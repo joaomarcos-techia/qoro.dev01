@@ -1,35 +1,46 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import {
-  Bell,
-  ChevronDown,
-  CreditCard,
-  Database,
-  Gift,
-  Key,
-  LogOut,
-  RefreshCw,
-  Save,
-  Settings,
-  User,
-  Webhook,
-  X,
-} from 'lucide-react';
+import { Bell, ChevronDown, LogOut, RefreshCw, Settings, User, X } from 'lucide-react';
 import { signOut } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase';
+
+interface UserProfile {
+  name: string;
+  organization: string;
+}
 
 export function Header() {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          setUserProfile(userDoc.data() as UserProfile);
+        }
+      } else {
+        setUserProfile(null);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   const toggleMenu = (menu: string) => {
-    setMenuOpen(prev => (prev === menu ? null : menu));
+    setMenuOpen((prev) => (prev === menu ? null : menu));
   };
 
   const handleSignOut = async () => {
     await signOut();
-    router.push('/login');
+    router.push('/');
   };
 
   useEffect(() => {
@@ -54,7 +65,7 @@ export function Header() {
 
           <div ref={menuRef} className="flex items-center space-x-4">
             <button
-              className="text-gray-500 hover:text-gray-700 p-2 rounded-xl hover:shadow-neumorphism-inset transition-all duration-300 hidden md:flex"
+              className="text-gray-500 hover:text-gray-700 p-2 rounded-xl hover:shadow-neumorphism-inset transition-all duration-300"
               title="Recarregar página"
               onClick={() => window.location.reload()}
             >
@@ -68,9 +79,6 @@ export function Header() {
                 title="Notificações"
               >
                 <Bell className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
-                  3
-                </span>
               </button>
 
               {menuOpen === 'notifications' && (
@@ -88,8 +96,8 @@ export function Header() {
                       </button>
                     </div>
                   </div>
-                  <div className="max-h-96 overflow-y-auto">
-                    {/* Notification items */}
+                  <div className="max-h-96 overflow-y-auto p-4 text-center text-gray-500">
+                    Nenhuma notificação nova.
                   </div>
                 </div>
               )}
@@ -98,35 +106,11 @@ export function Header() {
             <div className="relative">
               <button
                 onClick={() => toggleMenu('settings')}
-                className="text-gray-500 hover:text-gray-700 p-2 rounded-xl hover:shadow-neumorphism-inset transition-all duration-300 hidden md:flex"
+                className="text-gray-500 hover:text-gray-700 p-2 rounded-xl hover:shadow-neumorphism-inset transition-all duration-300"
                 title="Configurações"
               >
                 <Settings className="w-5 h-5" />
               </button>
-
-              {menuOpen === 'settings' && (
-                <div className="hidden md:block absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-neumorphism border border-gray-200 z-50">
-                  <div className="p-4 border-b border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        Configurações
-                      </h3>
-                      <button
-                        onClick={() => setMenuOpen(null)}
-                        className="text-gray-400 hover:text-gray-600"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                  <div className="p-4 border-t border-gray-200">
-                    <div className="flex items-center text-xs text-gray-500">
-                      <Save className="w-3 h-3 mr-1" />
-                      Configurações salvas automaticamente
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
 
             <div className="relative">
@@ -149,17 +133,16 @@ export function Header() {
                         <User className="w-6 h-6 text-gray-600" />
                       </div>
                       <div className="ml-3">
-                        <p className="font-medium text-gray-900">Usuário</p>
-                        <p className="text-sm text-gray-600">email@qoro.com</p>
+                        <p className="font-medium text-gray-900 truncate">
+                          {userProfile?.name || 'Usuário'}
+                        </p>
+                        <p className="text-sm text-gray-600 truncate">
+                          {userProfile?.organization || 'Organização'}
+                        </p>
                       </div>
                     </div>
                   </div>
                   <div className="py-2">
-                    <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center">
-                      <User className="w-4 h-4 mr-3" />
-                      Configurações de Perfil
-                    </button>
-                    <hr className="my-2" />
                     <button
                       onClick={handleSignOut}
                       className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
