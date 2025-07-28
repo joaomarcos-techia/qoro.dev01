@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
+import Link from 'next/link';
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -26,7 +27,7 @@ export function Header() {
   const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
     e.preventDefault();
     const targetId = e.currentTarget.getAttribute('href');
-    if(targetId) {
+    if(targetId && targetId.startsWith('#')) {
       const targetElement = document.querySelector(targetId);
       if (targetElement) {
         window.scrollTo({
@@ -59,9 +60,11 @@ export function Header() {
           </nav>
 
           <div className="hidden md:block">
-            <button className="bg-gray-800 text-white px-6 py-2 rounded-xl hover:bg-gray-700 transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover">
-              Entrar
-            </button>
+             <Link href="/login">
+                <div className="bg-gray-800 text-white px-6 py-2 rounded-xl hover:bg-gray-700 transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover">
+                    Entrar
+                </div>
+            </Link>
           </div>
 
           <div className="md:hidden">
@@ -90,9 +93,11 @@ export function Header() {
               </a>
             ))}
             <div className="px-3 py-2">
-              <button className="w-full bg-gray-800 text-white px-6 py-2 rounded-xl hover:bg-gray-700 transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover">
-                Entrar
-              </button>
+               <Link href="/login">
+                <div className="w-full text-center bg-gray-800 text-white px-6 py-2 rounded-xl hover:bg-gray-700 transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover">
+                    Entrar
+                </div>
+              </Link>
             </div>
           </div>
         </div>

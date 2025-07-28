@@ -1,5 +1,6 @@
 import { Star, Zap, Crown, Check, type LucideProps } from 'lucide-react';
 import type { ForwardRefExoticComponent, RefAttributes } from 'react';
+import Link from 'next/link';
 
 type Plan = {
   name: string;
@@ -16,6 +17,7 @@ type Plan = {
   popularText?: string;
   isScaled?: boolean;
   footerText?: string;
+  signupPath: string;
 };
 
 const plans: Plan[] = [
@@ -36,6 +38,7 @@ const plans: Plan[] = [
     popular: false,
     buttonClass: 'bg-gray-900 text-white hover:bg-gray-800',
     footerText: 'Sem compromisso • Sem cartão de crédito',
+    signupPath: '/signup',
   },
   {
     name: 'Plano Profissional',
@@ -58,6 +61,7 @@ const plans: Plan[] = [
     buttonClass: 'bg-gradient-to-r from-primary to-accent text-white',
     isScaled: true,
     footerText: 'Cancele a qualquer momento',
+    signupPath: '/signup',
   },
   {
     name: 'Plano Enterprise',
@@ -78,55 +82,68 @@ const plans: Plan[] = [
     popular: false,
     buttonClass: 'bg-gray-900 text-white hover:bg-gray-800',
     footerText: 'Soluções personalizadas para sua empresa',
+    signupPath: '#contato', // Enterprise plan should link to contact
   },
 ];
 
-const PricingCard = ({ plan, isLegacy }: { plan: Plan, isLegacy?: boolean }) => (
-    <div className={`relative bg-white rounded-3xl p-8 shadow-neumorphism hover:shadow-neumorphism-hover transition-all duration-300 ${plan.isScaled ? 'ring-2 ring-primary transform lg:scale-105' : ''}`}>
-      {plan.popular && (
-        <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-          <span className="bg-gradient-to-r from-primary to-accent text-white px-6 py-2 rounded-full text-sm font-medium shadow-lg">
-            {plan.popularText}
-          </span>
-        </div>
-      )}
-      <div className="text-center mb-8">
-        <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl text-white mb-4 shadow-neumorphism ${plan.iconBgClass}`}>
-          <plan.icon className="w-7 h-7" />
-        </div>
-        <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
-        <p className="text-gray-600 mb-6 h-12">{plan.description}</p>
-        
-        <div className="mb-6">
-          <div className="flex items-baseline justify-center">
-            <span className="text-4xl font-bold text-gray-900">{plan.price}</span>
-            {plan.priceUnit && <span className="text-gray-600 ml-2">{plan.priceUnit}</span>}
-          </div>
-          <p className="text-sm text-gray-500 mt-2">{plan.priceDetails}</p>
-        </div>
-      </div>
-  
-      <div className="space-y-4 mb-8 min-h-[200px]">
-        {plan.features.map((feature, index) => (
-          <div key={index} className="flex items-start">
-            <div className="flex-shrink-0 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
-              <Check className="w-3.5 h-3.5 text-green-600" />
+const PricingCard = ({ plan, isLegacy }: { plan: Plan, isLegacy?: boolean }) => {
+    const CardContent = (
+        <div className={`relative bg-white rounded-3xl p-8 shadow-neumorphism hover:shadow-neumorphism-hover transition-all duration-300 ${plan.isScaled ? 'ring-2 ring-primary transform lg:scale-105' : ''}`}>
+          {plan.popular && (
+            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+              <span className="bg-gradient-to-r from-primary to-accent text-white px-6 py-2 rounded-full text-sm font-medium shadow-lg">
+                {plan.popularText}
+              </span>
             </div>
-            <span className="text-gray-700 text-sm">{feature}</span>
+          )}
+          <div className="text-center mb-8">
+            <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl text-white mb-4 shadow-neumorphism ${plan.iconBgClass}`}>
+              <plan.icon className="w-7 h-7" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
+            <p className="text-gray-600 mb-6 h-12">{plan.description}</p>
+            
+            <div className="mb-6">
+              <div className="flex items-baseline justify-center">
+                <span className="text-4xl font-bold text-gray-900">{plan.price}</span>
+                {plan.priceUnit && <span className="text-gray-600 ml-2">{plan.priceUnit}</span>}
+              </div>
+              <p className="text-sm text-gray-500 mt-2">{plan.priceDetails}</p>
+            </div>
           </div>
-        ))}
-      </div>
-  
-      <button className={`w-full py-4 rounded-2xl font-medium transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover flex items-center justify-center ${plan.buttonClass}`}>
-        {plan.buttonText}
-      </button>
-      {plan.footerText && (
-          <p className="text-center text-xs text-gray-500 mt-4">
-              {plan.footerText}
-          </p>
-      )}
-    </div>
-  );
+      
+          <div className="space-y-4 mb-8 min-h-[200px]">
+            {plan.features.map((feature, index) => (
+              <div key={index} className="flex items-start">
+                <div className="flex-shrink-0 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                  <Check className="w-3.5 h-3.5 text-green-600" />
+                </div>
+                <span className="text-gray-700 text-sm">{feature}</span>
+              </div>
+            ))}
+          </div>
+      
+          <div className={`w-full py-4 rounded-2xl font-medium transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover flex items-center justify-center ${plan.buttonClass}`}>
+            {plan.buttonText}
+          </div>
+          {plan.footerText && (
+              <p className="text-center text-xs text-gray-500 mt-4">
+                  {plan.footerText}
+              </p>
+          )}
+        </div>
+      );
+
+    if (plan.signupPath.startsWith('#')) {
+        return <a href={plan.signupPath}>{CardContent}</a>
+    }
+
+    return (
+        <Link href={plan.signupPath}>
+            {CardContent}
+        </Link>
+    );
+}
 
 export function PricingSection() {
     return (
