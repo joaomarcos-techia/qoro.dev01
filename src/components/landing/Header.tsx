@@ -59,8 +59,8 @@ export function Header() {
           </nav>
 
           <div className="hidden md:block">
-            <button className="bg-primary text-primary-foreground px-6 py-2 rounded-xl hover:bg-primary/90 transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover">
-              Começar agora
+            <button className="bg-gray-800 text-white px-6 py-2 rounded-xl hover:bg-gray-700 transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover">
+              Entrar
             </button>
           </div>
 
@@ -90,8 +90,8 @@ export function Header() {
               </a>
             ))}
             <div className="px-3 py-2">
-              <button className="w-full bg-primary text-white px-6 py-2 rounded-xl hover:bg-primary/90 transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover">
-                Começar agora
+              <button className="w-full bg-gray-800 text-white px-6 py-2 rounded-xl hover:bg-gray-700 transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover">
+                Entrar
               </button>
             </div>
           </div>
