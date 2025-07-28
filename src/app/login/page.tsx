@@ -22,7 +22,11 @@ export default function LoginPage() {
       await signIn(email, password);
       router.push('/dashboard');
     } catch (err: any) {
-      setError('E-mail ou senha inválidos. Por favor, tente novamente.');
+      if (err.message.includes('verifique seu e-mail')) {
+        setError(err.message);
+      } else {
+        setError('E-mail ou senha inválidos. Por favor, tente novamente.');
+      }
       console.error(err);
     } finally {
       setIsLoading(false);
