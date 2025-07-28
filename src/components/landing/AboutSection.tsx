@@ -5,16 +5,19 @@ const features = [
     icon: Zap,
     title: 'Informação Unificada',
     description: 'Todos os seus dados em um só lugar. Chega de alternar entre sistemas e planilhas.',
+    colorClass: 'bg-blue-500',
   },
   {
     icon: Shield,
     title: 'Segurança de Nível Mundial',
     description: 'Confie na infraestrutura robusta do Google Firebase para proteger seus dados mais valiosos.',
+    colorClass: 'bg-green-500',
   },
   {
     icon: Gift,
     title: 'Comece Grátis, Cresça Sem Limites',
     description: 'Nosso plano gratuito é generoso e perfeito para você começar a organizar sua empresa hoje mesmo.',
+    colorClass: 'bg-yellow-500',
   },
 ];
 
@@ -34,7 +37,7 @@ export function AboutSection() {
             <div className="space-y-6">
               {features.map((feature, index) => (
                 <div key={index} className="flex items-start">
-                  <div className="bg-primary text-white w-12 h-12 rounded-xl flex items-center justify-center mr-4 flex-shrink-0 shadow-neumorphism">
+                  <div className={`text-white w-12 h-12 rounded-xl flex items-center justify-center mr-4 flex-shrink-0 shadow-neumorphism ${feature.colorClass}`}>
                     <feature.icon className="w-5 h-5" />
                   </div>
                   <div>
@@ -50,22 +53,22 @@ export function AboutSection() {
             <div className="bg-white rounded-3xl p-8 shadow-neumorphism">
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="bg-gray-50 p-4 rounded-2xl shadow-neumorphism-inset">
-                  <div className="w-8 h-8 bg-primary rounded-xl mb-3 shadow-neumorphism"></div>
+                  <div className="w-8 h-8 bg-blue-500 rounded-xl mb-3 shadow-neumorphism"></div>
                   <div className="h-2 bg-gray-200 rounded mb-2"></div>
                   <div className="h-2 bg-gray-100 rounded"></div>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-2xl shadow-neumorphism-inset">
-                  <div className="w-8 h-8 bg-gray-700 rounded-xl mb-3 shadow-neumorphism"></div>
+                  <div className="w-8 h-8 bg-green-500 rounded-xl mb-3 shadow-neumorphism"></div>
                   <div className="h-2 bg-gray-200 rounded mb-2"></div>
                   <div className="h-2 bg-gray-100 rounded"></div>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-2xl shadow-neumorphism-inset">
-                  <div className="w-8 h-8 bg-gray-600 rounded-xl mb-3 shadow-neumorphism"></div>
+                  <div className="w-8 h-8 bg-yellow-500 rounded-xl mb-3 shadow-neumorphism"></div>
                   <div className="h-2 bg-gray-200 rounded mb-2"></div>
                   <div className="h-2 bg-gray-100 rounded"></div>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-2xl shadow-neumorphism-inset">
-                  <div className="w-8 h-8 bg-gray-500 rounded-xl mb-3 shadow-neumorphism"></div>
+                  <div className="w-8 h-8 bg-red-500 rounded-xl mb-3 shadow-neumorphism"></div>
                   <div className="h-2 bg-gray-200 rounded mb-2"></div>
                   <div className="h-2 bg-gray-100 rounded"></div>
                 </div>
