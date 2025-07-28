@@ -8,7 +8,7 @@ export function HeroSection() {
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-black mb-6 leading-tight">
             Transforme seu
             <span className="block text-gray-600">negócio com</span>
-            <span className="block bg-gradient-to-r from-black to-gray-600 bg-clip-text text-transparent">CoreFlow</span>
+            <span className="block bg-gradient-to-r from-black to-gray-600 bg-clip-text text-transparent">Qoro</span>
           </h1>
           <p className="text-xl md:text-2xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
             a plataforma completa que unifica CRM, monitoramento, gestão de tarefas e controle financeiro 

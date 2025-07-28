@@ -2,8 +2,8 @@ import type {Metadata} from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'CoreFlow - Transforme seu negócio com nossa plataforma integrada',
-  description: 'CoreFlow - Plataforma completa com CRM, monitoramento, gestão de tarefas e controle financeiro para transformar seu negócio',
+  title: 'Qoro - Transforme seu negócio com nossa plataforma integrada',
+  description: 'Qoro - Plataforma completa com CRM, monitoramento, gestão de tarefas e controle financeiro para transformar seu negócio',
 };
 
 export default function RootLayout({

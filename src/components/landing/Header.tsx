@@ -44,7 +44,7 @@ export function Header() {
         <div className="flex items-center justify-between h-16 lg:h-20">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <a href="#home" onClick={handleLinkClick} className="text-2xl lg:text-3xl font-bold text-black">CoreFlow</a>
+              <a href="#home" onClick={handleLinkClick} className="text-2xl lg:text-3xl font-bold text-black">Qoro</a>
             </div>
           </div>
           
