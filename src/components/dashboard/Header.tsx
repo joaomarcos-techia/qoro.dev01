@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
+import Link from 'next/link';
 
 interface UserProfile {
   name: string;
@@ -103,15 +104,9 @@ export function Header() {
               )}
             </div>
 
-            <div className="relative">
-              <button
-                onClick={() => toggleMenu('settings')}
-                className="text-gray-500 hover:text-gray-700 p-2 rounded-xl hover:shadow-neumorphism-inset transition-all duration-300"
-                title="Configurações"
-              >
+            <Link href="/dashboard/settings" className="text-gray-500 hover:text-gray-700 p-2 rounded-xl hover:shadow-neumorphism-inset transition-all duration-300" title="Configurações">
                 <Settings className="w-5 h-5" />
-              </button>
-            </div>
+            </Link>
 
             <div className="relative">
               <button
