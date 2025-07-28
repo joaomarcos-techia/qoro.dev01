@@ -17,9 +17,9 @@ export function Header() {
 
   const navLinks = [
     { href: '#home', label: 'Início' },
-    { href: '#produtos', label: 'Produtos' },
-    { href: '#sobre', label: 'Sobre' },
-    { href: '#precos', label: 'Preços' },
+    { href: '#produtos', label: 'Soluções' },
+    { href: '#sobre', label: 'Por que a Qoro?' },
+    { href: '#precos', label: 'Planos' },
     { href: '#contato', label: 'Contato' },
   ];
   
@@ -51,7 +51,7 @@ export function Header() {
           <nav className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-8">
               {navLinks.map(link => (
-                <a key={link.href} href={link.href} onClick={handleLinkClick} className="text-gray-700 hover:text-black px-3 py-2 text-sm font-medium transition-colors">
+                <a key={link.href} href={link.href} onClick={handleLinkClick} className="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">
                   {link.label}
                 </a>
               ))}
@@ -59,7 +59,7 @@ export function Header() {
           </nav>
 
           <div className="hidden md:block">
-            <button className="bg-black text-white px-6 py-2 rounded-xl hover:bg-gray-800 transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover">
+            <button className="bg-primary text-primary-foreground px-6 py-2 rounded-xl hover:bg-primary/90 transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover">
               Começar agora
             </button>
           </div>
@@ -84,13 +84,13 @@ export function Header() {
                 key={link.href} 
                 href={link.href} 
                 onClick={handleLinkClick}
-                className="text-gray-700 hover:text-black block px-3 py-2 text-base font-medium rounded-xl hover:shadow-neumorphism-inset transition-all duration-300"
+                className="text-gray-700 hover:text-primary block px-3 py-2 text-base font-medium rounded-xl hover:bg-gray-50 transition-all duration-300"
               >
                 {link.label}
               </a>
             ))}
             <div className="px-3 py-2">
-              <button className="w-full bg-black text-white px-6 py-2 rounded-xl hover:bg-gray-800 transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover">
+              <button className="w-full bg-primary text-white px-6 py-2 rounded-xl hover:bg-primary/90 transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover">
                 Começar agora
               </button>
             </div>

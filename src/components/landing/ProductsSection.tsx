@@ -12,48 +12,48 @@ const products: Product[] = [
   {
     icon: Users,
     title: ' QoroCRM',
-    description: 'CRM com foco em gestão de funil de vendas e conversão',
+    description: 'Relacionamento com clientes sem perder nenhuma informação.',
     features: [
-      'Manipulação de leads',
-      'Histórico de interações',
-      'Lembretes automáticos de follow-up na plataforma',
+      'Funil de vendas visual e intuitivo',
+      'Histórico completo de interações',
+      'Follow-ups automáticos para não perder negócios',
     ],
   },
   {
     icon: Activity,
     title: 'QoroPulse',
-    description: 'Sistema nervoso central inteligente para análises da sua empresa',
+    description: 'O cérebro da sua operação, revelando insights valiosos.',
     features: [
-      'Análise de dados operacionais',
-      'Detecção de padrões e gargalos',
-      'Propostas de ações',
+      'Análise de dados em tempo real',
+      'Identificação de gargalos e oportunidades',
+      'Sugestões inteligentes para otimização',
     ],
   },
   {
     icon: CheckSquare,
     title: 'QoroTask',
-    description: 'Plataforma leve de gestão de tarefas e produtividade',
+    description: 'Organize o trabalho da sua equipe e entregue projetos no prazo.',
     features: [
-      'Kanban simples com notificações',
-      'Tarefas com datas e responsáveis',
-      'Alertas na plataforma',
+      'Quadros Kanban para gestão visual',
+      'Tarefas com prazos, responsáveis e subtarefas',
+      'Notificações para manter todos alinhados',
     ],
   },
   {
     icon: DollarSign,
     title: 'QoroFinance',
-    description: 'Controle financeiro completo para seu negócio',
+    description: 'A saúde financeira do seu negócio em um só lugar.',
     features: [
-      'Dashboard financeiro completo',
-      'Registro de transações',
-      'Contas a pagar e receber',
+      'Dashboard com visão geral das finanças',
+      'Controle de contas a pagar e receber',
+      'Registro rápido de transações',
     ],
   },
 ];
 
 const ProductCard = ({ product }: { product: Product }) => (
   <div className="group bg-white p-8 rounded-3xl shadow-neumorphism hover:shadow-neumorphism-hover transition-all duration-300 hover:-translate-y-2">
-    <div className="bg-black text-white w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-neumorphism">
+    <div className="bg-primary text-white w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-neumorphism">
       <product.icon className="w-7 h-7" />
     </div>
     <h3 className="text-2xl font-bold text-black mb-3">{product.title}</h3>
@@ -61,7 +61,7 @@ const ProductCard = ({ product }: { product: Product }) => (
     <ul className="space-y-2 mb-6">
       {product.features.map((feature, index) => (
         <li key={index} className="flex items-center text-sm text-gray-700">
-          <div className="w-1.5 h-1.5 bg-black rounded-full mr-3"></div>
+          <div className="w-1.5 h-1.5 bg-primary rounded-full mr-3"></div>
           {feature}
         </li>
       ))}
@@ -75,11 +75,10 @@ export function ProductsSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-5xl font-bold text-black mb-4">
-            Nossas soluções
+            Uma plataforma, controle total.
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Quatro produtos poderosos, uma única plataforma integrada para revolucionar 
-            a gestão do seu negócio
+            Centralize suas operações e ganhe clareza para focar no que realmente importa: o crescimento do seu negócio.
           </p>
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">

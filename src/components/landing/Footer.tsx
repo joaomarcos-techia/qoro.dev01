@@ -8,20 +8,20 @@ export function Footer() {
           <div>
             <div className="text-2xl font-bold mb-4">Qoro</div>
             <p className="text-gray-400 mb-6 leading-relaxed">
-              A plataforma completa para transformar a gestão do seu negócio.
+              O fim da desorganização. O começo da clareza.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-white transition-colors p-2 rounded-xl" aria-label="LinkedIn">
+              <a href="#" className="text-gray-400 hover:text-primary transition-colors p-2 rounded-xl" aria-label="LinkedIn">
                 <Linkedin className="w-5 h-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors p-2 rounded-xl" aria-label="Twitter">
+              <a href="#" className="text-gray-400 hover:text-primary transition-colors p-2 rounded-xl" aria-label="Twitter">
                 <Twitter className="w-5 h-5" />
               </a>
             </div>
           </div>
           
           <div>
-            <h3 className="text-lg font-semibold mb-4">Produtos</h3>
+            <h3 className="text-lg font-semibold mb-4">Soluções</h3>
             <ul className="space-y-3">
               <li><a href="#produtos" className="text-gray-400 hover:text-white transition-colors">QoroCRM</a></li>
               <li><a href="#produtos" className="text-gray-400 hover:text-white transition-colors">QoroPulse</a></li>
@@ -36,7 +36,6 @@ export function Footer() {
               <li><a href="#sobre" className="text-gray-400 hover:text-white transition-colors">Sobre nós</a></li>
               <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Carreiras</a></li>
               <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Blog</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Imprensa</a></li>
             </ul>
           </div>
           

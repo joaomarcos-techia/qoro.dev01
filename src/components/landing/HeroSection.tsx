@@ -6,17 +6,15 @@ export function HeroSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-black mb-6 leading-tight">
-            Transforme seu
-            <span className="block text-gray-600">negócio com</span>
-            <span className="block bg-gradient-to-r from-black to-gray-600 bg-clip-text text-transparent">Qoro</span>
+            Diga adeus às planilhas.
+            <span className="block bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Centralize tudo com a Qoro.</span>
           </h1>
           <p className="text-xl md:text-2xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
-            a plataforma completa que unifica CRM, monitoramento, gestão de tarefas e controle financeiro 
-            em uma única solução inteligente para empresas que buscam excelência.
+            Pare de perder tempo caçando informações. Unifique seu CRM, projetos, finanças e análises em uma única plataforma e tome decisões mais rápidas e inteligentes.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <button className="bg-black text-white px-8 py-4 rounded-2xl hover:bg-gray-800 transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover flex items-center justify-center">
-              Começar grátis
+            <button className="bg-primary text-primary-foreground px-8 py-4 rounded-2xl hover:bg-primary/90 transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover flex items-center justify-center text-lg font-semibold">
+              Organize sua empresa grátis
               <ArrowRight className="ml-2 w-5 h-5" />
             </button>
           </div>
