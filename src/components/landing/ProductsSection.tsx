@@ -13,7 +13,7 @@ type Product = {
 const products: Product[] = [
   {
     icon: Users,
-    title: ' QoroCRM',
+    title: 'QoroCRM',
     description: 'Relacionamento com clientes sem perder nenhuma informação.',
     features: [
       'Funil de vendas visual e intuitivo',
