@@ -7,7 +7,7 @@ export function HeroSection() {
         <div className="text-center">
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-black mb-6 leading-tight">
             Diga adeus ao caos.
-            <span className="block text-blue-800">Centralize tudo com a Qoro.</span>
+            <span className="block text-blue-500">Centralize tudo com a Qoro.</span>
           </h1>
           <p className="text-xl md:text-2xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
             Pare de perder tempo caçando informações. Unifique seu CRM, projetos, finanças e análises em uma única plataforma e tome decisões mais rápidas e inteligentes.
