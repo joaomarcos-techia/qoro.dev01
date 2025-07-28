@@ -18,7 +18,7 @@ export default function DashboardPage() {
           Bem-vindo à Qoro!
         </h2>
         <p className="text-gray-600">
-          Gerencie todos os seus SaaS em uma única plataforma integrada
+          Gerencie toda a sua empresa em uma única plataforma integrada
         </p>
       </div>
 
