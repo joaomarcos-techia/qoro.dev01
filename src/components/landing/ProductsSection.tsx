@@ -78,7 +78,8 @@ export function ProductsSection() {
             Nossas soluções
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Quatro produtos poderosos, uma única plataforma integrada para revolucionar a gestão do seu negócio
+            Quatro produtos poderosos, uma única plataforma integrada para revolucionar 
+            a gestão do seu negócio
           </p>
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
