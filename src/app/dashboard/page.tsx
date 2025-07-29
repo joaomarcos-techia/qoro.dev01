@@ -34,7 +34,7 @@ export default function DashboardPage() {
             <div className="h-2 bg-blue-500 rounded-t-xl"></div>
             <div className="p-6 flex-grow flex flex-col">
               <div className="flex items-center mb-4">
-                <div className="p-3 rounded-xl bg-blue-500 text-white mr-4 group-hover:scale-110 transition-transform duration-300">
+                <div className="p-3 rounded-xl bg-white text-blue-500 mr-4 group-hover:scale-110 transition-transform duration-300 shadow-neumorphism">
                   <Users className="w-6 h-6" />
                 </div>
                 <div>
@@ -56,7 +56,7 @@ export default function DashboardPage() {
             <div className="h-2 bg-purple-500 rounded-t-xl"></div>
             <div className="p-6 flex-grow flex flex-col">
               <div className="flex items-center mb-4">
-                <div className="p-3 rounded-xl bg-purple-500 text-white mr-4 group-hover:scale-110 transition-transform duration-300">
+                <div className="p-3 rounded-xl bg-white text-purple-500 mr-4 group-hover:scale-110 transition-transform duration-300 shadow-neumorphism">
                   <Activity className="w-6 h-6" />
                 </div>
                 <div>
@@ -78,7 +78,7 @@ export default function DashboardPage() {
             <div className="h-2 bg-green-500 rounded-t-xl"></div>
             <div className="p-6 flex-grow flex flex-col">
               <div className="flex items-center mb-4">
-                <div className="p-3 rounded-xl bg-green-500 text-white mr-4 group-hover:scale-110 transition-transform duration-300">
+                <div className="p-3 rounded-xl bg-white text-green-500 mr-4 group-hover:scale-110 transition-transform duration-300 shadow-neumorphism">
                   <CheckSquare className="w-6 h-6" />
                 </div>
                 <div>
@@ -100,7 +100,7 @@ export default function DashboardPage() {
             <div className="h-2 bg-orange-500 rounded-t-xl"></div>
             <div className="p-6 flex-grow flex flex-col">
               <div className="flex items-center mb-4">
-                <div className="p-3 rounded-xl bg-orange-500 text-white mr-4 group-hover:scale-110 transition-transform duration-300">
+                <div className="p-3 rounded-xl bg-white text-orange-500 mr-4 group-hover:scale-110 transition-transform duration-300 shadow-neumorphism">
                   <DollarSign className="w-6 h-6" />
                 </div>
                 <div>
