@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -113,7 +112,7 @@ export default function SettingsPage() {
             if(targetUser?.permissions) {
                  await updateUserPermissions({ userId, permissions: targetUser.permissions });
             }
-        } catch (error) => {
+        } catch (error) {
             console.error("Failed to update permissions:", error);
             setFeedback({ type: 'error', message: 'Falha ao atualizar permissões. Tente novamente.', context: `permissions-${userId}` });
             setUsers(originalUsers); // Revert on error
@@ -330,5 +329,3 @@ export default function SettingsPage() {
         </div>
     );
 }
-
-    
