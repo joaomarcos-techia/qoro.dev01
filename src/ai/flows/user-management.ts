@@ -140,14 +140,15 @@ export const signUpFlow = ai.defineFlow(
         outputSchema: z.object({ uid: z.string() }),
     },
     async ({ name, organizationName, email, password, cnpj, contactEmail, contactPhone }) => {
-        // 1. Create user in Firebase Auth
+        // 1. Create user in Firebase Auth FIRST. This is the critical step.
+        // If this fails (e.g., email already exists), the flow stops before creating any documents.
         const userRecord = await auth.createUser({
             email,
             password,
             emailVerified: false, // Start as unverified
         });
 
-        // 2. Create organization in Firestore
+        // 2. If user creation is successful, create organization in Firestore
         const orgRef = await db.collection('organizations').add({
             name: organizationName,
             owner: userRecord.uid,
@@ -174,8 +175,7 @@ export const signUpFlow = ai.defineFlow(
 
         // 4. Send verification email
         const verificationLink = await auth.generateEmailVerificationLink(email);
-        // Here you would typically use a service to email the link to the user.
-        // For this example, we'll just log it.
+        // In a real app, you would use a service to email the link.
         console.log(`Verification link for ${email}: ${verificationLink}`);
 
         return { uid: userRecord.uid };
