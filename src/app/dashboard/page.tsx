@@ -1,3 +1,4 @@
+
 'use client';
 import {
   Activity,
@@ -27,79 +28,79 @@ export default function DashboardPage() {
           <h3 className="text-xl font-bold text-black">Seus Aplicativos Qoro</h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Card QoroCRM */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col">
+          <div className="group bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-2 transition-all duration-300 flex flex-col">
             <div className="h-2 bg-blue-500"></div>
             <div className="p-6 flex-grow flex flex-col">
               <div className="flex items-center mb-4">
-                <div className="p-3 rounded-md bg-blue-500 text-white mr-4">
+                <div className="p-3 rounded-xl bg-blue-500 text-white mr-4 group-hover:scale-110 transition-transform duration-300">
                   <Users className="w-6 h-6" />
                 </div>
                 <div>
                   <h4 className="text-lg font-bold text-black">QoroCRM</h4>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 mb-4 flex-grow">
-                CRM ultra-simples com foco em WhatsApp e Email + automação
+              <p className="text-sm text-gray-600 mb-6 flex-grow">
+                CRM ultra-simples com foco em WhatsApp e Email + automação para um relacionamento impecável com o cliente.
               </p>
-              <button className="w-full bg-black text-white py-2 rounded-full hover:bg-gray-800 transition-colors flex items-center justify-center text-sm font-medium">
-                Acessar
-                <ArrowRight className="w-4 h-4 ml-2" />
+              <button className="group/button w-full bg-black text-white py-2.5 px-4 rounded-full hover:bg-gray-800 transition-colors flex items-center justify-center text-sm font-medium">
+                <span>Acessar</span>
+                <ArrowRight className="w-4 h-4 ml-2 transform transition-transform duration-300 group-hover/button:translate-x-1" />
               </button>
             </div>
           </div>
 
           {/* Card QoroPulse */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col">
+          <div className="group bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-2 transition-all duration-300 flex flex-col">
             <div className="h-2 bg-purple-500"></div>
             <div className="p-6 flex-grow flex flex-col">
               <div className="flex items-center mb-4">
-                <div className="p-3 rounded-md bg-purple-500 text-white mr-4">
+                <div className="p-3 rounded-xl bg-purple-500 text-white mr-4 group-hover:scale-110 transition-transform duration-300">
                   <Activity className="w-6 h-6" />
                 </div>
                 <div>
                   <h4 className="text-lg font-bold text-black">QoroPulse</h4>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 mb-4 flex-grow">
-                Sistema nervoso central inteligente para otimização automática
+              <p className="text-sm text-gray-600 mb-6 flex-grow">
+                O sistema nervoso central da sua operação, revelando insights para otimização automática e inteligente.
               </p>
-              <button className="w-full bg-black text-white py-2 rounded-full hover:bg-gray-800 transition-colors flex items-center justify-center text-sm font-medium">
-                Acessar
-                <ArrowRight className="w-4 h-4 ml-2" />
+              <button className="group/button w-full bg-black text-white py-2.5 px-4 rounded-full hover:bg-gray-800 transition-colors flex items-center justify-center text-sm font-medium">
+                <span>Acessar</span>
+                <ArrowRight className="w-4 h-4 ml-2 transform transition-transform duration-300 group-hover/button:translate-x-1" />
               </button>
             </div>
           </div>
 
           {/* Card QoroTask */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col">
+          <div className="group bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-2 transition-all duration-300 flex flex-col">
             <div className="h-2 bg-green-500"></div>
             <div className="p-6 flex-grow flex flex-col">
               <div className="flex items-center mb-4">
-                <div className="p-3 rounded-md bg-green-500 text-white mr-4">
+                <div className="p-3 rounded-xl bg-green-500 text-white mr-4 group-hover:scale-110 transition-transform duration-300">
                   <CheckSquare className="w-6 h-6" />
                 </div>
                 <div>
                   <h4 className="text-lg font-bold text-black">QoroTask</h4>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 mb-4 flex-grow">
-                Plataforma leve de gestão de tarefas e produtividade
+              <p className="text-sm text-gray-600 mb-6 flex-grow">
+                Plataforma leve e poderosa de gestão de tarefas e produtividade para manter sua equipe alinhada e focada.
               </p>
-              <button className="w-full bg-black text-white py-2 rounded-full hover:bg-gray-800 transition-colors flex items-center justify-center text-sm font-medium">
-                Acessar
-                <ArrowRight className="w-4 h-4 ml-2" />
+              <button className="group/button w-full bg-black text-white py-2.5 px-4 rounded-full hover:bg-gray-800 transition-colors flex items-center justify-center text-sm font-medium">
+                <span>Acessar</span>
+                <ArrowRight className="w-4 h-4 ml-2 transform transition-transform duration-300 group-hover/button:translate-x-1" />
               </button>
             </div>
           </div>
 
           {/* Card QoroFinance */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col">
+          <div className="group bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-2 transition-all duration-300 flex flex-col">
             <div className="h-2 bg-orange-500"></div>
             <div className="p-6 flex-grow flex flex-col">
               <div className="flex items-center mb-4">
-                <div className="p-3 rounded-md bg-orange-500 text-white mr-4">
+                <div className="p-3 rounded-xl bg-orange-500 text-white mr-4 group-hover:scale-110 transition-transform duration-300">
                   <DollarSign className="w-6 h-6" />
                 </div>
                 <div>
@@ -108,12 +109,12 @@ export default function DashboardPage() {
                   </h4>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 mb-4 flex-grow">
-                Controle financeiro completo para seu negócio
+              <p className="text-sm text-gray-600 mb-6 flex-grow">
+                Controle financeiro completo para seu negócio, com dashboards claros e relatórios simplificados.
               </p>
-              <button className="w-full bg-black text-white py-2 rounded-full hover:bg-gray-800 transition-colors flex items-center justify-center text-sm font-medium">
-                Acessar
-                <ArrowRight className="w-4 h-4 ml-2" />
+              <button className="group/button w-full bg-black text-white py-2.5 px-4 rounded-full hover:bg-gray-800 transition-colors flex items-center justify-center text-sm font-medium">
+                <span>Acessar</span>
+                <ArrowRight className="w-4 h-4 ml-2 transform transition-transform duration-300 group-hover/button:translate-x-1" />
               </button>
             </div>
           </div>
