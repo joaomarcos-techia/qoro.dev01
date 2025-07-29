@@ -30,8 +30,8 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Card QoroCRM */}
-          <div className="group bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-2 transition-all duration-300 flex flex-col">
-            <div className="h-2 bg-blue-500"></div>
+          <div className="group bg-white rounded-xl shadow-neumorphism hover:shadow-neumorphism-hover hover:-translate-y-2 transition-all duration-300 flex flex-col">
+            <div className="h-2 bg-blue-500 rounded-t-xl"></div>
             <div className="p-6 flex-grow flex flex-col">
               <div className="flex items-center mb-4">
                 <div className="p-3 rounded-xl bg-blue-500 text-white mr-4 group-hover:scale-110 transition-transform duration-300">
@@ -52,8 +52,8 @@ export default function DashboardPage() {
           </div>
 
           {/* Card QoroPulse */}
-          <div className="group bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-2 transition-all duration-300 flex flex-col">
-            <div className="h-2 bg-purple-500"></div>
+          <div className="group bg-white rounded-xl shadow-neumorphism hover:shadow-neumorphism-hover hover:-translate-y-2 transition-all duration-300 flex flex-col">
+            <div className="h-2 bg-purple-500 rounded-t-xl"></div>
             <div className="p-6 flex-grow flex flex-col">
               <div className="flex items-center mb-4">
                 <div className="p-3 rounded-xl bg-purple-500 text-white mr-4 group-hover:scale-110 transition-transform duration-300">
@@ -74,8 +74,8 @@ export default function DashboardPage() {
           </div>
 
           {/* Card QoroTask */}
-          <div className="group bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-2 transition-all duration-300 flex flex-col">
-            <div className="h-2 bg-green-500"></div>
+          <div className="group bg-white rounded-xl shadow-neumorphism hover:shadow-neumorphism-hover hover:-translate-y-2 transition-all duration-300 flex flex-col">
+            <div className="h-2 bg-green-500 rounded-t-xl"></div>
             <div className="p-6 flex-grow flex flex-col">
               <div className="flex items-center mb-4">
                 <div className="p-3 rounded-xl bg-green-500 text-white mr-4 group-hover:scale-110 transition-transform duration-300">
@@ -96,8 +96,8 @@ export default function DashboardPage() {
           </div>
 
           {/* Card QoroFinance */}
-          <div className="group bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-2 transition-all duration-300 flex flex-col">
-            <div className="h-2 bg-orange-500"></div>
+          <div className="group bg-white rounded-xl shadow-neumorphism hover:shadow-neumorphism-hover hover:-translate-y-2 transition-all duration-300 flex flex-col">
+            <div className="h-2 bg-orange-500 rounded-t-xl"></div>
             <div className="p-6 flex-grow flex flex-col">
               <div className="flex items-center mb-4">
                 <div className="p-3 rounded-xl bg-orange-500 text-white mr-4 group-hover:scale-110 transition-transform duration-300">
