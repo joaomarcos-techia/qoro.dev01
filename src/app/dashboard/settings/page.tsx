@@ -2,11 +2,13 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Mail, Send, KeyRound, UserPlus, Building, AlertCircle, CheckCircle, ArrowLeft, User, Shield, Users, Loader2 } from 'lucide-react';
+import { Mail, Send, KeyRound, UserPlus, Building, AlertCircle, CheckCircle, ArrowLeft, User, Shield, Users, Loader2, Trash2 } from 'lucide-react';
 import { inviteUser, listUsers, updateUserPermissions, UserProfile } from '@/ai/flows/user-management';
 import { changePassword } from '@/lib/auth';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, db }from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+
 
 type AppPermission = 'qoroCrm' | 'qoroPulse' | 'qoroTask' | 'qoroFinance';
 
@@ -22,6 +24,7 @@ export default function SettingsPage() {
     const [inviteEmail, setInviteEmail] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
+    const [userOrganization, setUserOrganization] = useState<string>('');
     const [isLoading, setIsLoading] = useState({ invite: false, password: false, users: true, permissions: '' });
     const [feedback, setFeedback] = useState<{ type: 'error' | 'success', message: string, context: string } | null>(null);
     const [users, setUsers] = useState<UserProfile[]>([]);
@@ -31,6 +34,14 @@ export default function SettingsPage() {
             setCurrentUser(user);
             if (user) {
                 fetchUsers();
+                const fetchOrg = async () => {
+                    const userDocRef = doc(db, 'users', user.uid);
+                    const userDoc = await getDoc(userDocRef);
+                    if(userDoc.exists()) {
+                        setUserOrganization(userDoc.data().organization || 'Organização');
+                    }
+                }
+                fetchOrg();
             }
         });
         return () => unsubscribe();
@@ -94,7 +105,6 @@ export default function SettingsPage() {
         setIsLoading(prev => ({ ...prev, permissions: userId }));
         const originalUsers = [...users];
         
-        // Optimistic UI update
         const updatedUsers = users.map(u => u.uid === userId ? { ...u, permissions: { ...u.permissions, [permission]: isEnabled } } : u);
         setUsers(updatedUsers);
 
@@ -103,7 +113,7 @@ export default function SettingsPage() {
             if(targetUser?.permissions) {
                  await updateUserPermissions({ userId, permissions: targetUser.permissions });
             }
-        } catch (error) {
+        } catch (error) => {
             console.error("Failed to update permissions:", error);
             setFeedback({ type: 'error', message: 'Falha ao atualizar permissões. Tente novamente.', context: `permissions-${userId}` });
             setUsers(originalUsers); // Revert on error
@@ -268,10 +278,52 @@ export default function SettingsPage() {
                     </div>
                 )}
                  {activeTab === 'organization' && (
-                     <div className="bg-white p-8 rounded-2xl shadow-neumorphism border border-gray-200 text-center">
-                         <Building className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                        <h3 className="text-xl font-bold text-black mb-2">Gestão da Organização</h3>
-                        <p className="text-gray-600">Funcionalidades de gestão da organização estarão disponíveis em breve.</p>
+                    <div className="space-y-8">
+                        {/* Organization Profile */}
+                        <div className="bg-white p-8 rounded-2xl shadow-neumorphism border border-gray-200">
+                            <div className="flex items-start">
+                                <div className="p-3 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 text-white mr-6 shadow-neumorphism">
+                                    <Building className="w-6 h-6" />
+                                </div>
+                                <div className="flex-grow">
+                                    <h3 className="text-xl font-bold text-black mb-1">Perfil da Organização</h3>
+                                    <p className="text-gray-600 mb-6">Veja e gerencie as informações da sua organização.</p>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-700">Nome da Organização</label>
+                                            <input type="text" value={userOrganization} disabled className="mt-1 w-full p-3 bg-gray-100 rounded-xl shadow-neumorphism-inset cursor-not-allowed"/>
+                                        </div>
+                                        {/* Futuramente, botão para editar */}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Danger Zone */}
+                        <div className="bg-white p-8 rounded-2xl shadow-neumorphism border border-red-300">
+                             <div className="flex items-start">
+                                <div className="p-3 rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-white mr-6 shadow-neumorphism">
+                                    <AlertCircle className="w-6 h-6" />
+                                </div>
+                                <div className="flex-grow">
+                                    <h3 className="text-xl font-bold text-red-700 mb-1">Zona de Perigo</h3>
+                                    <p className="text-gray-600 mb-6">Ações nesta área são perigosas e irreversíveis. Tenha certeza do que está fazendo.</p>
+                                    <div className="flex justify-between items-center p-4 border border-red-200 rounded-xl bg-red-50/50">
+                                        <div>
+                                            <p className="font-bold text-black">Excluir esta organização</p>
+                                            <p className="text-sm text-gray-600">Todo o conteúdo, usuários e configurações serão permanentemente deletados.</p>
+                                        </div>
+                                        <button 
+                                            disabled // Feature desabilitada por segurança
+                                            className="bg-red-600 text-white px-6 py-3 rounded-xl hover:bg-red-700 transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover flex items-center justify-center font-semibold disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400"
+                                        >
+                                            <Trash2 className="mr-2 w-5 h-5"/>
+                                            Excluir Organização
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>
