@@ -102,22 +102,34 @@ export default function SettingsPage() {
 
     const handlePermissionChange = async (userId: string, permission: AppPermission, isEnabled: boolean) => {
         setIsLoading(prev => ({ ...prev, permissions: userId }));
-        const originalUsers = [...users];
+    
+        // Find the current user and their permissions
+        const targetUser = users.find(u => u.uid === userId);
+        if (!targetUser) return;
+    
+        const currentPermissions = targetUser.permissions || { qoroCrm: false, qoroPulse: false, qoroTask: false, qoroFinance: false };
         
-        const updatedUsers = users.map(u => u.uid === userId ? { ...u, permissions: { ...u.permissions, [permission]: isEnabled } } : u);
-        setUsers(updatedUsers);
-
+        const updatedPermissions = {
+            ...currentPermissions,
+            [permission]: isEnabled
+        };
+    
         try {
-            const targetUser = updatedUsers.find(u => u.uid === userId);
-            if(targetUser?.permissions) {
-                 await updateUserPermissions({ userId, permissions: targetUser.permissions });
-            }
+            await updateUserPermissions({ userId, permissions: updatedPermissions });
+            // On success, update the local state to reflect the change
+            const updatedUsers = users.map(u => 
+                u.uid === userId 
+                    ? { ...u, permissions: updatedPermissions } 
+                    : u
+            );
+            setUsers(updatedUsers);
         } catch (error) {
             console.error("Failed to update permissions:", error);
+            // On error, show feedback to the user. The local state remains unchanged.
             setFeedback({ type: 'error', message: 'Falha ao atualizar permissões. Tente novamente.', context: `permissions-${userId}` });
-            setUsers(originalUsers); // Revert on error
         } finally {
-             setTimeout(() => setIsLoading(prev => ({ ...prev, permissions: '' })), 500); // Visual feedback
+             // Stop the loading indicator
+             setIsLoading(prev => ({ ...prev, permissions: '' }));
         }
     };
 
