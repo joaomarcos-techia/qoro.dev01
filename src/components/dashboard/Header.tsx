@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Bell, ChevronDown, LogOut, RefreshCw, Settings, User, X } from 'lucide-react';
+import { ChevronDown, LogOut, RefreshCw, Settings, User } from 'lucide-react';
 import { signOut } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
@@ -18,7 +18,12 @@ export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isClient, setIsClient] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const fetchUserProfile = useCallback(async (user: FirebaseUser) => {
     setIsLoading(true);
@@ -127,7 +132,7 @@ export function Header() {
                 <ChevronDown className="w-4 h-4 ml-1" />
               </button>
 
-              {menuOpen && (
+              {isClient && menuOpen && (
                 <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-neumorphism border border-gray-200 z-50">
                     {isLoading ? (
                         <div className="p-4 text-center text-sm text-gray-500">Carregando...</div>
