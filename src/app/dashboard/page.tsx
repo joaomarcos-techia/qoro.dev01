@@ -28,88 +28,88 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white rounded-2xl shadow-neumorphism border border-gray-200 overflow-hidden hover:shadow-neumorphism-hover transition-all duration-300 hover:-translate-y-1">
-            <div className="h-2 bg-gradient-to-r from-blue-500 to-blue-600"></div>
-            <div className="p-6">
+          <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col w-full">
+            <div className="h-2 bg-blue-500 rounded-t-lg"></div>
+            <div className="p-6 flex-grow flex flex-col">
               <div className="flex items-center mb-4">
-                <div className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white mr-4 shadow-neumorphism">
+                <div className="p-3 rounded-md bg-blue-500 text-white mr-4">
                   <Users className="w-6 h-6" />
                 </div>
                 <div>
                   <h4 className="text-lg font-bold text-black">QoroCRM</h4>
-                  <p className="text-sm text-gray-600">
-                    CRM ultra-simples com foco em WhatsApp e Email + automação
-                  </p>
                 </div>
               </div>
-              <button className="w-full bg-black text-white py-3 rounded-xl hover:bg-gray-800 transition-colors flex items-center justify-center shadow-neumorphism hover:shadow-neumorphism-hover">
-                Acessar QoroCRM
+               <p className="text-sm text-gray-600 mb-4 flex-grow">
+                    CRM ultra-simples com foco em WhatsApp e Email + automação
+                </p>
+              <button className="w-full bg-black text-white py-2 rounded-full hover:bg-gray-800 transition-colors flex items-center justify-center text-sm font-medium">
+                Acessar
                 <ArrowRight className="w-4 h-4 ml-2" />
               </button>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-neumorphism border border-gray-200 overflow-hidden hover:shadow-neumorphism-hover transition-all duration-300 hover:-translate-y-1">
-            <div className="h-2 bg-gradient-to-r from-purple-500 to-purple-600"></div>
-            <div className="p-6">
+          <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col w-full">
+            <div className="h-2 bg-purple-500 rounded-t-lg"></div>
+            <div className="p-6 flex-grow flex flex-col">
               <div className="flex items-center mb-4">
-                <div className="p-3 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 text-white mr-4 shadow-neumorphism">
+                <div className="p-3 rounded-md bg-purple-500 text-white mr-4">
                   <Activity className="w-6 h-6" />
                 </div>
                 <div>
                   <h4 className="text-lg font-bold text-black">QoroPulse</h4>
-                  <p className="text-sm text-gray-600">
-                    Sistema nervoso central inteligente para otimização
-                    automática
-                  </p>
                 </div>
               </div>
-              <button className="w-full bg-black text-white py-3 rounded-xl hover:bg-gray-800 transition-colors flex items-center justify-center shadow-neumorphism hover:shadow-neumorphism-hover">
-                Acessar QoroPulse
+               <p className="text-sm text-gray-600 mb-4 flex-grow">
+                    Sistema nervoso central inteligente para otimização
+                    automática
+                </p>
+              <button className="w-full bg-black text-white py-2 rounded-full hover:bg-gray-800 transition-colors flex items-center justify-center text-sm font-medium">
+                Acessar
                 <ArrowRight className="w-4 h-4 ml-2" />
               </button>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-neumorphism border border-gray-200 overflow-hidden hover:shadow-neumorphism-hover transition-all duration-300 hover:-translate-y-1">
-            <div className="h-2 bg-gradient-to-r from-green-500 to-green-600"></div>
-            <div className="p-6">
+          <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col w-full">
+            <div className="h-2 bg-green-500 rounded-t-lg"></div>
+            <div className="p-6 flex-grow flex flex-col">
               <div className="flex items-center mb-4">
-                <div className="p-3 rounded-xl bg-gradient-to-r from-green-500 to-green-600 text-white mr-4 shadow-neumorphism">
+                <div className="p-3 rounded-md bg-green-500 text-white mr-4">
                   <CheckSquare className="w-6 h-6" />
                 </div>
                 <div>
                   <h4 className="text-lg font-bold text-black">QoroTask</h4>
-                  <p className="text-sm text-gray-600">
-                    Plataforma leve de gestão de tarefas e produtividade
-                  </p>
                 </div>
               </div>
-              <button className="w-full bg-black text-white py-3 rounded-xl hover:bg-gray-800 transition-colors flex items-center justify-center shadow-neumorphism hover:shadow-neumorphism-hover">
-                Acessar QoroTask
+              <p className="text-sm text-gray-600 mb-4 flex-grow">
+                    Plataforma leve de gestão de tarefas e produtividade
+              </p>
+              <button className="w-full bg-black text-white py-2 rounded-full hover:bg-gray-800 transition-colors flex items-center justify-center text-sm font-medium">
+                Acessar
                 <ArrowRight className="w-4 h-4 ml-2" />
               </button>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-neumorphism border border-gray-200 overflow-hidden hover:shadow-neumorphism-hover transition-all duration-300 hover:-translate-y-1">
-            <div className="h-2 bg-gradient-to-r from-orange-500 to-orange-600"></div>
-            <div className="p-6">
+          <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col w-full">
+            <div className="h-2 bg-orange-500 rounded-t-lg"></div>
+            <div className="p-6 flex-grow flex flex-col">
               <div className="flex items-center mb-4">
-                <div className="p-3 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white mr-4 shadow-neumorphism">
+                <div className="p-3 rounded-md bg-orange-500 text-white mr-4">
                   <DollarSign className="w-6 h-6" />
                 </div>
                 <div>
                   <h4 className="text-lg font-bold text-black">
                     QoroFinance
                   </h4>
-                  <p className="text-sm text-gray-600">
-                    Controle financeiro completo para seu negócio
-                  </p>
                 </div>
               </div>
-              <button className="w-full bg-black text-white py-3 rounded-xl hover:bg-gray-800 transition-colors flex items-center justify-center shadow-neumorphism hover:shadow-neumorphism-hover">
-                Acessar QoroFinance
+              <p className="text-sm text-gray-600 mb-4 flex-grow">
+                    Controle financeiro completo para seu negócio
+              </p>
+              <button className="w-full bg-black text-white py-2 rounded-full hover:bg-gray-800 transition-colors flex items-center justify-center text-sm font-medium">
+                Acessar
                 <ArrowRight className="w-4 h-4 ml-2" />
               </button>
             </div>
