@@ -27,9 +27,10 @@ export default function DashboardPage() {
           <h3 className="text-xl font-bold text-black">Seus Aplicativos Qoro</h3>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col w-full">
-            <div className="h-2 bg-blue-500 rounded-t-lg"></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Card QoroCRM */}
+          <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col">
+            <div className="h-2 bg-blue-500"></div>
             <div className="p-6 flex-grow flex flex-col">
               <div className="flex items-center mb-4">
                 <div className="p-3 rounded-md bg-blue-500 text-white mr-4">
@@ -39,9 +40,9 @@ export default function DashboardPage() {
                   <h4 className="text-lg font-bold text-black">QoroCRM</h4>
                 </div>
               </div>
-               <p className="text-sm text-gray-600 mb-4 flex-grow">
-                    CRM ultra-simples com foco em WhatsApp e Email + automação
-                </p>
+              <p className="text-sm text-gray-600 mb-4 flex-grow">
+                CRM ultra-simples com foco em WhatsApp e Email + automação
+              </p>
               <button className="w-full bg-black text-white py-2 rounded-full hover:bg-gray-800 transition-colors flex items-center justify-center text-sm font-medium">
                 Acessar
                 <ArrowRight className="w-4 h-4 ml-2" />
@@ -49,8 +50,9 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col w-full">
-            <div className="h-2 bg-purple-500 rounded-t-lg"></div>
+          {/* Card QoroPulse */}
+          <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col">
+            <div className="h-2 bg-purple-500"></div>
             <div className="p-6 flex-grow flex flex-col">
               <div className="flex items-center mb-4">
                 <div className="p-3 rounded-md bg-purple-500 text-white mr-4">
@@ -60,10 +62,9 @@ export default function DashboardPage() {
                   <h4 className="text-lg font-bold text-black">QoroPulse</h4>
                 </div>
               </div>
-               <p className="text-sm text-gray-600 mb-4 flex-grow">
-                    Sistema nervoso central inteligente para otimização
-                    automática
-                </p>
+              <p className="text-sm text-gray-600 mb-4 flex-grow">
+                Sistema nervoso central inteligente para otimização automática
+              </p>
               <button className="w-full bg-black text-white py-2 rounded-full hover:bg-gray-800 transition-colors flex items-center justify-center text-sm font-medium">
                 Acessar
                 <ArrowRight className="w-4 h-4 ml-2" />
@@ -71,8 +72,9 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col w-full">
-            <div className="h-2 bg-green-500 rounded-t-lg"></div>
+          {/* Card QoroTask */}
+          <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col">
+            <div className="h-2 bg-green-500"></div>
             <div className="p-6 flex-grow flex flex-col">
               <div className="flex items-center mb-4">
                 <div className="p-3 rounded-md bg-green-500 text-white mr-4">
@@ -83,7 +85,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               <p className="text-sm text-gray-600 mb-4 flex-grow">
-                    Plataforma leve de gestão de tarefas e produtividade
+                Plataforma leve de gestão de tarefas e produtividade
               </p>
               <button className="w-full bg-black text-white py-2 rounded-full hover:bg-gray-800 transition-colors flex items-center justify-center text-sm font-medium">
                 Acessar
@@ -92,8 +94,9 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col w-full">
-            <div className="h-2 bg-orange-500 rounded-t-lg"></div>
+          {/* Card QoroFinance */}
+          <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col">
+            <div className="h-2 bg-orange-500"></div>
             <div className="p-6 flex-grow flex flex-col">
               <div className="flex items-center mb-4">
                 <div className="p-3 rounded-md bg-orange-500 text-white mr-4">
@@ -106,7 +109,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               <p className="text-sm text-gray-600 mb-4 flex-grow">
-                    Controle financeiro completo para seu negócio
+                Controle financeiro completo para seu negócio
               </p>
               <button className="w-full bg-black text-white py-2 rounded-full hover:bg-gray-800 transition-colors flex items-center justify-center text-sm font-medium">
                 Acessar
