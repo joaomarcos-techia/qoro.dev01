@@ -15,7 +15,7 @@ import { app } from './firebase';
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-export const signUp = async (name: string, organizationName: string, email: string, password: string): Promise<User> => {
+export const signUp = async (name: string, organizationName: string, email: string, password: string, cnpj: string, contactEmail: string, contactPhone: string): Promise<User> => {
   try {
     // 1. Create the user in Firebase Auth
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -26,10 +26,9 @@ export const signUp = async (name: string, organizationName: string, email: stri
         name: organizationName,
         owner: user.uid,
         createdAt: new Date(),
-        // Initialize empty fields
-        cnpj: '',
-        contactEmail: '',
-        contactPhone: '',
+        cnpj: cnpj || '',
+        contactEmail: contactEmail || '',
+        contactPhone: contactPhone || '',
     });
 
     // 3. Create the user document in Firestore and link to the organization

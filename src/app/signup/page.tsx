@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { User, Briefcase, Mail, Lock, AlertCircle, CheckCircle } from 'lucide-react';
+import { User, Briefcase, Mail, Lock, AlertCircle, CheckCircle, FileText, Phone } from 'lucide-react';
 import { signUp } from '@/lib/auth';
 
 export default function SignUpPage() {
@@ -11,6 +11,9 @@ export default function SignUpPage() {
   const [organizationName, setOrganizationName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [cnpj, setCnpj] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -29,7 +32,7 @@ export default function SignUpPage() {
     }
 
     try {
-      await signUp(name, organizationName, email, password);
+      await signUp(name, organizationName, email, password, cnpj, contactEmail, contactPhone);
       setSuccess('Conta criada! Enviamos um e-mail de verificação para você. Por favor, verifique sua caixa de entrada.');
       // Optionally redirect after a delay
       // setTimeout(() => router.push('/login'), 5000);
@@ -87,11 +90,24 @@ export default function SignUpPage() {
                 className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"
               />
             </div>
+             <div className="relative">
+                <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input type="text" name="cnpj" placeholder="CNPJ" value={cnpj} onChange={(e) => setCnpj(e.target.value)} className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"/>
+            </div>
+             <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input type="email" name="contactEmail" placeholder="Email de Contato da Empresa" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"/>
+            </div>
+            <div className="relative">
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input type="tel" name="contactPhone" placeholder="Telefone de Contato da Empresa" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"/>
+            </div>
+            <hr />
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="email"
-                placeholder="E-mail"
+                placeholder="Seu E-mail de login"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -102,7 +118,7 @@ export default function SignUpPage() {
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="password"
-                placeholder="Senha (mínimo 6 caracteres)"
+                placeholder="Sua Senha (mínimo 6 caracteres)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
