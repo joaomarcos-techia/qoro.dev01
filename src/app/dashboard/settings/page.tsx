@@ -24,7 +24,7 @@ export default function SettingsPage() {
     const [isLoading, setIsLoading] = useState({ invite: false, password: false, users: true, permissions: '', org: true, orgSave: false });
     const [feedback, setFeedback] = useState<{ type: 'error' | 'success', message: string, context: string } | null>(null);
     const [users, setUsers] = useState<UserProfile[]>([]);
-    const [organization, setOrganization] = useState<Partial<OrganizationProfile>>({});
+    const [organization, setOrganization] = useState<Partial<OrganizationProfile>>({ name: '', cnpj: '', contactEmail: '', contactPhone: '' });
 
     const clearFeedback = (context: string) => {
         if (feedback?.context === context) {
@@ -61,27 +61,29 @@ export default function SettingsPage() {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             setCurrentUser(user);
-            if (user) {
-                // Fetch initial data based on tab
-                if (activeTab === 'users') {
-                    fetchUsers();
-                } else if (activeTab === 'organization') {
-                    fetchOrganization();
-                }
-            }
         });
         return () => unsubscribe();
-    }, [activeTab, fetchUsers, fetchOrganization]);
+    }, []);
+
+    useEffect(() => {
+        if (currentUser) {
+            if (activeTab === 'users') {
+                fetchUsers();
+            } else if (activeTab === 'organization') {
+                fetchOrganization();
+            }
+        }
+        setFeedback(null);
+    }, [activeTab, currentUser, fetchUsers, fetchOrganization]);
     
     const handleTabChange = (tab: string) => {
         setActiveTab(tab);
-        setFeedback(null); // Clear feedback when changing tabs
     };
 
     const handleInviteUser = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(prev => ({ ...prev, invite: true }));
-        setFeedback(null);
+        clearFeedback('invite');
         try {
             await inviteUser({ email: inviteEmail });
             setFeedback({ type: 'success', message: `Convite enviado com sucesso para ${inviteEmail}!`, context: 'invite' });
@@ -102,7 +104,7 @@ export default function SettingsPage() {
             return;
         }
         setIsLoading(prev => ({ ...prev, password: true }));
-        setFeedback(null);
+        clearFeedback('password');
         try {
             await changePassword(newPassword);
             setFeedback({ type: 'success', message: 'Senha alterada com sucesso!', context: 'password' });
@@ -117,6 +119,7 @@ export default function SettingsPage() {
 
     const handlePermissionChange = async (userId: string, permission: AppPermission, isEnabled: boolean) => {
         setIsLoading(prev => ({ ...prev, permissions: userId }));
+        clearFeedback(`permissions-${userId}`);
         const targetUser = users.find(u => u.uid === userId);
         if (!targetUser) return;
 
@@ -130,7 +133,10 @@ export default function SettingsPage() {
             setUsers(users.map(u => u.uid === userId ? { ...u, permissions: updatedPermissions } : u));
         } catch (error) {
             console.error("Failed to update permissions:", error);
-            setFeedback({ type: 'error', message: 'Falha ao atualizar permissões.', context: `permissions-${userId}` });
+            const friendlyMessage = error instanceof Error && error.message.includes("cannot change their own permissions")
+                ? "Você não pode alterar suas próprias permissões."
+                : 'Falha ao atualizar permissões.';
+            setFeedback({ type: 'error', message: friendlyMessage, context: `permissions-${userId}` });
         } finally {
             setIsLoading(prev => ({ ...prev, permissions: '' }));
         }
@@ -146,7 +152,7 @@ export default function SettingsPage() {
     const handleSaveOrgDetails = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(prev => ({...prev, orgSave: true}));
-        setFeedback(null);
+        clearFeedback('org');
         try {
             await updateOrganizationDetails({
                 name: organization.name || '',
@@ -298,15 +304,15 @@ export default function SettingsPage() {
                                             <div className="flex items-center gap-4 mt-4 md:mt-0 relative">
                                                 {Object.keys(appPermissionsMap).map(key => {
                                                     const perm = key as AppPermission;
-                                                    const isOwner = user.uid === currentUser?.uid;
+                                                    const isSelf = user.uid === currentUser?.uid;
                                                     return (
-                                                        <label key={perm} className={`flex items-center space-x-2 text-sm ${isOwner ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
+                                                        <label key={perm} className={`flex items-center space-x-2 text-sm ${isSelf ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
                                                             <input
                                                                 type="checkbox"
                                                                 className="form-checkbox h-5 w-5 rounded text-primary focus:ring-primary border-gray-300"
                                                                 checked={!!user.permissions?.[perm]}
                                                                 onChange={(e) => handlePermissionChange(user.uid, perm, e.target.checked)}
-                                                                disabled={isLoading.permissions === user.uid || isOwner}
+                                                                disabled={isLoading.permissions === user.uid || isSelf}
                                                             />
                                                             <span>{appPermissionsMap[perm]}</span>
                                                         </label>

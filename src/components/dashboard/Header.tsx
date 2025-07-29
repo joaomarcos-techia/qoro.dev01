@@ -52,7 +52,8 @@ export function Header() {
       }
     } catch (error) {
       console.error("Failed to fetch user profile:", error);
-      setUserProfile(null);
+      // Don't sign out here, just clear the profile
+      setUserProfile(null); 
     } finally {
       setIsLoading(false);
     }
@@ -98,7 +99,9 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
-            <h1 className="text-2xl font-bold text-black">Qoro</h1>
+             <Link href="/dashboard">
+                <h1 className="text-2xl font-bold text-black cursor-pointer">Qoro</h1>
+             </Link>
           </div>
 
           <div ref={menuRef} className="flex items-center space-x-4">
@@ -117,6 +120,7 @@ export function Header() {
                 title="Notificações"
               >
                 <Bell className="w-5 h-5" />
+                 {/* Can add a notification dot here later */}
               </button>
 
               {menuOpen === 'notifications' && (
