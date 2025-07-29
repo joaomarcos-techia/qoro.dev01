@@ -16,13 +16,10 @@ import { getAuth } from 'firebase-admin/auth';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { SignUpSchema, InviteUserSchema, UpdateUserPermissionsSchema, UpdateOrganizationDetailsSchema, UserProfileSchema, UserProfile, OrganizationProfileSchema } from '@/ai/schemas';
 
-// Initialize Firebase Admin SDK
-const app = getApps().length
-  ? (getApps()[0] as App)
-  : initializeApp();
-
-const auth = getAuth(app);
-const db = getFirestore(app);
+// The Firebase Admin SDK is automatically initialized by the environment.
+// We can get the instances of the services directly.
+const auth = getAuth();
+const db = getFirestore();
 
 const getAdminAndOrg = async (actorUid: string | undefined) => {
     if (!actorUid) {
