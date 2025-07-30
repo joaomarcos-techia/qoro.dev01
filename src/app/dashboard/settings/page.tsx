@@ -6,7 +6,9 @@ import { inviteUser, listUsers, updateUserPermissions, getOrganizationDetails, u
 import { UserProfile, OrganizationProfile } from '@/ai/schemas';
 import { changePassword } from '@/lib/auth';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+
 
 type AppPermission = 'qoroCrm' | 'qoroPulse' | 'qoroTask' | 'qoroFinance';
 
@@ -22,7 +24,8 @@ export default function SettingsPage() {
     const [inviteEmail, setInviteEmail] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
-    const [isLoading, setIsLoading] = useState({ invite: false, password: false, users: true, permissions: '', org: true, orgSave: false });
+    const [userName, setUserName] = useState('');
+    const [isLoading, setIsLoading] = useState({ invite: false, password: false, users: true, permissions: '', org: true, orgSave: false, accountSave: false });
     const [feedback, setFeedback] = useState<{ type: 'error' | 'success', message: string, context: string } | null>(null);
     const [users, setUsers] = useState<UserProfile[]>([]);
     const [organization, setOrganization] = useState<Partial<OrganizationProfile>>({ name: '', cnpj: '', contactEmail: '', contactPhone: '' });
@@ -32,6 +35,14 @@ export default function SettingsPage() {
             setFeedback(null);
         }
     };
+
+    const fetchCurrentUserData = useCallback(async (user: FirebaseUser) => {
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+            setUserName(userDoc.data().name || '');
+        }
+    }, []);
     
     const fetchUsers = useCallback(async () => {
         setIsLoading(prev => ({ ...prev, users: true }));
@@ -62,9 +73,12 @@ export default function SettingsPage() {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             setCurrentUser(user);
+            if (user) {
+                fetchCurrentUserData(user);
+            }
         });
         return () => unsubscribe();
-    }, []);
+    }, [fetchCurrentUserData]);
 
     useEffect(() => {
         if (currentUser) {
@@ -97,24 +111,31 @@ export default function SettingsPage() {
             setIsLoading(prev => ({ ...prev, invite: false }));
         }
     };
-
-    const handleChangePassword = async (e: React.FormEvent) => {
+    
+    const handleAccountSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (newPassword.length < 6) {
-            setFeedback({ type: 'error', message: 'A nova senha deve ter pelo menos 6 caracteres.', context: 'password' });
-            return;
-        }
-        setIsLoading(prev => ({ ...prev, password: true }));
-        clearFeedback('password');
+        setIsLoading(prev => ({ ...prev, accountSave: true }));
+        clearFeedback('account');
         try {
-            await changePassword(newPassword);
-            setFeedback({ type: 'success', message: 'Senha alterada com sucesso!', context: 'password' });
-            setNewPassword('');
-        } catch (error: any) {
+            if(currentUser) {
+                const userDocRef = doc(db, "users", currentUser.uid);
+                await setDoc(userDocRef, { name: userName }, { merge: true });
+            }
+            if (newPassword) {
+                 if (newPassword.length < 6) {
+                    setFeedback({ type: 'error', message: 'A nova senha deve ter pelo menos 6 caracteres.', context: 'account' });
+                    setIsLoading(prev => ({ ...prev, accountSave: false }));
+                    return;
+                }
+                await changePassword(newPassword);
+                setNewPassword('');
+            }
+            setFeedback({ type: 'success', message: 'Dados da conta salvos com sucesso!', context: 'account' });
+        } catch (error) {
             console.error(error);
-            setFeedback({ type: 'error', message: 'Falha ao alterar a senha. Tente novamente mais tarde.', context: 'password' });
+            setFeedback({ type: 'error', message: 'Falha ao salvar dados. Tente novamente.', context: 'account' });
         } finally {
-            setIsLoading(prev => ({ ...prev, password: false }));
+            setIsLoading(prev => ({ ...prev, accountSave: false }));
         }
     };
 
@@ -210,42 +231,51 @@ export default function SettingsPage() {
                      <div className="bg-white p-8 rounded-2xl shadow-neumorphism border border-gray-200 max-w-2xl mx-auto">
                          <div className="flex items-start">
                             <div className="p-3 rounded-xl bg-gradient-to-r from-green-500 to-green-600 text-white mr-6 shadow-neumorphism">
-                                <KeyRound className="w-6 h-6" />
+                                <User className="w-6 h-6" />
                             </div>
-                            <div className="flex-grow">
+                            <form onSubmit={handleAccountSave} className="flex-grow">
                                 <h3 className="text-xl font-bold text-black mb-1">Configurações da Conta</h3>
-                                <p className="text-gray-600 mb-6">Altere sua senha de acesso.</p>
-                                <form onSubmit={handleChangePassword} className="space-y-4">
+                                <p className="text-gray-600 mb-6">Altere seu nome e senha de acesso.</p>
+                                <div className="space-y-4">
                                      <div className="relative">
                                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                                         <input type="email" value={currentUser?.email || 'Carregando...'} disabled className="w-full pl-12 pr-4 py-3 bg-gray-100 rounded-xl shadow-neumorphism-inset cursor-not-allowed"/>
+                                    </div>
+                                    <div className="relative">
+                                        <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                        <input 
+                                            type="text" 
+                                            placeholder="Seu nome"
+                                            value={userName}
+                                            onChange={(e) => {setUserName(e.target.value); clearFeedback('account');}}
+                                            required 
+                                            className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"/>
                                     </div>
                                      <div className="relative">
                                         <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                                         <input 
                                             type="password" 
-                                            placeholder="Nova Senha (mínimo 6 caracteres)"
+                                            placeholder="Nova Senha (deixe em branco para não alterar)"
                                             value={newPassword}
-                                            onChange={(e) => {setNewPassword(e.target.value); clearFeedback('password');}}
-                                            required 
+                                            onChange={(e) => {setNewPassword(e.target.value); clearFeedback('account');}}
                                             className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"/>
                                     </div>
                                     <div className="flex justify-end">
                                         <button 
                                             type="submit"
-                                            disabled={isLoading.password}
+                                            disabled={isLoading.accountSave}
                                             className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
-                                            {isLoading.password ? 'Salvando...' : 'Salvar Alterações'}
+                                            {isLoading.accountSave ? 'Salvando...' : 'Salvar Alterações'}
                                         </button>
                                     </div>
-                                </form>
-                                 {feedback && feedback.context === 'password' && (
+                                </div>
+                                 {feedback && feedback.context === 'account' && (
                                      <div className={`mt-4 p-4 rounded-lg flex items-center text-sm ${feedback.type === 'success' ? 'bg-green-100 border-l-4 border-green-500 text-green-800' : 'bg-red-100 border-l-4 border-red-500 text-red-700'}`}>
                                         {feedback.type === 'success' ? <CheckCircle className="w-5 h-5 mr-3" /> : <AlertCircle className="w-5 h-5 mr-3" />}
                                         <span>{feedback.message}</span>
                                     </div>
                                 )}
-                            </div>
+                            </form>
                         </div>
                     </div>
                 )}
@@ -425,3 +455,5 @@ export default function SettingsPage() {
         </div>
     );
 }
+
+    

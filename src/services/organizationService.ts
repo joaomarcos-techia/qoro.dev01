@@ -11,24 +11,15 @@ import {
     UserProfile,
     OrganizationProfileSchema 
 } from '@/ai/schemas';
-import { runInContext, getAction, getFlow, getActor } from 'genkit';
+import { getActor } from 'genkit';
 
 
-// Initialize Firebase Admin SDK
-// This is the definitive, centralized initialization.
 let app: App;
 if (!getApps().length) {
-    // In a real production environment, you would use applicationDefault()
-    // which automatically finds the credentials. For local/specific environments,
-    // you might use a service account file. We will try to initialize
-    // without explicit credentials, assuming the environment is set up.
     try {
         app = initializeApp();
     } catch (e) {
         console.error("Firebase Admin SDK initialization failed.", e);
-        // Fallback or error handling here.
-        // For development, you might load from a local file if env vars aren't set.
-        // For this project, we'll rely on the hosting environment's auto-config.
         throw new Error("Could not initialize Firebase Admin SDK. Ensure environment is configured correctly.");
     }
 } else {
@@ -38,7 +29,6 @@ if (!getApps().length) {
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Helper to get the authenticated user's UID and organization
 const getAdminAndOrg = async () => {
     const actor = getActor();
     const actorUid = actor?.uid;
@@ -61,7 +51,6 @@ const getAdminAndOrg = async () => {
         throw new Error('Admin user does not belong to an organization.');
     }
     
-    // Check role for actions that require admin privileges
     if (adminData.role !== 'admin') {
         throw new Error('User does not have admin privileges.');
     }
@@ -71,18 +60,16 @@ const getAdminAndOrg = async () => {
 
 
 export const signUp = async (input: z.infer<typeof SignUpSchema>): Promise<{ uid: string }> => {
-    const { name, organizationName, email, password, cnpj, contactEmail, contactPhone } = input;
+    const { email, password, name, organizationName, cnpj, contactEmail, contactPhone } = input;
     
-    // 1. Create user in Firebase Auth FIRST.
     const userRecord = await auth.createUser({
         email,
         password,
         emailVerified: false,
     });
 
-    // 2. Create organization in Firestore
     const orgRef = await db.collection('organizations').add({
-        name: organizationName,
+        name: organizationName || `Minha Organização`,
         owner: userRecord.uid,
         createdAt: FieldValue.serverTimestamp(),
         cnpj: cnpj || null,
@@ -90,12 +77,11 @@ export const signUp = async (input: z.infer<typeof SignUpSchema>): Promise<{ uid
         contactPhone: contactPhone || null,
     });
 
-    // 3. Create user profile in Firestore
     await db.collection('users').doc(userRecord.uid).set({
-        name,
+        name: name || '',
         email,
         organizationId: orgRef.id,
-        role: 'admin', // First user is always admin
+        role: 'admin',
         createdAt: FieldValue.serverTimestamp(),
         permissions: {
             qoroCrm: true,
@@ -105,9 +91,7 @@ export const signUp = async (input: z.infer<typeof SignUpSchema>): Promise<{ uid
         },
     });
 
-    // 4. Send verification email
     const verificationLink = await auth.generateEmailVerificationLink(email);
-    // In a real app, you'd email this link. For now, we log it.
     console.log(`Verification link for ${email}: ${verificationLink}`);
 
     return { uid: userRecord.uid };
@@ -136,7 +120,6 @@ export const inviteUser = async (input: z.infer<typeof InviteUserSchema>): Promi
       }
     });
     
-    // In a real app, you'd email this link. For now, we log it.
     const link = await auth.generatePasswordResetLink(email);
     console.log(`Password setup link for ${email}: ${link}`);
 
@@ -180,7 +163,6 @@ export const updateUserPermissions = async (input: z.infer<typeof UpdateUserPerm
     }
 
     if (adminUid === userId) {
-        // Updated error message to be more specific
         throw new Error("Administradores não podem alterar as próprias permissões.");
     }
 
@@ -220,3 +202,5 @@ export const updateOrganizationDetails = async (details: z.infer<typeof UpdateOr
 
     return { success: true };
 };
+
+    

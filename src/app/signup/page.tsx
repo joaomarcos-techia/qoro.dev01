@@ -3,42 +3,16 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { User, Briefcase, Mail, Lock, AlertCircle, CheckCircle, FileText, Phone } from 'lucide-react';
+import { Mail, Lock, AlertCircle, CheckCircle } from 'lucide-react';
 import { signUp } from '@/ai/flows/user-management';
 
 export default function SignUpPage() {
-  const [name, setName] = useState('');
-  const [organizationName, setOrganizationName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [cnpj, setCnpj] = useState('');
-  const [contactEmail, setContactEmail] = useState('');
-  const [contactPhone, setContactPhone] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-
-  const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    const digitsOnly = value.replace(/\D/g, '');
-
-    let formatted = digitsOnly;
-    if (digitsOnly.length > 2) {
-      formatted = `${digitsOnly.slice(0, 2)}.${digitsOnly.slice(2)}`;
-    }
-    if (digitsOnly.length > 5) {
-      formatted = `${digitsOnly.slice(0, 2)}.${digitsOnly.slice(2, 5)}.${digitsOnly.slice(5)}`;
-    }
-    if (digitsOnly.length > 8) {
-      formatted = `${digitsOnly.slice(0, 2)}.${digitsOnly.slice(2, 5)}.${digitsOnly.slice(5, 8)}/${digitsOnly.slice(8)}`;
-    }
-    if (digitsOnly.length > 12) {
-      formatted = `${digitsOnly.slice(0, 2)}.${digitsOnly.slice(2, 5)}.${digitsOnly.slice(5, 8)}/${digitsOnly.slice(8, 12)}-${digitsOnly.slice(12, 14)}`;
-    }
-
-    setCnpj(formatted);
-  };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,16 +27,9 @@ export default function SignUpPage() {
     }
 
     try {
-      // Remove formatting before sending to backend
-      const unformattedCnpj = cnpj.replace(/\D/g, '');
       await signUp({
-        name,
-        organizationName,
         email,
         password,
-        cnpj: unformattedCnpj,
-        contactEmail,
-        contactPhone,
       });
       setSuccess('Conta criada! Enviamos um e-mail de verificação para você. Por favor, verifique sua caixa de entrada.');
       // Optionally redirect after a delay
@@ -86,7 +53,7 @@ export default function SignUpPage() {
            <Link href="/">
               <div className="text-3xl font-bold text-gray-900 cursor-pointer mb-2">Qoro</div>
           </Link>
-          <p className="text-gray-600">Crie sua conta e acabe com a desorganização.</p>
+          <p className="text-gray-600">Crie sua conta para começar.</p>
         </div>
 
         {success ? (
@@ -99,49 +66,6 @@ export default function SignUpPage() {
           </div>
         ) : (
           <form onSubmit={handleSignUp} className="space-y-6">
-            <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Seu nome"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"
-              />
-            </div>
-            <div className="relative">
-              <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Nome da organização"
-                value={organizationName}
-                onChange={(e) => setOrganizationName(e.target.value)}
-                required
-                className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"
-              />
-            </div>
-             <div className="relative">
-                <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input 
-                  type="text" 
-                  name="cnpj" 
-                  placeholder="CNPJ (XX.XXX.XXX/XXXX-XX)" 
-                  value={cnpj} 
-                  onChange={handleCnpjChange}
-                  maxLength={18}
-                  className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"
-                />
-            </div>
-             <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input type="email" name="contactEmail" placeholder="Email de Contato da Empresa" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"/>
-            </div>
-            <div className="relative">
-                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input type="tel" name="contactPhone" placeholder="Telefone de Contato da Empresa" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"/>
-            </div>
-            <hr />
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
@@ -196,3 +120,5 @@ export default function SignUpPage() {
     </main>
   );
 }
+
+    
