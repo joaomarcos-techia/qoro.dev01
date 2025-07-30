@@ -16,7 +16,6 @@ import {
     InviteUserSchema, 
     UpdateUserPermissionsSchema, 
     UpdateOrganizationDetailsSchema, 
-    UserProfileSchema, 
     UserProfile, 
     OrganizationProfileSchema 
 } from '@/ai/schemas';
@@ -24,38 +23,38 @@ import * as orgService from '@/services/organizationService';
 
 
 // Exported functions (client-callable wrappers)
-export async function signUp(input: z.infer<typeof SignUpSchema>) {
+export async function signUp(input: z.infer<typeof SignUpSchema>): Promise<{ uid: string }> {
     // This flow is public and doesn't require an authenticated user.
-    return ai.run('signUpFlow', () => orgService.signUp(input));
+    return ai.run('signUpFlow', async () => orgService.signUp(input));
 }
 
-export async function inviteUser(input: z.infer<typeof InviteUserSchema>) {
+export async function inviteUser(input: z.infer<typeof InviteUserSchema>): Promise<{ uid: string; email: string; organizationId: string; }> {
     // This flow requires an authenticated admin user, which is handled
     // by the getAdminAndOrg helper in the service layer.
-    return ai.run('inviteUserFlow', () => orgService.inviteUser(input));
+    return ai.run('inviteUserFlow', async () => orgService.inviteUser(input));
 }
 
 export async function listUsers(): Promise<UserProfile[]> {
-    return ai.run('listUsersFlow', () => orgService.listUsers());
+    return ai.run('listUsersFlow', async () => orgService.listUsers());
 }
 
-export async function updateUserPermissions(input: z.infer<typeof UpdateUserPermissionsSchema>) {
-    return ai.run('updateUserPermissionsFlow', () => orgService.updateUserPermissions(input));
+export async function updateUserPermissions(input: z.infer<typeof UpdateUserPermissionsSchema>): Promise<{ success: boolean }> {
+    return ai.run('updateUserPermissionsFlow', async () => orgService.updateUserPermissions(input));
 }
 
 export async function getOrganizationDetails(): Promise<z.infer<typeof OrganizationProfileSchema>> {
-    return ai.run('getOrganizationDetailsFlow', () => orgService.getOrganizationDetails());
+    return ai.run('getOrganizationDetailsFlow', async () => orgService.getOrganizationDetails());
 }
 
-export async function updateOrganizationDetails(input: z.infer<typeof UpdateOrganizationDetailsSchema>) {
-    return ai.run('updateOrganizationDetailsFlow', () => orgService.updateOrganizationDetails(input));
+export async function updateOrganizationDetails(input: z.infer<typeof UpdateOrganizationDetailsSchema>): Promise<{ success: boolean }> {
+    return ai.run('updateOrganizationDetailsFlow', async () => orgService.updateOrganizationDetails(input));
 }
 
 // Genkit Flows (wrappers around service calls, for tracing and context)
 // Note: These are not exported directly to comply with 'use server' constraints.
 ai.defineFlow(
     { name: 'signUpFlow', inputSchema: SignUpSchema, outputSchema: z.object({ uid: z.string() }) },
-    (input) => orgService.signUp(input)
+    async (input) => orgService.signUp(input)
 );
 
 ai.defineFlow(
@@ -68,12 +67,12 @@ ai.defineFlow(
       organizationId: z.string(),
     }),
   },
-  (input) => orgService.inviteUser(input)
+  async (input) => orgService.inviteUser(input)
 );
 
 ai.defineFlow(
     { name: 'listUsersFlow', inputSchema: z.undefined(), outputSchema: z.array(UserProfileSchema) },
-    () => orgService.listUsers()
+    async () => orgService.listUsers()
 );
 
 ai.defineFlow(
@@ -82,7 +81,7 @@ ai.defineFlow(
         inputSchema: UpdateUserPermissionsSchema,
         outputSchema: z.object({ success: z.boolean() }),
     },
-    (input) => orgService.updateUserPermissions(input)
+    async (input) => orgService.updateUserPermissions(input)
 );
 
 ai.defineFlow(
@@ -91,7 +90,7 @@ ai.defineFlow(
         inputSchema: z.undefined(),
         outputSchema: OrganizationProfileSchema,
     },
-    () => orgService.getOrganizationDetails()
+    async () => orgService.getOrganizationDetails()
 );
 
 ai.defineFlow(
@@ -100,5 +99,5 @@ ai.defineFlow(
         inputSchema: UpdateOrganizationDetailsSchema,
         outputSchema: z.object({ success: z.boolean() }),
     },
-    (input) => orgService.updateOrganizationDetails(input)
+    async (input) => orgService.updateOrganizationDetails(input)
 );
