@@ -35,7 +35,7 @@ const inviteUserFlow = ai.defineFlow(
 );
 
 const listUsersFlow = ai.defineFlow(
-    { name: 'listUsersFlow', outputSchema: z.array(UserProfileSchema) },
+    { name: 'listUsersFlow', inputSchema: z.undefined(), outputSchema: z.array(UserProfileSchema) },
     async () => orgService.listUsers()
 );
 
@@ -45,7 +45,7 @@ const updateUserPermissionsFlow = ai.defineFlow(
 );
 
 const getOrganizationDetailsFlow = ai.defineFlow(
-    { name: 'getOrganizationDetailsFlow', outputSchema: OrganizationProfileSchema },
+    { name: 'getOrganizationDetailsFlow', inputSchema: z.undefined(), outputSchema: OrganizationProfileSchema },
     async () => orgService.getOrganizationDetails()
 );
 
