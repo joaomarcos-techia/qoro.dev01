@@ -1,6 +1,6 @@
 
 import { initializeApp, getApps, App, cert } from 'firebase-admin/app';
-import { getAuth } from 'firebase-admin/auth';
+import { getAuth, FirebaseAuthError } from 'firebase-admin/auth';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
 import { 
@@ -84,42 +84,48 @@ const getAdminAndOrg = async () => {
 export const signUp = async (input: z.infer<typeof SignUpSchema>): Promise<{ uid: string }> => {
     const { email, password, name, organizationName, cnpj, contactEmail, contactPhone } = input;
     
-    const userRecord = await auth.createUser({
-        email,
-        password,
-        displayName: name || '',
-        emailVerified: false, 
-    });
+    try {
+        const userRecord = await auth.createUser({
+            email,
+            password,
+            displayName: name || '',
+            emailVerified: false, 
+        });
 
-    const orgRef = await db.collection('organizations').add({
-        name: organizationName,
-        owner: userRecord.uid,
-        createdAt: FieldValue.serverTimestamp(),
-        cnpj: cnpj,
-        contactEmail: contactEmail || null,
-        contactPhone: contactPhone || null,
-    });
+        const orgRef = await db.collection('organizations').add({
+            name: organizationName,
+            owner: userRecord.uid,
+            createdAt: FieldValue.serverTimestamp(),
+            cnpj: cnpj,
+            contactEmail: contactEmail || null,
+            contactPhone: contactPhone || null,
+        });
 
-    await db.collection('users').doc(userRecord.uid).set({
-        name: name || '',
-        email,
-        organizationId: orgRef.id,
-        role: 'admin',
-        createdAt: FieldValue.serverTimestamp(),
-        permissions: {
-            qoroCrm: true,
-            qoroPulse: true,
-            qoroTask: true,
-            qoroFinance: true,
-        },
-    });
+        await db.collection('users').doc(userRecord.uid).set({
+            name: name || '',
+            email,
+            organizationId: orgRef.id,
+            role: 'admin',
+            createdAt: FieldValue.serverTimestamp(),
+            permissions: {
+                qoroCrm: true,
+                qoroPulse: true,
+                qoroTask: true,
+                qoroFinance: true,
+            },
+        });
 
-    // O Firebase Auth cuida do envio do e-mail de verificação com base nos templates
-    // configurados no console do Firebase. A geração de link é para cenários de cliente.
-    console.log(`Usuário ${email} criado. O Firebase enviará o e-mail de verificação se configurado.`);
+        console.log(`Usuário ${email} criado. O Firebase enviará o e-mail de verificação se configurado.`);
 
-
-    return { uid: userRecord.uid };
+        return { uid: userRecord.uid };
+    } catch (error) {
+        const firebaseError = error as FirebaseAuthError;
+        if (firebaseError.code === 'auth/email-already-exists') {
+            throw new Error('Este e-mail já está em uso.');
+        }
+        // Lança outros erros para serem tratados
+        throw error;
+    }
 };
 
 export const inviteUser = async (input: z.infer<typeof InviteUserSchema>): Promise<{ uid: string; email: string; organizationId: string; }> => {
