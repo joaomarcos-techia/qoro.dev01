@@ -16,10 +16,11 @@ import {
     InviteUserSchema, 
     UpdateUserPermissionsSchema, 
     UpdateOrganizationDetailsSchema, 
-    UserProfile, 
-    OrganizationProfileSchema 
+    OrganizationProfileSchema, 
+    UserProfileSchema
 } from '@/ai/schemas';
 import * as orgService from '@/services/organizationService';
+import type { UserProfile } from '@/ai/schemas';
 
 
 // Exported functions (client-callable wrappers)

@@ -6,7 +6,7 @@ export const SignUpSchema = z.object({
     organizationName: z.string().min(1, 'O nome da organização é obrigatório.'),
     email: z.string().email(),
     password: z.string().min(6),
-    cnpj: z.string().optional(),
+    cnpj: z.string().min(1, "O CNPJ é obrigatório."),
     contactEmail: z.string().email().optional(),
     contactPhone: z.string().optional(),
 });

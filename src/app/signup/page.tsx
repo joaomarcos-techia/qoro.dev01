@@ -94,11 +94,11 @@ export default function SignUpPage() {
                     </div>
                     <div className="relative">
                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input name="contactEmail" type="email" placeholder="E-mail de Contato *" value={formData.contactEmail} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"/>
+                        <input name="contactEmail" type="email" placeholder="E-mail de Contato" value={formData.contactEmail} onChange={handleInputChange} className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"/>
                     </div>
                     <div className="relative">
                         <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input name="contactPhone" type="tel" placeholder="Telefone de Contato *" value={formData.contactPhone} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"/>
+                        <input name="contactPhone" type="tel" placeholder="Telefone de Contato" value={formData.contactPhone} onChange={handleInputChange} className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"/>
                     </div>
                 </div>
             </div>
