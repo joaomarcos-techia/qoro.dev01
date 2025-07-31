@@ -25,7 +25,6 @@ console.log('Firebase Config Check:', {
 
 let app: App;
 
-// Inicialização segura e robusta do Firebase Admin SDK
 if (!getApps().length) {
     try {
         const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');

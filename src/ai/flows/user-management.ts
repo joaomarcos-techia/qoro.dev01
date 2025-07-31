@@ -25,13 +25,10 @@ import type { UserProfile } from '@/ai/schemas';
 
 // Exported functions (client-callable wrappers)
 export async function signUp(input: z.infer<typeof SignUpSchema>): Promise<{ uid: string }> {
-    // This flow is public and doesn't require an authenticated user.
     return ai.run('signUpFlow', async () => orgService.signUp(input));
 }
 
 export async function inviteUser(input: z.infer<typeof InviteUserSchema>): Promise<{ uid: string; email: string; organizationId: string; }> {
-    // This flow requires an authenticated admin user, which is handled
-    // by the getAdminAndOrg helper in the service layer.
     return ai.run('inviteUserFlow', async () => orgService.inviteUser(input));
 }
 
@@ -50,55 +47,3 @@ export async function getOrganizationDetails(): Promise<z.infer<typeof Organizat
 export async function updateOrganizationDetails(input: z.infer<typeof UpdateOrganizationDetailsSchema>): Promise<{ success: boolean }> {
     return ai.run('updateOrganizationDetailsFlow', async () => orgService.updateOrganizationDetails(input));
 }
-
-// Genkit Flows (wrappers around service calls, for tracing and context)
-// Note: These are not exported directly to comply with 'use server' constraints.
-ai.defineFlow(
-    { name: 'signUpFlow', inputSchema: SignUpSchema, outputSchema: z.object({ uid: z.string() }) },
-    async (input) => orgService.signUp(input)
-);
-
-ai.defineFlow(
-  {
-    name: 'inviteUserFlow',
-    inputSchema: InviteUserSchema,
-    outputSchema: z.object({
-      uid: z.string(),
-      email: z.string(),
-      organizationId: z.string(),
-    }),
-  },
-  async (input) => orgService.inviteUser(input)
-);
-
-ai.defineFlow(
-    { name: 'listUsersFlow', inputSchema: z.undefined(), outputSchema: z.array(UserProfileSchema) },
-    async () => orgService.listUsers()
-);
-
-ai.defineFlow(
-    {
-        name: 'updateUserPermissionsFlow',
-        inputSchema: UpdateUserPermissionsSchema,
-        outputSchema: z.object({ success: z.boolean() }),
-    },
-    async (input) => orgService.updateUserPermissions(input)
-);
-
-ai.defineFlow(
-    {
-        name: 'getOrganizationDetailsFlow',
-        inputSchema: z.undefined(),
-        outputSchema: OrganizationProfileSchema,
-    },
-    async () => orgService.getOrganizationDetails()
-);
-
-ai.defineFlow(
-    {
-        name: 'updateOrganizationDetailsFlow',
-        inputSchema: UpdateOrganizationDetailsSchema,
-        outputSchema: z.object({ success: z.boolean() }),
-    },
-    async (input) => orgService.updateOrganizationDetails(input)
-);
