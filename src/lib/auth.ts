@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -23,13 +24,20 @@ export const signIn = async (email: string, password: string): Promise<User> => 
       if (!user.emailVerified) {
         // Optionally re-send verification email
         await sendEmailVerification(user);
+        // Sign out the user immediately since they are not verified
+        await firebaseSignOut(auth);
         throw new Error('Por favor, verifique seu e-mail antes de fazer login. Um novo e-mail de verificação foi enviado.');
       }
   
       return user;
     } catch (error) {
       console.error("Error signing in:", error);
-      throw error;
+      // If the error is the one we threw, re-throw it to show the user.
+      if (error instanceof Error && error.message.includes('verifique seu e-mail')) {
+        throw error;
+      }
+      // For other Firebase errors, provide a generic message.
+      throw new Error('E-mail ou senha inválidos. Por favor, tente novamente.');
     }
 };
 

@@ -115,7 +115,7 @@ export const signUp = async (input: z.infer<typeof SignUpSchema>): Promise<{ uid
             },
         });
 
-        console.log(`Usuário ${email} criado. O Firebase enviará o e-mail de verificação se configurado.`);
+        console.log(`User ${email} created with emailVerified: false. Firebase will send verification email if template is enabled.`);
 
         return { uid: userRecord.uid };
     } catch (error) {
@@ -123,8 +123,9 @@ export const signUp = async (input: z.infer<typeof SignUpSchema>): Promise<{ uid
         if (firebaseError.code === 'auth/email-already-exists') {
             throw new Error('Este e-mail já está em uso.');
         }
+        console.error("Error during sign up in organizationService:", firebaseError);
         // Lança outros erros para serem tratados
-        throw error;
+        throw new Error("Ocorreu um erro inesperado durante o cadastro.");
     }
 };
 
@@ -152,8 +153,10 @@ export const inviteUser = async (input: z.infer<typeof InviteUserSchema>): Promi
     });
     
     try {
+        // This will trigger the password reset email, which for a new user,
+        // acts as an account setup and verification email.
         const link = await auth.generatePasswordResetLink(email);
-        console.log(`Link para definir senha enviado para ${email}: ${link}`);
+        console.log(`Setup/password reset link sent to ${email}. This link can be customized in Firebase Console to be a welcome email.`);
     } catch(error){
         console.error("Falha ao gerar o link de definição de senha:", error);
     }

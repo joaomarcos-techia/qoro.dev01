@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -25,11 +26,7 @@ export default function LoginPage() {
       // The component will unmount on navigation, so the state is discarded.
       // This prevents the button from becoming active again before the page transition is complete.
     } catch (err: any) {
-      if (err.message) {
-        setError(err.message);
-      } else {
-        setError('E-mail ou senha inválidos. Por favor, tente novamente.');
-      }
+      setError(err.message || 'Ocorreu um erro desconhecido. Tente novamente.');
       console.error(err);
       setIsLoading(false); // Only set loading to false on error
     }
