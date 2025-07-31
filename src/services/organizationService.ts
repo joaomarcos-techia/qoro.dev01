@@ -16,8 +16,16 @@ import { config } from 'dotenv';
 
 config({ path: `.env` });
 
+// Adicionando logs para debugging, como sugerido.
+console.log('Firebase Config Check:', {
+  projectId: process.env.FIREBASE_PROJECT_ID ? 'SET' : 'MISSING',
+  clientEmail: process.env.FIREBASE_CLIENT_EMAIL ? 'SET' : 'MISSING',
+  privateKey: process.env.FIREBASE_PRIVATE_KEY ? 'SET' : 'MISSING',
+});
 
 let app: App;
+
+// Inicialização segura e robusta do Firebase Admin SDK
 if (!getApps().length) {
     try {
         const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
