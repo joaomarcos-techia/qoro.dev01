@@ -1,6 +1,6 @@
 
 import { initializeApp, getApps, App, cert } from 'firebase-admin/app';
-import { getAuth, FirebaseAuthError } from 'firebase-admin/auth';
+import { getAuth, FirebaseAuthError, UserRecord } from 'firebase-admin/auth';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
 import { 
@@ -81,7 +81,7 @@ const getAdminAndOrg = async () => {
 };
 
 
-export const signUp = async (input: z.infer<typeof SignUpSchema>): Promise<{ uid: string }> => {
+export const signUp = async (input: z.infer<typeof SignUpSchema>): Promise<UserRecord> => {
     const { email, password, name, organizationName, cnpj, contactEmail, contactPhone } = input;
     
     try {
@@ -115,7 +115,8 @@ export const signUp = async (input: z.infer<typeof SignUpSchema>): Promise<{ uid
             },
         });
 
-        return { uid: userRecord.uid };
+        const newlyCreatedUser = await auth.getUserByEmail(email);
+        return newlyCreatedUser;
     } catch (error) {
         const firebaseError = error as FirebaseAuthError;
         if (firebaseError.code === 'auth/email-already-exists') {

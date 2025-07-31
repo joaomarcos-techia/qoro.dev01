@@ -21,10 +21,11 @@ import {
 } from '@/ai/schemas';
 import * as orgService from '@/services/organizationService';
 import type { UserProfile } from '@/ai/schemas';
+import { UserRecord } from 'firebase-admin/auth';
 
 // Define flows
 const signUpFlow = ai.defineFlow(
-    { name: 'signUpFlow', inputSchema: SignUpSchema, outputSchema: z.object({ uid: z.string() }) },
+    { name: 'signUpFlow', inputSchema: SignUpSchema, outputSchema: z.any() },
     async (input) => orgService.signUp(input)
 );
 
@@ -55,7 +56,7 @@ const updateOrganizationDetailsFlow = ai.defineFlow(
 
 
 // Exported functions (client-callable wrappers)
-export async function signUp(input: z.infer<typeof SignUpSchema>): Promise<{ uid: string }> {
+export async function signUp(input: z.infer<typeof SignUpSchema>): Promise<UserRecord> {
     return signUpFlow(input);
 }
 

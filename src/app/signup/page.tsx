@@ -6,6 +6,9 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, AlertCircle, CheckCircle, User, Building, FileText, Phone } from 'lucide-react';
 import { signUp } from '@/ai/flows/user-management';
+import { sendEmailVerification } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { User as FirebaseUser } from 'firebase/auth';
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState({
@@ -44,9 +47,12 @@ export default function SignUpPage() {
     }
 
     try {
-      await signUp({
+      const user = await signUp({
         ...formData
       });
+      if (auth.currentUser) {
+        await sendEmailVerification(auth.currentUser as FirebaseUser);
+      }
       setSuccess('Conta criada! Verifique seu e-mail para confirmar sua conta.');
     } catch (err: any) {
       if (err.message && err.message.includes('already in use')) {
