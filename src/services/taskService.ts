@@ -1,3 +1,4 @@
+
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
 import { TaskSchema, TaskProfileSchema } from '@/ai/schemas';
@@ -49,4 +50,18 @@ export const listTasks = async (actorUid: string): Promise<z.infer<typeof TaskPr
     });
     
     return tasks;
+};
+
+export const getDashboardMetrics = async (actorUid: string): Promise<{ pendingTasks: number }> => {
+    const { organizationId } = await getAdminAndOrg(actorUid);
+
+    const tasksSnapshot = await db.collection('tasks')
+                                    .where('companyId', '==', organizationId)
+                                    .where('status', 'in', ['todo', 'in_progress'])
+                                    .count()
+                                    .get();
+
+    return {
+        pendingTasks: tasksSnapshot.data().count,
+    };
 };

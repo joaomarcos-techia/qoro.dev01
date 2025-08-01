@@ -7,12 +7,16 @@ import {
   CheckSquare,
   DollarSign,
   Users,
-  Loader2
+  Loader2,
+  TrendingUp,
+  ListTodo
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
+import { getDashboardMetrics as getCrmMetrics } from '@/ai/flows/crm-management';
+import { getDashboardMetrics as getTaskMetrics } from '@/ai/flows/task-management';
 
 interface UserPermissions {
   qoroCrm: boolean;
@@ -21,12 +25,42 @@ interface UserPermissions {
   qoroFinance: boolean;
 }
 
+interface CrmMetrics {
+    totalCustomers: number;
+    totalLeads: number;
+}
+
+interface TaskMetrics {
+    pendingTasks: number;
+}
+
+const MetricCard = ({ title, value, icon: Icon, isLoading }: { title: string, value: number | string, icon: React.ElementType, isLoading: boolean }) => (
+    <div className="bg-white p-6 rounded-2xl shadow-neumorphism border border-gray-100 flex items-center">
+        <div className="p-3 rounded-xl bg-primary text-white mr-4 shadow-neumorphism">
+            <Icon className="w-6 h-6" />
+        </div>
+        <div>
+            <p className="text-gray-600 text-sm font-medium">{title}</p>
+            {isLoading ? (
+                 <Loader2 className="w-6 h-6 text-gray-400 animate-spin" />
+            ) : (
+                <p className="text-2xl font-bold text-black">{value}</p>
+            )}
+        </div>
+    </div>
+);
+
 export default function DashboardPage() {
   const [permissions, setPermissions] = useState<UserPermissions | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
+  const [isLoading, setIsLoading] = useState({ permissions: true, metrics: true });
+  const [crmMetrics, setCrmMetrics] = useState<CrmMetrics>({ totalCustomers: 0, totalLeads: 0 });
+  const [taskMetrics, setTaskMetrics] = useState<TaskMetrics>({ pendingTasks: 0 });
+
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user: FirebaseUser | null) => {
+        setCurrentUser(user);
       if (user) {
         const userDocRef = doc(db, 'users', user.uid);
         const userDoc = await getDoc(userDocRef);
@@ -37,13 +71,37 @@ export default function DashboardPage() {
       } else {
         setPermissions(null);
       }
-      setIsLoading(false);
+      setIsLoading(prev => ({...prev, permissions: false}));
     });
 
     return () => unsubscribe();
   }, []);
 
-  if (isLoading) {
+  useEffect(() => {
+    async function fetchMetrics() {
+        if (!currentUser) return;
+
+        setIsLoading(prev => ({...prev, metrics: true}));
+
+        try {
+            const [crmData, taskData] = await Promise.all([
+                getCrmMetrics({ actor: currentUser.uid }),
+                getTaskMetrics({ actor: currentUser.uid })
+            ]);
+            setCrmMetrics(crmData);
+            setTaskMetrics(taskData);
+        } catch (error) {
+            console.error("Failed to fetch dashboard metrics:", error);
+            // Optionally, set an error state to show in the UI
+        } finally {
+            setIsLoading(prev => ({...prev, metrics: false}));
+        }
+    }
+
+    fetchMetrics();
+  }, [currentUser]);
+
+  if (isLoading.permissions) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
         <Loader2 className="w-12 h-12 text-primary animate-spin" />
@@ -56,7 +114,7 @@ export default function DashboardPage() {
       id="dashboard-content"
       className="app-content active max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
     >
-      <div className="mb-8">
+      <div className="mb-10">
         <h2 className="text-3xl font-bold text-black mb-2">
           Bem-vindo à Qoro!
         </h2>
@@ -64,6 +122,17 @@ export default function DashboardPage() {
           Gerencie toda a sua empresa em uma única plataforma integrada
         </p>
       </div>
+
+       {/* Metrics Section */}
+       <div className="mb-12">
+            <h3 className="text-xl font-bold text-black mb-6">Métricas e Insights Rápidos</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <MetricCard title="Total de Clientes" value={crmMetrics.totalCustomers} icon={Users} isLoading={isLoading.metrics} />
+                <MetricCard title="Leads no Funil" value={crmMetrics.totalLeads} icon={TrendingUp} isLoading={isLoading.metrics} />
+                <MetricCard title="Tarefas Pendentes" value={taskMetrics.pendingTasks} icon={ListTodo} isLoading={isLoading.metrics} />
+                <MetricCard title="Saldo Atual" value="R$ --" icon={DollarSign} isLoading={false} />
+            </div>
+        </div>
 
       <div>
         <div className="flex items-center justify-between mb-6">

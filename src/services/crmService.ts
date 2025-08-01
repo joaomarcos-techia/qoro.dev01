@@ -1,3 +1,4 @@
+
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
 import { CustomerSchema, CustomerProfileSchema, SaleLeadProfileSchema, SaleLeadSchema } from '@/ai/schemas';
@@ -53,7 +54,6 @@ export const listSaleLeads = async (actorUid: string): Promise<SaleLeadProfile[]
 
     const leadsSnapshot = await db.collection('sales_pipeline')
         .where('companyId', '==', organizationId)
-        .orderBy('createdAt', 'desc')
         .get();
 
     if (leadsSnapshot.empty) {
@@ -94,4 +94,27 @@ export const listSaleLeads = async (actorUid: string): Promise<SaleLeadProfile[]
     });
 
     return leads;
+};
+
+
+export const getDashboardMetrics = async (actorUid: string): Promise<{ totalCustomers: number, totalLeads: number }> => {
+    const { organizationId } = await getAdminAndOrg(actorUid);
+
+    const customersPromise = db.collection('customers')
+                                .where('companyId', '==', organizationId)
+                                .count()
+                                .get();
+
+    const leadsPromise = db.collection('sales_pipeline')
+                             .where('companyId', '==', organizationId)
+                             .where('stage', 'not-in', ['closed_won', 'closed_lost'])
+                             .count()
+                             .get();
+    
+    const [customersSnapshot, leadsSnapshot] = await Promise.all([customersPromise, leadsPromise]);
+
+    return {
+        totalCustomers: customersSnapshot.data().count,
+        totalLeads: leadsSnapshot.data().count,
+    };
 };
