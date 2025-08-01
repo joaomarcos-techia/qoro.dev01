@@ -3,10 +3,11 @@
  * @fileOverview CRM management flows.
  * - createCustomer - Creates a new customer.
  * - listCustomers - Lists all customers for the user's organization.
+ * - listSaleLeads - Lists all sales leads for the user's organization.
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { CustomerSchema, CustomerProfileSchema } from '@/ai/schemas';
+import { CustomerSchema, CustomerProfileSchema, SaleLeadProfileSchema } from '@/ai/schemas';
 import * as crmService from '@/services/crmService';
 
 const ActorSchema = z.object({ actor: z.string() });
@@ -30,6 +31,16 @@ const listCustomersFlow = ai.defineFlow(
     async ({ actor }) => crmService.listCustomers(actor)
 );
 
+const listSaleLeadsFlow = ai.defineFlow(
+    {
+        name: 'listSaleLeadsFlow',
+        inputSchema: ActorSchema,
+        outputSchema: z.array(SaleLeadProfileSchema)
+    },
+    async ({ actor }) => crmService.listSaleLeads(actor)
+);
+
+
 // Exported functions (client-callable wrappers)
 export async function createCustomer(input: z.infer<typeof CustomerSchema> & z.infer<typeof ActorSchema>): Promise<{ id: string; }> {
     return createCustomerFlow(input);
@@ -37,4 +48,8 @@ export async function createCustomer(input: z.infer<typeof CustomerSchema> & z.i
 
 export async function listCustomers(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof CustomerProfileSchema>[]> {
     return listCustomersFlow(input);
+}
+
+export async function listSaleLeads(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof SaleLeadProfileSchema>[]> {
+    return listSaleLeadsFlow(input);
 }

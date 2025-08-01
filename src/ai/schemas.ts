@@ -80,6 +80,25 @@ export const CustomerProfileSchema = CustomerSchema.extend({
 });
 export type CustomerProfile = z.infer<typeof CustomerProfileSchema>;
 
+export const SaleLeadSchema = z.object({
+    customerId: z.string(),
+    title: z.string(),
+    value: z.number(),
+    stage: z.enum(['prospect', 'qualified', 'proposal', 'negotiation', 'closed_won', 'closed_lost']),
+    priority: z.enum(['low', 'medium', 'high']),
+    expectedCloseDate: z.date(),
+});
+
+export const SaleLeadProfileSchema = SaleLeadSchema.extend({
+    id: z.string(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    customerName: z.string().optional(), // Denormalized for easy display
+    customerEmail: z.string().email().optional(), // Denormalized for easy display
+});
+export type SaleLeadProfile = z.infer<typeof SaleLeadProfileSchema>;
+
+
 // Schemas for Task Management
 export const TaskSchema = z.object({
   title: z.string().min(1, 'O título é obrigatório.'),
