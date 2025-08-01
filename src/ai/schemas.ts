@@ -174,4 +174,20 @@ export const AskPulseInputSchema = z.object({
     messages: z.array(PulseMessageSchema),
     actor: z.string(),
 });
-export type AskPulseInput = z.infer<typeof AskPulseInputSchema>;
+export type AskPulseInput = z.infer<typeof AskPulseInput>;
+
+
+// Schemas for Finance Management
+export const AccountSchema = z.object({
+    name: z.string().min(1, 'O nome da conta é obrigatório.'),
+    type: z.enum(['checking', 'savings', 'credit_card', 'cash']),
+    bank: z.string().optional(),
+    balance: z.coerce.number().default(0),
+    isActive: z.boolean().default(true),
+});
+
+export const AccountProfileSchema = AccountSchema.extend({
+    id: z.string(),
+    createdAt: z.string(),
+});
+export type AccountProfile = z.infer<typeof AccountProfileSchema>;

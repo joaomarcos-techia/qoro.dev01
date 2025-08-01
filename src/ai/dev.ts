@@ -4,6 +4,8 @@ import './flows/user-management';
 import './flows/crm-management';
 import './flows/task-management';
 import './flows/pulse-flow';
+import './flows/finance-management';
+
 
 // Tools will be imported for their side effects in this file.
 import './tools/crm-tools';
