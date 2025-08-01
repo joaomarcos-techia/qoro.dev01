@@ -1,3 +1,4 @@
+
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
 import { CustomerSchema, CustomerProfileSchema } from '@/ai/schemas';
@@ -34,19 +35,12 @@ export const listCustomers = async (actorUid: string): Promise<z.infer<typeof Cu
     
     const customers: z.infer<typeof CustomerProfileSchema>[] = customersSnapshot.docs.map(doc => {
         const data = doc.data();
-        return {
+        return CustomerProfileSchema.parse({
             id: doc.id,
-            name: data.name,
-            email: data.email,
-            phone: data.phone,
-            status: data.status,
-            createdAt: data.createdAt.toDate().toISOString(), // Convert Timestamp to ISO string
-            // Make sure all required fields in CustomerProfileSchema are present
-            company: data.company,
-            address: data.address,
-            tags: data.tags,
-
-        };
+            ...data,
+            createdAt: data.createdAt.toDate().toISOString(),
+            updatedAt: data.updatedAt.toDate().toISOString(),
+        });
     });
     
     return customers;

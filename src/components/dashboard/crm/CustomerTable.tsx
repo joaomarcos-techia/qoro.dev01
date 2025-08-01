@@ -42,7 +42,7 @@ const statusMap = {
     prospect: { text: 'Prospect', color: 'bg-blue-100 text-blue-800' },
 };
 
-const columns: ColumnDef<CustomerProfile>[] = [
+export const columns: ColumnDef<CustomerProfile>[] = [
   {
     accessorKey: 'name',
     header: ({ column }) => {
