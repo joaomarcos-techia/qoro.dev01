@@ -10,6 +10,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { AskPulseInputSchema } from '@/ai/schemas';
 import { listCustomersTool, listSaleLeadsTool } from '@/ai/tools/crm-tools';
+import { listTasksTool } from '@/ai/tools/task-tools';
 
 export async function askPulse(input: z.infer<typeof AskPulseInputSchema>): Promise<string> {
   return pulseFlow(input);
@@ -44,7 +45,7 @@ const pulseFlow = ai.defineFlow(
         model: 'googleai/gemini-2.0-flash',
         prompt: prompt,
         history: history,
-        tools: [listCustomersTool, listSaleLeadsTool],
+        tools: [listCustomersTool, listSaleLeadsTool, listTasksTool],
         toolConfig: {
           // Pass the actor UID to the tool through the request context
           context: { actor },
@@ -54,7 +55,10 @@ const pulseFlow = ai.defineFlow(
         Você é amigável, profissional e sempre focado em dados.
 
         Para responder às perguntas, você DEVE usar as ferramentas fornecidas para acessar os dados da empresa.
-        Use as ferramentas 'listCustomersTool' para perguntas sobre clientes e 'listSaleLeadsTool' para perguntas sobre o funil de vendas.
+        - Use a ferramenta 'listCustomersTool' para perguntas sobre clientes.
+        - Use a ferramenta 'listSaleLeadsTool' para perguntas sobre o funil de vendas.
+        - Use a ferramenta 'listTasksTool' para perguntas sobre tarefas, projetos e produtividade.
+        
         Analise os dados retornados pelas ferramentas para formular sua resposta.
         
         Nunca diga que você é um modelo de linguagem ou uma IA. Você é o QoroPulse.`,

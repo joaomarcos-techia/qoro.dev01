@@ -7,3 +7,4 @@ import './flows/pulse-flow';
 
 // Tools will be imported for their side effects in this file.
 import './tools/crm-tools';
+import './tools/task-tools';
