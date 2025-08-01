@@ -95,8 +95,13 @@ export const columns: ColumnDef<TaskProfile>[] = [
     cell: ({ row }) => {
         const dueDate = row.getValue('dueDate') as string | null;
         if (!dueDate) return '-';
-        // The date is coming as an ISO string, so we need to parse it first.
-        return format(parseISO(dueDate), "dd 'de' MMM 'de' yyyy", { locale: ptBR });
+        try {
+            const date = parseISO(dueDate);
+            return format(date, "dd 'de' MMM 'de' yyyy", { locale: ptBR });
+        } catch (error) {
+            console.error('Invalid date format for dueDate:', dueDate);
+            return 'Data inválida';
+        }
     },
   },
   {
