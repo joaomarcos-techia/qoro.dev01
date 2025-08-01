@@ -78,7 +78,9 @@ const navConfig: Record<string, NavGroup> = {
         group: 'QoroPulse',
         icon: Activity,
         color: 'bg-purple-500',
-        items: []
+        items: [
+             { href: '/dashboard/pulse', label: 'Chat', icon: Activity },
+        ]
     }
 };
 
