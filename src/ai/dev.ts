@@ -3,3 +3,4 @@
 import './flows/user-management';
 import './flows/crm-management';
 import './flows/task-management';
+import './flows/pulse-flow';

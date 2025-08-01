@@ -5,13 +5,10 @@ import { useState, useRef, useEffect, FormEvent } from 'react';
 import { Send, CornerDownLeft, BrainCircuit, Loader } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { User as FirebaseUser } from 'firebase/auth';
+import { User as FirebaseUser, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-}
+import { askPulse } from '@/ai/flows/pulse-flow';
+import type { PulseMessage } from '@/ai/schemas';
 
 const exampleQuestions = [
     "Quais são meus clientes mais valiosos este mês?",
@@ -21,7 +18,7 @@ const exampleQuestions = [
 ]
 
 export default function PulsePage() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<PulseMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
@@ -46,20 +43,34 @@ export default function PulsePage() {
     e.preventDefault();
     if (!input.trim() || isLoading || !currentUser) return;
   
-    const userMessage: Message = { role: 'user', content: input };
-    setMessages(prev => [...prev, userMessage]);
+    const userMessage: PulseMessage = { role: 'user', content: input };
+    const newMessages: PulseMessage[] = [...messages, userMessage];
+    setMessages(newMessages);
     setInput('');
     setIsLoading(true);
   
-    // MOCK: Simulate AI response
-    setTimeout(() => {
-      const assistantMessage: Message = {
-        role: 'assistant',
-        content: `Esta é uma resposta simulada para: "${userMessage.content}". A integração com a IA está a caminho.`,
-      };
-      setMessages(prev => [...prev, assistantMessage]);
-      setIsLoading(false);
-    }, 1500);
+    try {
+        const response = await askPulse({
+            messages: newMessages,
+            actor: currentUser.uid,
+        });
+
+        const assistantMessage: PulseMessage = {
+            role: 'assistant',
+            content: response,
+        }
+        setMessages(prev => [...prev, assistantMessage]);
+
+    } catch (error) {
+        console.error("Error calling Pulse Flow:", error);
+        const errorMessage: PulseMessage = {
+            role: 'assistant',
+            content: 'Desculpe, não consegui processar sua solicitação. Tente novamente mais tarde.'
+        }
+        setMessages(prev => [...prev, errorMessage]);
+    } finally {
+        setIsLoading(false);
+    }
   };
   
   const handleSuggestionClick = (question: string) => {

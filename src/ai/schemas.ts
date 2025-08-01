@@ -115,3 +115,17 @@ export const TaskProfileSchema = TaskSchema.extend({
     userId: z.string(),
 });
 export type TaskProfile = z.infer<typeof TaskProfileSchema>;
+
+
+// Schemas for QoroPulse
+export const PulseMessageSchema = z.object({
+    role: z.enum(['user', 'assistant']),
+    content: z.string(),
+});
+export type PulseMessage = z.infer<typeof PulseMessageSchema>;
+
+export const AskPulseInputSchema = z.object({
+    messages: z.array(PulseMessageSchema),
+    actor: z.string(),
+});
+export type AskPulseInput = z.infer<typeof AskPulseInputSchema>;
