@@ -1,9 +1,9 @@
 
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
-import { CustomerSchema, CustomerProfileSchema, SaleLeadProfileSchema, SaleLeadSchema, ProductSchema, ProductProfileSchema } from '@/ai/schemas';
+import { CustomerSchema, CustomerProfileSchema, SaleLeadProfileSchema, SaleLeadSchema, ProductSchema, ProductProfileSchema, QuoteProfileSchema } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
-import type { SaleLeadProfile } from '@/ai/schemas';
+import type { SaleLeadProfile, QuoteProfile } from '@/ai/schemas';
 
 const db = getFirestore();
 
@@ -178,4 +178,49 @@ export const listProducts = async (actorUid: string): Promise<z.infer<typeof Pro
         });
     });
     return products;
+};
+
+export const listQuotes = async (actorUid: string): Promise<QuoteProfile[]> => {
+    const { organizationId } = await getAdminAndOrg(actorUid);
+
+    const quotesSnapshot = await db.collection('quotes')
+        .where('companyId', '==', organizationId)
+        .orderBy('createdAt', 'desc')
+        .get();
+
+    if (quotesSnapshot.empty) {
+        return [];
+    }
+
+    const customerIds = [...new Set(quotesSnapshot.docs.map(doc => doc.data().customerId).filter(id => id))];
+    const customers: Record<string, { name?: string }> = {};
+
+    if (customerIds.length > 0) {
+        const customersSnapshot = await db.collection('customers').where('__name__', 'in', customerIds).get();
+        customersSnapshot.forEach(doc => {
+            customers[doc.id] = { name: doc.data().name };
+        });
+    }
+
+    const quotes: QuoteProfile[] = quotesSnapshot.docs.map(doc => {
+        const data = doc.data();
+        const customerInfo = customers[data.customerId] || {};
+        const validUntil = data.validUntil ? data.validUntil.toDate() : new Date();
+
+        const parsedData = QuoteProfileSchema.parse({
+            id: doc.id,
+            ...data,
+            validUntil,
+            createdAt: data.createdAt.toDate().toISOString(),
+            updatedAt: data.updatedAt.toDate().toISOString(),
+            customerName: customerInfo.name,
+        });
+        
+        return {
+            ...parsedData,
+            validUntil: parsedData.validUntil.toISOString()
+        };
+    });
+
+    return quotes;
 };

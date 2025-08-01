@@ -8,10 +8,11 @@
  * - getDashboardMetrics - Retrieves key metrics for the CRM dashboard.
  * - createProduct - Creates a new product.
  * - listProducts - Lists all products.
+ * - listQuotes - Lists all quotes.
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { CustomerSchema, CustomerProfileSchema, SaleLeadProfileSchema, ProductSchema, ProductProfileSchema } from '@/ai/schemas';
+import { CustomerSchema, CustomerProfileSchema, SaleLeadProfileSchema, ProductSchema, ProductProfileSchema, QuoteProfileSchema } from '@/ai/schemas';
 import * as crmService from '@/services/crmService';
 
 const ActorSchema = z.object({ actor: z.string() });
@@ -78,6 +79,15 @@ const listProductsFlow = ai.defineFlow(
     async ({ actor }) => crmService.listProducts(actor)
 );
 
+const listQuotesFlow = ai.defineFlow(
+    {
+        name: 'listQuotesFlow',
+        inputSchema: ActorSchema,
+        outputSchema: z.array(QuoteProfileSchema)
+    },
+    async ({ actor }) => crmService.listQuotes(actor)
+);
+
 
 // Exported functions (client-callable wrappers)
 export async function createCustomer(input: z.infer<typeof CustomerSchema> & z.infer<typeof ActorSchema>): Promise<{ id: string; }> {
@@ -102,4 +112,8 @@ export async function createProduct(input: z.infer<typeof ProductSchema> & z.inf
 
 export async function listProducts(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof ProductProfileSchema>[]> {
     return listProductsFlow(input);
+}
+
+export async function listQuotes(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof QuoteProfileSchema>[]> {
+    return listQuotesFlow(input);
 }

@@ -114,6 +114,36 @@ export const ProductProfileSchema = ProductSchema.extend({
 });
 export type ProductProfile = z.infer<typeof ProductProfileSchema>;
 
+export const QuoteItemSchema = z.object({
+    type: z.enum(['product', 'service']),
+    itemId: z.string(),
+    name: z.string(),
+    quantity: z.number().min(1),
+    unitPrice: z.number().min(0),
+    total: z.number(),
+});
+
+export const QuoteSchema = z.object({
+    customerId: z.string().min(1, "É necessário selecionar um cliente."),
+    number: z.string(),
+    items: z.array(QuoteItemSchema).min(1, "O orçamento deve ter pelo menos um item."),
+    subtotal: z.number(),
+    discount: z.number().optional(),
+    tax: z.number().optional(),
+    total: z.number(),
+    status: z.enum(['draft', 'sent', 'accepted', 'rejected', 'expired']),
+    validUntil: z.date(),
+    notes: z.string().optional(),
+});
+
+export const QuoteProfileSchema = QuoteSchema.extend({
+    id: z.string(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    customerName: z.string().optional(),
+});
+export type QuoteProfile = z.infer<typeof QuoteProfileSchema>;
+
 
 // Schemas for Task Management
 export const TaskSchema = z.object({
