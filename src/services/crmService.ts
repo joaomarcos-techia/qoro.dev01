@@ -81,7 +81,7 @@ export const listSaleLeads = async (actorUid: string): Promise<SaleLeadProfile[]
         // Firestore timestamps need to be converted to Date objects for Zod schema
         const expectedCloseDate = data.expectedCloseDate ? data.expectedCloseDate.toDate() : new Date();
 
-        return SaleLeadProfileSchema.parse({
+        const parsedData = SaleLeadProfileSchema.parse({
             id: doc.id,
             ...data,
             expectedCloseDate, // This is now a Date object
@@ -91,6 +91,12 @@ export const listSaleLeads = async (actorUid: string): Promise<SaleLeadProfile[]
             customerName: customerInfo.name,
             customerEmail: customerInfo.email
         });
+        
+        // Convert Date object back to ISO string for the client
+        return {
+            ...parsedData,
+            expectedCloseDate: parsedData.expectedCloseDate.toISOString()
+        };
     });
 
     return leads;
