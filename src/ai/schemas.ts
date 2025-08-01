@@ -98,6 +98,22 @@ export const SaleLeadProfileSchema = SaleLeadSchema.extend({
 });
 export type SaleLeadProfile = z.infer<typeof SaleLeadProfileSchema>;
 
+export const ProductSchema = z.object({
+    name: z.string().min(1, 'Nome do produto é obrigatório.'),
+    description: z.string().optional(),
+    price: z.coerce.number().min(0, 'O preço deve ser um número positivo.'),
+    cost: z.coerce.number().optional(),
+    category: z.string().optional(),
+    sku: z.string().optional(),
+    isActive: z.boolean().default(true),
+});
+
+export const ProductProfileSchema = ProductSchema.extend({
+    id: z.string(),
+    createdAt: z.string(),
+});
+export type ProductProfile = z.infer<typeof ProductProfileSchema>;
+
 
 // Schemas for Task Management
 export const TaskSchema = z.object({

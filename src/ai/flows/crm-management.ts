@@ -6,10 +6,12 @@
  * - listCustomers - Lists all customers for the user's organization.
  * - listSaleLeads - Lists all sales leads for the user's organization.
  * - getDashboardMetrics - Retrieves key metrics for the CRM dashboard.
+ * - createProduct - Creates a new product.
+ * - listProducts - Lists all products.
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { CustomerSchema, CustomerProfileSchema, SaleLeadProfileSchema } from '@/ai/schemas';
+import { CustomerSchema, CustomerProfileSchema, SaleLeadProfileSchema, ProductSchema, ProductProfileSchema } from '@/ai/schemas';
 import * as crmService from '@/services/crmService';
 
 const ActorSchema = z.object({ actor: z.string() });
@@ -58,6 +60,24 @@ const getDashboardMetricsFlow = ai.defineFlow(
     async ({ actor }) => crmService.getDashboardMetrics(actor)
 );
 
+const createProductFlow = ai.defineFlow(
+    {
+        name: 'createProductFlow',
+        inputSchema: ProductSchema.extend(ActorSchema.shape),
+        outputSchema: z.object({ id: z.string() })
+    },
+    async (input) => crmService.createProduct(input, input.actor)
+);
+
+const listProductsFlow = ai.defineFlow(
+    {
+        name: 'listProductsFlow',
+        inputSchema: ActorSchema,
+        outputSchema: z.array(ProductProfileSchema)
+    },
+    async ({ actor }) => crmService.listProducts(actor)
+);
+
 
 // Exported functions (client-callable wrappers)
 export async function createCustomer(input: z.infer<typeof CustomerSchema> & z.infer<typeof ActorSchema>): Promise<{ id: string; }> {
@@ -74,4 +94,12 @@ export async function listSaleLeads(input: z.infer<typeof ActorSchema>): Promise
 
 export async function getDashboardMetrics(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof DashboardMetricsOutputSchema>> {
     return getDashboardMetricsFlow(input);
+}
+
+export async function createProduct(input: z.infer<typeof ProductSchema> & z.infer<typeof ActorSchema>): Promise<{ id: string; }> {
+    return createProductFlow(input);
+}
+
+export async function listProducts(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof ProductProfileSchema>[]> {
+    return listProductsFlow(input);
 }

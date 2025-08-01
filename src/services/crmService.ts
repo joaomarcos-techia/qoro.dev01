@@ -1,7 +1,7 @@
 
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
-import { CustomerSchema, CustomerProfileSchema, SaleLeadProfileSchema, SaleLeadSchema } from '@/ai/schemas';
+import { CustomerSchema, CustomerProfileSchema, SaleLeadProfileSchema, SaleLeadSchema, ProductSchema, ProductProfileSchema } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
 import type { SaleLeadProfile } from '@/ai/schemas';
 
@@ -146,4 +146,36 @@ export const getDashboardMetrics = async (actorUid: string): Promise<{ totalCust
         conversionRate: parseFloat(conversionRate.toFixed(1)),
         totalRevenueWon,
     };
+};
+
+export const createProduct = async (input: z.infer<typeof ProductSchema>, actorUid: string) => {
+    const { organizationId } = await getAdminAndOrg(actorUid);
+    const newProductData = {
+        ...input,
+        companyId: organizationId,
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+    };
+    const productRef = await db.collection('products').add(newProductData);
+    return { id: productRef.id };
+};
+
+export const listProducts = async (actorUid: string): Promise<z.infer<typeof ProductProfileSchema>[]> => {
+    const { organizationId } = await getAdminAndOrg(actorUid);
+    const productsSnapshot = await db.collection('products')
+                                     .where('companyId', '==', organizationId)
+                                     .orderBy('createdAt', 'desc')
+                                     .get();
+    if (productsSnapshot.empty) {
+        return [];
+    }
+    const products: z.infer<typeof ProductProfileSchema>[] = productsSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return ProductProfileSchema.parse({
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt.toDate().toISOString(),
+        });
+    });
+    return products;
 };

@@ -1,0 +1,111 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { createProduct } from '@/ai/flows/crm-management';
+import { ProductSchema } from '@/ai/schemas';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { Loader2, AlertCircle } from 'lucide-react';
+
+type ProductFormProps = {
+  onProductCreated: () => void;
+};
+
+export function ProductForm({ onProductCreated }: ProductFormProps) {
+  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<z.infer<typeof ProductSchema>>({
+    resolver: zodResolver(ProductSchema),
+    defaultValues: {
+        name: '',
+        description: '',
+        category: '',
+        sku: '',
+        price: 0,
+        cost: 0
+    },
+  });
+
+  const onSubmit = async (data: z.infer<typeof ProductSchema>) => {
+    if (!currentUser) {
+      setError('Você precisa estar autenticado para criar um produto.');
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    try {
+      await createProduct({ ...data, actor: currentUser.uid });
+      onProductCreated();
+    } catch (err) {
+      console.error(err);
+      setError('Falha ao criar o produto. Tente novamente.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 py-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2 md:col-span-2">
+          <Label htmlFor="name">Nome do Produto*</Label>
+          <Input id="name" {...register('name')} placeholder="Ex: Assinatura Mensal Pro" />
+          {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
+        </div>
+        <div className="space-y-2 md:col-span-2">
+          <Label htmlFor="description">Descrição</Label>
+          <Textarea id="description" {...register('description')} placeholder="Detalhes do produto, características, etc." />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="category">Categoria</Label>
+          <Input id="category" {...register('category')} placeholder="Ex: Software" />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="sku">SKU (Código)</Label>
+          <Input id="sku" {...register('sku')} placeholder="Ex: PROD-001" />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="price">Preço de Venda (R$)*</Label>
+          <Input id="price" type="number" step="0.01" {...register('price')} />
+          {errors.price && <p className="text-red-500 text-sm">{errors.price.message}</p>}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="cost">Custo (R$)</Label>
+          <Input id="cost" type="number" step="0.01" {...register('cost')} />
+        </div>
+      </div>
+       {error && (
+            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg flex items-center mt-4">
+              <AlertCircle className="w-5 h-5 mr-3" />
+              <span className="text-sm">{error}</span>
+            </div>
+        )}
+      <div className="flex justify-end pt-4">
+        <Button type="submit" disabled={isLoading} className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
+          {isLoading ? <Loader2 className="mr-2 w-5 h-5 animate-spin" /> : null}
+          {isLoading ? 'Salvando...' : 'Salvar Produto'}
+        </Button>
+      </div>
+    </form>
+  );
+}
