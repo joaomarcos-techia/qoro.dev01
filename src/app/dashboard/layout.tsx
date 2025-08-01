@@ -19,7 +19,8 @@ import {
   Receipt,
   Landmark,
   DollarSign,
-  Activity
+  Activity,
+  Home
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Header } from '@/components/dashboard/Header';
@@ -46,6 +47,7 @@ const navConfig: Record<string, NavGroup> = {
         items: [
             { href: '/dashboard/crm/clientes', label: 'Clientes', icon: Users },
             { href: '/dashboard/crm/funil', label: 'Funil', icon: LayoutGrid },
+            { href: '/dashboard/crm/relatorios', label: 'Relatórios', icon: BarChart3 },
             { href: '/dashboard/crm/servicos', label: 'Serviços', icon: Wrench },
             { href: '/dashboard/crm/produtos', label: 'Produtos', icon: ShoppingCart },
             { href: '/dashboard/crm/orcamentos', label: 'Orçamentos', icon: FileText },
@@ -85,14 +87,16 @@ const navConfig: Record<string, NavGroup> = {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const segments = pathname.split('/');
-  const currentModule = segments[2] as keyof typeof navConfig;
-  const navData = navConfig[currentModule];
+  // If we are at /dashboard, segments[2] is undefined.
+  // Otherwise, it's the module name (crm, task, etc.).
+  const currentModule = segments.length > 2 ? segments[2] : 'home';
 
   const renderSidebar = () => {
-    if (!navData) {
-      return null;
+    if (currentModule === 'home' || !navConfig[currentModule]) {
+      return null; // Don't render sidebar for the main dashboard page
     }
-
+    
+    const navData = navConfig[currentModule];
     const { group, icon: GroupIcon, color, items } = navData;
     
     return (
