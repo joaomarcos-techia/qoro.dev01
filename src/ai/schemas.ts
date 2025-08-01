@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-// Schemas
+// Schemas for User and Organization Management
 export const SignUpSchema = z.object({
     name: z.string().min(1, 'O nome é obrigatório.'),
     organizationName: z.string().min(1, 'O nome da organização é obrigatório.'),
@@ -9,10 +9,6 @@ export const SignUpSchema = z.object({
     cnpj: z.string().min(1, "O CNPJ é obrigatório."),
     contactEmail: z.string().email().optional(),
     contactPhone: z.string().optional(),
-});
-
-export const InviteUserSchema = z.object({
-  email: z.string().email(),
 });
 
 const AppPermissionsSchema = z.object({
@@ -57,3 +53,29 @@ export const UpdateOrganizationDetailsSchema = z.object({
     contactEmail: z.string().email().optional(),
     contactPhone: z.string().optional(),
 });
+
+// Schemas for CRM
+export const AddressSchema = z.object({
+    street: z.string().optional(),
+    city: z.string().optional(),
+    state: z.string().optional(),
+    zipCode: z.string().optional(),
+});
+
+export const CustomerSchema = z.object({
+  name: z.string().min(1, 'Nome é obrigatório'),
+  email: z.string().email('Email inválido'),
+  phone: z.string().optional(),
+  company: z.string().optional(),
+  address: AddressSchema.optional(),
+  tags: z.array(z.string()).optional(),
+  source: z.enum(['website', 'referral', 'social', 'cold_call', 'other']).default('other'),
+  status: z.enum(['active', 'inactive', 'prospect']).default('prospect'),
+  customFields: z.record(z.any()).optional(),
+});
+
+export const CustomerProfileSchema = CustomerSchema.extend({
+    id: z.string(),
+    createdAt: z.string(), // Using string for simplicity on the client
+});
+export type CustomerProfile = z.infer<typeof CustomerProfileSchema>;

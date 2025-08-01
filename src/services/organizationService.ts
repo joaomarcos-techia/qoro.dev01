@@ -11,6 +11,7 @@ import {
     OrganizationProfileSchema 
 } from '@/ai/schemas';
 import { config } from 'dotenv';
+import { getAdminAndOrg } from './utils';
 
 config({ path: `.env` });
 
@@ -41,32 +42,6 @@ if (!getApps().length) {
 
 const auth = getAuth(app);
 const db = getFirestore(app);
-
-const getAdminAndOrg = async (actorUid: string) => {
-    if (!actorUid) {
-        throw new Error('User must be authenticated to perform this action.');
-    }
-    
-    const adminDocRef = db.collection('users').doc(actorUid);
-    const adminDoc = await adminDocRef.get();
-    
-    if (!adminDoc.exists) {
-        throw new Error('Admin user not found in Firestore.');
-    }
-    
-    const adminData = adminDoc.data()!;
-    const organizationId = adminData.organizationId;
-    
-    if (!organizationId) {
-        throw new Error('Admin user does not belong to an organization.');
-    }
-    
-    if (adminData.role !== 'admin') {
-        throw new Error('User does not have admin privileges.');
-    }
-
-    return { adminDocRef, adminData, organizationId, adminUid: actorUid };
-};
 
 
 export const signUp = async (input: z.infer<typeof SignUpSchema>): Promise<UserRecord> => {
@@ -103,8 +78,7 @@ export const signUp = async (input: z.infer<typeof SignUpSchema>): Promise<UserR
             },
         });
 
-        const newlyCreatedUser = await auth.getUserByEmail(email);
-        return newlyCreatedUser;
+        return userRecord;
     } catch (error) {
         const firebaseError = error as FirebaseAuthError;
         if (firebaseError.code === 'auth/email-already-exists') {
@@ -138,12 +112,13 @@ export const inviteUser = async (email: string, actor: string): Promise<{ uid: s
     });
     
     try {
+        // This generates a link that can be used in a custom email to set the initial password
         const link = await auth.generatePasswordResetLink(email);
         console.log(`Setup/password reset link sent to ${email}. This link can be customized in Firebase Console to be a welcome email.`);
+        // In a real app, you would use an email service (like SendGrid, Mailgun) to send this link to the user.
     } catch(error){
         console.error("Falha ao gerar o link de definição de senha:", error);
     }
-
 
     return {
       uid: userRecord.uid,
@@ -185,7 +160,7 @@ export const updateUserPermissions = async (input: z.infer<typeof UpdateUserPerm
     }
 
     if (adminUid === userId) {
-        throw new Error("Administradores não podem alterar as próprias permissões.");
+        throw new Error("Administrators cannot change their own permissions.");
     }
 
     await targetUserRef.update({ permissions });
