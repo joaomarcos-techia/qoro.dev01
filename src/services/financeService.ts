@@ -1,10 +1,26 @@
 
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
-import { AccountProfileSchema } from '@/ai/schemas';
+import { AccountSchema, AccountProfileSchema } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
 
 const db = getFirestore();
+
+export const createAccount = async (input: z.infer<typeof AccountSchema>, actorUid: string) => {
+    const { organizationId } = await getAdminAndOrg(actorUid);
+
+    const newAccountData = {
+        ...input,
+        companyId: organizationId,
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+    };
+
+    const accountRef = await db.collection('accounts').add(newAccountData);
+
+    return { id: accountRef.id };
+};
+
 
 export const listAccounts = async (actorUid: string): Promise<z.infer<typeof AccountProfileSchema>[]> => {
     const { organizationId } = await getAdminAndOrg(actorUid);
