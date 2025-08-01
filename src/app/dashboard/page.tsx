@@ -87,7 +87,7 @@ export default function DashboardPage() {
             // Fetch CRM metrics only if the user has permission
             const crmPromise = permissions?.qoroCrm 
                 ? getCrmMetrics({ actor: currentUser.uid }) 
-                : Promise.resolve({ totalCustomers: 0, totalLeads: 0 });
+                : Promise.resolve({ totalCustomers: 0, totalLeads: 0, conversionRate: 0, totalRevenueWon: 0 });
 
             // Fetch Task metrics only if the user has permission
             const taskPromise = permissions?.qoroTask 
@@ -99,7 +99,7 @@ export default function DashboardPage() {
                 taskPromise
             ]);
 
-            setCrmMetrics(crmData);
+            setCrmMetrics({ totalCustomers: crmData.totalCustomers, totalLeads: crmData.totalLeads });
             setTaskMetrics({ pendingTasks: taskData.pendingTasks });
 
         } catch (error) {
@@ -145,7 +145,7 @@ export default function DashboardPage() {
                 <MetricCard title="Total de Clientes" value={crmMetrics.totalCustomers} icon={Users} isLoading={isLoading.metrics} />
                 <MetricCard title="Leads no Funil" value={crmMetrics.totalLeads} icon={TrendingUp} isLoading={isLoading.metrics} />
                 <MetricCard title="Tarefas Pendentes" value={taskMetrics.pendingTasks} icon={ListTodo} isLoading={isLoading.metrics} />
-                <MetricCard title="Saldo Atual" value="R$ --" icon={DollarSign} isLoading={true} />
+                <MetricCard title="Saldo Atual" value="R$ 0,00" icon={DollarSign} isLoading={isLoading.metrics} />
             </div>
         </div>
 
@@ -157,7 +157,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Card QoroCRM */}
           {permissions?.qoroCrm && (
-            <Link href="/dashboard/crm/clientes">
+            <Link href="/dashboard/crm/dashboard">
               <div className="group bg-white rounded-xl shadow-neumorphism hover:shadow-neumorphism-hover hover:-translate-y-2 transition-all duration-300 flex flex-col h-full">
                 <div className="h-2 bg-blue-500 rounded-t-xl"></div>
                 <div className="p-6 flex-grow flex flex-col">
