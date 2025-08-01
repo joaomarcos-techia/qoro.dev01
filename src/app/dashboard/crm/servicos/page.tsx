@@ -1,9 +1,10 @@
+
 'use client';
 
 import { useState } from 'react';
 import { PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-// import { ServiceTable } from '@/components/dashboard/crm/ServiceTable';
+import { ServiceTable } from '@/components/dashboard/crm/ServiceTable';
 import {
   Dialog,
   DialogContent,
@@ -12,7 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-// import { ServiceForm } from '@/components/dashboard/crm/ServiceForm';
+import { ServiceForm } from '@/components/dashboard/crm/ServiceForm';
 
 export default function ServicosPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -46,16 +47,13 @@ export default function ServicosPage() {
                 Preencha as informações abaixo para cadastrar um novo serviço no sistema.
               </DialogDescription>
             </DialogHeader>
-            {/* <ServiceForm onServiceCreated={handleServiceCreated} /> */}
+            <ServiceForm onServiceCreated={handleServiceCreated} />
           </DialogContent>
         </Dialog>
       </div>
 
       <div className="bg-white p-6 rounded-2xl shadow-neumorphism border border-gray-200">
-        {/* <ServiceTable key={refreshCounter} /> */}
-        <div className="h-96 flex items-center justify-center bg-gray-50 rounded-xl">
-            <p className="text-gray-400">Tabela de Serviços - Em breve</p>
-        </div>
+        <ServiceTable key={refreshCounter} />
       </div>
     </div>
   );
