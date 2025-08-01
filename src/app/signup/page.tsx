@@ -46,7 +46,7 @@ export default function SignUpPage() {
     }
 
     try {
-      const user = await signUp({
+      await signUp({
         ...formData
       });
       if (auth.currentUser) {
@@ -57,7 +57,7 @@ export default function SignUpPage() {
       if (err.message && err.message.includes('Este e-mail já está em uso.')) {
         setError('Este e-mail já está em uso. Tente fazer login.');
       } else {
-        setError('Ocorreu um erro ao criar a conta. Tente novamente.');
+        setError(err.message || 'Ocorreu um erro ao criar a conta. Tente novamente.');
         console.error(err);
       }
     } finally {
