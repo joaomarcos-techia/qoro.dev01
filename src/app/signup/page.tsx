@@ -2,7 +2,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, AlertCircle, CheckCircle, User, Building, FileText, Phone } from 'lucide-react';
 import { signUp } from '@/ai/flows/user-management';
@@ -53,9 +52,9 @@ export default function SignUpPage() {
       if (auth.currentUser) {
         await sendEmailVerification(auth.currentUser as FirebaseUser);
       }
-      setSuccess('Conta criada! Verifique seu e-mail para confirmar sua conta.');
+      setSuccess('Conta criada! Verifique seu e-mail para confirmar sua conta e acessar a plataforma.');
     } catch (err: any) {
-      if (err.message && err.message.includes('already in use')) {
+      if (err.message && err.message.includes('Este e-mail já está em uso.')) {
         setError('Este e-mail já está em uso. Tente fazer login.');
       } else {
         setError('Ocorreu um erro ao criar a conta. Tente novamente.');
@@ -100,11 +99,11 @@ export default function SignUpPage() {
                     </div>
                     <div className="relative">
                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input name="contactEmail" type="email" placeholder="E-mail de Contato" value={formData.contactEmail} onChange={handleInputChange} className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"/>
+                        <input name="contactEmail" type="email" placeholder="E-mail de Contato (opcional)" value={formData.contactEmail} onChange={handleInputChange} className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"/>
                     </div>
                     <div className="relative">
                         <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input name="contactPhone" type="tel" placeholder="Telefone de Contato" value={formData.contactPhone} onChange={handleInputChange} className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"/>
+                        <input name="contactPhone" type="tel" placeholder="Telefone de Contato (opcional)" value={formData.contactPhone} onChange={handleInputChange} className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"/>
                     </div>
                 </div>
             </div>
@@ -146,7 +145,19 @@ export default function SignUpPage() {
             </div>
           </form>
         )}
+         <div className="text-center mt-8">
+          <p className="text-sm text-gray-600">
+            Já tem uma conta?{' '}
+            <Link href="/login">
+              <span className="font-medium text-primary hover:underline">
+                Faça o login
+              </span>
+            </Link>
+          </p>
+        </div>
       </div>
     </main>
   );
 }
+
+    

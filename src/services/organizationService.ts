@@ -105,17 +105,15 @@ export const inviteUser = async (email: string, actor: string): Promise<{ uid: s
       role: 'member',
       permissions: {
         qoroCrm: true,
-        qoroPulse: true,
+        qoroPulse: false,
         qoroTask: true,
-        qoroFinance: true,
+        qoroFinance: false,
       }
     });
     
     try {
-        // This generates a link that can be used in a custom email to set the initial password
         const link = await auth.generatePasswordResetLink(email);
-        console.log(`Setup/password reset link sent to ${email}. This link can be customized in Firebase Console to be a welcome email.`);
-        // In a real app, you would use an email service (like SendGrid, Mailgun) to send this link to the user.
+        console.log(`Link de configuração de senha enviado para ${email}. Em um aplicativo real, este link seria enviado por meio de um serviço de e-mail.`);
     } catch(error){
         console.error("Falha ao gerar o link de definição de senha:", error);
     }
@@ -135,13 +133,14 @@ export const listUsers = async (actor: string): Promise<UserProfile[]> => {
     const users: UserProfile[] = [];
     usersSnapshot.forEach(doc => {
         const data = doc.data();
+        const defaultPermissions = { qoroCrm: false, qoroPulse: false, qoroTask: false, qoroFinance: false };
         users.push({
             uid: doc.id,
             email: data.email,
             name: data.name,
             organizationId: data.organizationId,
             role: data.role,
-            permissions: data.permissions,
+            permissions: { ...defaultPermissions, ...data.permissions },
         });
     });
     
@@ -156,11 +155,11 @@ export const updateUserPermissions = async (input: z.infer<typeof UpdateUserPerm
     const targetUserDoc = await targetUserRef.get();
 
     if (!targetUserDoc.exists || targetUserDoc.data()?.organizationId !== organizationId) {
-        throw new Error("Target user not found in this organization.");
+        throw new Error("Usuário alvo não encontrado nesta organização.");
     }
 
     if (adminUid === userId) {
-        throw new Error("Administrators cannot change their own permissions.");
+        throw new Error("Administradores não podem alterar as próprias permissões.");
     }
 
     await targetUserRef.update({ permissions });
@@ -173,7 +172,7 @@ export const getOrganizationDetails = async (actor: string): Promise<z.infer<typ
     const orgDoc = await db.collection('organizations').doc(organizationId).get();
 
     if (!orgDoc.exists) {
-        throw new Error('Organization not found.');
+        throw new Error('Organização não encontrada.');
     }
     const orgData = orgDoc.data()!;
     return {
@@ -188,14 +187,15 @@ export const getOrganizationDetails = async (actor: string): Promise<z.infer<typ
 export const updateOrganizationDetails = async (details: z.infer<typeof UpdateOrganizationDetailsSchema>, actor: string): Promise<{ success: boolean }> => {
     const { organizationId } = await getAdminAndOrg(actor);
     
-    const updateData = {
-        name: details.name,
-        cnpj: details.cnpj || null,
-        contactEmail: details.contactEmail || null,
-        contactPhone: details.contactPhone || null,
-    };
+    const updateData: any = {};
+    if(details.name) updateData.name = details.name;
+    if(details.cnpj) updateData.cnpj = details.cnpj;
+    if(details.contactEmail) updateData.contactEmail = details.contactEmail;
+    if(details.contactPhone) updateData.contactPhone = details.contactPhone;
 
     await db.collection('organizations').doc(organizationId).update(updateData);
 
     return { success: true };
 };
+
+    
