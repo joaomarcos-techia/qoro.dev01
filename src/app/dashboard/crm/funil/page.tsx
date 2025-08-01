@@ -1,5 +1,5 @@
+
 'use client';
-import type { Metadata } from 'next';
 import { useEffect, useMemo, useState } from 'react';
 import { KanbanBoard } from '@/components/dashboard/crm/KanbanBoard';
 import { SaleLeadProfile } from '@/ai/schemas';
@@ -7,10 +7,6 @@ import { listSaleLeads } from '@/ai/flows/crm-management';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Loader2, ServerCrash } from 'lucide-react';
-
-export const metadata: Metadata = {
-  title: 'QoroCRM | Funil de Vendas',
-};
 
 export default function FunilPage() {
   const [leads, setLeads] = useState<SaleLeadProfile[]>([]);
@@ -21,6 +17,12 @@ export default function FunilPage() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
+      if (!user) {
+        // If the user signs out, stop loading and clear data.
+        setIsLoading(false);
+        setLeads([]);
+        setError(null);
+      }
     });
     return () => unsubscribe();
   }, []);
@@ -35,9 +37,6 @@ export default function FunilPage() {
           setError('Não foi possível carregar os leads do funil.');
         })
         .finally(() => setIsLoading(false));
-    } else {
-        // If there's no user, stop loading.
-        setIsLoading(false);
     }
   }, [currentUser]);
 
