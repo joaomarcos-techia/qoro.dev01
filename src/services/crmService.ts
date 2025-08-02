@@ -115,7 +115,7 @@ export const listSaleLeads = async (actorUid: string): Promise<SaleLeadProfile[]
 };
 
 
-export const getDashboardMetrics = async (actorUid: string): Promise<{ totalCustomers: number, totalLeads: number, conversionRate: number, totalRevenueWon: number }> => {
+export const getDashboardMetrics = async (actorUid: string): Promise<{ totalCustomers: number; totalLeads: number; conversionRate: number; totalRevenueWon: number; leadStages: { prospect: number; qualified: number; proposal: number; negotiation: number; }; }> => {
     const { organizationId } = await getAdminAndOrg(actorUid);
 
     const customersPromise = db.collection('customers')
@@ -138,6 +138,12 @@ export const getDashboardMetrics = async (actorUid: string): Promise<{ totalCust
     let totalRevenueWon = 0;
     let closedWonCount = 0;
     let closedLostCount = 0;
+    const leadStages = {
+        prospect: 0,
+        qualified: 0,
+        proposal: 0,
+        negotiation: 0,
+    };
 
     leadsDataSnapshot.forEach(doc => {
         const lead = doc.data();
@@ -146,6 +152,8 @@ export const getDashboardMetrics = async (actorUid: string): Promise<{ totalCust
             closedWonCount++;
         } else if (lead.stage === 'closed_lost') {
             closedLostCount++;
+        } else if (lead.stage in leadStages) {
+            leadStages[lead.stage as keyof typeof leadStages]++;
         }
     });
 
@@ -157,6 +165,7 @@ export const getDashboardMetrics = async (actorUid: string): Promise<{ totalCust
         totalLeads: leadsSnapshot.data().count,
         conversionRate: parseFloat(conversionRate.toFixed(1)),
         totalRevenueWon,
+        leadStages,
     };
 };
 

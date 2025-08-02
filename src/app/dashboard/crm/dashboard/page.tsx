@@ -4,14 +4,30 @@ import { useState, useEffect } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { getDashboardMetrics } from '@/ai/flows/crm-management';
-import { BarChart, Users, LineChart, TrendingUp, Percent, DollarSign, Loader2, ServerCrash } from 'lucide-react';
+import { Bar, BarChart as BarChartPrimitive, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from 'recharts';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { LineChart, Users, TrendingUp, Percent, DollarSign, Loader2, ServerCrash } from 'lucide-react';
 
 interface CrmMetrics {
   totalCustomers: number;
   totalLeads: number;
   conversionRate: number;
   totalRevenueWon: number;
+  leadStages: {
+    prospect: number;
+    qualified: number;
+    proposal: number;
+    negotiation: number;
+  };
 }
+
+const chartConfig = {
+  leads: {
+    label: "Leads",
+    color: "hsl(var(--chart-1))",
+  },
+};
 
 const MetricCard = ({ title, value, icon: Icon, isLoading, color, format }: { title: string, value: number, icon: React.ElementType, isLoading: boolean, color: string, format?: (value: number) => string }) => (
   <div className="bg-white p-6 rounded-2xl shadow-neumorphism border border-gray-100 flex items-center">
@@ -64,6 +80,13 @@ export default function DashboardCrmPage() {
   }
 
   const formatPercentage = (value: number) => `${value}%`;
+  
+  const funnelChartData = metrics ? [
+    { stage: 'Prospect', leads: metrics.leadStages.prospect, fill: "var(--color-leads)" },
+    { stage: 'Qualificado', leads: metrics.leadStages.qualified, fill: "var(--color-leads)" },
+    { stage: 'Proposta', leads: metrics.leadStages.proposal, fill: "var(--color-leads)" },
+    { stage: 'Negociação', leads: metrics.leadStages.negotiation, fill: "var(--color-leads)" },
+  ] : [];
 
   const renderContent = () => {
     if (error) {
@@ -87,12 +110,23 @@ export default function DashboardCrmPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-white p-6 rounded-2xl shadow-neumorphism border border-gray-100">
-                <h3 className="text-lg font-bold text-black mb-4 flex items-center"><BarChart className="w-5 h-5 mr-3 text-primary"/>Funil de Vendas</h3>
-                <div className="h-80 flex items-center justify-center bg-gray-50 rounded-xl">
-                    <p className="text-gray-400">Componente de Gráfico - Em breve</p>
-                </div>
-            </div>
+             <Card className="bg-white p-6 rounded-2xl shadow-neumorphism border border-gray-100">
+                <CardHeader>
+                    <CardTitle className="flex items-center"><TrendingUp className="w-5 h-5 mr-3 text-primary"/>Funil de Vendas</CardTitle>
+                    <CardDescription>Distribuição de leads ativos por estágio.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
+                        <BarChartPrimitive data={funnelChartData} accessibilityLayer>
+                            <CartesianGrid vertical={false} />
+                            <XAxis dataKey="stage" tickLine={false} tickMargin={10} axisLine={false} />
+                            <YAxis tickLine={false} axisLine={false} />
+                            <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+                            <Bar dataKey="leads" radius={8} />
+                        </BarChartPrimitive>
+                    </ChartContainer>
+                </CardContent>
+            </Card>
             <div className="bg-white p-6 rounded-2xl shadow-neumorphism border border-gray-100">
                 <h3 className="text-lg font-bold text-black mb-4 flex items-center"><LineChart className="w-5 h-5 mr-3 text-primary"/>Novos Clientes por Mês</h3>
                 <div className="h-80 flex items-center justify-center bg-gray-50 rounded-xl">

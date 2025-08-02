@@ -24,6 +24,12 @@ const DashboardMetricsOutputSchema = z.object({
     totalLeads: z.number(),
     conversionRate: z.number(),
     totalRevenueWon: z.number(),
+    leadStages: z.object({
+        prospect: z.number(),
+        qualified: z.number(),
+        proposal: z.number(),
+        negotiation: z.number(),
+    }),
 });
 
 // Define flows
