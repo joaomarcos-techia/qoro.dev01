@@ -5,20 +5,24 @@ import { SaleLeadProfile } from '@/ai/schemas';
 import { listSaleLeads } from '@/ai/flows/crm-management';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { Loader2, ServerCrash } from 'lucide-react';
+import { Loader2, ServerCrash, PlusCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { SaleLeadForm } from '@/components/dashboard/crm/SaleLeadForm';
 
 export default function FunilPage() {
   const [leads, setLeads] = useState<SaleLeadProfile[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [refreshCounter, setRefreshCounter] = useState(0);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setCurrentUser(user);
       } else {
-        // If the user signs out, stop loading and clear data.
         setCurrentUser(null);
         setIsLoading(false);
         setLeads([]);
@@ -31,7 +35,7 @@ export default function FunilPage() {
   useEffect(() => {
     if (currentUser) {
       setIsLoading(true);
-      setError(null); // Reset error on new fetch
+      setError(null);
       listSaleLeads({ actor: currentUser.uid })
         .then(setLeads)
         .catch((err) => {
@@ -40,10 +44,14 @@ export default function FunilPage() {
         })
         .finally(() => setIsLoading(false));
     } else if (!auth.currentUser) {
-      // Explicitly stop loading if there's no user to fetch for.
       setIsLoading(false);
     }
-  }, [currentUser]);
+  }, [currentUser, refreshCounter]);
+
+  const handleLeadCreated = () => {
+    setIsModalOpen(false);
+    setRefreshCounter(prev => prev + 1);
+  };
 
   const columns = useMemo(() => {
     const stageOrder: SaleLeadProfile['stage'][] = [
@@ -105,6 +113,23 @@ export default function FunilPage() {
             Visualize e gerencie seu pipeline de negócios.
           </p>
         </div>
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <DialogTrigger asChild>
+                 <Button className="bg-primary text-primary-foreground px-4 py-2 rounded-xl hover:bg-primary/90 transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover flex items-center justify-center font-semibold">
+                    <PlusCircle className="mr-2 w-5 h-5" />
+                    Criar Oportunidade
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[700px]">
+                <DialogHeader>
+                    <DialogTitle className="text-2xl font-bold text-black">Criar Nova Oportunidade</DialogTitle>
+                    <DialogDescription>
+                        Preencha as informações para adicionar uma nova oportunidade ao funil.
+                    </DialogDescription>
+                </DialogHeader>
+                <SaleLeadForm onSaleLeadCreated={handleLeadCreated} />
+            </DialogContent>
+        </Dialog>
       </div>
       {renderContent()}
     </div>

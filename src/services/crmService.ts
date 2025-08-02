@@ -49,6 +49,18 @@ export const listCustomers = async (actorUid: string): Promise<z.infer<typeof Cu
     return customers;
 };
 
+export const createSaleLead = async (input: z.infer<typeof SaleLeadSchema>, actorUid: string) => {
+    const { organizationId } = await getAdminAndOrg(actorUid);
+    const newSaleLeadData = {
+        ...input,
+        companyId: organizationId,
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+    };
+    const saleLeadRef = await db.collection('sales_pipeline').add(newSaleLeadData);
+    return { id: saleLeadRef.id };
+};
+
 export const listSaleLeads = async (actorUid: string): Promise<SaleLeadProfile[]> => {
     const { organizationId } = await getAdminAndOrg(actorUid);
 
