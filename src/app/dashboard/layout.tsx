@@ -19,7 +19,8 @@ import {
   LayoutDashboard,
   ArrowLeftRight,
   Receipt,
-  Landmark
+  Landmark,
+  Truck
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Header } from '@/components/dashboard/Header';
@@ -73,6 +74,7 @@ const navConfig: Record<string, NavGroup> = {
             { href: '/dashboard/finance/transacoes', label: 'Transações', icon: ArrowLeftRight },
             { href: '/dashboard/finance/faturamento', label: 'Faturamento', icon: Receipt },
             { href: '/dashboard/finance/contas', label: 'Contas', icon: Landmark },
+            { href: '/dashboard/finance/fornecedores', label: 'Fornecedores', icon: Truck },
         ]
     },
     pulse: {

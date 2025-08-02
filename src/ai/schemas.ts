@@ -215,3 +215,19 @@ export const TransactionProfileSchema = TransactionSchema.extend({
     accountName: z.string().optional(), // Denormalized for display
 });
 export type TransactionProfile = z.infer<typeof TransactionProfileSchema>;
+
+export const SupplierSchema = z.object({
+    name: z.string().min(1, 'O nome é obrigatório.'),
+    cnpj: z.string().optional(),
+    email: z.string().email('Email inválido.'),
+    phone: z.string().optional(),
+    address: AddressSchema.optional(),
+    paymentTerms: z.string().optional(),
+    isActive: z.boolean().default(true),
+});
+
+export const SupplierProfileSchema = SupplierSchema.extend({
+    id: z.string(),
+    createdAt: z.string(),
+});
+export type SupplierProfile = z.infer<typeof SupplierProfileSchema>;
