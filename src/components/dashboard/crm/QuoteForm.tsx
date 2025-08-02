@@ -33,6 +33,8 @@ export function QuoteForm({ onQuoteCreated }: QuoteFormProps) {
   const [products, setProducts] = useState<ProductProfile[]>([]);
   const [customerSearch, setCustomerSearch] = useState('');
   const [productSearch, setProductSearch] = useState('');
+  const [isCustomerPopoverOpen, setIsCustomerPopoverOpen] = useState(false);
+  const [isProductPopoverOpen, setIsProductPopoverOpen] = useState(false);
 
   const {
     register,
@@ -103,6 +105,7 @@ export function QuoteForm({ onQuoteCreated }: QuoteFormProps) {
         unitPrice: product.price,
         total: product.price,
     });
+    setIsProductPopoverOpen(false);
   }
 
   const onSubmit = async (data: z.infer<typeof QuoteSchema>) => {
@@ -140,7 +143,7 @@ export function QuoteForm({ onQuoteCreated }: QuoteFormProps) {
                     name="customerId"
                     control={control}
                     render={({ field }) => (
-                         <Popover>
+                         <Popover open={isCustomerPopoverOpen} onOpenChange={setIsCustomerPopoverOpen}>
                             <PopoverTrigger asChild>
                                 <Button variant="outline" className="w-full justify-start font-normal">
                                     {field.value ? customers.find(c => c.id === field.value)?.name : 'Selecione um cliente'}
@@ -157,7 +160,7 @@ export function QuoteForm({ onQuoteCreated }: QuoteFormProps) {
                                 </div>
                                 <div className="max-h-[200px] overflow-y-auto">
                                     {filteredCustomers.map(customer => (
-                                        <div key={customer.id} onClick={() => { field.onChange(customer.id); }}
+                                        <div key={customer.id} onClick={() => { field.onChange(customer.id); setIsCustomerPopoverOpen(false); }}
                                             className="p-2 hover:bg-accent cursor-pointer text-sm">
                                             {customer.name}
                                         </div>
@@ -196,15 +199,15 @@ export function QuoteForm({ onQuoteCreated }: QuoteFormProps) {
                 {fields.map((item, index) => (
                     <div key={item.id} className="grid grid-cols-12 gap-2 items-center">
                         <div className="col-span-5"><Input value={item.name} disabled /></div>
-                        <div className="col-span-2"><Input type="number" value={item.quantity} onChange={(e) => update(index, {...item, quantity: Number(e.target.value)})} /></div>
-                        <div className="col-span-2"><Input type="number" step="0.01" value={item.unitPrice} onChange={(e) => update(index, {...item, unitPrice: Number(e.target.value)})} /></div>
-                        <div className="col-span-2"><Input value={(item.quantity * item.unitPrice).toFixed(2)} disabled /></div>
+                        <div className="col-span-2"><Input type="number" value={item.quantity} onChange={(e) => update(index, {...item, quantity: Number(e.target.value), total: Number(e.target.value) * item.unitPrice })} /></div>
+                        <div className="col-span-2"><Input type="number" step="0.01" value={item.unitPrice} onChange={(e) => update(index, {...item, unitPrice: Number(e.target.value), total: item.quantity * Number(e.target.value)})} /></div>
+                        <div className="col-span-2"><Input value={(item.total).toFixed(2)} disabled /></div>
                         <div className="col-span-1"><Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}><Trash2 className="w-4 h-4 text-red-500"/></Button></div>
                     </div>
                 ))}
                 {errors.items && <p className="text-red-500 text-sm">{errors.items.message}</p>}
 
-                 <Popover>
+                 <Popover open={isProductPopoverOpen} onOpenChange={setIsProductPopoverOpen}>
                     <PopoverTrigger asChild>
                         <Button type="button" variant="outline" className="w-full mt-2">
                             <PlusCircle className="mr-2 w-4 h-4"/> Adicionar Produto/Serviço
