@@ -121,8 +121,7 @@ export default function DashboardPage() {
             if(financeData) setFinanceMetrics({ totalBalance: financeData.totalBalance });
 
         } catch (error) {
-            // In case of an error, we'll just fall back to the default empty state
-            // rather than logging a console error, as the UI handles the loading/empty state.
+            console.error("Failed to fetch dashboard metrics:", error);
             setCrmMetrics({ totalCustomers: 0, totalLeads: 0 });
             setTaskMetrics({ pendingTasks: 0 });
             setFinanceMetrics({ totalBalance: 0 });
@@ -164,7 +163,7 @@ export default function DashboardPage() {
                 <MetricCard title="Total de Clientes" value={String(crmMetrics.totalCustomers)} icon={Users} isLoading={isLoading.metrics} />
                 <MetricCard title="Leads no Funil" value={String(crmMetrics.totalLeads)} icon={TrendingUp} isLoading={isLoading.metrics} />
                 <MetricCard title="Tarefas Pendentes" value={String(taskMetrics.pendingTasks)} icon={ListTodo} isLoading={isLoading.metrics} />
-                <MetricCard title="Saldo Atual" value={formatCurrency(financeMetrics.totalBalance)} icon={DollarSign} isLoading={isLoading.metrics} />
+                <MetricCard title="Saldo em Contas" value={formatCurrency(financeMetrics.totalBalance)} icon={DollarSign} isLoading={isLoading.metrics} />
             </div>
         </div>
 
