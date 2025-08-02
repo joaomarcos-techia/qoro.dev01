@@ -115,14 +115,31 @@ export const listSaleLeads = async (actorUid: string): Promise<SaleLeadProfile[]
 };
 
 
-export const getDashboardMetrics = async (actorUid: string): Promise<{ totalCustomers: number; totalLeads: number; conversionRate: number; totalRevenueWon: number; leadStages: { prospect: number; qualified: number; proposal: number; negotiation: number; }; }> => {
+export const getDashboardMetrics = async (actorUid: string): Promise<{ totalCustomers: number; totalLeads: number; conversionRate: number; totalRevenueWon: number; leadStages: { prospect: number; qualified: number; proposal: number; negotiation: number; }; newCustomersPerMonth: { month: string; count: number; }[] }> => {
     const { organizationId } = await getAdminAndOrg(actorUid);
 
-    const customersPromise = db.collection('customers')
-                                .where('companyId', '==', organizationId)
-                                .count()
-                                .get();
+    const customersRef = db.collection('customers').where('companyId', '==', organizationId);
+    
+    // Get total customers count
+    const totalCustomersPromise = customersRef.count().get();
+    
+    // Get new customers per month for the last 6 months
+    const now = new Date();
+    const monthlyCounts: Record<string, number> = {};
+    const monthLabels: string[] = [];
+    
+    for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const monthLabel = d.toLocaleString('default', { month: 'short' });
+        monthlyCounts[monthKey] = 0;
+        monthLabels.push(monthLabel);
+    }
+    
+    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+    const newCustomersPromise = customersRef.where('createdAt', '>=', sixMonthsAgo).get();
 
+    // Get leads data
     const leadsPromise = db.collection('sales_pipeline')
                              .where('companyId', '==', organizationId)
                              .where('stage', 'not-in', ['closed_won', 'closed_lost'])
@@ -133,17 +150,27 @@ export const getDashboardMetrics = async (actorUid: string): Promise<{ totalCust
                                .where('companyId', '==', organizationId)
                                .get();
     
-    const [customersSnapshot, leadsSnapshot, leadsDataSnapshot] = await Promise.all([customersPromise, leadsPromise, leadsDataPromise]);
+    const [totalCustomersSnapshot, newCustomersSnapshot, leadsSnapshot, leadsDataSnapshot] = await Promise.all([totalCustomersPromise, newCustomersPromise, leadsPromise, leadsDataPromise]);
+    
+    // Process new customers
+    newCustomersSnapshot.forEach(doc => {
+        const createdAt = doc.data().createdAt.toDate();
+        const monthKey = `${createdAt.getFullYear()}-${String(createdAt.getMonth() + 1).padStart(2, '0')}`;
+        if (monthlyCounts.hasOwnProperty(monthKey)) {
+            monthlyCounts[monthKey]++;
+        }
+    });
 
+    const newCustomersPerMonth = Object.keys(monthlyCounts).map((key, index) => ({
+        month: monthLabels[index],
+        count: monthlyCounts[key],
+    }));
+
+    // Process leads
     let totalRevenueWon = 0;
     let closedWonCount = 0;
     let closedLostCount = 0;
-    const leadStages = {
-        prospect: 0,
-        qualified: 0,
-        proposal: 0,
-        negotiation: 0,
-    };
+    const leadStages = { prospect: 0, qualified: 0, proposal: 0, negotiation: 0 };
 
     leadsDataSnapshot.forEach(doc => {
         const lead = doc.data();
@@ -161,11 +188,12 @@ export const getDashboardMetrics = async (actorUid: string): Promise<{ totalCust
     const conversionRate = totalClosedDeals > 0 ? (closedWonCount / totalClosedDeals) * 100 : 0;
 
     return {
-        totalCustomers: customersSnapshot.data().count,
+        totalCustomers: totalCustomersSnapshot.data().count,
         totalLeads: leadsSnapshot.data().count,
         conversionRate: parseFloat(conversionRate.toFixed(1)),
         totalRevenueWon,
         leadStages,
+        newCustomersPerMonth,
     };
 };
 

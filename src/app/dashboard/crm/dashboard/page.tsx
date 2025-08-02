@@ -20,12 +20,17 @@ interface CrmMetrics {
     proposal: number;
     negotiation: number;
   };
+  newCustomersPerMonth: { month: string; count: number }[];
 }
 
 const chartConfig = {
   leads: {
     label: "Leads",
     color: "hsl(var(--chart-1))",
+  },
+  customers: {
+    label: "Novos Clientes",
+    color: "hsl(var(--chart-2))",
   },
 };
 
@@ -88,6 +93,8 @@ export default function DashboardCrmPage() {
     { stage: 'Negociação', leads: metrics.leadStages.negotiation, fill: "var(--color-leads)" },
   ] : [];
 
+  const newCustomersChartData = metrics ? metrics.newCustomersPerMonth.map(item => ({...item, fill: 'var(--color-customers)' })) : [];
+
   const renderContent = () => {
     if (error) {
       return (
@@ -127,12 +134,23 @@ export default function DashboardCrmPage() {
                     </ChartContainer>
                 </CardContent>
             </Card>
-            <div className="bg-white p-6 rounded-2xl shadow-neumorphism border border-gray-100">
-                <h3 className="text-lg font-bold text-black mb-4 flex items-center"><LineChart className="w-5 h-5 mr-3 text-primary"/>Novos Clientes por Mês</h3>
-                <div className="h-80 flex items-center justify-center bg-gray-50 rounded-xl">
-                    <p className="text-gray-400">Componente de Gráfico - Em breve</p>
-                </div>
-            </div>
+            <Card className="bg-white p-6 rounded-2xl shadow-neumorphism border border-gray-100">
+                <CardHeader>
+                    <CardTitle className="flex items-center"><LineChart className="w-5 h-5 mr-3 text-primary"/>Novos Clientes por Mês</CardTitle>
+                    <CardDescription>Crescimento da base de clientes nos últimos 6 meses.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
+                        <BarChartPrimitive data={newCustomersChartData} accessibilityLayer>
+                            <CartesianGrid vertical={false} />
+                            <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
+                            <YAxis tickLine={false} axisLine={false} />
+                            <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+                            <Bar dataKey="count" name="Novos Clientes" radius={8} />
+                        </BarChartPrimitive>
+                    </ChartContainer>
+                </CardContent>
+            </Card>
         </div>
       </div>
     );

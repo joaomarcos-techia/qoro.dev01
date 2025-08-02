@@ -30,6 +30,10 @@ const DashboardMetricsOutputSchema = z.object({
         proposal: z.number(),
         negotiation: z.number(),
     }),
+    newCustomersPerMonth: z.array(z.object({
+        month: z.string(),
+        count: z.number(),
+    })),
 });
 
 // Define flows
