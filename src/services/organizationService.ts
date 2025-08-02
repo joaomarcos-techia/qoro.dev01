@@ -150,16 +150,16 @@ export const listUsers = async (actor: string): Promise<UserProfile[]> => {
 export const updateUserPermissions = async (input: z.infer<typeof UpdateUserPermissionsSchema>, actor: string): Promise<{ success: boolean }> => {
     const { organizationId, adminUid } = await getAdminAndOrg(actor);
     const { userId, permissions } = input;
+
+    if (adminUid === userId) {
+        throw new Error("Administradores não podem alterar as próprias permissões.");
+    }
     
     const targetUserRef = db.collection('users').doc(userId);
     const targetUserDoc = await targetUserRef.get();
 
     if (!targetUserDoc.exists || targetUserDoc.data()?.organizationId !== organizationId) {
         throw new Error("Usuário alvo não encontrado nesta organização.");
-    }
-
-    if (adminUid === userId) {
-        throw new Error("Administradores não podem alterar as próprias permissões.");
     }
 
     await targetUserRef.update({ permissions });
