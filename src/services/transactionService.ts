@@ -62,9 +62,12 @@ export const listTransactions = async (actorUid: string): Promise<TransactionPro
         return [];
     }
     
-    // Denormalization: Fetch account names
+    // Denormalization: Fetch account and customer names
     const accountIds = [...new Set(transactionsSnapshot.docs.map(doc => doc.data().accountId).filter(id => id))];
+    const customerIds = [...new Set(transactionsSnapshot.docs.map(doc => doc.data().customerId).filter(id => id))];
+    
     const accounts: Record<string, { name?: string }> = {};
+    const customers: Record<string, { name?: string }> = {};
 
     if (accountIds.length > 0) {
         const accountsSnapshot = await db.collection('accounts').where('__name__', 'in', accountIds).get();
@@ -73,9 +76,17 @@ export const listTransactions = async (actorUid: string): Promise<TransactionPro
         });
     }
 
+    if (customerIds.length > 0) {
+        const customersSnapshot = await db.collection('customers').where('__name__', 'in', customerIds).get();
+        customersSnapshot.forEach(doc => {
+            customers[doc.id] = { name: doc.data().name };
+        });
+    }
+
     const transactions: TransactionProfile[] = transactionsSnapshot.docs.map(doc => {
         const data = doc.data();
         const accountInfo = accounts[data.accountId] || {};
+        const customerInfo = customers[data.customerId] || {};
         const date = data.date ? data.date.toDate() : new Date();
 
         const parsedData = TransactionProfileSchema.parse({
@@ -85,6 +96,7 @@ export const listTransactions = async (actorUid: string): Promise<TransactionPro
             createdAt: data.createdAt.toDate().toISOString(),
             updatedAt: data.updatedAt.toDate().toISOString(),
             accountName: accountInfo.name,
+            customerName: customerInfo.name,
         });
 
         // Convert Date object back to ISO string for the client

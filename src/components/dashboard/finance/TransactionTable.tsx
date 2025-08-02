@@ -70,6 +70,11 @@ export const columns: ColumnDef<TransactionProfile>[] = [
         return <span className={`font-semibold ${color}`}>{type === 'income' ? `+ ${formatted}` : `- ${formatted}`}</span>;
     },
   },
+   {
+    accessorKey: 'customerName',
+    header: 'Cliente',
+    cell: ({ row }) => row.getValue('customerName') || '-',
+  },
   {
     accessorKey: 'category',
     header: 'Categoria',
@@ -232,7 +237,10 @@ export function TransactionTable() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
                   Nenhum resultado encontrado.
                 </TableCell>
               </TableRow>

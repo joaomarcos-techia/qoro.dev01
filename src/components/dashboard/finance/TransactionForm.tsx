@@ -11,10 +11,11 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { createTransaction, listAccounts } from '@/ai/flows/finance-management';
-import { TransactionSchema, AccountProfile } from '@/ai/schemas';
+import { listCustomers } from '@/ai/flows/crm-management';
+import { TransactionSchema, AccountProfile, CustomerProfile } from '@/ai/schemas';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { Loader2, AlertCircle, CalendarIcon } from 'lucide-react';
+import { Loader2, AlertCircle, CalendarIcon, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
@@ -27,6 +28,9 @@ export function TransactionForm({ onTransactionCreated }: TransactionFormProps) 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [accounts, setAccounts] = useState<AccountProfile[]>([]);
+  const [customers, setCustomers] = useState<CustomerProfile[]>([]);
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [isCustomerPopoverOpen, setIsCustomerPopoverOpen] = useState(false);
   
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -37,12 +41,20 @@ export function TransactionForm({ onTransactionCreated }: TransactionFormProps) 
 
   useEffect(() => {
     if (currentUser) {
-        listAccounts({ actor: currentUser.uid })
-            .then(setAccounts)
-            .catch(err => {
-                console.error("Failed to load accounts", err);
-                setError("Não foi possível carregar as contas. Tente novamente.");
-            });
+        const fetchData = async () => {
+            try {
+                const [accountsData, customersData] = await Promise.all([
+                    listAccounts({ actor: currentUser.uid }),
+                    listCustomers({ actor: currentUser.uid })
+                ]);
+                setAccounts(accountsData);
+                setCustomers(customersData);
+            } catch (err) {
+                 console.error("Failed to load accounts or customers", err);
+                 setError("Não foi possível carregar os dados necessários. Tente novamente.");
+            }
+        };
+        fetchData();
     }
   }, [currentUser]);
 
@@ -78,6 +90,8 @@ export function TransactionForm({ onTransactionCreated }: TransactionFormProps) 
       setIsLoading(false);
     }
   };
+
+  const filteredCustomers = customers.filter(c => c.name.toLowerCase().includes(customerSearch.toLowerCase()));
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 py-4">
@@ -144,6 +158,41 @@ export function TransactionForm({ onTransactionCreated }: TransactionFormProps) 
           )}/>
            {errors.date && <p className="text-red-500 text-sm">{errors.date.message}</p>}
         </div>
+        
+        <div className="space-y-2">
+          <Label>Cliente (Opcional)</Label>
+            <Controller
+                name="customerId"
+                control={control}
+                render={({ field }) => (
+                    <Popover open={isCustomerPopoverOpen} onOpenChange={setIsCustomerPopoverOpen}>
+                        <PopoverTrigger asChild>
+                            <Button variant="outline" className="w-full justify-start font-normal">
+                                {field.value ? customers.find(c => c.id === field.value)?.name : 'Selecione um cliente'}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[300px] p-0">
+                            <div className="p-2 border-b">
+                                <Input 
+                                    placeholder="Buscar cliente..." 
+                                    value={customerSearch}
+                                    onChange={(e) => setCustomerSearch(e.target.value)}
+                                    className="w-full"
+                                />
+                            </div>
+                            <div className="max-h-[200px] overflow-y-auto">
+                                {filteredCustomers.length > 0 ? filteredCustomers.map(customer => (
+                                    <div key={customer.id} onClick={() => { field.onChange(customer.id); setIsCustomerPopoverOpen(false); }}
+                                        className="p-2 hover:bg-accent cursor-pointer text-sm">
+                                        {customer.name}
+                                    </div>
+                                )) : <div className="p-2 text-sm text-gray-500">Nenhum cliente encontrado.</div>}
+                            </div>
+                        </PopoverContent>
+                    </Popover>
+                )}
+            />
+        </div>
 
         <div className="space-y-2">
           <Label htmlFor="category">Categoria*</Label>
@@ -168,7 +217,7 @@ export function TransactionForm({ onTransactionCreated }: TransactionFormProps) 
           )}/>
         </div>
 
-         <div className="space-y-2 md:col-span-2">
+         <div className="space-y-2">
           <Label>Status*</Label>
           <Controller name="status" control={control} render={({ field }) => (
             <Select onValueChange={field.onChange} defaultValue={field.value}>

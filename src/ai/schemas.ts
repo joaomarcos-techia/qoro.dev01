@@ -206,6 +206,7 @@ export const TransactionSchema = z.object({
     status: z.enum(['pending', 'paid', 'cancelled']).default('paid'),
     paymentMethod: z.enum(['cash', 'credit_card', 'debit_card', 'pix', 'bank_transfer', 'boleto']),
     tags: z.array(z.string()).optional(),
+    customerId: z.string().optional(),
 });
 
 export const TransactionProfileSchema = TransactionSchema.extend({
@@ -213,6 +214,7 @@ export const TransactionProfileSchema = TransactionSchema.extend({
     createdAt: z.string(),
     updatedAt: z.string(),
     accountName: z.string().optional(), // Denormalized for display
+    customerName: z.string().optional(), // Denormalized for display
 });
 export type TransactionProfile = z.infer<typeof TransactionProfileSchema>;
 
