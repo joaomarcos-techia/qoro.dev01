@@ -8,7 +8,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import * as taskService from '@/services/taskService';
-import { TaskProfileSchema } from '@/ai/schemas';
+import { TaskProfileSchema, TaskSchema } from '@/ai/schemas';
 
 // Define the tool for listing tasks
 export const listTasksTool = ai.defineTool(
@@ -24,5 +24,29 @@ export const listTasksTool = ai.defineTool(
             throw new Error('User authentication is required to list tasks.');
         }
         return taskService.listTasks(context.actor);
+    }
+);
+
+// Define the tool for creating a task
+export const createTaskTool = ai.defineTool(
+    {
+        name: 'createTaskTool',
+        description: 'Creates a new task for the user. Use this when the user asks to be reminded of something, to create a to-do item, or to schedule an activity.',
+        inputSchema: TaskSchema.pick({ title: true, description: true, dueDate: true, priority: true, status: true }),
+        outputSchema: z.object({ id: z.string() }),
+    },
+    async (input, context) => {
+        if (!context?.actor) {
+            throw new Error('User authentication is required to create a task.');
+        }
+        // The service expects the full TaskSchema, so we provide defaults for fields the AI doesn't set.
+        const fullTaskData: z.infer<typeof TaskSchema> = {
+            title: input.title,
+            description: input.description || undefined,
+            dueDate: input.dueDate || null,
+            priority: input.priority || 'medium',
+            status: input.status || 'todo',
+        };
+        return taskService.createTask(fullTaskData, context.actor);
     }
 );
