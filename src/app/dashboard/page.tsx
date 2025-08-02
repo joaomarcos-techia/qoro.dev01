@@ -100,27 +100,54 @@ export default function DashboardPage() {
         setIsLoading(prev => ({...prev, metrics: true}));
         setErrors({ crm: false, task: false, finance: false });
 
-        const crmPromise = permissions.qoroCrm 
-            ? getCrmMetrics({ actor: currentUser.uid }).catch(() => { setErrors(e => ({...e, crm: true})); return null; })
-            : Promise.resolve(null);
+        const promises = [];
 
-        const taskPromise = permissions.qoroTask 
-            ? getTaskMetrics({ actor: currentUser.uid }).catch(() => { setErrors(e => ({...e, task: true})); return null; })
-            : Promise.resolve(null);
+        if (permissions.qoroCrm) {
+            promises.push(
+                getCrmMetrics({ actor: currentUser.uid })
+                    .then(data => ({ type: 'crm', data }))
+                    .catch(err => { 
+                        console.error("CRM Metrics Error:", err);
+                        setErrors(e => ({...e, crm: true})); 
+                        return { type: 'crm', data: null }; 
+                    })
+            );
+        }
 
-        const financePromise = permissions.qoroFinance
-            ? getFinanceMetrics({ actor: currentUser.uid }).catch(() => { setErrors(e => ({...e, finance: true})); return null; })
-            : Promise.resolve(null);
+        if (permissions.qoroTask) {
+             promises.push(
+                getTaskMetrics({ actor: currentUser.uid })
+                    .then(data => ({ type: 'task', data }))
+                    .catch(err => { 
+                        console.error("Task Metrics Error:", err);
+                        setErrors(e => ({...e, task: true})); 
+                        return { type: 'task', data: null }; 
+                    })
+            );
+        }
+
+        if (permissions.qoroFinance) {
+            promises.push(
+                getFinanceMetrics({ actor: currentUser.uid })
+                    .then(data => ({ type: 'finance', data }))
+                    .catch(err => { 
+                        console.error("Finance Metrics Error:", err);
+                        setErrors(e => ({...e, finance: true})); 
+                        return { type: 'finance', data: null }; 
+                    })
+            );
+        }
         
-        const [crmData, taskData, financeData] = await Promise.all([
-            crmPromise,
-            taskPromise,
-            financePromise
-        ]);
+        const results = await Promise.all(promises);
 
-        if(crmData) setCrmMetrics({ totalCustomers: crmData.totalCustomers, totalLeads: crmData.totalLeads });
-        if(taskData) setTaskMetrics({ pendingTasks: taskData.pendingTasks });
-        if(financeData) setFinanceMetrics({ totalBalance: financeData.totalBalance });
+        results.forEach(result => {
+            if (result.data) {
+                if (result.type === 'crm') setCrmMetrics({ totalCustomers: result.data.totalCustomers, totalLeads: result.data.totalLeads });
+                if (result.type === 'task') setTaskMetrics({ pendingTasks: result.data.pendingTasks });
+                if (result.type === 'finance') setFinanceMetrics({ totalBalance: result.data.totalBalance });
+            }
+        });
+
 
         setIsLoading(prev => ({...prev, metrics: false}));
     }

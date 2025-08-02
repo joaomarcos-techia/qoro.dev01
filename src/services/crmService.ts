@@ -119,15 +119,28 @@ export const getDashboardMetrics = async (actorUid: string): Promise<{ totalCust
     const { organizationId } = await getAdminAndOrg(actorUid);
 
     const customersRef = db.collection('customers').where('companyId', '==', organizationId);
+    const leadsRef = db.collection('sales_pipeline').where('companyId', '==', organizationId);
     
-    // Get total customers count
+    // 1. Get total customers count
     const totalCustomersPromise = customersRef.count().get();
     
-    // Get new customers per month for the last 6 months
+    // 2. Get new customers per month for the last 6 months
     const now = new Date();
+    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+    const newCustomersPromise = customersRef.where('createdAt', '>=', sixMonthsAgo).get();
+
+    // 3. Get all leads to process their stages and values
+    const allLeadsPromise = leadsRef.get();
+    
+    const [totalCustomersSnapshot, newCustomersSnapshot, allLeadsSnapshot] = await Promise.all([
+        totalCustomersPromise, 
+        newCustomersPromise, 
+        allLeadsPromise
+    ]);
+    
+    // Process new customers
     const monthlyCounts: Record<string, number> = {};
     const monthLabels: string[] = [];
-    
     for (let i = 5; i >= 0; i--) {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -135,18 +148,6 @@ export const getDashboardMetrics = async (actorUid: string): Promise<{ totalCust
         monthlyCounts[monthKey] = 0;
         monthLabels.push(monthLabel);
     }
-    
-    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
-    const newCustomersPromise = customersRef.where('createdAt', '>=', sixMonthsAgo).get();
-
-    // Get leads data
-    const leadsDataPromise = db.collection('sales_pipeline')
-                               .where('companyId', '==', organizationId)
-                               .get();
-    
-    const [totalCustomersSnapshot, newCustomersSnapshot, leadsDataSnapshot] = await Promise.all([totalCustomersPromise, newCustomersPromise, leadsDataPromise]);
-    
-    // Process new customers
     newCustomersSnapshot.forEach(doc => {
         const createdAt = doc.data().createdAt.toDate();
         const monthKey = `${createdAt.getFullYear()}-${String(createdAt.getMonth() + 1).padStart(2, '0')}`;
@@ -154,19 +155,18 @@ export const getDashboardMetrics = async (actorUid: string): Promise<{ totalCust
             monthlyCounts[monthKey]++;
         }
     });
-
     const newCustomersPerMonth = Object.keys(monthlyCounts).map((key, index) => ({
         month: monthLabels[index],
         count: monthlyCounts[key],
     }));
 
-    // Process leads (client-side aggregation)
+    // Process leads
     let totalRevenueWon = 0;
     let closedWonCount = 0;
     let closedLostCount = 0;
     const leadStages = { prospect: 0, qualified: 0, proposal: 0, negotiation: 0 };
 
-    leadsDataSnapshot.forEach(doc => {
+    allLeadsSnapshot.forEach(doc => {
         const lead = doc.data();
         if(lead.stage === 'closed_won') {
             totalRevenueWon += lead.value || 0;
@@ -180,12 +180,12 @@ export const getDashboardMetrics = async (actorUid: string): Promise<{ totalCust
     
     const activeLeadsCount = Object.values(leadStages).reduce((a, b) => a + b, 0);
     const totalClosedDeals = closedWonCount + closedLostCount;
-    const conversionRate = totalClosedDeals > 0 ? (closedWonCount / totalClosedDeals) * 100 : 0;
+    const conversionRate = totalClosedDeals > 0 ? parseFloat(((closedWonCount / totalClosedDeals) * 100).toFixed(1)) : 0;
 
     return {
         totalCustomers: totalCustomersSnapshot.data().count,
         totalLeads: activeLeadsCount,
-        conversionRate: parseFloat(conversionRate.toFixed(1)),
+        conversionRate: conversionRate,
         totalRevenueWon,
         leadStages,
         newCustomersPerMonth,
