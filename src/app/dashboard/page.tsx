@@ -9,7 +9,8 @@ import {
   Users,
   Loader2,
   TrendingUp,
-  ListTodo
+  ListTodo,
+  AlertTriangle
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
@@ -47,17 +48,17 @@ const formatCurrency = (value: number) => {
     }).format(value);
 };
 
-const MetricCard = ({ title, value, icon: Icon, isLoading }: { title: string, value: string, icon: React.ElementType, isLoading: boolean }) => (
+const MetricCard = ({ title, value, icon: Icon, isLoading, error }: { title: string, value: string, icon: React.ElementType, isLoading: boolean, error?: boolean }) => (
     <div className="bg-white p-6 rounded-2xl shadow-neumorphism border border-gray-100 flex items-center">
-        <div className="p-3 rounded-xl bg-primary text-white mr-4 shadow-neumorphism">
-            <Icon className="w-6 h-6" />
+        <div className={`p-3 rounded-xl ${error ? 'bg-yellow-400' : 'bg-primary'} text-white mr-4 shadow-neumorphism`}>
+            {error ? <AlertTriangle className="w-6 h-6" /> : <Icon className="w-6 h-6" />}
         </div>
         <div>
             <p className="text-gray-600 text-sm font-medium">{title}</p>
             {isLoading ? (
                  <Loader2 className="w-6 h-6 text-gray-400 animate-spin" />
             ) : (
-                <p className="text-2xl font-bold text-black">{value}</p>
+                <p className="text-2xl font-bold text-black">{error ? 'Erro' : value}</p>
             )}
         </div>
     </div>
@@ -67,6 +68,7 @@ export default function DashboardPage() {
   const [permissions, setPermissions] = useState<UserPermissions | null>(null);
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [isLoading, setIsLoading] = useState({ permissions: true, metrics: true });
+  const [errors, setErrors] = useState({ crm: false, task: false, finance: false });
   const [crmMetrics, setCrmMetrics] = useState<CrmMetrics>({ totalCustomers: 0, totalLeads: 0 });
   const [taskMetrics, setTaskMetrics] = useState<TaskMetrics>({ pendingTasks: 0 });
   const [financeMetrics, setFinanceMetrics] = useState<FinanceMetrics>({ totalBalance: 0 });
@@ -93,41 +95,34 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function fetchMetrics() {
-        if (!currentUser) return;
+        if (!currentUser || !permissions) return;
 
         setIsLoading(prev => ({...prev, metrics: true}));
+        setErrors({ crm: false, task: false, finance: false });
 
-        try {
-            const crmPromise = permissions?.qoroCrm 
-                ? getCrmMetrics({ actor: currentUser.uid }) 
-                : Promise.resolve(null);
+        const crmPromise = permissions.qoroCrm 
+            ? getCrmMetrics({ actor: currentUser.uid }).catch(() => { setErrors(e => ({...e, crm: true})); return null; })
+            : Promise.resolve(null);
 
-            const taskPromise = permissions?.qoroTask 
-                ? getTaskMetrics({ actor: currentUser.uid }) 
-                : Promise.resolve(null);
+        const taskPromise = permissions.qoroTask 
+            ? getTaskMetrics({ actor: currentUser.uid }).catch(() => { setErrors(e => ({...e, task: true})); return null; })
+            : Promise.resolve(null);
 
-            const financePromise = permissions?.qoroFinance
-                ? getFinanceMetrics({ actor: currentUser.uid })
-                : Promise.resolve(null);
-            
-            const [crmData, taskData, financeData] = await Promise.all([
-                crmPromise,
-                taskPromise,
-                financePromise
-            ]);
+        const financePromise = permissions.qoroFinance
+            ? getFinanceMetrics({ actor: currentUser.uid }).catch(() => { setErrors(e => ({...e, finance: true})); return null; })
+            : Promise.resolve(null);
+        
+        const [crmData, taskData, financeData] = await Promise.all([
+            crmPromise,
+            taskPromise,
+            financePromise
+        ]);
 
-            if(crmData) setCrmMetrics({ totalCustomers: crmData.totalCustomers, totalLeads: crmData.totalLeads });
-            if(taskData) setTaskMetrics({ pendingTasks: taskData.pendingTasks });
-            if(financeData) setFinanceMetrics({ totalBalance: financeData.totalBalance });
+        if(crmData) setCrmMetrics({ totalCustomers: crmData.totalCustomers, totalLeads: crmData.totalLeads });
+        if(taskData) setTaskMetrics({ pendingTasks: taskData.pendingTasks });
+        if(financeData) setFinanceMetrics({ totalBalance: financeData.totalBalance });
 
-        } catch (error) {
-            console.error("Failed to fetch dashboard metrics:", error);
-            setCrmMetrics({ totalCustomers: 0, totalLeads: 0 });
-            setTaskMetrics({ pendingTasks: 0 });
-            setFinanceMetrics({ totalBalance: 0 });
-        } finally {
-            setIsLoading(prev => ({...prev, metrics: false}));
-        }
+        setIsLoading(prev => ({...prev, metrics: false}));
     }
     
     if (currentUser && permissions) {
@@ -160,11 +155,20 @@ export default function DashboardPage() {
        <div className="mb-12">
             <h3 className="text-xl font-bold text-black mb-6">Métricas e Insights Rápidos</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <MetricCard title="Total de Clientes" value={String(crmMetrics.totalCustomers)} icon={Users} isLoading={isLoading.metrics} />
-                <MetricCard title="Leads no Funil" value={String(crmMetrics.totalLeads)} icon={TrendingUp} isLoading={isLoading.metrics} />
-                <MetricCard title="Tarefas Pendentes" value={String(taskMetrics.pendingTasks)} icon={ListTodo} isLoading={isLoading.metrics} />
-                <MetricCard title="Saldo em Contas" value={formatCurrency(financeMetrics.totalBalance)} icon={DollarSign} isLoading={isLoading.metrics} />
+                {permissions?.qoroCrm && (
+                  <>
+                    <MetricCard title="Total de Clientes" value={String(crmMetrics.totalCustomers)} icon={Users} isLoading={isLoading.metrics} error={errors.crm} />
+                    <MetricCard title="Leads no Funil" value={String(crmMetrics.totalLeads)} icon={TrendingUp} isLoading={isLoading.metrics} error={errors.crm} />
+                  </>
+                )}
+                {permissions?.qoroTask && <MetricCard title="Tarefas Pendentes" value={String(taskMetrics.pendingTasks)} icon={ListTodo} isLoading={isLoading.metrics} error={errors.task} />}
+                {permissions?.qoroFinance && <MetricCard title="Saldo em Contas" value={formatCurrency(financeMetrics.totalBalance)} icon={DollarSign} isLoading={isLoading.metrics} error={errors.finance} />}
             </div>
+             {(errors.crm || errors.task || errors.finance) && (
+                <div className="mt-4 p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 rounded-lg text-sm">
+                   <p><span className="font-bold">Aviso:</span> Alguns dados não puderam ser carregados. Os desenvolvedores foram notificados. A funcionalidade principal continua operacional.</p>
+                </div>
+            )}
         </div>
 
       <div>

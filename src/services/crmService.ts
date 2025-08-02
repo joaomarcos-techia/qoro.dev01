@@ -140,17 +140,12 @@ export const getDashboardMetrics = async (actorUid: string): Promise<{ totalCust
     const newCustomersPromise = customersRef.where('createdAt', '>=', sixMonthsAgo).get();
 
     // Get leads data
-    const leadsPromise = db.collection('sales_pipeline')
-                             .where('companyId', '==', organizationId)
-                             .where('stage', 'not-in', ['closed_won', 'closed_lost'])
-                             .count()
-                             .get();
-
+    // Temporarily simplified query to avoid composite index error
     const leadsDataPromise = db.collection('sales_pipeline')
                                .where('companyId', '==', organizationId)
                                .get();
     
-    const [totalCustomersSnapshot, newCustomersSnapshot, leadsSnapshot, leadsDataSnapshot] = await Promise.all([totalCustomersPromise, newCustomersPromise, leadsPromise, leadsDataPromise]);
+    const [totalCustomersSnapshot, newCustomersSnapshot, leadsDataSnapshot] = await Promise.all([totalCustomersPromise, newCustomersPromise, leadsDataPromise]);
     
     // Process new customers
     newCustomersSnapshot.forEach(doc => {
@@ -166,10 +161,11 @@ export const getDashboardMetrics = async (actorUid: string): Promise<{ totalCust
         count: monthlyCounts[key],
     }));
 
-    // Process leads
+    // Process leads (client-side aggregation)
     let totalRevenueWon = 0;
     let closedWonCount = 0;
     let closedLostCount = 0;
+    let activeLeadsCount = 0;
     const leadStages = { prospect: 0, qualified: 0, proposal: 0, negotiation: 0 };
 
     leadsDataSnapshot.forEach(doc => {
@@ -181,6 +177,7 @@ export const getDashboardMetrics = async (actorUid: string): Promise<{ totalCust
             closedLostCount++;
         } else if (lead.stage in leadStages) {
             leadStages[lead.stage as keyof typeof leadStages]++;
+            activeLeadsCount++;
         }
     });
 
@@ -189,7 +186,7 @@ export const getDashboardMetrics = async (actorUid: string): Promise<{ totalCust
 
     return {
         totalCustomers: totalCustomersSnapshot.data().count,
-        totalLeads: leadsSnapshot.data().count,
+        totalLeads: activeLeadsCount,
         conversionRate: parseFloat(conversionRate.toFixed(1)),
         totalRevenueWon,
         leadStages,
