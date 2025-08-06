@@ -46,32 +46,15 @@ const ChartTooltip = RechartsTooltip
 
 const ChartTooltipContent = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<typeof RechartsTooltip.Content>
->(({ className, style, ...props }, ref) => {
-  // Destructure all known props from recharts to prevent them from being passed to the div
-  const {
-    active,
-    payload,
-    label,
-    formatter,
-    itemStyle,
-    labelStyle,
-    contentStyle,
-    cursor,
-    viewBox,
-    offset,
-    coordinate,
-    position,
-    isAnimationActive,
-    animationDuration,
-    animationEasing,
-    filterNull,
-    useTranslate3d,
-    // Keep any other props that might be passed by Recharts in a rest parameter
-    // but do not spread them onto the final div.
-    ...rest
-  } = props;
-  
+  React.ComponentProps<"div"> & {
+    hideLabel?: boolean
+    hideIndicator?: boolean
+  }
+>(({
+  className,
+  style,
+  ...props
+}, ref) => {
   return (
     <div
       ref={ref}
