@@ -47,9 +47,8 @@ const ChartTooltip = RechartsTooltip
 const ChartTooltipContent = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<typeof RechartsTooltip.Content>
->(({ className, ...props }, ref) => {
-  // Destructure props specific to Recharts that are not valid HTML attributes
-  // and any other that might be passed by Recharts by using a rest parameter.
+>(({ className, style, ...props }, ref) => {
+  // Destructure all known props from recharts to prevent them from being passed to the div
   const {
     active,
     payload,
@@ -68,6 +67,8 @@ const ChartTooltipContent = React.forwardRef<
     animationEasing,
     filterNull,
     useTranslate3d,
+    // Keep any other props that might be passed by Recharts in a rest parameter
+    // but do not spread them onto the final div.
     ...rest
   } = props;
   
@@ -78,9 +79,10 @@ const ChartTooltipContent = React.forwardRef<
         "z-50 overflow-hidden rounded-lg border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-sm animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
         className
       )}
-      // Pass only valid HTML attributes to the div
-      {...rest as React.HTMLAttributes<HTMLDivElement>}
-    />
+      style={style}
+    >
+      {/* You can optionally render payload data here if needed, or leave it empty */}
+    </div>
   )
 })
 ChartTooltipContent.displayName = "ChartTooltipContent"
