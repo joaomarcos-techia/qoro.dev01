@@ -138,11 +138,11 @@ export default function VisaoGeralPage() {
                         </CardHeader>
                         <CardContent>
                              <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
-                                <BarChartPrimitive data={cashFlowChartData} accessibilityLayer>
+                                <BarChartPrimitive data={cashFlowChartData}>
                                     <CartesianGrid vertical={false} />
                                     <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
                                     <YAxis tickLine={false} axisLine={false} tickFormatter={(value) => `R$ ${value / 1000}k`} />
-                                    <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+                                    <ChartTooltip content={<ChartTooltipContent />} />
                                     <Bar dataKey="receita" fill="var(--color-receita)" radius={8} />
                                     <Bar dataKey="despesa" fill="var(--color-despesa)" radius={8} />
                                 </BarChartPrimitive>
@@ -157,7 +157,7 @@ export default function VisaoGeralPage() {
                         <CardContent className="flex justify-center">
                             <ChartContainer config={chartConfig} className="min-h-[300px] w-full max-w-[300px]">
                                 <PieChartPrimitive>
-                                <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                                <ChartTooltip content={<ChartTooltipContent hideLabel />} />
                                 <Pie data={expenseChartData} dataKey="value" nameKey="name" innerRadius={60}>
                                     {expenseChartData.map((entry) => (
                                         <Cell key={entry.name} fill={entry.fill} />
