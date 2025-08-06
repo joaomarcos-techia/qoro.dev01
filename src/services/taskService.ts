@@ -1,4 +1,9 @@
 
+'use server';
+/**
+ * @fileOverview Task management services.
+ */
+
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
 import { TaskSchema, TaskProfileSchema } from '@/ai/schemas';
@@ -67,7 +72,12 @@ export const getDashboardMetrics = async (actorUid: string): Promise<{ totalTask
         completedSnapshot,
         inProgressSnapshot,
         pendingSnapshot,
-    ] = await Promise.all([totalPromise, completedPromise, inProgressPromise, pendingPromise]);
+    ] = await Promise.all([
+        totalPromise, 
+        completedPromise, 
+        inProgressPromise, 
+        pendingPromise
+    ]);
 
     return {
         totalTasks: totalSnapshot.data().count,
