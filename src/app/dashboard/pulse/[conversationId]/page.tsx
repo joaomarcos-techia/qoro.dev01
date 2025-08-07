@@ -97,7 +97,7 @@ export default function PulsePage({ params }: { params: { conversationId: string
         setMessages(prev => [...prev, assistantMessage]);
         
         // If this was a new conversation, the backend returns the new ID.
-        // We then redirect to the new URL.
+        // We then redirect to the new URL, which triggers a re-render of the layout.
         if (response.conversationId && conversationId !== response.conversationId) {
              router.push(`/dashboard/pulse/${response.conversationId}`);
         }
@@ -122,7 +122,7 @@ export default function PulsePage({ params }: { params: { conversationId: string
   }
 
   const renderWelcomeScreen = () => (
-     <div className="text-center text-gray-500 h-full flex flex-col justify-center">
+     <div className="text-center text-gray-500 h-full flex flex-col justify-center max-w-2xl mx-auto">
         <div className="mb-6 text-center">
             <h1 className="text-3xl font-bold text-black flex items-center justify-center">
                 <BrainCircuit className="w-8 h-8 mr-3 text-primary"/>
@@ -138,7 +138,7 @@ export default function PulsePage({ params }: { params: { conversationId: string
                 <button 
                     key={i}
                     onClick={() => handleSuggestionClick(q)}
-                    className="bg-gray-50/80 hover:bg-gray-100 p-4 rounded-xl text-left text-sm font-medium shadow-neumorphism hover:shadow-neumorphism-hover transition-all duration-300"
+                    className="bg-white hover:bg-gray-100 p-4 rounded-xl text-left text-sm font-medium shadow-neumorphism hover:shadow-neumorphism-hover transition-all duration-300 border border-gray-100"
                 >
                 {q}
                 </button>
@@ -148,10 +148,10 @@ export default function PulsePage({ params }: { params: { conversationId: string
   );
 
   return (
-    <div className="flex flex-col flex-1 h-[calc(100vh-100px)] max-w-4xl mx-auto">
+    <div className="flex flex-col h-full max-w-4xl mx-auto">
         <div 
             ref={scrollAreaRef}
-            className="flex-1 overflow-y-auto p-6 space-y-6 bg-white rounded-t-2xl shadow-neumorphism border border-gray-200"
+            className="flex-1 overflow-y-auto p-6 space-y-6"
         >
             {isHistoryLoading ? (
                  <div className="flex justify-center items-center h-full">
@@ -171,7 +171,7 @@ export default function PulsePage({ params }: { params: { conversationId: string
                         </div>
                     )}
                     <div
-                    className={`max-w-lg px-5 py-3 rounded-2xl shadow-sm ${
+                    className={`max-w-xl px-5 py-3 rounded-2xl shadow-sm ${
                         message.role === 'user'
                         ? 'bg-primary/90 text-white rounded-br-none'
                         : 'bg-gray-100 text-black rounded-bl-none'
@@ -198,7 +198,7 @@ export default function PulsePage({ params }: { params: { conversationId: string
             </div>
             )}
         </div>
-        <div className="bg-white p-4 border-t border-gray-200 rounded-b-2xl shadow-neumorphism">
+        <div className="bg-transparent px-4 pb-4">
             {error && (
                 <div className="bg-red-100 text-red-700 p-2 rounded-md text-sm mb-2 flex items-center">
                     <AlertCircle className="w-4 h-4 mr-2" />
@@ -216,7 +216,7 @@ export default function PulsePage({ params }: { params: { conversationId: string
                 }
                 }}
                 placeholder="Pergunte qualquer coisa sobre seu negócio..."
-                className="w-full pr-20 py-3 pl-4 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary"
+                className="w-full pr-20 py-3 pl-4 bg-white rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary border border-gray-200"
                 rows={1}
                 disabled={isLoading}
             />
