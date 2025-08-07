@@ -79,8 +79,8 @@ export const CustomerSchema = z.object({
   birthDate: z.date().optional().nullable(),
   address: AddressSchema.optional(),
   tags: z.array(z.string()).optional(),
-  source: z.enum(['website', 'referral', 'social', 'cold_call', 'other']).default('other'),
-  status: z.enum(['active', 'inactive', 'prospect']).default('prospect'),
+  source: z.string().optional(),
+  status: z.enum(['new', 'initial_contact', 'qualification', 'proposal', 'negotiation', 'won', 'lost']).default('new'),
   customFields: z.record(z.any()).optional(),
 });
 

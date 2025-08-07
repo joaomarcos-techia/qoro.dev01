@@ -36,10 +36,14 @@ import type { CustomerProfile } from '@/ai/schemas';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 
-const statusMap = {
-    active: { text: 'Ativo', color: 'bg-green-100 text-green-800' },
-    inactive: { text: 'Inativo', color: 'bg-gray-100 text-gray-800' },
-    prospect: { text: 'Prospect', color: 'bg-blue-100 text-blue-800' },
+const statusMap: Record<CustomerProfile['status'], { text: string; color: string }> = {
+    new: { text: 'Novo', color: 'bg-blue-100 text-blue-800' },
+    initial_contact: { text: 'Contato Inicial', color: 'bg-cyan-100 text-cyan-800' },
+    qualification: { text: 'Qualificação', color: 'bg-purple-100 text-purple-800' },
+    proposal: { text: 'Proposta', color: 'bg-indigo-100 text-indigo-800' },
+    negotiation: { text: 'Negociação', color: 'bg-yellow-100 text-yellow-800' },
+    won: { text: 'Ganho', color: 'bg-green-100 text-green-800' },
+    lost: { text: 'Perdido', color: 'bg-red-100 text-red-800' },
 };
 
 export const columns: ColumnDef<CustomerProfile>[] = [
@@ -77,7 +81,7 @@ export const columns: ColumnDef<CustomerProfile>[] = [
     header: 'Status',
     cell: ({ row }) => {
         const status = row.getValue('status') as keyof typeof statusMap;
-        const { text, color } = statusMap[status] || statusMap.inactive;
+        const { text, color } = statusMap[status] || { text: 'Desconhecido', color: 'bg-gray-100 text-gray-800' };
         return (
           <span className={`px-2 py-1 text-xs font-semibold rounded-full ${color}`}>
             {text}
@@ -90,8 +94,8 @@ export const columns: ColumnDef<CustomerProfile>[] = [
     header: 'Criado em',
     cell: ({ row }) => {
         const createdAt = row.getValue('createdAt');
-        if (!createdAt) return '-';
-        return new Date(createdAt as string).toLocaleDateString('pt-BR');
+        if (!createdAt || typeof createdAt !== 'string') return '-';
+        return new Date(createdAt).toLocaleDateString('pt-BR');
     }
   },
   {

@@ -43,8 +43,8 @@ export function CustomerForm({ onCustomerCreated }: CustomerFormProps) {
   } = useForm<z.infer<typeof CustomerSchema>>({
     resolver: zodResolver(CustomerSchema),
     defaultValues: {
-      source: 'other',
-      status: 'prospect',
+      source: '',
+      status: 'new',
       tags: [],
     },
   });
@@ -169,34 +169,21 @@ export function CustomerForm({ onCustomerCreated }: CustomerFormProps) {
                     <SelectValue placeholder="Selecione o status" />
                     </SelectTrigger>
                     <SelectContent>
-                    <SelectItem value="prospect">Prospect</SelectItem>
-                    <SelectItem value="active">Ativo</SelectItem>
-                    <SelectItem value="inactive">Inativo</SelectItem>
+                        <SelectItem value="new">Novo / Lead Recebido</SelectItem>
+                        <SelectItem value="initial_contact">Contato Inicial</SelectItem>
+                        <SelectItem value="qualification">Qualificação</SelectItem>
+                        <SelectItem value="proposal">Proposta</SelectItem>
+                        <SelectItem value="negotiation">Negociação</SelectItem>
+                        <SelectItem value="won">Ganho (Fechamento)</SelectItem>
+                        <SelectItem value="lost">Perdido</SelectItem>
                     </SelectContent>
                 </Select>
                 )}
             />
             </div>
             <div className="space-y-2">
-            <Label>Fonte</Label>
-            <Controller
-                name="source"
-                control={control}
-                render={({ field }) => (
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <SelectTrigger>
-                    <SelectValue placeholder="Selecione a fonte" />
-                    </SelectTrigger>
-                    <SelectContent>
-                    <SelectItem value="website">Website</SelectItem>
-                    <SelectItem value="referral">Indicação</SelectItem>
-                    <SelectItem value="social">Rede Social</SelectItem>
-                    <SelectItem value="cold_call">Cold Call</SelectItem>
-                    <SelectItem value="other">Outro</SelectItem>
-                    </SelectContent>
-                </Select>
-                )}
-            />
+                <Label htmlFor="source">Fonte</Label>
+                <Input id="source" {...register('source')} placeholder="Ex: Indicação, Website, Evento" />
             </div>
         </div>
       </div>
