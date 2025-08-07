@@ -17,7 +17,7 @@ export function PulseSidebarContent() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [isDeleting, startDeleteTransition] = useTransition();
 
   const pathname = usePathname();
   const router = useRouter();
@@ -41,11 +41,11 @@ export function PulseSidebarContent() {
         })
         .catch(err => {
           console.error("Failed to fetch conversations:", err);
-          setError("Não foi possível carregar o histórico.");
+          setError("Não foi possível carregar o histórico. Isso pode ser um problema temporário com a base de dados.");
         })
         .finally(() => setIsLoading(false));
     }
-  }, [currentUser, pathname]); // Re-fetch when pathname changes
+  }, [currentUser, pathname]); // Re-fetch when pathname changes to reflect new/deleted convos
 
   const handleDeleteConversation = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -53,7 +53,7 @@ export function PulseSidebarContent() {
 
     if (!currentUser) return;
 
-    startTransition(async () => {
+    startDeleteTransition(async () => {
         const previousConversations = conversations;
         setConversations(prev => prev.filter(c => c.id !== id));
 
@@ -82,9 +82,10 @@ export function PulseSidebarContent() {
     }
     if (error) {
         return (
-            <div className="p-4 text-center text-sm text-red-600 bg-red-50 rounded-lg">
+            <div className="p-4 m-4 text-center text-sm text-red-600 bg-red-50 rounded-lg">
                 <AlertTriangle className="mx-auto w-8 h-8 mb-2" />
-                {error}
+                <p className="font-semibold">Ocorreu um Erro</p>
+                <p>{error}</p>
             </div>
         )
     }
@@ -109,7 +110,7 @@ export function PulseSidebarContent() {
                         variant="ghost"
                         size="icon"
                         onClick={(e) => handleDeleteConversation(convo.id, e)}
-                        disabled={isPending}
+                        disabled={isDeleting}
                         className={cn(
                             "h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0",
                             convo.id === conversationId ? "hover:bg-primary/80" : "hover:bg-red-100 text-red-500"
@@ -120,7 +121,7 @@ export function PulseSidebarContent() {
                 </Link>
             </li>
             )) : (
-                <div className="text-center text-gray-400 mt-10">
+                <div className="text-center text-gray-400 mt-10 px-4">
                     <MessageSquare className="mx-auto w-10 h-10 mb-2"/>
                     <p className="text-sm">Seu histórico de conversas aparecerá aqui.</p>
                 </div>
