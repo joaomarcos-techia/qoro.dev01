@@ -76,7 +76,7 @@ export const CustomerSchema = z.object({
   company: z.string().optional(),
   cpf: z.string().optional(),
   cnpj: z.string().optional(),
-  birthDate: z.date().optional().nullable(),
+  birthDate: z.string().datetime().optional().nullable(),
   address: AddressSchema.optional(),
   tags: z.array(z.string()).optional(),
   source: z.string().optional(),

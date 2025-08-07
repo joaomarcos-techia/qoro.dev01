@@ -23,6 +23,13 @@ type CustomerFormProps = {
   onCustomerCreated: () => void;
 };
 
+const FormSchema = CustomerSchema.extend({
+  birthDate: z.date().optional().nullable(),
+});
+
+type FormValues = z.infer<typeof FormSchema>;
+
+
 // --- Funções de formatação ---
 const formatCPF = (value: string) => {
     if (!value) return "";
@@ -68,11 +75,9 @@ export function CustomerForm({ onCustomerCreated }: CustomerFormProps) {
     register,
     handleSubmit,
     control,
-    setValue,
-    watch,
     formState: { errors },
-  } = useForm<z.infer<typeof CustomerSchema>>({
-    resolver: zodResolver(CustomerSchema),
+  } = useForm<FormValues>({
+    resolver: zodResolver(FormSchema),
     defaultValues: {
       source: '',
       status: 'new',
@@ -80,7 +85,7 @@ export function CustomerForm({ onCustomerCreated }: CustomerFormProps) {
     },
   });
 
-  const onSubmit = async (data: z.infer<typeof CustomerSchema>) => {
+  const onSubmit = async (data: FormValues) => {
     if (!currentUser) {
       setError('Você precisa estar autenticado para criar um cliente.');
       return;
@@ -88,12 +93,13 @@ export function CustomerForm({ onCustomerCreated }: CustomerFormProps) {
     setIsLoading(true);
     setError(null);
     try {
-      // Remove a formatação antes de enviar
-      const unformattedData = {
+      // Remove a formatação e converte a data antes de enviar
+      const unformattedData: z.infer<typeof CustomerSchema> = {
         ...data,
         cpf: data.cpf?.replace(/\D/g, ''),
         cnpj: data.cnpj?.replace(/\D/g, ''),
         phone: data.phone?.replace(/\D/g, ''),
+        birthDate: data.birthDate ? data.birthDate.toISOString() : null,
       };
       await createCustomer({ ...unformattedData, actor: currentUser.uid });
       onCustomerCreated();
@@ -129,7 +135,7 @@ export function CustomerForm({ onCustomerCreated }: CustomerFormProps) {
                     render={({ field }) => (
                         <Input
                             id="phone"
-                            value={field.value}
+                            value={field.value ?? ''}
                             onChange={(e) => field.onChange(formatPhone(e.target.value))}
                         />
                     )}
@@ -161,7 +167,7 @@ export function CustomerForm({ onCustomerCreated }: CustomerFormProps) {
                     render={({ field }) => (
                         <Input
                             id="cpf"
-                            value={field.value}
+                            value={field.value ?? ''}
                             onChange={(e) => field.onChange(formatCPF(e.target.value))}
                         />
                     )}
@@ -186,7 +192,7 @@ export function CustomerForm({ onCustomerCreated }: CustomerFormProps) {
                     render={({ field }) => (
                         <Input
                             id="cnpj"
-                            value={field.value}
+                            value={field.value ?? ''}
                             onChange={(e) => field.onChange(formatCNPJ(e.target.value))}
                         />
                     )}
@@ -271,5 +277,3 @@ export function CustomerForm({ onCustomerCreated }: CustomerFormProps) {
     </form>
   );
 }
-
-    
