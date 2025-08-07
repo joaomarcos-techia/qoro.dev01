@@ -1,6 +1,6 @@
 
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { getDashboardMetrics } from '@/ai/flows/finance-management';
@@ -84,31 +84,38 @@ export default function VisaoGeralPage() {
         }).format(value);
     }
     
-    const monthlyCashFlowData = transactions.reduce((acc, t) => {
-        const month = new Date(t.date).toLocaleString('default', { month: 'short' });
-        if (!acc[month]) {
-            acc[month] = { month, receita: 0, despesa: 0 };
-        }
-        if (t.type === 'income') {
-            acc[month].receita += t.amount;
-        } else {
-            acc[month].despesa += t.amount;
-        }
-        return acc;
-    }, {} as Record<string, { month: string; receita: number; despesa: number }>);
-    const cashFlowChartData = Object.values(monthlyCashFlowData).reverse();
-
-    const expenseByCategoryData = transactions
-        .filter(t => t.type === 'expense')
-        .reduce((acc, t) => {
-            const category = t.category || 'Outros';
-            if (!acc[category]) {
-                acc[category] = { name: category, value: 0, fill: `hsl(var(--chart-${Object.keys(acc).length + 1}))` };
+    const { cashFlowChartData, expenseChartData } = useMemo(() => {
+        const monthlyCashFlow = transactions.reduce((acc, t) => {
+            const month = new Date(t.date).toLocaleString('default', { month: 'short' });
+            if (!acc[month]) {
+                acc[month] = { month, receita: 0, despesa: 0 };
             }
-            acc[category].value += t.amount;
+            if (t.type === 'income') {
+                acc[month].receita += t.amount;
+            } else {
+                acc[month].despesa += t.amount;
+            }
             return acc;
-        }, {} as Record<string, { name: string; value: number; fill: string }>);
-    const expenseChartData = Object.values(expenseByCategoryData);
+        }, {} as Record<string, { month: string; receita: number; despesa: number }>);
+        
+        const cashFlowData = Object.values(monthlyCashFlow).reverse();
+
+        const expenseByCategory = transactions
+            .filter(t => t.type === 'expense')
+            .reduce((acc, t) => {
+                const category = t.category || 'Outros';
+                if (!acc[category]) {
+                    acc[category] = { name: category, value: 0, fill: `hsl(var(--chart-${Object.keys(acc).length + 1}))` };
+                }
+                acc[category].value += t.amount;
+                return acc;
+            }, {} as Record<string, { name: string; value: number; fill: string }>);
+        
+        const expenseData = Object.values(expenseByCategory);
+
+        return { cashFlowChartData: cashFlowData, expenseChartData: expenseData };
+    }, [transactions]);
+
 
     const renderContent = () => {
         if (error) {

@@ -1,6 +1,6 @@
 
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { getDashboardMetrics } from '@/ai/flows/crm-management';
@@ -68,67 +68,68 @@ export default function DashboardCrmPage() {
     return () => unsubscribe();
   }, []);
 
+  const calculateMetrics = useCallback((customers: CustomerProfile[], leads: SaleLeadProfile[]): CrmMetrics => {
+    const totalCustomers = customers.length;
+    
+    let totalRevenueWon = 0;
+    let closedWonCount = 0;
+    const leadStages = { prospect: 0, qualified: 0, proposal: 0, negotiation: 0 };
+    
+    leads.forEach(lead => {
+        if(lead.stage === 'closed_won') {
+            totalRevenueWon += lead.value || 0;
+            closedWonCount++;
+        } else if (lead.stage !== 'closed_lost') {
+            if (lead.stage in leadStages) {
+                leadStages[lead.stage as keyof typeof leadStages]++;
+            }
+        }
+    });
+
+    const totalLeads = Object.values(leadStages).reduce((a, b) => a + b, 0);
+    const totalClosedDeals = closedWonCount + leads.filter(l => l.stage === 'closed_lost').length;
+    const conversionRate = totalClosedDeals > 0 ? parseFloat(((closedWonCount / totalClosedDeals) * 100).toFixed(1)) : 0;
+
+    const now = new Date();
+    const monthlyCounts: { [key: string]: number } = {};
+    for (let i = 5; i >= 0; i--) {
+        const monthDate = subMonths(now, i);
+        const monthKey = format(monthDate, 'yyyy-MM');
+        monthlyCounts[monthKey] = 0;
+    }
+
+    customers.forEach(customer => {
+        const createdAt = new Date(customer.createdAt);
+        if (createdAt >= startOfMonth(subMonths(now, 5))) {
+            const monthKey = format(createdAt, 'yyyy-MM');
+            if (monthlyCounts.hasOwnProperty(monthKey)) {
+                monthlyCounts[monthKey]++;
+            }
+        }
+    });
+    
+    const newCustomersPerMonth = Object.keys(monthlyCounts).map(key => {
+        const [year, month] = key.split('-');
+        const date = new Date(parseInt(year), parseInt(month) - 1);
+        return {
+            month: format(date, 'MMM', { locale: ptBR }),
+            customers: monthlyCounts[key],
+        };
+    });
+
+    return {
+        totalCustomers,
+        totalLeads,
+        conversionRate,
+        totalRevenueWon,
+        leadStages,
+        newCustomersPerMonth
+    };
+  }, []);
+
+
   useEffect(() => {
     if (!currentUser) return;
-
-    const calculateMetrics = (customers: CustomerProfile[], leads: SaleLeadProfile[]): CrmMetrics => {
-        const totalCustomers = customers.length;
-        
-        let totalRevenueWon = 0;
-        let closedWonCount = 0;
-        const leadStages = { prospect: 0, qualified: 0, proposal: 0, negotiation: 0 };
-        
-        leads.forEach(lead => {
-            if(lead.stage === 'closed_won') {
-                totalRevenueWon += lead.value || 0;
-                closedWonCount++;
-            } else if (lead.stage !== 'closed_lost') {
-                if (lead.stage in leadStages) {
-                    leadStages[lead.stage as keyof typeof leadStages]++;
-                }
-            }
-        });
-    
-        const totalLeads = Object.values(leadStages).reduce((a, b) => a + b, 0);
-        const totalClosedDeals = closedWonCount + leads.filter(l => l.stage === 'closed_lost').length;
-        const conversionRate = totalClosedDeals > 0 ? parseFloat(((closedWonCount / totalClosedDeals) * 100).toFixed(1)) : 0;
-    
-        const now = new Date();
-        const monthlyCounts: { [key: string]: number } = {};
-        for (let i = 5; i >= 0; i--) {
-            const monthDate = subMonths(now, i);
-            const monthKey = format(monthDate, 'yyyy-MM');
-            monthlyCounts[monthKey] = 0;
-        }
-    
-        customers.forEach(customer => {
-            const createdAt = new Date(customer.createdAt);
-            if (createdAt >= startOfMonth(subMonths(now, 5))) {
-                const monthKey = format(createdAt, 'yyyy-MM');
-                if (monthlyCounts.hasOwnProperty(monthKey)) {
-                    monthlyCounts[monthKey]++;
-                }
-            }
-        });
-        
-        const newCustomersPerMonth = Object.keys(monthlyCounts).map(key => {
-            const [year, month] = key.split('-');
-            const date = new Date(parseInt(year), parseInt(month) - 1);
-            return {
-                month: format(date, 'MMM', { locale: ptBR }),
-                customers: monthlyCounts[key],
-            };
-        });
-    
-        return {
-            totalCustomers,
-            totalLeads,
-            conversionRate,
-            totalRevenueWon,
-            leadStages,
-            newCustomersPerMonth
-        };
-    }
 
     const fetchAndSetMetrics = async () => {
         setIsLoading(true);
@@ -147,7 +148,7 @@ export default function DashboardCrmPage() {
     
     fetchAndSetMetrics();
 
-  }, [currentUser]);
+  }, [currentUser, calculateMetrics]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
