@@ -8,43 +8,58 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { AskPulseInputSchema } from '@/ai/schemas';
+import { AskPulseInputSchema, ConversationSchema, PulseMessageSchema } from '@/ai/schemas';
 import { listCustomersTool, listSaleLeadsTool } from '@/ai/tools/crm-tools';
 import { createTaskTool, listTasksTool } from '@/ai/tools/task-tools';
 import { listAccountsTool, getFinanceSummaryTool } from '@/ai/tools/finance-tools';
 import { listSuppliersTool } from '@/ai/tools/supplier-tools';
+import * as pulseService from '@/services/pulseService';
+import { generateTitleTool } from '@/ai/tools/pulse-tools';
 
-export async function askPulse(input: z.infer<typeof AskPulseInputSchema>): Promise<string> {
+
+export async function askPulse(input: z.infer<typeof AskPulseInputSchema>): Promise<z.infer<typeof PulseMessageSchema>> {
   return pulseFlow(input);
 }
+
+export async function listConversations(actor: string): Promise<z.infer<typeof ConversationSchema>[]> {
+    return pulseService.listConversations(actor);
+}
+
+export async function deleteConversation(conversationId: string, actor: string): Promise<{ success: boolean }> {
+    return pulseService.deleteConversation(conversationId, actor);
+}
+
 
 const pulseFlow = ai.defineFlow(
   {
     name: 'pulseFlow',
     inputSchema: AskPulseInputSchema,
-    outputSchema: z.string(),
+    outputSchema: PulseMessageSchema,
   },
   async (input) => {
+    const { actor, messages } = input;
+    let conversationId = input.conversationId;
+
     // Correctly separate the latest prompt from the history
-    const history = input.messages.slice(0, -1).map(message => ({
+    const history = messages.slice(0, -1).map(message => ({
         role: message.role === 'user' ? 'user' : 'model',
         parts: [{ text: message.content }],
     }));
 
-    const lastMessage = input.messages[input.messages.length - 1];
+    const lastMessage = messages[messages.length - 1];
     const prompt = lastMessage.content;
     
+    // Generate the main response
     const llmResponse = await ai.generate({
         model: 'googleai/gemini-2.0-flash',
         prompt: prompt,
         history: history,
         config: {
-          temperature: 0.7, // Aumenta a criatividade e evita respostas repetitivas
+          temperature: 0.7,
         },
-        tools: [listCustomersTool, listSaleLeadsTool, listTasksTool, createTaskTool, listAccountsTool, getFinanceSummaryTool, listSuppliersTool],
+        tools: [listCustomersTool, listSaleLeadsTool, listTasksTool, createTaskTool, listAccountsTool, getFinanceSummaryTool, listSuppliersTool, generateTitleTool],
         toolConfig: {
-          // Pass the actor UID to the tool through the request context
-          context: { actor: input.actor },
+          context: { actor },
         },
         system: `Você é o QoroPulse— um agente de inteligência estratégica interna. Seu papel é agir como o cérebro analítico da empresa: interpretar dados comerciais, financeiros e operacionais para fornecer respostas inteligentes, acionáveis e estrategicamente valiosas ao empreendedor.
 
@@ -81,6 +96,26 @@ Transformar dados empresariais em decisões estratégicas com impacto real. Iden
 🎯 Seu foco é sempre dar um passo além: não descreva, oriente. Não reaja, antecipe. Não informe, transforme.`,
     });
 
-    return llmResponse.text;
+    const assistantResponse: z.infer<typeof PulseMessageSchema> = {
+        role: 'assistant',
+        content: llmResponse.text,
+    };
+    
+    const updatedMessages = [...messages, assistantResponse];
+
+    // If it's a new conversation, generate a title and save it.
+    if (!conversationId) {
+        const titleResponse = await ai.generate({
+            model: 'googleai/gemini-2.0-flash',
+            prompt: `Crie um título curto (máximo 5 palavras) para a seguinte conversa:\n\nUsuário: ${prompt}\nAssistente: ${assistantResponse.content}`,
+        });
+        const title = titleResponse.text.replace(/"/g, ''); // Remove quotes from title
+        conversationId = await pulseService.saveConversation(actor, title, updatedMessages);
+    } else {
+        // Otherwise, just update the existing conversation
+        await pulseService.updateConversation(conversationId, actor, updatedMessages);
+    }
+    
+    return { ...assistantResponse, conversationId };
   }
 );

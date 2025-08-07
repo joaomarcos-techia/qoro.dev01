@@ -171,15 +171,24 @@ export type TaskProfile = z.infer<typeof TaskProfileSchema>;
 export const PulseMessageSchema = z.object({
     role: z.enum(['user', 'assistant']),
     content: z.string(),
+    conversationId: z.string().optional(),
 });
 export type PulseMessage = z.infer<typeof PulseMessageSchema>;
 
 export const AskPulseInputSchema = z.object({
     messages: z.array(PulseMessageSchema),
     actor: z.string(),
+    conversationId: z.string().optional(),
 });
-export type AskPulseInput = z.infer<typeof AskPulseInput>;
+export type AskPulseInput = z.infer<typeof AskPulseInputSchema>;
 
+export const ConversationSchema = z.object({
+    id: z.string(),
+    title: z.string(),
+    createdAt: z.string(),
+    messages: z.array(PulseMessageSchema),
+});
+export type Conversation = z.infer<typeof ConversationSchema>;
 
 // Schemas for Finance Management
 export const AccountSchema = z.object({

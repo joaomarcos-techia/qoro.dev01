@@ -13,3 +13,4 @@ import './tools/crm-tools';
 import './tools/task-tools';
 import './tools/finance-tools';
 import './tools/supplier-tools';
+import './tools/pulse-tools';
