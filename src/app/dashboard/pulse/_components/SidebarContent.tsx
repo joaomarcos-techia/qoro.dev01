@@ -34,7 +34,6 @@ export function PulseSidebarContent() {
     setError(null);
     try {
       const convos = await listConversations({ actor: user.uid });
-      // The sorting is now handled directly in the query with the new index
       setConversations(convos);
     } catch (err: any) {
         console.error("Failed to fetch conversations:", err);
