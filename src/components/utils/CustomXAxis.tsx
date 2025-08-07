@@ -1,7 +1,6 @@
-
 'use client';
 
-import { XAxis as RechartsXAxis, XAxisProps } from 'recharts';
+import { XAxis as RechartsXAxis, type XAxisProps } from 'recharts';
 
 /**
  * @fileoverview Custom Wrapper for Recharts XAxis Component.
@@ -22,13 +21,19 @@ import { XAxis as RechartsXAxis, XAxisProps } from 'recharts';
  */
 
 const CustomXAxis = ({
-  // Adicione aqui os valores padrão que você deseja para o XAxis
-  // Estes são alguns exemplos comuns baseados na documentação da recharts
-  allowDuplicatedCategory={true}
-  tickLine={false}
-  axisLine={false}
-  {...props}: XAxisProps) => {
-  return <RechartsXAxis {...props} />;
+  // Define os valores padrão usando a sintaxe de parâmetros de função do JS.
+  allowDuplicatedCategory = true,
+  tickLine = false,
+  axisLine = false,
+  ...props
+}: XAxisProps) => {
+  // Passa as props (incluindo as com valores padrão) para o componente original.
+  return <RechartsXAxis 
+    allowDuplicatedCategory={allowDuplicatedCategory}
+    tickLine={tickLine}
+    axisLine={axisLine}
+    {...props} 
+  />;
 };
 
 export default CustomXAxis;

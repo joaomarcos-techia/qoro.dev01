@@ -1,7 +1,6 @@
-
 'use client';
 
-import { YAxis as RechartsYAxis, YAxisProps } from 'recharts';
+import { YAxis as RechartsYAxis, type YAxisProps } from 'recharts';
 
 /**
  * @fileoverview Custom Wrapper for Recharts YAxis Component.
@@ -21,12 +20,17 @@ import { YAxis as RechartsYAxis, YAxisProps } from 'recharts';
  * @param {YAxisProps} props - As mesmas props do componente YAxis original da `recharts`.
  */
 const CustomYAxis = ({ 
-  // Adicione aqui os valores padrão que você deseja para o YAxis
-  // Estes são alguns exemplos comuns baseados na documentação da recharts
-  tickLine={false}
-  axisLine={false}
-  {...props}: YAxisProps) => {
-  return <RechartsYAxis {...props} />;
+  // Define os valores padrão usando a sintaxe de parâmetros de função do JS.
+  tickLine = false,
+  axisLine = false,
+  ...props
+}: YAxisProps) => {
+  // Passa as props (incluindo as com valores padrão) para o componente original.
+  return <RechartsYAxis 
+    tickLine={tickLine}
+    axisLine={axisLine}
+    {...props} 
+  />;
 };
 
 export default CustomYAxis;
