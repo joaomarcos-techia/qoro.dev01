@@ -36,33 +36,34 @@ export default function PulsePage({ params }: { params: { conversationId: string
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    async function fetchHistory() {
-        if (!currentUser || !conversationId) return;
+  const fetchHistory = useCallback(async () => {
+    if (!currentUser || !conversationId) return;
 
-        if (conversationId === 'new') {
-            setMessages([]);
-            setIsHistoryLoading(false);
-            return;
-        }
-        
-        setIsHistoryLoading(true);
-        try {
-            const convo = await getConversation({ actor: currentUser.uid, conversationId });
-            if (convo) {
-                setMessages(convo.messages);
-            } else {
-                 setError("Conversa não encontrada ou acesso negado.");
-            }
-        } catch (err) {
-            console.error(err);
-            setError("Não foi possível carregar o histórico da conversa.");
-        } finally {
-            setIsHistoryLoading(false);
-        }
+    if (conversationId === 'new') {
+        setMessages([]);
+        setIsHistoryLoading(false);
+        return;
     }
-    fetchHistory();
+    
+    setIsHistoryLoading(true);
+    try {
+        const convo = await getConversation({ actor: currentUser.uid, conversationId });
+        if (convo) {
+            setMessages(convo.messages);
+        } else {
+             setError("Conversa não encontrada ou acesso negado.");
+        }
+    } catch (err) {
+        console.error(err);
+        setError("Não foi possível carregar o histórico da conversa.");
+    } finally {
+        setIsHistoryLoading(false);
+    }
   }, [currentUser, conversationId]);
+
+  useEffect(() => {
+    fetchHistory();
+  }, [fetchHistory]);
 
 
   useEffect(() => {
@@ -95,7 +96,7 @@ export default function PulsePage({ params }: { params: { conversationId: string
         }
         setMessages(prev => [...prev, assistantMessage]);
         
-        if (response.conversationId && conversationId === 'new') {
+        if (response.conversationId && conversationId !== response.conversationId) {
              // Redirect to the new conversation URL to make it bookmarkable
              // and to update the sidebar.
              router.push(`/dashboard/pulse/${response.conversationId}`);
@@ -156,7 +157,7 @@ export default function PulsePage({ params }: { params: { conversationId: string
                  <div className="flex justify-center items-center h-full">
                     <Loader className="w-8 h-8 animate-spin text-primary" />
                  </div>
-            ) : messages.length === 0 ? (
+            ) : messages.length === 0 && conversationId === 'new' ? (
                 renderWelcomeScreen()
             ) : (
                 messages.map((message, index) => (
