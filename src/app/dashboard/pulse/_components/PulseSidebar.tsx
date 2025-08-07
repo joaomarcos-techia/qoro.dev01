@@ -1,128 +1,11 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
-import { listConversations, deleteConversation as deleteConversationFlow } from '@/ai/flows/pulse-flow';
-import type { Conversation } from '@/ai/schemas';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { PlusCircle, MessageSquare, Trash2, AlertTriangle, Loader2, ChevronLeft, Activity } from 'lucide-react';
+import { ChevronLeft, Activity } from 'lucide-react';
+import { PulseSidebarContent } from './SidebarContent';
 
 export function PulseSidebar() {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const pathname = usePathname();
-  const router = useRouter();
-  const conversationId = pathname.split('/').pop();
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (currentUser) {
-      setIsLoading(true);
-      setError(null);
-      listConversations({ actor: currentUser.uid })
-        .then(convos => {
-            const sortedConvos = [...convos].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-            setConversations(sortedConvos);
-        })
-        .catch(err => {
-          console.error("Failed to fetch conversations:", err);
-          setError("Não foi possível carregar o histórico.");
-        })
-        .finally(() => setIsLoading(false));
-    }
-  }, [currentUser, pathname]); // Re-fetch when pathname changes (e.g., after creating a new chat)
-
-  const handleDeleteConversation = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-
-    if (!currentUser) return;
-
-    const previousConversations = conversations;
-    setConversations(prev => prev.filter(c => c.id !== id));
-
-    try {
-        await deleteConversationFlow({ conversationId: id, actor: currentUser.uid });
-        if (id === conversationId) {
-            router.push('/dashboard/pulse/new');
-        }
-    } catch (err) {
-        console.error("Failed to delete conversation", err);
-        setError("Falha ao excluir a conversa.");
-        setConversations(previousConversations);
-    }
-  }
-
-  const renderContent = () => {
-    if (isLoading) {
-      return (
-        <div className="flex justify-center items-center h-full">
-          <Loader2 className="w-6 h-6 animate-spin text-primary" />
-        </div>
-      );
-    }
-    if (error) {
-        return (
-            <div className="p-4 text-center text-sm text-red-600 bg-red-50 rounded-lg">
-                <AlertTriangle className="mx-auto w-8 h-8 mb-2" />
-                {error}
-            </div>
-        )
-    }
-    return (
-        <ul className="space-y-1">
-            {conversations.length > 0 ? conversations.map(convo => (
-            <li key={convo.id}>
-                <Link
-                    href={`/dashboard/pulse/${convo.id}`}
-                    className={cn(
-                        "group flex items-center justify-between w-full text-left p-3 rounded-xl cursor-pointer transition-all duration-200",
-                        convo.id === conversationId 
-                        ? 'bg-primary text-white shadow-neumorphism-inset' 
-                        : 'text-gray-700 hover:bg-gray-100 hover:shadow-neumorphism'
-                    )}
-                >
-                    <span className="text-sm font-medium truncate flex items-center">
-                        <MessageSquare className="w-4 h-4 mr-3 flex-shrink-0" />
-                        {convo.title}
-                    </span>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => handleDeleteConversation(convo.id, e)}
-                        className={cn(
-                            "h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0",
-                            convo.id === conversationId ? "hover:bg-primary/80" : "hover:bg-red-100 text-red-500"
-                        )}
-                    >
-                        <Trash2 className="w-4 h-4" />
-                    </Button>
-                </Link>
-            </li>
-            )) : (
-                <div className="text-center text-gray-400 mt-10">
-                    <MessageSquare className="mx-auto w-10 h-10 mb-2"/>
-                    <p className="text-sm">Seu histórico de conversas aparecerá aqui.</p>
-                </div>
-            )}
-        </ul>
-    );
-  }
-
   return (
     <aside className="w-64 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col shadow-neumorphism-right">
         <div className="p-4 border-b border-gray-200 space-y-4">
@@ -138,19 +21,7 @@ export function PulseSidebar() {
             </Link>
         </div>
 
-        <div className="p-4 border-b border-gray-200">
-             <Link href="/dashboard/pulse/new">
-                <Button className="w-full bg-primary text-primary-foreground px-4 py-2 rounded-xl hover:bg-primary/90 transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover flex items-center justify-center font-semibold">
-                    <PlusCircle className="mr-2 w-5 h-5"/>
-                    Nova Conversa
-                </Button>
-            </Link>
-        </div>
-        
-        <nav className="flex-grow p-4 overflow-y-auto">
-            {renderContent()}
-        </nav>
+        <PulseSidebarContent />
     </aside>
   );
 }
-
