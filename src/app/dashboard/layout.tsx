@@ -20,7 +20,8 @@ import {
   ArrowLeftRight,
   Receipt,
   Landmark,
-  Truck
+  Truck,
+  PlusCircle
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Header } from '@/components/dashboard/Header';
@@ -82,7 +83,7 @@ const navConfig: Record<string, NavGroup> = {
         icon: Activity,
         color: 'bg-purple-500',
         items: [
-             { href: '/dashboard/pulse', label: 'Nova Conversa', icon: Activity },
+             { href: '/dashboard/pulse', label: 'Nova Conversa', icon: PlusCircle },
         ]
     }
 };
@@ -91,22 +92,23 @@ const navConfig: Record<string, NavGroup> = {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const segments = pathname.split('/');
-  // If we are at /dashboard, segments[2] is undefined.
-  // Otherwise, it's the module name (crm, task, etc.).
   const currentModule = segments.length > 2 ? segments[2] : 'home';
 
   const renderSidebar = () => {
     if (currentModule === 'home' || !navConfig[currentModule]) {
-      return null; // Don't render sidebar for the main dashboard page
+      return null;
     }
     
     const navData = navConfig[currentModule];
     const { group, icon: GroupIcon, color, items } = navData;
     
+    // Special case for QoroPulse to reorder items
+    const isPulse = currentModule === 'pulse';
+    
     return (
         <aside className="w-64 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col shadow-neumorphism-right">
-            <div className="p-4 border-b border-gray-200">
-                <div className="flex items-center mb-4">
+            <div className="p-4 border-b border-gray-200 space-y-4">
+                <div className="flex items-center">
                     <div className={`p-3 rounded-xl text-white mr-4 shadow-neumorphism ${color}`}>
                         <GroupIcon className="w-6 h-6" />
                     </div>
@@ -116,26 +118,40 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <ChevronLeft className="w-4 h-4 mr-2" />
                     <span>Voltar ao Dashboard</span>
                 </Link>
+                {/* For Pulse, render "Nova Conversa" button here */}
+                 {isPulse && items.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 bg-primary text-white shadow-neumorphism-inset`}
+                    >
+                      <item.icon className="w-5 h-5 mr-3" />
+                      {item.label}
+                    </Link>
+                ))}
             </div>
-            <nav className="flex-grow p-4">
-                <ul>
-                    {items.map((item) => (
-                    <li key={item.href}>
-                        <Link
-                        href={item.href}
-                        className={`flex items-center px-4 py-3 my-1 rounded-xl text-sm font-medium transition-all duration-200 ${
-                            pathname.startsWith(item.href)
-                            ? 'bg-primary text-white shadow-neumorphism-inset'
-                            : 'text-gray-700 hover:bg-gray-100 hover:shadow-neumorphism'
-                        }`}
-                        >
-                        <item.icon className="w-5 h-5 mr-3" />
-                        {item.label}
-                        </Link>
-                    </li>
-                    ))}
-                </ul>
-            </nav>
+            {/* For other modules, render the nav list normally */}
+            {!isPulse && (
+                <nav className="flex-grow p-4">
+                    <ul>
+                        {items.map((item) => (
+                        <li key={item.href}>
+                            <Link
+                            href={item.href}
+                            className={`flex items-center px-4 py-3 my-1 rounded-xl text-sm font-medium transition-all duration-200 ${
+                                pathname.startsWith(item.href)
+                                ? 'bg-primary text-white shadow-neumorphism-inset'
+                                : 'text-gray-700 hover:bg-gray-100 hover:shadow-neumorphism'
+                            }`}
+                            >
+                            <item.icon className="w-5 h-5 mr-3" />
+                            {item.label}
+                            </Link>
+                        </li>
+                        ))}
+                    </ul>
+                </nav>
+            )}
         </aside>
     );
   }
