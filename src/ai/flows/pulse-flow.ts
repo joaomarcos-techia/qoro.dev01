@@ -3,21 +3,56 @@
 /**
  * @fileOverview A conversational AI agent for business insights.
  * - askPulse - A function that handles the conversational chat with QoroPulse.
- * - AskPulseInput - The input type for the askPulse function.
+ * - listConversations - Lists all conversations for the user.
+ * - deleteConversation - Deletes a specific conversation.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { AskPulseInputSchema, PulseMessageSchema } from '@/ai/schemas';
+import { AskPulseInputSchema, PulseMessageSchema, ConversationSchema } from '@/ai/schemas';
 import { listCustomersTool, listSaleLeadsTool } from '@/ai/tools/crm-tools';
 import { createTaskTool, listTasksTool } from '@/ai/tools/task-tools';
 import { listAccountsTool, getFinanceSummaryTool } from '@/ai/tools/finance-tools';
 import { listSuppliersTool } from '@/ai/tools/supplier-tools';
 import * as pulseService from '@/services/pulseService';
 
+const ActorSchema = z.object({ actor: z.string() });
+
 export async function askPulse(input: z.infer<typeof AskPulseInputSchema>): Promise<z.infer<typeof PulseMessageSchema>> {
   return pulseFlow(input);
 }
+
+export async function listConversations(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof ConversationSchema>[]> {
+    return listConversationsFlow(input);
+}
+
+export async function deleteConversation(input: { conversationId: string } & z.infer<typeof ActorSchema>): Promise<{ success: boolean }> {
+    return deleteConversationFlow(input);
+}
+
+const listConversationsFlow = ai.defineFlow(
+    {
+        name: 'listPulseConversationsFlow',
+        inputSchema: ActorSchema,
+        outputSchema: z.array(ConversationSchema),
+    },
+    async ({ actor }) => {
+        return pulseService.listConversations(actor);
+    }
+);
+
+const deleteConversationFlow = ai.defineFlow(
+    {
+        name: 'deletePulseConversationFlow',
+        inputSchema: z.object({ conversationId: z.string(), actor: z.string() }),
+        outputSchema: z.object({ success: z.boolean() }),
+    },
+    async ({ conversationId, actor }) => {
+        await pulseService.deleteConversation(conversationId, actor);
+        return { success: true };
+    }
+);
+
 
 const pulseFlow = ai.defineFlow(
   {
