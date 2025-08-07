@@ -118,35 +118,3 @@ export const deleteConversation = async (conversationId: string, actorUid: strin
 
     await docRef.delete();
 }
-
-export const listConversationsSortedByCreation = async (actorUid: string): Promise<z.infer<typeof ConversationSchema>[]> => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
-
-    try {
-        const snapshot = await adminDb.collection('pulse_conversations')
-            .where('organizationId', '==', organizationId)
-            .where('userId', '==', actorUid)
-            .orderBy('createdAt', 'desc')
-            .get();
-            
-        if (snapshot.empty) {
-            return [];
-        }
-
-        return snapshot.docs.map(doc => {
-            const data = doc.data();
-            const updatedAt = data.updatedAt ? data.updatedAt.toDate().toISOString() : data.createdAt.toDate().toISOString();
-            
-            return ConversationSchema.parse({
-                id: doc.id,
-                title: data.title,
-                createdAt: data.createdAt.toDate().toISOString(),
-                updatedAt: updatedAt,
-                messages: data.messages || [],
-            });
-        });
-    } catch (error: any) {
-        console.error("Critical error in listConversationsSortedByCreation:", error, error.stack);
-        throw new Error("Failed to fetch conversation history due to a server error.");
-    }
-};
