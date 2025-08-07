@@ -1,3 +1,4 @@
+
 'use client';
 
 import { XAxis as RechartsXAxis, type XAxisProps } from 'recharts';
