@@ -25,24 +25,15 @@ const pulseFlow = ai.defineFlow(
     outputSchema: z.string(),
   },
   async (input) => {
-    const { history, prompt, actor } = input.messages.reduce(
-        (acc, message) => {
-          if (message.role === 'assistant') {
-            acc.history.push({ role: 'model', parts: [{ text: message.content }] });
-          } else {
-            // Check if it's the last message (the current prompt)
-            if (acc.prompt === '') {
-                 acc.prompt = message.content;
-            } else {
-                // Older user messages are also part of history
-                acc.history.push({ role: 'user', parts: [{ text: message.content }] });
-            }
-          }
-          return acc;
-        },
-        { history: [] as any[], prompt: '', actor: input.actor }
-      );
+    // Correctly separate the latest prompt from the history
+    const history = input.messages.slice(0, -1).map(message => ({
+        role: message.role === 'user' ? 'user' : 'model',
+        parts: [{ text: message.content }],
+    }));
 
+    const lastMessage = input.messages[input.messages.length - 1];
+    const prompt = lastMessage.content;
+    
     const llmResponse = await ai.generate({
         model: 'googleai/gemini-2.0-flash',
         prompt: prompt,
@@ -53,7 +44,7 @@ const pulseFlow = ai.defineFlow(
         tools: [listCustomersTool, listSaleLeadsTool, listTasksTool, createTaskTool, listAccountsTool, getFinanceSummaryTool, listSuppliersTool],
         toolConfig: {
           // Pass the actor UID to the tool through the request context
-          context: { actor },
+          context: { actor: input.actor },
         },
         system: `Você é o QoroPulse— um agente de inteligência estratégica interna. Seu papel é agir como o cérebro analítico da empresa: interpretar dados comerciais, financeiros e operacionais para fornecer respostas inteligentes, acionáveis e estrategicamente valiosas ao empreendedor.
 
