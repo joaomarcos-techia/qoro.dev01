@@ -11,6 +11,8 @@
  * - listProducts - Lists all products.
  * - createQuote - Creates a new quote.
  * - listQuotes - Lists all quotes.
+ * - updateCustomerStatus - Updates the status of a customer.
+ * - deleteCustomer - Deletes a customer.
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
@@ -23,6 +25,16 @@ const DashboardMetricsOutputSchema = z.object({
     customers: z.array(CustomerProfileSchema),
     leads: z.array(SaleLeadProfileSchema),
 });
+
+const UpdateCustomerStatusInputSchema = z.object({
+    customerId: z.string(),
+    status: CustomerProfileSchema.shape.status,
+}).extend(ActorSchema.shape);
+
+const DeleteCustomerInputSchema = z.object({
+    customerId: z.string(),
+}).extend(ActorSchema.shape);
+
 
 // Define flows
 const createCustomerFlow = ai.defineFlow(
@@ -106,6 +118,24 @@ const listQuotesFlow = ai.defineFlow(
     async ({ actor }) => crmService.listQuotes(actor)
 );
 
+const updateCustomerStatusFlow = ai.defineFlow(
+    {
+        name: 'updateCustomerStatusFlow',
+        inputSchema: UpdateCustomerStatusInputSchema,
+        outputSchema: z.object({ id: z.string(), status: CustomerProfileSchema.shape.status })
+    },
+    async (input) => crmService.updateCustomerStatus(input.customerId, input.status, input.actor)
+);
+
+const deleteCustomerFlow = ai.defineFlow(
+    {
+        name: 'deleteCustomerFlow',
+        inputSchema: DeleteCustomerInputSchema,
+        outputSchema: z.object({ id: z.string(), success: z.boolean() })
+    },
+    async (input) => crmService.deleteCustomer(input.customerId, input.actor)
+);
+
 
 // Exported functions (client-callable wrappers)
 export async function createCustomer(input: z.infer<typeof CustomerSchema> & z.infer<typeof ActorSchema>): Promise<{ id: string; }> {
@@ -142,4 +172,12 @@ export async function createQuote(input: z.infer<typeof QuoteSchema> & z.infer<t
 
 export async function listQuotes(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof QuoteProfileSchema>[]> {
     return listQuotesFlow(input);
+}
+
+export async function updateCustomerStatus(input: z.infer<typeof UpdateCustomerStatusInputSchema>): Promise<{ id: string; status: z.infer<typeof CustomerProfileSchema>['status'] }> {
+    return updateCustomerStatusFlow(input);
+}
+
+export async function deleteCustomer(input: z.infer<typeof DeleteCustomerInputSchema>): Promise<{ id: string; success: boolean }> {
+    return deleteCustomerFlow(input);
 }

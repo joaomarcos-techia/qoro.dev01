@@ -47,6 +47,42 @@ export const listCustomers = async (actorUid: string): Promise<z.infer<typeof Cu
     return customers;
 };
 
+export const updateCustomerStatus = async (
+    customerId: string, 
+    status: z.infer<typeof CustomerProfileSchema>['status'], 
+    actorUid: string
+) => {
+    const { organizationId } = await getAdminAndOrg(actorUid);
+    const customerRef = adminDb.collection('customers').doc(customerId);
+    
+    const customerDoc = await customerRef.get();
+    if (!customerDoc.exists || customerDoc.data()?.companyId !== organizationId) {
+        throw new Error('Cliente não encontrado ou acesso negado.');
+    }
+
+    await customerRef.update({
+        status: status,
+        updatedAt: FieldValue.serverTimestamp(),
+    });
+
+    return { id: customerId, status };
+};
+
+export const deleteCustomer = async (customerId: string, actorUid: string) => {
+    const { organizationId } = await getAdminAndOrg(actorUid);
+    const customerRef = adminDb.collection('customers').doc(customerId);
+
+    const customerDoc = await customerRef.get();
+    if (!customerDoc.exists || customerDoc.data()?.companyId !== organizationId) {
+        throw new Error('Cliente não encontrado ou acesso negado.');
+    }
+
+    await customerRef.delete();
+
+    return { id: customerId, success: true };
+};
+
+
 export const createSaleLead = async (input: z.infer<typeof SaleLeadSchema>, actorUid: string) => {
     const { organizationId } = await getAdminAndOrg(actorUid);
     const newSaleLeadData = {
