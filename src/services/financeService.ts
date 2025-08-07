@@ -36,11 +36,13 @@ export const listAccounts = async (actorUid: string): Promise<z.infer<typeof Acc
     
     const accounts: z.infer<typeof AccountProfileSchema>[] = accountsSnapshot.docs.map(doc => {
         const data = doc.data();
-        return AccountProfileSchema.parse({
+        const parsedData = {
             id: doc.id,
             ...data,
             createdAt: data.createdAt.toDate().toISOString(),
-        });
+        };
+
+        return AccountProfileSchema.parse(parsedData);
     });
     
     return accounts;
