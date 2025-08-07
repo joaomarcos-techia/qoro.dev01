@@ -54,7 +54,7 @@ export const listConversations = async (actorUid: string): Promise<z.infer<typeo
     const { organizationId } = await getAdminAndOrg(actorUid);
 
     try {
-        const snapshot = await adminDb.collection('pulse_conversations')
+        const snapshot = await adminDb.collectionGroup('pulse_conversations')
             .where('organizationId', '==', organizationId)
             .where('userId', '==', actorUid)
             .orderBy('updatedAt', 'desc')
