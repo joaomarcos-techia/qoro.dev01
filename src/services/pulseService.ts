@@ -56,7 +56,7 @@ export const listConversations = async (actorUid: string): Promise<z.infer<typeo
     const snapshot = await adminDb.collection('pulse_conversations')
         .where('organizationId', '==', organizationId)
         .where('userId', '==', actorUid)
-        .orderBy('createdAt', 'desc')
+        .orderBy('updatedAt', 'desc')
         .get();
         
     if (snapshot.empty) {
@@ -105,6 +105,3 @@ export const deleteConversation = async (conversationId: string, actorUid: strin
 
     await docRef.delete();
 }
-
-
-

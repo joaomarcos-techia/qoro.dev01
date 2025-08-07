@@ -27,11 +27,11 @@
     },
     {
       "collectionGroup": "pulse_conversations",
-      "queryScope": "COLLECTION",
+      "queryScope": "COLLECTION_GROUP",
       "fields": [
         { "fieldPath": "organizationId", "order": "ASCENDING" },
         { "fieldPath": "userId", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
+        { "fieldPath": "updatedAt", "order": "DESCENDING" }
       ]
     },
     {
