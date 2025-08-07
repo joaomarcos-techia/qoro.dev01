@@ -96,7 +96,7 @@ export const SaleLeadSchema = z.object({
     value: z.coerce.number().min(0, "O valor deve ser um número positivo."),
     stage: z.enum(['new', 'initial_contact', 'qualified', 'proposal', 'negotiation', 'won', 'lost']),
     priority: z.enum(['low', 'medium', 'high']),
-    expectedCloseDate: z.date(),
+    expectedCloseDate: z.string().datetime(),
 });
 
 export const SaleLeadProfileSchema = SaleLeadSchema.extend({

@@ -23,6 +23,11 @@ type SaleLeadFormProps = {
   onSaleLeadCreated: () => void;
 };
 
+const FormSchema = SaleLeadSchema.extend({
+    expectedCloseDate: z.date(),
+});
+type FormValues = z.infer<typeof FormSchema>;
+
 export function SaleLeadForm({ onSaleLeadCreated }: SaleLeadFormProps) {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -37,8 +42,8 @@ export function SaleLeadForm({ onSaleLeadCreated }: SaleLeadFormProps) {
     handleSubmit,
     control,
     formState: { errors },
-  } = useForm<z.infer<typeof SaleLeadSchema>>({
-    resolver: zodResolver(SaleLeadSchema),
+  } = useForm<FormValues>({
+    resolver: zodResolver(FormSchema),
     defaultValues: {
       stage: 'new',
       priority: 'medium',
@@ -68,7 +73,7 @@ export function SaleLeadForm({ onSaleLeadCreated }: SaleLeadFormProps) {
     fetchCustomers();
   }, [fetchCustomers]);
 
-  const onSubmit = async (data: z.infer<typeof SaleLeadSchema>) => {
+  const onSubmit = async (data: FormValues) => {
     if (!currentUser) {
       setError('Você precisa estar autenticado para criar uma oportunidade.');
       return;
@@ -77,7 +82,11 @@ export function SaleLeadForm({ onSaleLeadCreated }: SaleLeadFormProps) {
     setError(null);
     
     try {
-      await createSaleLead({ ...data, actor: currentUser.uid });
+      const submissionData = {
+          ...data,
+          expectedCloseDate: data.expectedCloseDate.toISOString(),
+      };
+      await createSaleLead({ ...submissionData, actor: currentUser.uid });
       onSaleLeadCreated();
     } catch (err) {
       console.error(err);
@@ -189,6 +198,7 @@ export function SaleLeadForm({ onSaleLeadCreated }: SaleLeadFormProps) {
                         </Popover>
                     )}
                 />
+                 {errors.expectedCloseDate && <p className="text-red-500 text-sm">{errors.expectedCloseDate.message}</p>}
             </div>
         </div>
 
