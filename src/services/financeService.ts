@@ -1,10 +1,9 @@
 
-import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
 import { AccountSchema, AccountProfileSchema } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
-
-const db = getFirestore();
+import { adminDb } from '@/lib/firebase-admin';
 
 export const createAccount = async (input: z.infer<typeof AccountSchema>, actorUid: string) => {
     const { organizationId } = await getAdminAndOrg(actorUid);
@@ -16,7 +15,7 @@ export const createAccount = async (input: z.infer<typeof AccountSchema>, actorU
         updatedAt: FieldValue.serverTimestamp(),
     };
 
-    const accountRef = await db.collection('accounts').add(newAccountData);
+    const accountRef = await adminDb.collection('accounts').add(newAccountData);
 
     return { id: accountRef.id };
 };
@@ -26,7 +25,7 @@ export const listAccounts = async (actorUid: string): Promise<z.infer<typeof Acc
     const { organizationId } = await getAdminAndOrg(actorUid);
     
     try {
-        const accountsSnapshot = await db.collection('accounts')
+        const accountsSnapshot = await adminDb.collection('accounts')
                                          .where('companyId', '==', organizationId)
                                          .orderBy('createdAt', 'desc')
                                          .get();
@@ -57,8 +56,8 @@ export const listAccounts = async (actorUid: string): Promise<z.infer<typeof Acc
 export const getDashboardMetrics = async (actorUid: string) => {
     const { organizationId } = await getAdminAndOrg(actorUid);
 
-    const accountsRef = db.collection('accounts').where('companyId', '==', organizationId);
-    const transactionsRef = db.collection('transactions').where('companyId', '==', organizationId);
+    const accountsRef = adminDb.collection('accounts').where('companyId', '==', organizationId);
+    const transactionsRef = adminDb.collection('transactions').where('companyId', '==', organizationId);
 
     // Get date range for the current month
     const now = new Date();

@@ -1,11 +1,10 @@
 
-import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
 import { CustomerSchema, CustomerProfileSchema, SaleLeadProfileSchema, SaleLeadSchema, ProductSchema, ProductProfileSchema, QuoteSchema, QuoteProfileSchema } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
 import type { SaleLeadProfile, QuoteProfile } from '@/ai/schemas';
-
-const db = getFirestore();
+import { adminDb } from '@/lib/firebase-admin';
 
 export const createCustomer = async (input: z.infer<typeof CustomerSchema>, actorUid: string) => {
     const { organizationId } = await getAdminAndOrg(actorUid);
@@ -17,7 +16,7 @@ export const createCustomer = async (input: z.infer<typeof CustomerSchema>, acto
         updatedAt: FieldValue.serverTimestamp(),
     };
 
-    const customerRef = await db.collection('customers').add(newCustomerData);
+    const customerRef = await adminDb.collection('customers').add(newCustomerData);
 
     return { id: customerRef.id };
 };
@@ -25,7 +24,7 @@ export const createCustomer = async (input: z.infer<typeof CustomerSchema>, acto
 export const listCustomers = async (actorUid: string): Promise<z.infer<typeof CustomerProfileSchema>[]> => {
     const { organizationId } = await getAdminAndOrg(actorUid);
     
-    const customersSnapshot = await db.collection('customers')
+    const customersSnapshot = await adminDb.collection('customers')
                                      .where('companyId', '==', organizationId)
                                      .orderBy('createdAt', 'desc')
                                      .get();
@@ -55,14 +54,14 @@ export const createSaleLead = async (input: z.infer<typeof SaleLeadSchema>, acto
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
     };
-    const saleLeadRef = await db.collection('sales_pipeline').add(newSaleLeadData);
+    const saleLeadRef = await adminDb.collection('sales_pipeline').add(newSaleLeadData);
     return { id: saleLeadRef.id };
 };
 
 export const listSaleLeads = async (actorUid: string): Promise<SaleLeadProfile[]> => {
     const { organizationId } = await getAdminAndOrg(actorUid);
 
-    const leadsSnapshot = await db.collection('sales_pipeline')
+    const leadsSnapshot = await adminDb.collection('sales_pipeline')
         .where('companyId', '==', organizationId)
         .get();
 
@@ -74,7 +73,7 @@ export const listSaleLeads = async (actorUid: string): Promise<SaleLeadProfile[]
     const customers: Record<string, { name?: string, email?: string }> = {};
 
     if (customerIds.length > 0) {
-        const customersSnapshot = await db.collection('customers').where('__name__', 'in', customerIds).get();
+        const customersSnapshot = await adminDb.collection('customers').where('__name__', 'in', customerIds).get();
         customersSnapshot.forEach(doc => {
             customers[doc.id] = {
                 name: doc.data().name,
@@ -128,13 +127,13 @@ export const createProduct = async (input: z.infer<typeof ProductSchema>, actorU
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
     };
-    const productRef = await db.collection('products').add(newProductData);
+    const productRef = await adminDb.collection('products').add(newProductData);
     return { id: productRef.id };
 };
 
 export const listProducts = async (actorUid: string): Promise<z.infer<typeof ProductProfileSchema>[]> => {
     const { organizationId } = await getAdminAndOrg(actorUid);
-    const productsSnapshot = await db.collection('products')
+    const productsSnapshot = await adminDb.collection('products')
                                      .where('companyId', '==', organizationId)
                                      .orderBy('createdAt', 'desc')
                                      .get();
@@ -160,14 +159,14 @@ export const createQuote = async (input: z.infer<typeof QuoteSchema>, actorUid: 
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
     };
-    const quoteRef = await db.collection('quotes').add(newQuoteData);
+    const quoteRef = await adminDb.collection('quotes').add(newQuoteData);
     return { id: quoteRef.id };
 };
 
 export const listQuotes = async (actorUid: string): Promise<QuoteProfile[]> => {
     const { organizationId } = await getAdminAndOrg(actorUid);
 
-    const quotesSnapshot = await db.collection('quotes')
+    const quotesSnapshot = await adminDb.collection('quotes')
         .where('companyId', '==', organizationId)
         .orderBy('createdAt', 'desc')
         .get();
@@ -180,7 +179,7 @@ export const listQuotes = async (actorUid: string): Promise<QuoteProfile[]> => {
     const customers: Record<string, { name?: string }> = {};
 
     if (customerIds.length > 0) {
-        const customersSnapshot = await db.collection('customers').where('__name__', 'in', customerIds).get();
+        const customersSnapshot = await adminDb.collection('customers').where('__name__', 'in', customerIds).get();
         customersSnapshot.forEach(doc => {
             customers[doc.id] = { name: doc.data().name };
         });

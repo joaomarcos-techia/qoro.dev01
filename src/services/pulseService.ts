@@ -4,12 +4,12 @@
  * @fileOverview Service for managing QoroPulse conversations in Firestore.
  */
 
-import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { FieldValue } from 'firebase-admin/firestore';
 import { getAdminAndOrg } from './utils';
 import { PulseMessageSchema, ConversationSchema } from '@/ai/schemas';
 import { z } from 'zod';
+import { adminDb } from '@/lib/firebase-admin';
 
-const db = getFirestore();
 
 export const saveConversation = async (
     actorUid: string, 
@@ -27,7 +27,7 @@ export const saveConversation = async (
         updatedAt: FieldValue.serverTimestamp(),
     };
 
-    const conversationRef = await db.collection('pulse_conversations').add(conversationData);
+    const conversationRef = await adminDb.collection('pulse_conversations').add(conversationData);
     return conversationRef.id;
 }
 
@@ -37,7 +37,7 @@ export const updateConversation = async (
     messages: z.infer<typeof PulseMessageSchema>[]
 ): Promise<void> => {
     const { organizationId } = await getAdminAndOrg(actorUid);
-    const conversationRef = db.collection('pulse_conversations').doc(conversationId);
+    const conversationRef = adminDb.collection('pulse_conversations').doc(conversationId);
 
     const doc = await conversationRef.get();
     if (!doc.exists || doc.data()?.organizationId !== organizationId) {
@@ -53,7 +53,7 @@ export const updateConversation = async (
 export const listConversations = async (actorUid: string): Promise<z.infer<typeof ConversationSchema>[]> => {
     const { organizationId } = await getAdminAndOrg(actorUid);
 
-    const snapshot = await db.collection('pulse_conversations')
+    const snapshot = await adminDb.collection('pulse_conversations')
         .where('organizationId', '==', organizationId)
         .where('userId', '==', actorUid)
         .orderBy('updatedAt', 'desc')
@@ -77,7 +77,7 @@ export const listConversations = async (actorUid: string): Promise<z.infer<typeo
 
 export const getConversation = async (conversationId: string, actorUid: string): Promise<z.infer<typeof ConversationSchema> | null> => {
     const { organizationId } = await getAdminAndOrg(actorUid);
-    const docRef = db.collection('pulse_conversations').doc(conversationId);
+    const docRef = adminDb.collection('pulse_conversations').doc(conversationId);
     
     const doc = await docRef.get();
     if (!doc.exists || doc.data()?.organizationId !== organizationId || doc.data()?.userId !== actorUid) {
@@ -96,7 +96,7 @@ export const getConversation = async (conversationId: string, actorUid: string):
 
 export const deleteConversation = async (conversationId: string, actorUid: string): Promise<void> => {
     const { organizationId } = await getAdminAndOrg(actorUid);
-    const docRef = db.collection('pulse_conversations').doc(conversationId);
+    const docRef = adminDb.collection('pulse_conversations').doc(conversationId);
     
     const doc = await docRef.get();
     if (!doc.exists || doc.data()?.organizationId !== organizationId || doc.data()?.userId !== actorUid) {

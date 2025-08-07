@@ -4,12 +4,12 @@
  * @fileOverview Task management services.
  */
 
-import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
 import { TaskSchema, TaskProfileSchema } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
+import { adminDb } from '@/lib/firebase-admin';
 
-const db = getFirestore();
 
 export const createTask = async (input: z.infer<typeof TaskSchema>, actorUid: string) => {
     const { organizationId } = await getAdminAndOrg(actorUid);
@@ -22,7 +22,7 @@ export const createTask = async (input: z.infer<typeof TaskSchema>, actorUid: st
         updatedAt: FieldValue.serverTimestamp(),
     };
 
-    const taskRef = await db.collection('tasks').add(newTaskData);
+    const taskRef = await adminDb.collection('tasks').add(newTaskData);
 
     return { id: taskRef.id };
 };
@@ -32,7 +32,7 @@ export const listTasks = async (actorUid: string): Promise<z.infer<typeof TaskPr
     
     // Query for all tasks in the organization, for now.
     // Can be refined to query only for tasks assigned to the user (actorUid).
-    const tasksSnapshot = await db.collection('tasks')
+    const tasksSnapshot = await adminDb.collection('tasks')
                                      .where('companyId', '==', organizationId)
                                      .orderBy('createdAt', 'desc')
                                      .get();
@@ -60,7 +60,7 @@ export const listTasks = async (actorUid: string): Promise<z.infer<typeof TaskPr
 export const getDashboardMetrics = async (actorUid: string): Promise<{ totalTasks: number; completedTasks: number; inProgressTasks: number; pendingTasks: number; }> => {
     const { organizationId } = await getAdminAndOrg(actorUid);
 
-    const tasksRef = db.collection('tasks').where('companyId', '==', organizationId);
+    const tasksRef = adminDb.collection('tasks').where('companyId', '==', organizationId);
 
     const totalPromise = tasksRef.count().get();
     const completedPromise = tasksRef.where('status', '==', 'done').count().get();

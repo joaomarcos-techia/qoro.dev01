@@ -1,17 +1,18 @@
-import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+
+import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
 import { TransactionSchema, TransactionProfileSchema, TransactionProfile } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
+import { adminDb } from '@/lib/firebase-admin';
 
-const db = getFirestore();
 
 export const createTransaction = async (input: z.infer<typeof TransactionSchema>, actorUid: string) => {
     const { organizationId } = await getAdminAndOrg(actorUid);
 
-    const accountRef = db.collection('accounts').doc(input.accountId);
-    const transactionRef = db.collection('transactions').doc(); // Create a new ref for the transaction
+    const accountRef = adminDb.collection('accounts').doc(input.accountId);
+    const transactionRef = adminDb.collection('transactions').doc(); // Create a new ref for the transaction
 
-    await db.runTransaction(async (t) => {
+    await adminDb.runTransaction(async (t) => {
         const accountDoc = await t.get(accountRef);
         if (!accountDoc.exists) {
             throw new Error("A conta financeira especificada não foi encontrada.");
@@ -53,7 +54,7 @@ export const createTransaction = async (input: z.infer<typeof TransactionSchema>
 export const listTransactions = async (actorUid: string): Promise<TransactionProfile[]> => {
     const { organizationId } = await getAdminAndOrg(actorUid);
     
-    const transactionsSnapshot = await db.collection('transactions')
+    const transactionsSnapshot = await adminDb.collection('transactions')
                                      .where('companyId', '==', organizationId)
                                      .orderBy('date', 'desc')
                                      .get();
@@ -70,14 +71,14 @@ export const listTransactions = async (actorUid: string): Promise<TransactionPro
     const customers: Record<string, { name?: string }> = {};
 
     if (accountIds.length > 0) {
-        const accountsSnapshot = await db.collection('accounts').where('__name__', 'in', accountIds).get();
+        const accountsSnapshot = await adminDb.collection('accounts').where('__name__', 'in', accountIds).get();
         accountsSnapshot.forEach(doc => {
             accounts[doc.id] = { name: doc.data().name };
         });
     }
 
     if (customerIds.length > 0) {
-        const customersSnapshot = await db.collection('customers').where('__name__', 'in', customerIds).get();
+        const customersSnapshot = await adminDb.collection('customers').where('__name__', 'in', customerIds).get();
         customersSnapshot.forEach(doc => {
             customers[doc.id] = { name: doc.data().name };
         });

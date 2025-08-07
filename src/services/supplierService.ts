@@ -1,10 +1,9 @@
 
-import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
 import { SupplierSchema, SupplierProfileSchema } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
-
-const db = getFirestore();
+import { adminDb } from '@/lib/firebase-admin';
 
 export const createSupplier = async (input: z.infer<typeof SupplierSchema>, actorUid: string) => {
     const { organizationId } = await getAdminAndOrg(actorUid);
@@ -16,7 +15,7 @@ export const createSupplier = async (input: z.infer<typeof SupplierSchema>, acto
         updatedAt: FieldValue.serverTimestamp(),
     };
 
-    const supplierRef = await db.collection('suppliers').add(newSupplierData);
+    const supplierRef = await adminDb.collection('suppliers').add(newSupplierData);
 
     return { id: supplierRef.id };
 };
@@ -24,7 +23,7 @@ export const createSupplier = async (input: z.infer<typeof SupplierSchema>, acto
 export const listSuppliers = async (actorUid: string): Promise<z.infer<typeof SupplierProfileSchema>[]> => {
     const { organizationId } = await getAdminAndOrg(actorUid);
     
-    const suppliersSnapshot = await db.collection('suppliers')
+    const suppliersSnapshot = await adminDb.collection('suppliers')
                                      .where('companyId', '==', organizationId)
                                      .orderBy('createdAt', 'desc')
                                      .get();

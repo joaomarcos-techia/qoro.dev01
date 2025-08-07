@@ -1,7 +1,6 @@
 
-import { initializeApp, getApps, App, cert } from 'firebase-admin/app';
-import { getAuth, FirebaseAuthError, UserRecord } from 'firebase-admin/auth';
-import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { FieldValue } from 'firebase-admin/firestore';
+import type { UserRecord } from 'firebase-admin/auth';
 import { z } from 'zod';
 import { 
     SignUpSchema, 
@@ -10,52 +9,22 @@ import {
     UserProfile,
     OrganizationProfileSchema 
 } from '@/ai/schemas';
-import { config } from 'dotenv';
 import { getAdminAndOrg } from './utils';
-
-config({ path: `.env` });
-
-let app: App;
-
-if (!getApps().length) {
-    try {
-        const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
-
-        if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_CLIENT_EMAIL || !privateKey) {
-            throw new Error("As variáveis de ambiente do Firebase Admin não estão configuradas corretamente.");
-        }
-
-        app = initializeApp({
-            credential: cert({
-                projectId: process.env.FIREBASE_PROJECT_ID,
-                clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-                privateKey: privateKey,
-            }),
-        });
-    } catch (e) {
-        console.error("Firebase Admin SDK initialization failed.", e);
-        throw new Error("Could not initialize Firebase Admin SDK. Ensure environment is configured correctly.");
-    }
-} else {
-    app = getApps()[0];
-}
-
-const auth = getAuth(app);
-const db = getFirestore(app);
+import { adminAuth, adminDb } from '@/lib/firebase-admin';
 
 
 export const signUp = async (input: z.infer<typeof SignUpSchema>): Promise<UserRecord> => {
     const { email, password, name, organizationName, cnpj, contactEmail, contactPhone } = input;
     
     try {
-        const userRecord = await auth.createUser({
+        const userRecord = await adminAuth.createUser({
             email,
             password,
             displayName: name || '',
             emailVerified: false, 
         });
 
-        const orgRef = await db.collection('organizations').add({
+        const orgRef = await adminDb.collection('organizations').add({
             name: organizationName,
             owner: userRecord.uid,
             createdAt: FieldValue.serverTimestamp(),
@@ -64,7 +33,7 @@ export const signUp = async (input: z.infer<typeof SignUpSchema>): Promise<UserR
             contactPhone: contactPhone || null,
         });
 
-        await db.collection('users').doc(userRecord.uid).set({
+        await adminDb.collection('users').doc(userRecord.uid).set({
             name: name || '',
             email,
             organizationId: orgRef.id,
@@ -79,12 +48,11 @@ export const signUp = async (input: z.infer<typeof SignUpSchema>): Promise<UserR
         });
 
         return userRecord;
-    } catch (error) {
-        const firebaseError = error as FirebaseAuthError;
-        if (firebaseError.code === 'auth/email-already-exists') {
+    } catch (error: any) {
+        if (error.code === 'auth/email-already-exists') {
             throw new Error('Este e-mail já está em uso.');
         }
-        console.error("Error during sign up in organizationService:", firebaseError);
+        console.error("Error during sign up in organizationService:", error);
         throw new Error("Ocorreu um erro inesperado durante o cadastro.");
     }
 };
@@ -92,12 +60,12 @@ export const signUp = async (input: z.infer<typeof SignUpSchema>): Promise<UserR
 export const inviteUser = async (email: string, actor: string): Promise<{ uid: string; email: string; organizationId: string; }> => {
     const { organizationId, adminUid } = await getAdminAndOrg(actor);
     
-    const userRecord = await auth.createUser({
+    const userRecord = await adminAuth.createUser({
       email,
       emailVerified: false,
     });
 
-    await db.collection('users').doc(userRecord.uid).set({
+    await adminDb.collection('users').doc(userRecord.uid).set({
       email,
       organizationId,
       invitedBy: adminUid,
@@ -112,7 +80,7 @@ export const inviteUser = async (email: string, actor: string): Promise<{ uid: s
     });
     
     try {
-        const link = await auth.generatePasswordResetLink(email);
+        const link = await adminAuth.generatePasswordResetLink(email);
         console.log(`Link de configuração de senha enviado para ${email}. Em um aplicativo real, este link seria enviado por meio de um serviço de e-mail.`);
     } catch(error){
         console.error("Falha ao gerar o link de definição de senha:", error);
@@ -128,7 +96,7 @@ export const inviteUser = async (email: string, actor: string): Promise<{ uid: s
 export const listUsers = async (actor: string): Promise<UserProfile[]> => {
     const { organizationId } = await getAdminAndOrg(actor);
     
-    const usersSnapshot = await db.collection('users').where('organizationId', '==', organizationId).get();
+    const usersSnapshot = await adminDb.collection('users').where('organizationId', '==', organizationId).get();
     
     const users: UserProfile[] = [];
     usersSnapshot.forEach(doc => {
@@ -155,7 +123,7 @@ export const updateUserPermissions = async (input: z.infer<typeof UpdateUserPerm
         throw new Error("Administradores não podem alterar as próprias permissões.");
     }
     
-    const targetUserRef = db.collection('users').doc(userId);
+    const targetUserRef = adminDb.collection('users').doc(userId);
     const targetUserDoc = await targetUserRef.get();
 
     if (!targetUserDoc.exists || targetUserDoc.data()?.organizationId !== organizationId) {
@@ -169,7 +137,7 @@ export const updateUserPermissions = async (input: z.infer<typeof UpdateUserPerm
 
 export const getOrganizationDetails = async (actor: string): Promise<z.infer<typeof OrganizationProfileSchema>> => {
     const { organizationId } = await getAdminAndOrg(actor);
-    const orgDoc = await db.collection('organizations').doc(organizationId).get();
+    const orgDoc = await adminDb.collection('organizations').doc(organizationId).get();
 
     if (!orgDoc.exists) {
         throw new Error('Organização não encontrada.');
@@ -193,7 +161,7 @@ export const updateOrganizationDetails = async (details: z.infer<typeof UpdateOr
     if(details.contactEmail) updateData.contactEmail = details.contactEmail;
     if(details.contactPhone) updateData.contactPhone = details.contactPhone;
 
-    await db.collection('organizations').doc(organizationId).update(updateData);
+    await adminDb.collection('organizations').doc(organizationId).update(updateData);
 
     return { success: true };
 };
