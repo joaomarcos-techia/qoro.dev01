@@ -6,11 +6,12 @@ import { auth } from '@/lib/firebase';
 import { getDashboardMetrics } from '@/ai/flows/finance-management';
 import { listTransactions } from '@/ai/flows/finance-management';
 import { TransactionProfile } from '@/ai/schemas';
-import { Bar, BarChart as BarChartPrimitive, CartesianGrid, XAxis, YAxis, ResponsiveContainer, Pie, PieChart as PieChartPrimitive, Cell } from 'recharts';
+import { Bar, BarChart as BarChartPrimitive, CartesianGrid, ResponsiveContainer, Pie, PieChart as PieChartPrimitive, Cell } from 'recharts';
+import CustomXAxis from '@/components/utils/CustomXAxis';
+import CustomYAxis from '@/components/utils/CustomYAxis';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { DollarSign, ArrowUp, ArrowDown, Landmark, Loader2, ServerCrash, TrendingUp, TrendingDown, Wallet, Component } from 'lucide-react';
-import { SuppressRechartsWarning } from '@/components/utils/SuppressRechartsWarning';
 
 interface FinanceMetrics {
   totalIncome: number;
@@ -121,57 +122,55 @@ export default function VisaoGeralPage() {
         }
 
         return (
-            <SuppressRechartsWarning>
-                <div className="space-y-8">
-                    {/* Metrics Section */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <MetricCard title="Receita (Mês)" value={metrics?.totalIncome ?? 0} icon={TrendingUp} isLoading={isLoading} color="bg-green-500" format={formatCurrency} />
-                        <MetricCard title="Despesa (Mês)" value={metrics?.totalExpense ?? 0} icon={TrendingDown} isLoading={isLoading} color="bg-red-500" format={formatCurrency} />
-                        <MetricCard title="Lucro Líquido (Mês)" value={metrics?.netProfit ?? 0} icon={DollarSign} isLoading={isLoading} color="bg-blue-500" format={formatCurrency} />
-                        <MetricCard title="Saldo em Contas" value={metrics?.totalBalance ?? 0} icon={Wallet} isLoading={isLoading} color="bg-yellow-500" format={formatCurrency} />
-                    </div>
-                    
-                    {/* Charts Section */}
-                    <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-                        <Card className="lg:col-span-3 bg-white p-6 rounded-2xl shadow-neumorphism border border-gray-100">
-                            <CardHeader>
-                                <CardTitle>Fluxo de Caixa Mensal</CardTitle>
-                                <CardDescription>Receitas vs. Despesas nos últimos meses.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
-                                    <BarChartPrimitive data={cashFlowChartData}>
-                                        <CartesianGrid vertical={false} />
-                                        <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
-                                        <YAxis tickLine={false} axisLine={false} tickFormatter={(value) => `R$ ${value / 1000}k`} />
-                                        <ChartTooltip content={<ChartTooltipContent />} />
-                                        <Bar dataKey="receita" fill="var(--color-receita)" radius={8} />
-                                        <Bar dataKey="despesa" fill="var(--color-despesa)" radius={8} />
-                                    </BarChartPrimitive>
-                                </ChartContainer>
-                            </CardContent>
-                        </Card>
-                        <Card className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-neumorphism border border-gray-100">
-                            <CardHeader>
-                            <CardTitle>Composição de Despesas</CardTitle>
-                            <CardDescription>Categorias de despesas no mês atual.</CardDescription>
-                            </CardHeader>
-                            <CardContent className="flex justify-center">
-                                <ChartContainer config={chartConfig} className="min-h-[300px] w-full max-w-[300px]">
-                                    <PieChartPrimitive>
-                                    <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                                    <Pie data={expenseChartData} dataKey="value" nameKey="name" innerRadius={60}>
-                                        {expenseChartData.map((entry) => (
-                                            <Cell key={entry.name} fill={entry.fill} />
-                                        ))}
-                                    </Pie>
-                                    </PieChartPrimitive>
-                                </ChartContainer>
-                            </CardContent>
-                        </Card>
-                    </div>
+            <div className="space-y-8">
+                {/* Metrics Section */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <MetricCard title="Receita (Mês)" value={metrics?.totalIncome ?? 0} icon={TrendingUp} isLoading={isLoading} color="bg-green-500" format={formatCurrency} />
+                    <MetricCard title="Despesa (Mês)" value={metrics?.totalExpense ?? 0} icon={TrendingDown} isLoading={isLoading} color="bg-red-500" format={formatCurrency} />
+                    <MetricCard title="Lucro Líquido (Mês)" value={metrics?.netProfit ?? 0} icon={DollarSign} isLoading={isLoading} color="bg-blue-500" format={formatCurrency} />
+                    <MetricCard title="Saldo em Contas" value={metrics?.totalBalance ?? 0} icon={Wallet} isLoading={isLoading} color="bg-yellow-500" format={formatCurrency} />
                 </div>
-            </SuppressRechartsWarning>
+                
+                {/* Charts Section */}
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                    <Card className="lg:col-span-3 bg-white p-6 rounded-2xl shadow-neumorphism border border-gray-100">
+                        <CardHeader>
+                            <CardTitle>Fluxo de Caixa Mensal</CardTitle>
+                            <CardDescription>Receitas vs. Despesas nos últimos meses.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
+                                <BarChartPrimitive data={cashFlowChartData}>
+                                    <CartesianGrid vertical={false} />
+                                    <CustomXAxis dataKey="month" tickMargin={10} />
+                                    <CustomYAxis tickFormatter={(value) => `R$ ${value / 1000}k`} />
+                                    <ChartTooltip content={<ChartTooltipContent />} />
+                                    <Bar dataKey="receita" fill="var(--color-receita)" radius={8} />
+                                    <Bar dataKey="despesa" fill="var(--color-despesa)" radius={8} />
+                                </BarChartPrimitive>
+                            </ChartContainer>
+                        </CardContent>
+                    </Card>
+                    <Card className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-neumorphism border border-gray-100">
+                        <CardHeader>
+                        <CardTitle>Composição de Despesas</CardTitle>
+                        <CardDescription>Categorias de despesas no mês atual.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex justify-center">
+                            <ChartContainer config={chartConfig} className="min-h-[300px] w-full max-w-[300px]">
+                                <PieChartPrimitive>
+                                <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                                <Pie data={expenseChartData} dataKey="value" nameKey="name" innerRadius={60}>
+                                    {expenseChartData.map((entry) => (
+                                        <Cell key={entry.name} fill={entry.fill} />
+                                    ))}
+                                </Pie>
+                                </PieChartPrimitive>
+                            </ChartContainer>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
         );
     };
 
@@ -187,5 +186,3 @@ export default function VisaoGeralPage() {
       </div>
     );
   }
-
-    
