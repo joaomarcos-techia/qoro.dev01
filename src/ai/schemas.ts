@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 
 // Schemas for User and Organization Management
@@ -186,6 +187,7 @@ export const ConversationSchema = z.object({
     id: z.string(),
     title: z.string(),
     createdAt: z.string(),
+    updatedAt: z.string().optional(),
     messages: z.array(PulseMessageSchema),
 });
 export type Conversation = z.infer<typeof ConversationSchema>;

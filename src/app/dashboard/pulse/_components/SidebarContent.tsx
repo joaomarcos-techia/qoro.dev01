@@ -1,10 +1,10 @@
 
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useState, useTransition, useCallback } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { listConversations, deleteConversation as deleteConversationFlow } from '@/ai/flows/pulse-flow';
+import { listConversations, deleteConversation as deleteConversationFlow, listConversationsSortedByCreation } from '@/ai/flows/pulse-flow';
 import type { Conversation } from '@/ai/schemas';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -30,22 +30,35 @@ export function PulseSidebarContent() {
     return () => unsubscribe();
   }, []);
 
+  const fetchConversations = useCallback(async (user: User) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      // Tenta primeiro com 'updatedAt', que precisa do índice novo.
+      const convos = await listConversations({ actor: user.uid });
+      const sortedConvos = [...convos].sort((a, b) => new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime());
+      setConversations(sortedConvos);
+    } catch (err: any) {
+        console.warn("Query by 'updatedAt' failed, falling back to 'createdAt'. This is expected while the index is building.", err.message);
+        try {
+            // Se a primeira falhar (índice construindo), usa 'createdAt' que já tem índice.
+            const convos = await listConversationsSortedByCreation({ actor: user.uid });
+            setConversations(convos);
+        } catch (finalErr) {
+            console.error("Failed to fetch conversations with fallback:", finalErr);
+            setError("Não foi possível carregar o histórico. Tente recarregar a página em alguns minutos.");
+        }
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+
   useEffect(() => {
     if (currentUser) {
-      setIsLoading(true);
-      setError(null);
-      listConversations({ actor: currentUser.uid })
-        .then(convos => {
-            const sortedConvos = [...convos].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-            setConversations(sortedConvos);
-        })
-        .catch(err => {
-          console.error("Failed to fetch conversations:", err);
-          setError("Não foi possível carregar o histórico. Isso pode ser um problema temporário com a base de dados.");
-        })
-        .finally(() => setIsLoading(false));
+      fetchConversations(currentUser);
     }
-  }, [currentUser, pathname]); // Re-fetch when pathname changes to reflect new/deleted convos
+  }, [currentUser, pathname, fetchConversations]);
 
   const handleDeleteConversation = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -75,14 +88,18 @@ export function PulseSidebarContent() {
   const renderContent = () => {
     if (isLoading) {
       return (
-        <div className="flex justify-center items-center h-full">
-          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        <div className="flex justify-center items-center h-full p-4">
+          <div className="text-center">
+            <Loader2 className="mx-auto w-6 h-6 animate-spin text-primary" />
+            <p className="text-sm text-gray-500 mt-2">Carregando conversas...</p>
+            <p className="text-xs text-gray-400 mt-1">(Isso pode levar um minuto na primeira vez)</p>
+          </div>
         </div>
       );
     }
     if (error) {
         return (
-            <div className="p-4 m-4 text-center text-sm text-red-600 bg-red-50 rounded-lg">
+            <div className="p-4 m-4 text-center text-sm text-red-600 bg-red-50 rounded-lg border border-red-200">
                 <AlertTriangle className="mx-auto w-8 h-8 mb-2" />
                 <p className="font-semibold">Ocorreu um Erro</p>
                 <p>{error}</p>
