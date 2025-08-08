@@ -88,7 +88,13 @@ export const updateCustomerStatus = async (
 };
 
 export const deleteCustomer = async (customerId: string, actorUid: string) => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
+    const { organizationId, userRole } = await getAdminAndOrg(actorUid);
+
+    // Security Check: Only admins can delete customers.
+    if (userRole !== 'admin') {
+        throw new Error("Permissão negada. Apenas administradores podem excluir clientes.");
+    }
+
     const customerRef = adminDb.collection('customers').doc(customerId);
 
     const customerDoc = await customerRef.get();
