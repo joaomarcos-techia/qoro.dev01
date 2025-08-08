@@ -17,11 +17,15 @@ import { CustomerForm } from '@/components/dashboard/crm/CustomerForm';
 
 export default function ClientesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  // The CustomerTable now manages its own refresh state internally.
+  // This refreshCounter is kept to re-render the table component itself if needed,
+  // for instance, if we needed to force a full re-mount.
   const [refreshCounter, setRefreshCounter] = useState(0);
 
-  const handleCustomerCreated = () => {
+  const handleCustomerAction = () => {
     setIsModalOpen(false);
-    setRefreshCounter(prev => prev + 1); // Trigger a refresh
+    // Refresh the table by changing its key
+    setRefreshCounter(prev => prev + 1);
   };
 
   return (
@@ -47,7 +51,7 @@ export default function ClientesPage() {
                 Preencha as informações abaixo para cadastrar um novo cliente no sistema.
               </DialogDescription>
             </DialogHeader>
-            <CustomerForm onCustomerCreated={handleCustomerCreated} />
+            <CustomerForm onCustomerAction={handleCustomerAction} />
           </DialogContent>
         </Dialog>
       </div>

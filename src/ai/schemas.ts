@@ -84,6 +84,10 @@ export const CustomerSchema = z.object({
   customFields: z.record(z.any()).optional(),
 });
 
+export const UpdateCustomerSchema = CustomerSchema.extend({
+    id: z.string(),
+});
+
 export const CustomerProfileSchema = CustomerSchema.extend({
     id: z.string(),
     createdAt: z.string(), // Using string for simplicity on the client

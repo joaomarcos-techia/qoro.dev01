@@ -9,8 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { createCustomer } from '@/ai/flows/crm-management';
-import { CustomerSchema } from '@/ai/schemas';
+import { createCustomer, updateCustomer } from '@/ai/flows/crm-management';
+import { CustomerSchema, CustomerProfile } from '@/ai/schemas';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Loader2, AlertCircle, CalendarIcon } from 'lucide-react';
@@ -20,7 +20,8 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
 type CustomerFormProps = {
-  onCustomerCreated: () => void;
+  onCustomerAction: () => void;
+  customer?: CustomerProfile | null;
 };
 
 const FormSchema = CustomerSchema.extend({
@@ -28,7 +29,6 @@ const FormSchema = CustomerSchema.extend({
 });
 
 type FormValues = z.infer<typeof FormSchema>;
-
 
 // --- Funções de formatação ---
 const formatCPF = (value: string) => {
@@ -59,10 +59,12 @@ const formatPhone = (value: string) => {
 };
 // -----------------------------
 
-export function CustomerForm({ onCustomerCreated }: CustomerFormProps) {
+export function CustomerForm({ onCustomerAction, customer }: CustomerFormProps) {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isEditMode = !!customer;
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -75,37 +77,51 @@ export function CustomerForm({ onCustomerCreated }: CustomerFormProps) {
     register,
     handleSubmit,
     control,
+    reset,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
-    defaultValues: {
-      source: '',
-      status: 'new',
-      tags: [],
-    },
   });
+
+  useEffect(() => {
+    if (customer) {
+        const birthDate = customer.birthDate ? new Date(customer.birthDate) : null;
+        reset({ ...customer, birthDate });
+    } else {
+        reset({
+            name: '', email: '', phone: '', company: '', cpf: '', cnpj: '',
+            birthDate: null, address: { street: '', number: '', neighborhood: '', city: '', state: '', zipCode: '' },
+            tags: [], source: '', status: 'new', customFields: {}
+        });
+    }
+  }, [customer, reset]);
 
   const onSubmit = async (data: FormValues) => {
     if (!currentUser) {
-      setError('Você precisa estar autenticado para criar um cliente.');
+      setError('Você precisa estar autenticado para executar esta ação.');
       return;
     }
     setIsLoading(true);
     setError(null);
+
     try {
-      // Remove a formatação e converte a data antes de enviar
-      const unformattedData: z.infer<typeof CustomerSchema> = {
+      const submissionData = {
         ...data,
         cpf: data.cpf?.replace(/\D/g, ''),
         cnpj: data.cnpj?.replace(/\D/g, ''),
         phone: data.phone?.replace(/\D/g, ''),
         birthDate: data.birthDate ? data.birthDate.toISOString() : null,
       };
-      await createCustomer({ ...unformattedData, actor: currentUser.uid });
-      onCustomerCreated();
+
+      if (isEditMode) {
+        await updateCustomer({ ...submissionData, id: customer.id, actor: currentUser.uid });
+      } else {
+        await createCustomer({ ...submissionData, actor: currentUser.uid });
+      }
+      onCustomerAction();
     } catch (err) {
       console.error(err);
-      setError('Falha ao criar o cliente. Tente novamente.');
+      setError(`Falha ao ${isEditMode ? 'atualizar' : 'criar'} o cliente. Tente novamente.`);
     } finally {
       setIsLoading(false);
     }
@@ -238,7 +254,7 @@ export function CustomerForm({ onCustomerCreated }: CustomerFormProps) {
                 name="status"
                 control={control}
                 render={({ field }) => (
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value}>
                     <SelectTrigger>
                     <SelectValue placeholder="Selecione o status" />
                     </SelectTrigger>
@@ -250,6 +266,7 @@ export function CustomerForm({ onCustomerCreated }: CustomerFormProps) {
                         <SelectItem value="negotiation">Negociação</SelectItem>
                         <SelectItem value="won">Ganho (Fechamento)</SelectItem>
                         <SelectItem value="lost">Perdido</SelectItem>
+                        <SelectItem value="archived">Arquivado</SelectItem>
                     </SelectContent>
                 </Select>
                 )}
@@ -271,7 +288,7 @@ export function CustomerForm({ onCustomerCreated }: CustomerFormProps) {
       <div className="flex justify-end pt-4">
         <Button type="submit" disabled={isLoading} className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
           {isLoading ? <Loader2 className="mr-2 w-5 h-5 animate-spin" /> : null}
-          {isLoading ? 'Salvando...' : 'Salvar Cliente'}
+          {isLoading ? 'Salvando...' : (isEditMode ? 'Salvar Alterações' : 'Salvar Cliente')}
         </Button>
       </div>
     </form>

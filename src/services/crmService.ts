@@ -1,7 +1,7 @@
 
 import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
-import { CustomerSchema, CustomerProfileSchema, SaleLeadProfileSchema, SaleLeadSchema, ProductSchema, ProductProfileSchema, QuoteSchema, QuoteProfileSchema } from '@/ai/schemas';
+import { CustomerSchema, CustomerProfileSchema, SaleLeadProfileSchema, SaleLeadSchema, ProductSchema, ProductProfileSchema, QuoteSchema, QuoteProfileSchema, UpdateCustomerSchema } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
 import type { SaleLeadProfile, QuoteProfile } from '@/ai/schemas';
 import { adminDb } from '@/lib/firebase-admin';
@@ -45,6 +45,25 @@ export const listCustomers = async (actorUid: string): Promise<z.infer<typeof Cu
     });
     
     return customers;
+};
+
+export const updateCustomer = async (customerId: string, input: z.infer<typeof UpdateCustomerSchema>, actorUid: string) => {
+    const { organizationId } = await getAdminAndOrg(actorUid);
+    const customerRef = adminDb.collection('customers').doc(customerId);
+
+    const customerDoc = await customerRef.get();
+    if (!customerDoc.exists || customerDoc.data()?.companyId !== organizationId) {
+        throw new Error('Cliente não encontrado ou acesso negado.');
+    }
+
+    const { id, ...updateData } = input;
+
+    await customerRef.update({
+        ...updateData,
+        updatedAt: FieldValue.serverTimestamp(),
+    });
+
+    return { id: customerId };
 };
 
 export const updateCustomerStatus = async (
@@ -122,8 +141,7 @@ export const listSaleLeads = async (actorUid: string): Promise<SaleLeadProfile[]
     const leads: SaleLeadProfile[] = leadsSnapshot.docs.map(doc => {
         const data = doc.data();
         const customerInfo = customers[data.customerId] || {};
-        const expectedCloseDate = data.expectedCloseDate; // It's already a string
-
+        
         const stageMap: Record<string, SaleLeadProfile['stage']> = {
             prospect: 'new',
             initial_contact: 'initial_contact',
@@ -142,7 +160,7 @@ export const listSaleLeads = async (actorUid: string): Promise<SaleLeadProfile[]
             id: doc.id,
             ...data,
             stage: mappedStage,
-            expectedCloseDate, 
+            expectedCloseDate: data.expectedCloseDate, 
             createdAt: data.createdAt.toDate().toISOString(),
             updatedAt: data.updatedAt.toDate().toISOString(),
             customerName: customerInfo.name,

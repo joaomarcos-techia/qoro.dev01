@@ -22,112 +22,40 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+  } from "@/components/ui/alert-dialog"
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MoreHorizontal, ArrowUpDown, User, Users, Search, Loader2 } from 'lucide-react';
-import { listCustomers } from '@/ai/flows/crm-management';
+import { MoreHorizontal, ArrowUpDown, Users, Search, Loader2, Trash2, Edit, Copy } from 'lucide-react';
+import { listCustomers, deleteCustomer } from '@/ai/flows/crm-management';
 import type { CustomerProfile } from '@/ai/schemas';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { CustomerForm } from './CustomerForm';
 
-const statusMap: Record<CustomerProfile['status'], { text: string; color: string }> = {
-    new: { text: 'Novo', color: 'bg-blue-100 text-blue-800' },
-    initial_contact: { text: 'Contato Inicial', color: 'bg-cyan-100 text-cyan-800' },
-    qualification: { text: 'Qualificação', color: 'bg-purple-100 text-purple-800' },
-    proposal: { text: 'Proposta', color: 'bg-indigo-100 text-indigo-800' },
-    negotiation: { text: 'Negociação', color: 'bg-yellow-100 text-yellow-800' },
-    won: { text: 'Ganho', color: 'bg-green-100 text-green-800' },
-    lost: { text: 'Perdido', color: 'bg-red-100 text-red-800' },
-};
-
-export const columns: ColumnDef<CustomerProfile>[] = [
-  {
-    accessorKey: 'name',
-    header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Nome
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        )
-      },
-    cell: ({ row }) => <div className="font-medium text-black">{row.getValue('name')}</div>,
-  },
-  {
-    accessorKey: 'email',
-    header: 'Email',
-  },
-   {
-    accessorKey: 'cpf',
-    header: 'CPF',
-    cell: ({ row }) => row.getValue('cpf') || '-',
-  },
-  {
-    accessorKey: 'phone',
-    header: 'Telefone',
-    cell: ({ row }) => row.getValue('phone') || '-',
-  },
-  {
-    accessorKey: 'status',
-    header: 'Status',
-    cell: ({ row }) => {
-        const status = row.getValue('status') as keyof typeof statusMap;
-        const { text, color } = statusMap[status] || { text: 'Desconhecido', color: 'bg-gray-100 text-gray-800' };
-        return (
-          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${color}`}>
-            {text}
-          </span>
-        );
-      },
-  },
-  {
-    accessorKey: 'createdAt',
-    header: 'Criado em',
-    cell: ({ row }) => {
-        const createdAt = row.getValue('createdAt');
-        if (!createdAt || typeof createdAt !== 'string') return '-';
-        return new Date(createdAt).toLocaleDateString('pt-BR');
-    }
-  },
-  {
-    id: 'actions',
-    cell: ({ row }) => {
-      const customer = row.original;
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Abrir menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Ações</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(customer.id)}
-            >
-              Copiar ID do Cliente
-            </DropdownMenuItem>
-            <DropdownMenuItem>Ver Detalhes</DropdownMenuItem>
-            <DropdownMenuItem>Editar Cliente</DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600">
-              Excluir Cliente
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
-  },
-];
 
 export function CustomerTable() {
   const [data, setData] = React.useState<CustomerProfile[]>([]);
@@ -136,6 +64,155 @@ export function CustomerTable() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [currentUser, setCurrentUser] = React.useState<FirebaseUser | null>(null);
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [selectedCustomer, setSelectedCustomer] = React.useState<CustomerProfile | null>(null);
+  const [refreshCounter, setRefreshCounter] = React.useState(0);
+
+
+  const statusMap: Record<CustomerProfile['status'], { text: string; color: string }> = {
+    new: { text: 'Novo', color: 'bg-blue-100 text-blue-800' },
+    initial_contact: { text: 'Contato Inicial', color: 'bg-cyan-100 text-cyan-800' },
+    qualification: { text: 'Qualificação', color: 'bg-purple-100 text-purple-800' },
+    proposal: { text: 'Proposta', color: 'bg-indigo-100 text-indigo-800' },
+    negotiation: { text: 'Negociação', color: 'bg-yellow-100 text-yellow-800' },
+    won: { text: 'Ganho', color: 'bg-green-100 text-green-800' },
+    lost: { text: 'Perdido', color: 'bg-red-100 text-red-800' },
+    archived: { text: 'Arquivado', color: 'bg-gray-100 text-gray-800' },
+  };
+
+  const handleEdit = (customer: CustomerProfile) => {
+    setSelectedCustomer(customer);
+    setIsModalOpen(true);
+  };
+  
+  const handleDelete = async (customerId: string) => {
+    if (!currentUser) return;
+    try {
+        await deleteCustomer({ customerId, actor: currentUser.uid });
+        triggerRefresh();
+    } catch(err) {
+        console.error("Failed to delete customer:", err);
+        setError("Não foi possível excluir o cliente.");
+    }
+  };
+
+  const triggerRefresh = () => {
+    setRefreshCounter(prev => prev + 1);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setSelectedCustomer(null);
+  }
+
+  const handleCustomerAction = () => {
+    handleModalClose();
+    triggerRefresh();
+  }
+  
+  const columns: ColumnDef<CustomerProfile>[] = [
+    {
+      accessorKey: 'name',
+      header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            >
+              Nome
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          )
+        },
+      cell: ({ row }) => <div className="font-medium text-black">{row.getValue('name')}</div>,
+    },
+    {
+      accessorKey: 'email',
+      header: 'Email',
+    },
+     {
+      accessorKey: 'cpf',
+      header: 'CPF',
+      cell: ({ row }) => row.getValue('cpf') || '-',
+    },
+    {
+      accessorKey: 'phone',
+      header: 'Telefone',
+      cell: ({ row }) => row.getValue('phone') || '-',
+    },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => {
+          const status = row.getValue('status') as keyof typeof statusMap;
+          const { text, color } = statusMap[status] || { text: 'Desconhecido', color: 'bg-gray-100 text-gray-800' };
+          return (
+            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${color}`}>
+              {text}
+            </span>
+          );
+        },
+    },
+    {
+      accessorKey: 'createdAt',
+      header: 'Criado em',
+      cell: ({ row }) => {
+          const createdAt = row.getValue('createdAt');
+          if (!createdAt || typeof createdAt !== 'string') return '-';
+          return new Date(createdAt).toLocaleDateString('pt-BR');
+      }
+    },
+    {
+      id: 'actions',
+      cell: ({ row }) => {
+        const customer = row.original;
+        return (
+            <AlertDialog>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Abrir menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => handleEdit(customer)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Editar Cliente
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigator.clipboard.writeText(customer.id)}>
+                            <Copy className="mr-2 h-4 w-4" />
+                            Copiar ID
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <AlertDialogTrigger asChild>
+                            <DropdownMenuItem className="text-red-600 focus:bg-red-50 focus:text-red-700">
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Excluir Cliente
+                            </DropdownMenuItem>
+                        </AlertDialogTrigger>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Esta ação não pode ser desfeita. Isso excluirá permanentemente o cliente <span className='font-bold'>{customer.name}</span> e removerá seus dados de nossos servidores.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleDelete(customer.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        Sim, excluir
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        );
+      },
+    },
+  ];
 
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -161,7 +238,7 @@ export function CustomerTable() {
       }
     }
     fetchData();
-  }, [currentUser]);
+  }, [currentUser, refreshCounter]);
 
   const table = useReactTable({
     data,
@@ -191,7 +268,7 @@ export function CustomerTable() {
     return <div className="text-red-500 text-center min-h-[400px]">{error}</div>;
   }
   
-  if (data.length === 0) {
+  if (data.length === 0 && !isLoading) {
     return (
         <div className="flex flex-col items-center justify-center text-center min-h-[400px]">
             <Users className="w-16 h-16 text-gray-300 mb-4" />
@@ -202,6 +279,19 @@ export function CustomerTable() {
   }
 
   return (
+    <>
+    <Dialog open={isModalOpen} onOpenChange={handleModalClose}>
+        <DialogContent className="sm:max-w-[750px]">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold text-black">Editar Cliente</DialogTitle>
+              <DialogDescription>
+                Altere as informações do cliente abaixo.
+              </DialogDescription>
+            </DialogHeader>
+            <CustomerForm onCustomerAction={handleCustomerAction} customer={selectedCustomer} />
+          </DialogContent>
+    </Dialog>
+
     <div>
        <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-black">Sua Lista de Clientes</h2>
@@ -286,5 +376,6 @@ export function CustomerTable() {
         </Button>
       </div>
     </div>
+    </>
   );
 }
