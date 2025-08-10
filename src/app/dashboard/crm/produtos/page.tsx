@@ -24,13 +24,15 @@ export default function ProdutosPage() {
     setRefreshCounter(prev => prev + 1);
   };
 
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    setSelectedProduct(null);
-  };
+  const handleModalOpenChange = (open: boolean) => {
+    setIsModalOpen(open);
+    if (!open) {
+        setSelectedProduct(null);
+    }
+  }
 
   const handleProductAction = () => {
-    handleModalClose();
+    handleModalOpenChange(false);
     triggerRefresh();
   };
   
@@ -53,7 +55,7 @@ export default function ProdutosPage() {
             Cadastre e gerencie os produtos que sua empresa vende.
           </p>
         </div>
-        <Dialog open={isModalOpen} onOpenChange={handleModalClose}>
+        <Dialog open={isModalOpen} onOpenChange={handleModalOpenChange}>
           <DialogTrigger asChild>
             <Button 
               onClick={handleAdd}

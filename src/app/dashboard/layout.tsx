@@ -51,7 +51,6 @@ const navConfig: Record<string, NavGroup> = {
             { href: '/dashboard/crm/produtos', label: 'Produtos', icon: ShoppingCart },
             { href: '/dashboard/crm/servicos', label: 'Serviços', icon: Wrench },
             { href: '/dashboard/crm/orcamentos', label: 'Orçamentos', icon: FileText },
-            { href: '/dashboard/crm/relatorios', label: 'Relatórios', icon: BarChart3 },
         ]
     },
     task: {
