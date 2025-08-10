@@ -35,12 +35,13 @@ import type { ProductProfile } from '@/ai/schemas';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 
-const formatCurrency = (value: number | null | undefined) => {
+const formatCurrency = (value: number | null | undefined, pricingModel: 'fixed' | 'per_hour' | undefined) => {
     if (value === null || value === undefined) return '-';
-    return new Intl.NumberFormat('pt-BR', {
+    const formattedValue = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL',
     }).format(value);
+    return pricingModel === 'per_hour' ? `${formattedValue}/h` : formattedValue;
 };
 
 export const columns: ColumnDef<ProductProfile>[] = [
@@ -61,7 +62,16 @@ export const columns: ColumnDef<ProductProfile>[] = [
   {
     accessorKey: 'price',
     header: 'Preço',
-    cell: ({ row }) => formatCurrency(row.getValue('price')),
+    cell: ({ row }) => formatCurrency(row.getValue('price'), row.original.pricingModel),
+  },
+   {
+    accessorKey: 'pricingModel',
+    header: 'Modelo',
+    cell: ({ row }) => {
+        const model = row.getValue('pricingModel');
+        if (model === 'per_hour') return 'Por Hora';
+        return 'Fixo';
+    },
   },
   {
     accessorKey: 'createdAt',

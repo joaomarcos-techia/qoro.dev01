@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import { ProductSchema } from '@/ai/schemas';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Loader2, AlertCircle } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type ServiceFormProps = {
   onServiceCreated: () => void;
@@ -39,6 +40,7 @@ export function ServiceForm({ onServiceCreated }: ServiceFormProps) {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<z.infer<typeof ServiceSchema>>({
     resolver: zodResolver(ServiceSchema),
@@ -47,6 +49,7 @@ export function ServiceForm({ onServiceCreated }: ServiceFormProps) {
         description: '',
         category: 'Serviço', // Default category
         price: 0,
+        pricingModel: 'fixed',
     },
   });
 
@@ -87,6 +90,18 @@ export function ServiceForm({ onServiceCreated }: ServiceFormProps) {
           <Input id="category" {...register('category')} placeholder="Ex: Consultoria, Desenvolvimento" />
         </div>
         <div className="space-y-2">
+            <Label>Modelo de Preço*</Label>
+            <Controller name="pricingModel" control={control} render={({ field }) => (
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="fixed">Preço Fixo</SelectItem>
+                        <SelectItem value="per_hour">Por Hora</SelectItem>
+                    </SelectContent>
+                </Select>
+            )} />
+        </div>
+        <div className="space-y-2 md:col-span-2">
           <Label htmlFor="price">Preço (R$)*</Label>
           <Input id="price" type="number" step="0.01" {...register('price')} />
           {errors.price && <p className="text-red-500 text-sm">{errors.price.message}</p>}

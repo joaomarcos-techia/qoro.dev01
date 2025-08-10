@@ -29,13 +29,15 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MoreHorizontal, ArrowUpDown, Search, Loader2, FileText, CalendarOff } from 'lucide-react';
+import { MoreHorizontal, ArrowUpDown, Search, Loader2, FileText, Download } from 'lucide-react';
 import { listQuotes } from '@/ai/flows/crm-management';
 import type { QuoteProfile } from '@/ai/schemas';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { format, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { QuotePDF } from './QuotePDF';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const formatCurrency = (value: number | null | undefined) => {
     if (value === null || value === undefined) return '-';
@@ -50,70 +52,6 @@ const statusMap: Record<QuoteProfile['status'], { text: string; color: string }>
     expired: { text: 'Expirado', color: 'bg-orange-100 text-orange-800' },
 };
 
-
-export const columns: ColumnDef<QuoteProfile>[] = [
-  {
-    accessorKey: 'number',
-    header: ({ column }) => (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-            Número <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-    ),
-    cell: ({ row }) => <div className="font-medium text-black">{row.getValue('number')}</div>,
-  },
-  {
-    accessorKey: 'customerName',
-    header: 'Cliente',
-    cell: ({ row }) => row.getValue('customerName') || '-',
-  },
-  {
-    accessorKey: 'status',
-    header: 'Status',
-    cell: ({ row }) => {
-        const status = row.getValue('status') as keyof typeof statusMap;
-        const { text, color } = statusMap[status] || statusMap.draft;
-        return <span className={`px-2 py-1 text-xs font-semibold rounded-full ${color}`}>{text}</span>;
-    },
-  },
-  {
-    accessorKey: 'total',
-    header: 'Total',
-    cell: ({ row }) => formatCurrency(row.getValue('total')),
-  },
-  {
-    accessorKey: 'validUntil',
-    header: 'Válido Até',
-    cell: ({ row }) => {
-        const date = row.getValue('validUntil') as string | null;
-        if (!date) return '-';
-        return format(parseISO(date), "dd/MM/yyyy");
-    },
-  },
-  {
-    id: 'actions',
-    cell: ({ row }) => {
-      const quote = row.original;
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Abrir menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Ações</DropdownMenuLabel>
-            <DropdownMenuItem>Ver Detalhes</DropdownMenuItem>
-            <DropdownMenuItem>Editar</DropdownMenuItem>
-            <DropdownMenuItem>Baixar PDF</DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600">Excluir</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
-  },
-];
-
 export function QuoteTable() {
   const [data, setData] = React.useState<QuoteProfile[]>([]);
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -121,6 +59,114 @@ export function QuoteTable() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [currentUser, setCurrentUser] = React.useState<FirebaseUser | null>(null);
+  const pdfRef = React.useRef<HTMLDivElement>(null);
+
+  const handleExportPDF = async (quote: QuoteProfile) => {
+    const pdfContainer = document.createElement('div');
+    pdfContainer.style.position = 'absolute';
+    pdfContainer.style.left = '-9999px';
+    document.body.appendChild(pdfContainer);
+
+    const tempDiv = document.createElement('div');
+    pdfContainer.appendChild(tempDiv);
+    
+    // This is a bit of a hack to render the component to get its HTML
+    const ReactDOM = await import('react-dom');
+    ReactDOM.render(<QuotePDF quote={quote} ref={pdfRef}/>, tempDiv, async () => {
+        const input = tempDiv.children[0] as HTMLElement;
+        if (input) {
+            const canvas = await html2canvas(input, { scale: 2 });
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+            const canvasWidth = canvas.width;
+            const canvasHeight = canvas.height;
+            const ratio = canvasWidth / pdfWidth;
+            const height = canvasHeight / ratio;
+
+            let position = 0;
+            let remainingHeight = height;
+            
+            while(remainingHeight > 0) {
+              pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, height);
+              remainingHeight -= pdfHeight;
+              if (remainingHeight > 0) {
+                pdf.addPage();
+                position -= pdfHeight;
+              }
+            }
+            
+            pdf.save(`proposta-${quote.number}.pdf`);
+        }
+        document.body.removeChild(pdfContainer);
+    });
+  };
+
+  const columns: ColumnDef<QuoteProfile>[] = [
+    {
+      accessorKey: 'number',
+      header: ({ column }) => (
+          <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+              Número <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+      ),
+      cell: ({ row }) => <div className="font-medium text-black">{row.getValue('number')}</div>,
+    },
+    {
+      accessorKey: 'customerName',
+      header: 'Cliente',
+      cell: ({ row }) => row.getValue('customerName') || '-',
+    },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => {
+          const status = row.getValue('status') as keyof typeof statusMap;
+          const { text, color } = statusMap[status] || statusMap.draft;
+          return <span className={`px-2 py-1 text-xs font-semibold rounded-full ${color}`}>{text}</span>;
+      },
+    },
+    {
+      accessorKey: 'total',
+      header: 'Total',
+      cell: ({ row }) => formatCurrency(row.getValue('total')),
+    },
+    {
+      accessorKey: 'validUntil',
+      header: 'Válido Até',
+      cell: ({ row }) => {
+          const date = row.getValue('validUntil') as string | null;
+          if (!date) return '-';
+          return format(parseISO(date), "dd/MM/yyyy");
+      },
+    },
+    {
+      id: 'actions',
+      cell: ({ row }) => {
+        const quote = row.original;
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Abrir menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Ações</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => handleExportPDF(quote)}>
+                <Download className="mr-2 h-4 w-4" />
+                Exportar PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem>Editar</DropdownMenuItem>
+              <DropdownMenuItem className="text-red-600">Excluir</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ];
 
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {

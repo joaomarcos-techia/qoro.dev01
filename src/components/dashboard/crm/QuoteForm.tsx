@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -13,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { createQuote, listCustomers, listProducts } from '@/ai/flows/crm-management';
-import { QuoteSchema, CustomerProfile, ProductProfile } from '@/ai/schemas';
+import { QuoteSchema, CustomerProfile, ProductProfile, QuoteItemSchema } from '@/ai/schemas';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Loader2, AlertCircle, CalendarIcon, PlusCircle, Trash2, Search } from 'lucide-react';
@@ -98,12 +97,13 @@ export function QuoteForm({ onQuoteCreated }: QuoteFormProps) {
 
   const addProductItem = (product: ProductProfile) => {
     append({
-        type: 'product',
+        type: product.category?.toLowerCase().includes('serviço') ? 'service' : 'product',
         itemId: product.id,
         name: product.name,
         quantity: 1,
         unitPrice: product.price,
         total: product.price,
+        pricingModel: product.pricingModel,
     });
     setIsProductPopoverOpen(false);
   }
