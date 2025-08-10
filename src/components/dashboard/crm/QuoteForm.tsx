@@ -12,13 +12,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { createQuote, listCustomers, listProducts } from '@/ai/flows/crm-management';
-import { QuoteSchema, CustomerProfile, ProductProfile, QuoteProfileSchema, QuoteProfile } from '@/ai/schemas';
+import { createQuote, listCustomers, listProducts, updateQuote } from '@/ai/flows/crm-management';
+import { QuoteSchema, CustomerProfile, ProductProfile, QuoteProfile, UpdateQuoteSchema } from '@/ai/schemas';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { Loader2, AlertCircle, CalendarIcon, PlusCircle, Trash2, Package, Wrench } from 'lucide-react';
+import { Loader2, AlertCircle, CalendarIcon, PlusCircle, Trash2, Package, Wrench, Download, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { QuotePDF } from './QuotePDF';
 import jsPDF from 'jspdf';
@@ -53,7 +53,7 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
   const [isItemPopoverOpen, setIsItemPopoverOpen] = useState(false);
 
   const pdfRef = useRef<HTMLDivElement>(null);
-  const [quoteForPdf, setQuoteForPdf] = useState<QuoteProfile | null>(null);
+  const [quoteForPdf, setQuoteForPdf] = useState<{ quoteData: QuoteProfile; action: 'download' | 'view' } | null>(null);
 
   const isEditMode = !!quote;
 
@@ -71,6 +71,7 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
     watch,
     setValue,
     reset,
+    getValues,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
@@ -83,6 +84,11 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
       tax: 0,
       validUntil: new Date(),
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "items",
   });
 
   const fetchDependencies = useCallback(async (user: FirebaseUser) => {
@@ -104,8 +110,11 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
     if (currentUser) {
         fetchDependencies(currentUser);
     }
+  }, [currentUser, fetchDependencies]);
+
+  useEffect(() => {
     if (quote) {
-      const validUntilDate = quote.validUntil ? new Date(quote.validUntil) : new Date();
+      const validUntilDate = quote.validUntil ? parseISO(quote.validUntil.toString()) : new Date();
       reset({ ...quote, validUntil: validUntilDate });
     } else {
       reset({
@@ -120,7 +129,7 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
         notes: '',
       });
     }
-  }, [currentUser, quote, reset, fetchDependencies]);
+  }, [quote, reset]);
 
   const watchItems = watch("items");
   const watchDiscount = watch("discount");
@@ -135,10 +144,23 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
     setValue('total', total);
   }, [watchItems, watchDiscount, watchTax, setValue]);
 
-  const handleExportPDF = async (quoteData: QuoteProfile) => {
-    setQuoteForPdf(quoteData);
-    // Callback useEffect will handle the PDF generation
+  const handlePdfAction = (action: 'download' | 'view') => {
+    const values = getValues();
+    const customer = customers.find(c => c.id === values.customerId);
+    
+    // Ensure all data is valid before creating the PDF data object
+    const quoteDataForPdf: QuoteProfile = {
+        ...values,
+        id: quote?.id || 'N/A',
+        number: quote?.number || `QT-${Date.now().toString().slice(-6)}`,
+        createdAt: quote?.createdAt || new Date().toISOString(),
+        updatedAt: quote?.updatedAt || new Date().toISOString(),
+        customerName: customer?.name || 'Cliente não selecionado',
+        validUntil: values.validUntil.toISOString(),
+    };
+    setQuoteForPdf({ quoteData: quoteDataForPdf, action });
   };
+  
 
   useEffect(() => {
     if (!quoteForPdf || !pdfRef.current) return;
@@ -157,8 +179,13 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
           const ratio = canvasWidth / pdfWidth;
           const height = canvasHeight / ratio;
   
-          pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, height);
-          pdf.save(`proposta-${quoteForPdf.number}.pdf`);
+          if (quoteForPdf.action === 'download') {
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, height);
+            pdf.save(`proposta-${quoteForPdf.quoteData.number}.pdf`);
+          } else {
+            const newWindow = window.open();
+            newWindow?.document.write(`<img src="${imgData}" style="width:100%;" />`);
+          }
 
         } catch (error) {
             console.error("Error generating PDF:", error)
@@ -196,20 +223,12 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
     
     try {
         if(isEditMode && quote?.id) {
-            // Update logic here if implemented
+            const updateData: z.infer<typeof UpdateQuoteSchema> = { ...data, id: quote.id };
+            await updateQuote({ ...updateData, actor: currentUser.uid });
         } else {
             const quoteNumber = `QT-${Date.now().toString().slice(-6)}`;
             const submissionData = { ...data, number: quoteNumber, actor: currentUser.uid };
-            const result = await createQuote(submissionData);
-            
-            const newQuoteForPdf: QuoteProfile = {
-                ...submissionData,
-                id: result.id,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-                customerName: customers.find(c => c.id === data.customerId)?.name || '',
-            };
-            handleExportPDF(newQuoteForPdf);
+            await createQuote(submissionData);
         }
       onQuoteAction();
     } catch (err) {
@@ -230,7 +249,7 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
   return (
     <>
       <div style={{ position: 'absolute', left: '-9999px', top: 'auto', width: '794px', height: 'auto' }}>
-          {quoteForPdf && <QuotePDF quote={quoteForPdf} ref={pdfRef}/>}
+          {quoteForPdf && <QuotePDF quote={quoteForPdf.quoteData} ref={pdfRef}/>}
       </div>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 py-4">
         {/* Customer and Dates */}
@@ -370,13 +389,27 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
               <span className="text-sm">{error}</span>
             </div>
         )}
-      <div className="flex justify-end pt-4">
+      <div className="flex justify-between items-center pt-4">
+        <div>
+            {isEditMode && (
+                <div className="flex gap-2">
+                    <Button type="button" variant="outline" onClick={() => handlePdfAction('view')}>
+                        <Eye className="mr-2 w-4 h-4"/> Visualizar PDF
+                    </Button>
+                     <Button type="button" variant="outline" onClick={() => handlePdfAction('download')}>
+                        <Download className="mr-2 w-4 h-4"/> Baixar PDF
+                    </Button>
+                </div>
+            )}
+        </div>
         <Button type="submit" disabled={isLoading} className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
           {isLoading ? <Loader2 className="mr-2 w-5 h-5 animate-spin" /> : null}
-          {isLoading ? 'Salvando...' : (isEditMode ? 'Salvar Alterações' : 'Salvar e Exportar PDF')}
+          {isLoading ? 'Salvando...' : (isEditMode ? 'Salvar Alterações' : 'Salvar Orçamento')}
         </Button>
       </div>
     </form>
     </>
   );
 }
+
+    
