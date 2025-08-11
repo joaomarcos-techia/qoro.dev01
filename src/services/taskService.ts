@@ -34,11 +34,10 @@ export const listTasks = async (actorUid: string): Promise<z.infer<typeof TaskPr
     const { organizationId } = await getAdminAndOrg(actorUid);
     
     try {
+        // Temporary Simplification: Fetch all and filter in code to avoid index issues.
         const tasksQuery = adminDb.collection('tasks')
-                                 .where('companyId', '==', organizationId)
-                                 .where('isArchived', '==', false);
-                                 // .orderBy('createdAt', 'desc'); - Temporariamente removido para evitar erro de índice.
-
+                                 .where('companyId', '==', organizationId);
+                                 
         const tasksSnapshot = await tasksQuery.get();
         
         if (tasksSnapshot.empty) {
@@ -60,6 +59,13 @@ export const listTasks = async (actorUid: string): Promise<z.infer<typeof TaskPr
         const tasks: z.infer<typeof TaskProfileSchema>[] = tasksSnapshot.docs
         .map(doc => {
             const data = doc.data();
+
+            // Filter out archived tasks
+            if (data.isArchived === true) {
+                return null;
+            }
+
+            // Filter out old 'done' tasks
             if (data.status === 'done' && data.completedAt && data.completedAt.toDate() < twentyFourHoursAgo) {
                 return null;
             }
@@ -81,13 +87,13 @@ export const listTasks = async (actorUid: string): Promise<z.infer<typeof TaskPr
         })
         .filter((task): task is z.infer<typeof TaskProfileSchema> => task !== null);
         
-        // Sort in code as a temporary measure
+        // Sort in code
         tasks.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
         return tasks;
     } catch (error: any) {
-        console.error("Erro ao listar tarefas no Firestore:", error);
-        if (error.code === 9) { // 9 é o código para FAILED_PRECONDITION
+        console.error("Critical error in listTasks:", error, error.stack);
+        if (error.code === 'FAILED_PRECONDITION' || (error.message && error.message.includes("index"))) {
              throw new Error("O índice do banco de dados para tarefas ainda está sendo criado. Por favor, aguarde alguns minutos e recarregue a página.");
         }
         throw new Error("Falha ao carregar tarefas. Ocorreu um erro no servidor.");
