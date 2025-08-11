@@ -41,6 +41,10 @@ const nextConfig = {
           {
             key: 'Cross-Origin-Embedder-Policy',
             value: 'require-corp'
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: "frame-ancestors 'self' *.google.com;"
           }
         ],
       },
