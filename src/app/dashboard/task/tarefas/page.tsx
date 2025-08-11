@@ -6,7 +6,7 @@ import { Loader2, ServerCrash, CheckCircle, AlertCircle } from 'lucide-react';
 import { TaskKanbanBoard } from '@/components/dashboard/task/TaskKanbanBoard';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { listTasks, updateTaskStatus, archiveTask } from '@/ai/flows/task-management';
+import { listTasks, updateTaskStatus, deleteTask } from '@/ai/flows/task-management';
 import { TaskProfile } from '@/ai/schemas';
 
 export default function ProgressoPage() {
@@ -60,7 +60,7 @@ export default function ProgressoPage() {
         setTasks(prev => prev.map(t => t.id === taskId ? {...t, status: newStatus} : t));
 
         if (newStatus === 'done') {
-            showTemporaryFeedback("Tarefa concluída! Ela será ocultada deste quadro em 24 horas.");
+            showTemporaryFeedback("Tarefa concluída!");
         }
 
         try {
@@ -73,21 +73,21 @@ export default function ProgressoPage() {
     });
   };
 
-  const handleArchiveTask = (taskId: string) => {
+  const handleDeleteTask = (taskId: string) => {
     startTransition(async () => {
         if (!currentUser) return;
         
         const originalTasks = [...tasks];
         
         setTasks(prev => prev.filter(t => t.id !== taskId));
-        showTemporaryFeedback("Tarefa arquivada com sucesso.");
+        showTemporaryFeedback("Tarefa excluída com sucesso.");
 
         try {
-            await archiveTask({ taskId, actor: currentUser.uid });
+            await deleteTask({ taskId, actor: currentUser.uid });
         } catch (err) {
-            console.error("Failed to archive task", err);
+            console.error("Failed to delete task", err);
             setTasks(originalTasks);
-            showTemporaryFeedback("Erro ao arquivar a tarefa.", "error");
+            showTemporaryFeedback("Erro ao excluir a tarefa.", "error");
         }
     });
   };
@@ -128,7 +128,7 @@ export default function ProgressoPage() {
       );
     }
 
-    return <TaskKanbanBoard columns={columns} onMoveTask={handleMoveTask} onArchiveTask={handleArchiveTask} />;
+    return <TaskKanbanBoard columns={columns} onMoveTask={handleMoveTask} onDeleteTask={handleDeleteTask} />;
   };
 
   return (

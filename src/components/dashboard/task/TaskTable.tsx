@@ -42,11 +42,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MoreHorizontal, ArrowUpDown, Search, Loader2, List, Flag, Calendar, User, Edit, Archive } from 'lucide-react';
+import { MoreHorizontal, ArrowUpDown, Search, Loader2, List, Flag, Calendar, User, Edit, Trash2 } from 'lucide-react';
 import type { TaskProfile } from '@/ai/schemas';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { archiveTask } from '@/ai/flows/task-management';
+import { deleteTask } from '@/ai/flows/task-management';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 
@@ -77,13 +77,13 @@ export function TaskTable({ data, isLoading, error, onRefresh }: { data: TaskPro
     return () => unsubscribe();
   }, []);
 
-  const handleArchive = async (taskId: string) => {
+  const handleDelete = async (taskId: string) => {
     if (!currentUser) return;
     try {
-        await archiveTask({ taskId, actor: currentUser.uid });
+        await deleteTask({ taskId, actor: currentUser.uid });
         onRefresh();
     } catch(err) {
-        console.error("Failed to archive task:", err);
+        console.error("Failed to delete task:", err);
     }
   };
 
@@ -154,24 +154,24 @@ export function TaskTable({ data, isLoading, error, onRefresh }: { data: TaskPro
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <AlertDialogTrigger asChild>
-                        <DropdownMenuItem className="text-orange-600 focus:bg-orange-50 focus:text-orange-700">
-                            <Archive className="mr-2 h-4 w-4" />
-                            Arquivar Tarefa
+                        <DropdownMenuItem className="text-red-600 focus:bg-red-50 focus:text-red-700">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Excluir Tarefa
                         </DropdownMenuItem>
                     </AlertDialogTrigger>
                     </DropdownMenuContent>
                 </DropdownMenu>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Arquivar esta tarefa?</AlertDialogTitle>
+                      <AlertDialogTitle>Excluir esta tarefa?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Esta ação irá mover a tarefa para o arquivo. Ela não será excluída e poderá ser consultada posteriormente se necessário.
+                         Esta ação não pode ser desfeita. A tarefa <span className='font-semibold'>"{task.title}"</span> será excluída permanentemente.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => handleArchive(task.id)} className="bg-orange-500 text-white hover:bg-orange-600">
-                        Sim, arquivar
+                      <AlertDialogAction onClick={() => handleDelete(task.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        Sim, excluir
                       </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -262,7 +262,10 @@ export function TaskTable({ data, isLoading, error, onRefresh }: { data: TaskPro
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
                   Nenhum resultado encontrado.
                 </TableCell>
               </TableRow>

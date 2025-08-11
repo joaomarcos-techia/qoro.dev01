@@ -6,7 +6,7 @@
  * - listTasks - Lists all tasks for the user's organization.
  * - getDashboardMetrics - Retrieves key metrics for the Task dashboard.
  * - updateTaskStatus - Updates the status of a task.
- * - archiveTask - Archives a task.
+ * - deleteTask - Deletes a task permanently.
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
@@ -20,7 +20,7 @@ const UpdateTaskStatusInputSchema = z.object({
     status: TaskProfileSchema.shape.status,
 }).extend(ActorSchema.shape);
 
-const ArchiveTaskInputSchema = z.object({
+const DeleteTaskInputSchema = z.object({
     taskId: z.string(),
 }).extend(ActorSchema.shape);
 
@@ -68,13 +68,13 @@ const updateTaskStatusFlow = ai.defineFlow(
     async (input) => taskService.updateTaskStatus(input.taskId, input.status, input.actor)
 );
 
-const archiveTaskFlow = ai.defineFlow(
+const deleteTaskFlow = ai.defineFlow(
     {
-        name: 'archiveTaskFlow',
-        inputSchema: ArchiveTaskInputSchema,
+        name: 'deleteTaskFlow',
+        inputSchema: DeleteTaskInputSchema,
         outputSchema: z.object({ id: z.string(), success: z.boolean() })
     },
-    async (input) => taskService.archiveTask(input.taskId, input.actor)
+    async (input) => taskService.deleteTask(input.taskId, input.actor)
 );
 
 
@@ -95,6 +95,6 @@ export async function updateTaskStatus(input: z.infer<typeof UpdateTaskStatusInp
     return updateTaskStatusFlow(input);
 }
 
-export async function archiveTask(input: z.infer<typeof ArchiveTaskInputSchema>): Promise<{ id: string; success: boolean }> {
-    return archiveTaskFlow(input);
+export async function deleteTask(input: z.infer<typeof DeleteTaskInputSchema>): Promise<{ id: string; success: boolean }> {
+    return deleteTaskFlow(input);
 }

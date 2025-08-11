@@ -178,7 +178,6 @@ export const TaskSchema = z.object({
   priority: z.enum(['low', 'medium', 'high', 'urgent']).default('medium'),
   dueDate: z.union([z.string().datetime(), z.null()]).optional(),
   responsibleUserId: z.string().optional(),
-  isArchived: z.boolean().default(false).optional(),
 });
 
 export const TaskProfileSchema = TaskSchema.extend({

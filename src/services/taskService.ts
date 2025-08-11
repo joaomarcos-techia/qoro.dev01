@@ -22,7 +22,6 @@ export const createTask = async (input: z.infer<typeof TaskSchema>, actorUid: st
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
         completedAt: null,
-        isArchived: false,
     };
 
     const taskRef = await adminDb.collection('tasks').add(newTaskData);
@@ -34,9 +33,7 @@ export const listTasks = async (actorUid: string): Promise<z.infer<typeof TaskPr
     const { organizationId } = await getAdminAndOrg(actorUid);
     
     try {
-        // Temporary Simplification: Fetch all and filter in code to avoid index issues.
-        const tasksQuery = adminDb.collection('tasks')
-                                 .where('companyId', '==', organizationId);
+        const tasksQuery = adminDb.collection('tasks').where('companyId', '==', organizationId);
                                  
         const tasksSnapshot = await tasksQuery.get();
         
@@ -60,12 +57,6 @@ export const listTasks = async (actorUid: string): Promise<z.infer<typeof TaskPr
         .map(doc => {
             const data = doc.data();
 
-            // Filter out archived tasks
-            if (data.isArchived === true) {
-                return null;
-            }
-
-            // Filter out old 'done' tasks
             if (data.status === 'done' && data.completedAt && data.completedAt.toDate() < twentyFourHoursAgo) {
                 return null;
             }
@@ -87,7 +78,6 @@ export const listTasks = async (actorUid: string): Promise<z.infer<typeof TaskPr
         })
         .filter((task): task is z.infer<typeof TaskProfileSchema> => task !== null);
         
-        // Sort in code
         tasks.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
         return tasks;
@@ -129,7 +119,7 @@ export const updateTaskStatus = async (
     return { id: taskId, status };
 };
 
-export const archiveTask = async (taskId: string, actorUid: string) => {
+export const deleteTask = async (taskId: string, actorUid: string) => {
     const { organizationId } = await getAdminAndOrg(actorUid);
     const taskRef = adminDb.collection('tasks').doc(taskId);
     
@@ -138,10 +128,7 @@ export const archiveTask = async (taskId: string, actorUid: string) => {
         throw new Error('Tarefa não encontrada ou acesso negado.');
     }
 
-    await taskRef.update({
-        isArchived: true,
-        updatedAt: FieldValue.serverTimestamp(),
-    });
+    await taskRef.delete();
 
     return { id: taskId, success: true };
 }

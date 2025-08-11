@@ -16,13 +16,13 @@ import {
 } from "@/components/ui/alert-dialog"
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Calendar, Flag, User, ChevronLeft, ChevronRight, Archive } from 'lucide-react';
+import { Calendar, Flag, User, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 
 interface TaskKanbanCardProps {
   task: TaskProfile;
   stageIds: string[];
   onMove: (taskId: string, newStatus: TaskProfile['status']) => void;
-  onArchive: (taskId: string) => void;
+  onDelete: (taskId: string) => void;
 }
 
 const priorityMap: Record<TaskProfile['priority'], { text: string; color: string }> = {
@@ -32,7 +32,7 @@ const priorityMap: Record<TaskProfile['priority'], { text: string; color: string
     urgent: { text: 'Urgente', color: 'bg-red-100 text-red-800 border-red-200' },
 };
 
-export function TaskKanbanCard({ task, stageIds, onMove, onArchive }: TaskKanbanCardProps) {
+export function TaskKanbanCard({ task, stageIds, onMove, onDelete }: TaskKanbanCardProps) {
   
   const priorityInfo = priorityMap[task.priority] || priorityMap.medium;
   const currentStageIndex = stageIds.findIndex(id => id === task.status);
@@ -74,20 +74,20 @@ export function TaskKanbanCard({ task, stageIds, onMove, onArchive }: TaskKanban
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-500 hover:bg-gray-100 hover:text-gray-600" title="Arquivar Tarefa">
-                    <Archive className="w-4 h-4" />
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-500 hover:bg-red-100 hover:text-red-600" title="Excluir Tarefa">
+                    <Trash2 className="w-4 h-4" />
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Arquivar esta tarefa?</AlertDialogTitle>
+                  <AlertDialogTitle>Excluir esta tarefa?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Esta ação irá mover a tarefa para o arquivo. Ela não será excluída e poderá ser consultada posteriormente.
+                    Esta ação não pode ser desfeita. A tarefa será excluída permanentemente.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => onArchive(task.id)} className='bg-primary text-primary-foreground hover:bg-primary/90'>Sim, Arquivar</AlertDialogAction>
+                  <AlertDialogAction onClick={() => onDelete(task.id)} className='bg-destructive text-destructive-foreground hover:bg-destructive/90'>Sim, Excluir</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
