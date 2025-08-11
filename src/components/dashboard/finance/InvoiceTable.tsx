@@ -30,12 +30,15 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MoreHorizontal, ArrowUpDown, Search, Loader2, Receipt } from 'lucide-react';
+import { MoreHorizontal, ArrowUpDown, Search, Loader2, Receipt, Download, Eye } from 'lucide-react';
 import { listInvoices } from '@/ai/flows/finance-management';
 import type { InvoiceProfile } from '@/ai/schemas';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { format, parseISO } from 'date-fns';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import { DocumentPDF } from '../crm/QuotePDF';
 
 const formatCurrency = (value: number | null | undefined) => {
     if (value === null || value === undefined) return '-';
@@ -49,66 +52,6 @@ const statusMap: Record<InvoiceProfile['paymentStatus'], { text: string; color: 
     cancelled: { text: 'Cancelada', color: 'bg-gray-100 text-gray-800' },
 };
 
-export const columns: ColumnDef<InvoiceProfile>[] = [
-  {
-    accessorKey: 'number',
-    header: ({ column }) => (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-            Número <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-    ),
-    cell: ({ row }) => <div className="font-medium text-black">{row.getValue('number')}</div>,
-  },
-  {
-    accessorKey: 'customerName',
-    header: 'Cliente',
-  },
-  {
-    accessorKey: 'total',
-    header: 'Valor',
-    cell: ({ row }) => formatCurrency(row.getValue('total')),
-  },
-  {
-    accessorKey: 'dueDate',
-    header: 'Vencimento',
-    cell: ({ row }) => {
-        const date = row.getValue('dueDate') as string;
-        return format(parseISO(date), "dd/MM/yyyy");
-    },
-  },
-  {
-    accessorKey: 'paymentStatus',
-    header: 'Status',
-    cell: ({ row }) => {
-        const status = row.getValue('paymentStatus') as keyof typeof statusMap;
-        const { text, color } = statusMap[status] || statusMap.pending;
-        return <span className={`px-2 py-1 text-xs font-semibold rounded-full ${color}`}>{text}</span>;
-    },
-  },
-  {
-    id: 'actions',
-    cell: ({ row }) => {
-      const invoice = row.original;
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Abrir menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Ações</DropdownMenuLabel>
-            <DropdownMenuItem>Ver PDF</DropdownMenuItem>
-            <DropdownMenuItem>Marcar como Paga</DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600">Cancelar Fatura</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
-  },
-];
-
 export function InvoiceTable() {
   const [data, setData] = React.useState<InvoiceProfile[]>([]);
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -116,6 +59,114 @@ export function InvoiceTable() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [currentUser, setCurrentUser] = React.useState<FirebaseUser | null>(null);
+  
+  const pdfRef = React.useRef<HTMLDivElement>(null);
+  const [documentForPdf, setDocumentForPdf] = React.useState<{document: InvoiceProfile, action: 'download' | 'view'} | null>(null);
+  
+  const handlePdfAction = async (invoice: InvoiceProfile, action: 'download' | 'view') => {
+    setDocumentForPdf({ document: invoice, action });
+  };
+  
+  React.useEffect(() => {
+    if (!documentForPdf || !pdfRef.current) return;
+  
+    const generateAndHandlePdf = async () => {
+      const input = pdfRef.current;
+      if (input) {
+        try {
+          const canvas = await html2canvas(input, { scale: 2 });
+          const imgData = canvas.toDataURL('image/png');
+          
+          if (documentForPdf.action === 'download') {
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const imgProps = pdf.getImageProperties(imgData);
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(`fatura-${documentForPdf.document.number}.pdf`);
+          } else if (documentForPdf.action === 'view') {
+             const newWindow = window.open();
+             newWindow?.document.write(`<img src="${imgData}" style="width:100%;" />`);
+          }
+
+        } catch (error) {
+            console.error("Error generating PDF:", error)
+        }
+      }
+      setDocumentForPdf(null); 
+    };
+  
+    const timer = setTimeout(generateAndHandlePdf, 100); 
+    return () => clearTimeout(timer);
+  }, [documentForPdf]);
+
+
+  const columns: ColumnDef<InvoiceProfile>[] = [
+    {
+      accessorKey: 'number',
+      header: ({ column }) => (
+          <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+              Número <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+      ),
+      cell: ({ row }) => <div className="font-medium text-black">{row.getValue('number')}</div>,
+    },
+    {
+      accessorKey: 'customerName',
+      header: 'Cliente',
+    },
+    {
+      accessorKey: 'total',
+      header: 'Valor',
+      cell: ({ row }) => formatCurrency(row.getValue('total')),
+    },
+    {
+      accessorKey: 'dueDate',
+      header: 'Vencimento',
+      cell: ({ row }) => {
+          const date = row.getValue('dueDate') as string;
+          return format(parseISO(date), "dd/MM/yyyy");
+      },
+    },
+    {
+      accessorKey: 'paymentStatus',
+      header: 'Status',
+      cell: ({ row }) => {
+          const status = row.getValue('paymentStatus') as keyof typeof statusMap;
+          const { text, color } = statusMap[status] || statusMap.pending;
+          return <span className={`px-2 py-1 text-xs font-semibold rounded-full ${color}`}>{text}</span>;
+      },
+    },
+    {
+      id: 'actions',
+      cell: ({ row }) => {
+        const invoice = row.original;
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Abrir menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Ações</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => handlePdfAction(invoice, 'view')}>
+                <Eye className="mr-2 h-4 w-4" />
+                Visualizar PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handlePdfAction(invoice, 'download')}>
+                <Download className="mr-2 h-4 w-4" />
+                Exportar PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem>Marcar como Paga</DropdownMenuItem>
+              <DropdownMenuItem className="text-red-600">Cancelar Fatura</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ];
 
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -182,6 +233,9 @@ export function InvoiceTable() {
 
   return (
     <div>
+        <div style={{ position: 'fixed', left: '-9999px', top: 0, width: '794px', height: 'auto' }}>
+            {documentForPdf && <DocumentPDF document={documentForPdf.document} ref={pdfRef}/>}
+        </div>
        <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-black">Suas Faturas</h2>
             <div className="relative">

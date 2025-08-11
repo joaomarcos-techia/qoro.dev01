@@ -45,7 +45,7 @@ import type { QuoteProfile } from '@/ai/schemas';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { format, parseISO } from 'date-fns';
-import { QuotePDF } from './QuotePDF';
+import { DocumentPDF } from './QuotePDF';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { QuoteForm } from './QuoteForm';
@@ -72,7 +72,7 @@ export function QuoteTable() {
   const [currentUser, setCurrentUser] = React.useState<FirebaseUser | null>(null);
   
   const pdfRef = React.useRef<HTMLDivElement>(null);
-  const [quoteForPdf, setQuoteForPdf] = React.useState<{quote: QuoteProfile, action: 'download' | 'view'} | null>(null);
+  const [documentForPdf, setDocumentForPdf] = React.useState<{document: QuoteProfile, action: 'download' | 'view'} | null>(null);
   
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [selectedQuote, setSelectedQuote] = React.useState<QuoteProfile | null>(null);
@@ -105,11 +105,11 @@ export function QuoteTable() {
   }
 
   const handlePdfAction = async (quote: QuoteProfile, action: 'download' | 'view') => {
-    setQuoteForPdf({ quote, action });
+    setDocumentForPdf({ document: quote, action });
   };
   
   React.useEffect(() => {
-    if (!quoteForPdf || !pdfRef.current) return;
+    if (!documentForPdf || !pdfRef.current) return;
   
     const generateAndHandlePdf = async () => {
       const input = pdfRef.current;
@@ -118,14 +118,14 @@ export function QuoteTable() {
           const canvas = await html2canvas(input, { scale: 2 });
           const imgData = canvas.toDataURL('image/png');
           
-          if (quoteForPdf.action === 'download') {
+          if (documentForPdf.action === 'download') {
             const pdf = new jsPDF('p', 'mm', 'a4');
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const imgProps = pdf.getImageProperties(imgData);
             const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
             pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-            pdf.save(`proposta-${quoteForPdf.quote.number}.pdf`);
-          } else if (quoteForPdf.action === 'view') {
+            pdf.save(`proposta-${documentForPdf.document.number}.pdf`);
+          } else if (documentForPdf.action === 'view') {
              const newWindow = window.open();
              newWindow?.document.write(`<img src="${imgData}" style="width:100%;" />`);
           }
@@ -134,13 +134,13 @@ export function QuoteTable() {
             console.error("Error generating PDF:", error)
         }
       }
-      setQuoteForPdf(null); 
+      setDocumentForPdf(null); 
     };
   
     // Use a short timeout to ensure the component has rendered with the new state
     const timer = setTimeout(generateAndHandlePdf, 100); 
     return () => clearTimeout(timer);
-  }, [quoteForPdf]);
+  }, [documentForPdf]);
 
   const columns: ColumnDef<QuoteProfile>[] = [
     {
@@ -290,7 +290,7 @@ export function QuoteTable() {
     <>
        {/* Hidden component for PDF generation */}
        <div style={{ position: 'fixed', left: '-9999px', top: 0, width: '794px', height: 'auto' }}>
-         {quoteForPdf && <QuotePDF quote={quoteForPdf.quote} ref={pdfRef}/>}
+         {documentForPdf && <DocumentPDF document={documentForPdf.document} ref={pdfRef}/>}
        </div>
        
        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -347,7 +347,10 @@ export function QuoteTable() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="h-24 text-center">
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
                     Nenhum resultado encontrado.
                   </TableCell>
                 </TableRow>
@@ -377,3 +380,4 @@ export function QuoteTable() {
     </>
   );
 }
+

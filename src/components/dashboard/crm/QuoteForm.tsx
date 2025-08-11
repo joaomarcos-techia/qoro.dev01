@@ -19,7 +19,7 @@ import { Loader2, AlertCircle, CalendarIcon, PlusCircle, Trash2, Package, Wrench
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { QuotePDF } from './QuotePDF';
+import { DocumentPDF } from './QuotePDF';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -117,7 +117,6 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
     } else {
       reset({
         customerId: '',
-        number: '',
         items: [],
         subtotal: 0,
         total: 0,
@@ -248,7 +247,7 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
   return (
     <>
       <div style={{ position: 'fixed', left: '-9999px', top: 0 }}>
-          {quoteForPdf && <QuotePDF quote={quoteForPdf.quoteData} ref={pdfRef}/>}
+          {quoteForPdf && <DocumentPDF document={quoteForPdf.quoteData} ref={pdfRef}/>}
       </div>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 py-4">
         {/* Customer and Dates */}
@@ -387,10 +386,4 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
         </div>
         <Button type="submit" disabled={isLoading} className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
           {isLoading ? <Loader2 className="mr-2 w-5 h-5 animate-spin" /> : null}
-          {isLoading ? 'Salvando...' : (isEditMode ? 'Salvar Alterações' : 'Salvar Orçamento')}
-        </Button>
-      </div>
-    </form>
-    </>
-  );
-}
+          {isLoading ? 'Salvando...' : (isEditMode ? 'Salvar Alterações' :
