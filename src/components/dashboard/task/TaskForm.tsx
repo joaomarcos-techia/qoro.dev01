@@ -21,6 +21,11 @@ import { Loader2, AlertCircle, CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
+const FormSchema = TaskSchema.extend({
+    dueDate: z.date().optional().nullable(),
+});
+type FormValues = z.infer<typeof FormSchema>;
+
 
 type TaskFormProps = {
   onTaskCreated: () => void;
@@ -51,17 +56,18 @@ export function TaskForm({ onTaskCreated }: TaskFormProps) {
     handleSubmit,
     control,
     formState: { errors },
-  } = useForm<z.infer<typeof TaskSchema>>({
-    resolver: zodResolver(TaskSchema),
+  } = useForm<FormValues>({
+    resolver: zodResolver(FormSchema),
     defaultValues: {
       status: 'todo',
       priority: 'medium',
       description: '',
       responsibleUserId: '',
+      dueDate: null,
     },
   });
 
-  const onSubmit = async (data: z.infer<typeof TaskSchema>) => {
+  const onSubmit = async (data: FormValues) => {
     if (!currentUser) {
       setError('Você precisa estar autenticado para criar uma tarefa.');
       return;
@@ -71,6 +77,7 @@ export function TaskForm({ onTaskCreated }: TaskFormProps) {
     try {
       const submissionData = {
         ...data,
+        dueDate: data.dueDate ? data.dueDate.toISOString() : null,
         responsibleUserId: data.responsibleUserId || undefined,
       };
       await createTask({ ...submissionData, actor: currentUser.uid });

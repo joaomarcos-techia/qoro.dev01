@@ -177,7 +177,7 @@ export const TaskSchema = z.object({
   description: z.string().optional(),
   status: z.enum(['todo', 'in_progress', 'review', 'done']).default('todo'),
   priority: z.enum(['low', 'medium', 'high', 'urgent']).default('medium'),
-  dueDate: z.date().optional().nullable(),
+  dueDate: z.string().datetime().optional().nullable(),
   responsibleUserId: z.string().optional(),
 });
 

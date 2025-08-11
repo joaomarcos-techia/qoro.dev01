@@ -16,6 +16,7 @@ export const createTask = async (input: z.infer<typeof TaskSchema>, actorUid: st
 
     const newTaskData = {
         ...input,
+        dueDate: input.dueDate ? new Date(input.dueDate) : null,
         creatorId: actorUid,
         companyId: organizationId,
         createdAt: FieldValue.serverTimestamp(),
@@ -51,7 +52,7 @@ export const listTasks = async (actorUid: string): Promise<z.infer<typeof TaskPr
     
     const tasks: z.infer<typeof TaskProfileSchema>[] = tasksSnapshot.docs.map(doc => {
         const data = doc.data();
-        const dueDate = data.dueDate ? data.dueDate.toDate() : null;
+        const dueDate = data.dueDate ? data.dueDate.toDate().toISOString() : null;
         const responsibleUserInfo = data.responsibleUserId ? users[data.responsibleUserId] : {};
 
         return TaskProfileSchema.parse({
