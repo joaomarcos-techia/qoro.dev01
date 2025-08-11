@@ -33,55 +33,61 @@ export const createTask = async (input: z.infer<typeof TaskSchema>, actorUid: st
 export const listTasks = async (actorUid: string): Promise<z.infer<typeof TaskProfileSchema>[]> => {
     const { organizationId } = await getAdminAndOrg(actorUid);
     
-    let tasksQuery = adminDb.collection('tasks')
-                             .where('companyId', '==', organizationId)
-                             .where('isArchived', '==', false)
-                             .orderBy('createdAt', 'desc');
+    try {
+        const tasksQuery = adminDb.collection('tasks')
+                                 .where('companyId', '==', organizationId)
+                                 .where('isArchived', '==', false)
+                                 .orderBy('createdAt', 'desc');
 
-    const tasksSnapshot = await tasksQuery.get();
-    
-    if (tasksSnapshot.empty) {
-        return [];
-    }
-
-    const userIds = [...new Set(tasksSnapshot.docs.map(doc => doc.data().responsibleUserId).filter(Boolean))];
-    const users: Record<string, { name?: string }> = {};
-
-    if (userIds.length > 0) {
-        const usersSnapshot = await adminDb.collection('users').where('__name__', 'in', userIds).get();
-        usersSnapshot.forEach(doc => {
-            users[doc.id] = { name: doc.data().name };
-        });
-    }
-    
-    // Filter out tasks completed more than 24 hours ago
-    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-
-    const tasks: z.infer<typeof TaskProfileSchema>[] = tasksSnapshot.docs
-      .map(doc => {
-        const data = doc.data();
-        if (data.status === 'done' && data.completedAt && data.completedAt.toDate() < twentyFourHoursAgo) {
-            return null;
+        const tasksSnapshot = await tasksQuery.get();
+        
+        if (tasksSnapshot.empty) {
+            return [];
         }
 
-        const dueDate = data.dueDate ? data.dueDate.toDate().toISOString() : null;
-        const completedAt = data.completedAt ? data.completedAt.toDate().toISOString() : null;
-        const responsibleUserInfo = data.responsibleUserId ? users[data.responsibleUserId] : {};
+        const userIds = [...new Set(tasksSnapshot.docs.map(doc => doc.data().responsibleUserId).filter(Boolean))];
+        const users: Record<string, { name?: string }> = {};
 
-        return TaskProfileSchema.parse({
-            id: doc.id,
-            ...data,
-            dueDate,
-            completedAt,
-            creatorId: data.creatorId,
-            createdAt: data.createdAt.toDate().toISOString(),
-            updatedAt: data.updatedAt.toDate().toISOString(),
-            responsibleUserName: responsibleUserInfo?.name,
-        });
-      })
-      .filter((task): task is z.infer<typeof TaskProfileSchema> => task !== null);
-    
-    return tasks;
+        if (userIds.length > 0) {
+            const usersSnapshot = await adminDb.collection('users').where('__name__', 'in', userIds).get();
+            usersSnapshot.forEach(doc => {
+                users[doc.id] = { name: doc.data().name };
+            });
+        }
+        
+        // Filter out tasks completed more than 24 hours ago
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+        const tasks: z.infer<typeof TaskProfileSchema>[] = tasksSnapshot.docs
+        .map(doc => {
+            const data = doc.data();
+            if (data.status === 'done' && data.completedAt && data.completedAt.toDate() < twentyFourHoursAgo) {
+                return null;
+            }
+
+            const dueDate = data.dueDate ? data.dueDate.toDate().toISOString() : null;
+            const completedAt = data.completedAt ? data.completedAt.toDate().toISOString() : null;
+            const responsibleUserInfo = data.responsibleUserId ? users[data.responsibleUserId] : {};
+
+            return TaskProfileSchema.parse({
+                id: doc.id,
+                ...data,
+                dueDate,
+                completedAt,
+                creatorId: data.creatorId,
+                createdAt: data.createdAt.toDate().toISOString(),
+                updatedAt: data.updatedAt.toDate().toISOString(),
+                responsibleUserName: responsibleUserInfo?.name,
+            });
+        })
+        .filter((task): task is z.infer<typeof TaskProfileSchema> => task !== null);
+        
+        return tasks;
+    } catch (error) {
+        console.error("Erro ao listar tarefas no Firestore:", error);
+        // Lançar um erro mais informativo que pode ser tratado pelo frontend se necessário
+        throw new Error("Falha ao buscar tarefas. Verifique se o índice do Firestore foi criado corretamente.");
+    }
 };
 
 export const updateTaskStatus = async (
