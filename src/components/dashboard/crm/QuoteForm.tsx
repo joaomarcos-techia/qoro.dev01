@@ -216,12 +216,13 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
     
     try {
         let savedQuote: { id: string; number: string };
+        const submissionData = { ...data, validUntil: data.validUntil.toISOString() };
         
         if (isEditMode && quote?.id) {
-            const updateData: z.infer<typeof UpdateQuoteSchema> = { ...data, id: quote.id };
+            const updateData: z.infer<typeof UpdateQuoteSchema> = { ...submissionData, id: quote.id };
             savedQuote = await updateQuote({ ...updateData, actor: currentUser.uid });
         } else {
-            savedQuote = await createQuote({ ...data, actor: currentUser.uid });
+            savedQuote = await createQuote({ ...submissionData, actor: currentUser.uid });
         }
         
         onQuoteAction();
