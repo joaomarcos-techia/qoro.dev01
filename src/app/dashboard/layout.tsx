@@ -62,7 +62,6 @@ const navConfig: Record<string, NavGroup> = {
             { href: '/dashboard/task/dashboard', label: 'Dashboard', icon: BarChart3 },
             { href: '/dashboard/task/minha-lista', label: 'Minha Lista', icon: List },
             { href: '/dashboard/task/tarefas', label: 'Progresso', icon: LayoutGrid },
-            { href: '/dashboard/task/projetos', label: 'Projetos', icon: ClipboardList },
             { href: '/dashboard/task/calendario', label: 'Calendário', icon: Calendar },
         ]
     },

@@ -14,8 +14,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { createTask } from '@/ai/flows/task-management';
 import { listUsers } from '@/ai/flows/user-management';
-import { listProjects } from '@/ai/flows/project-management';
-import { TaskSchema, UserProfile, ProjectProfile } from '@/ai/schemas';
+import { TaskSchema, UserProfile } from '@/ai/schemas';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Loader2, AlertCircle, CalendarIcon } from 'lucide-react';
@@ -37,7 +36,6 @@ export function TaskForm({ onTaskCreated }: TaskFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [users, setUsers] = useState<UserProfile[]>([]);
-  const [projects, setProjects] = useState<ProjectProfile[]>([]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -45,14 +43,10 @@ export function TaskForm({ onTaskCreated }: TaskFormProps) {
         setCurrentUser(user);
         const fetchData = async () => {
             try {
-                const [usersData, projectsData] = await Promise.all([
-                    listUsers({ actor: user.uid }),
-                    listProjects({ actor: user.uid })
-                ]);
+                const usersData = await listUsers({ actor: user.uid });
                 setUsers(usersData);
-                setProjects(projectsData);
             } catch (err) {
-                console.error("Failed to fetch users or projects:", err);
+                console.error("Failed to fetch users:", err);
             }
         };
         fetchData();
@@ -75,7 +69,6 @@ export function TaskForm({ onTaskCreated }: TaskFormProps) {
       priority: 'medium',
       description: '',
       responsibleUserId: undefined,
-      projectId: undefined,
       dueDate: null,
     },
   });
@@ -92,7 +85,6 @@ export function TaskForm({ onTaskCreated }: TaskFormProps) {
         ...data,
         dueDate: data.dueDate ? new Date(data.dueDate).toISOString() : null,
         responsibleUserId: data.responsibleUserId || undefined,
-        projectId: data.projectId || undefined,
       };
       await createTask({ ...submissionData, actor: currentUser.uid });
       onTaskCreated();
@@ -203,26 +195,6 @@ export function TaskForm({ onTaskCreated }: TaskFormProps) {
                         />
                         </PopoverContent>
                     </Popover>
-                )}
-            />
-        </div>
-        <div className="space-y-2 md:col-span-2">
-            <Label>Projeto (Opcional)</Label>
-            <Controller
-                name="projectId"
-                control={control}
-                render={({ field }) => (
-                <Select onValueChange={field.onChange} value={field.value ?? ''}>
-                    <SelectTrigger>
-                    <SelectValue placeholder="Associe a um projeto" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="">Nenhum Projeto</SelectItem>
-                        {projects.map(project => (
-                            <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
                 )}
             />
         </div>

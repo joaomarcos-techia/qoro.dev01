@@ -51,16 +51,9 @@ export const listTasks = async (actorUid: string): Promise<z.infer<typeof TaskPr
             });
         }
         
-        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-
         const tasks: z.infer<typeof TaskProfileSchema>[] = tasksSnapshot.docs
         .map(doc => {
             const data = doc.data();
-
-            if (data.status === 'done' && data.completedAt && data.completedAt.toDate() < twentyFourHoursAgo) {
-                return null;
-            }
-
             const dueDate = data.dueDate ? data.dueDate.toDate().toISOString() : null;
             const completedAt = data.completedAt ? data.completedAt.toDate().toISOString() : null;
             const responsibleUserInfo = data.responsibleUserId ? users[data.responsibleUserId] : {};
@@ -75,8 +68,7 @@ export const listTasks = async (actorUid: string): Promise<z.infer<typeof TaskPr
                 updatedAt: data.updatedAt.toDate().toISOString(),
                 responsibleUserName: responsibleUserInfo?.name,
             });
-        })
-        .filter((task): task is z.infer<typeof TaskProfileSchema> => task !== null);
+        });
         
         tasks.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 

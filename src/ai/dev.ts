@@ -3,7 +3,6 @@
 import './flows/user-management';
 import './flows/crm-management';
 import './flows/task-management';
-import './flows/project-management';
 import './flows/pulse-flow';
 import './flows/finance-management';
 import './flows/supplier-management';
