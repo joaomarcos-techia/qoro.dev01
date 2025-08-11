@@ -12,53 +12,31 @@ import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { createTask } from '@/ai/flows/task-management';
-import { listUsers } from '@/ai/flows/user-management';
-import { listProjects } from '@/ai/flows/project-management';
-import { TaskSchema, UserProfile, ProjectProfile } from '@/ai/schemas';
+import { createProject } from '@/ai/flows/project-management';
+import { ProjectSchema } from '@/ai/schemas';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Loader2, AlertCircle, CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
-const FormSchema = TaskSchema.extend({
+const FormSchema = ProjectSchema.extend({
     dueDate: z.union([z.string().datetime(), z.date(), z.null()]).optional(),
 });
 type FormValues = z.infer<typeof FormSchema>;
 
-
-type TaskFormProps = {
-  onTaskCreated: () => void;
+type ProjectFormProps = {
+  onProjectAction: () => void;
 };
 
-export function TaskForm({ onTaskCreated }: TaskFormProps) {
+export function ProjectForm({ onProjectAction }: ProjectFormProps) {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [users, setUsers] = useState<UserProfile[]>([]);
-  const [projects, setProjects] = useState<ProjectProfile[]>([]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setCurrentUser(user);
-        const fetchData = async () => {
-            try {
-                const [usersData, projectsData] = await Promise.all([
-                    listUsers({ actor: user.uid }),
-                    listProjects({ actor: user.uid })
-                ]);
-                setUsers(usersData);
-                setProjects(projectsData);
-            } catch (err) {
-                console.error("Failed to fetch users or projects:", err);
-            }
-        };
-        fetchData();
-      } else {
-        setCurrentUser(null);
-      }
+      setCurrentUser(user);
     });
     return () => unsubscribe();
   }, []);
@@ -71,18 +49,15 @@ export function TaskForm({ onTaskCreated }: TaskFormProps) {
   } = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      status: 'todo',
-      priority: 'medium',
+      status: 'not_started',
       description: '',
-      responsibleUserId: undefined,
-      projectId: undefined,
       dueDate: null,
     },
   });
 
   const onSubmit = async (data: FormValues) => {
     if (!currentUser) {
-      setError('Você precisa estar autenticado para criar uma tarefa.');
+      setError('Você precisa estar autenticado para criar um projeto.');
       return;
     }
     setIsLoading(true);
@@ -91,14 +66,12 @@ export function TaskForm({ onTaskCreated }: TaskFormProps) {
       const submissionData = {
         ...data,
         dueDate: data.dueDate ? new Date(data.dueDate).toISOString() : null,
-        responsibleUserId: data.responsibleUserId || undefined,
-        projectId: data.projectId || undefined,
       };
-      await createTask({ ...submissionData, actor: currentUser.uid });
-      onTaskCreated();
+      await createProject({ ...submissionData, actor: currentUser.uid });
+      onProjectAction();
     } catch (err: any) {
       console.error(err);
-      setError(err.message || 'Falha ao criar a tarefa. Tente novamente.');
+      setError(err.message || 'Falha ao criar o projeto. Tente novamente.');
     } finally {
       setIsLoading(false);
     }
@@ -107,13 +80,13 @@ export function TaskForm({ onTaskCreated }: TaskFormProps) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 py-4">
       <div className="space-y-2">
-        <Label htmlFor="title">Título da Tarefa*</Label>
-        <Input id="title" {...register('title')} placeholder="Ex: Fazer follow-up com cliente X" />
-        {errors.title && <p className="text-red-500 text-sm">{errors.title.message}</p>}
+        <Label htmlFor="name">Nome do Projeto*</Label>
+        <Input id="name" {...register('name')} placeholder="Ex: Lançamento do Novo Site" />
+        {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
       </div>
       <div className="space-y-2">
         <Label htmlFor="description">Descrição</Label>
-        <Textarea id="description" {...register('description')} placeholder="Adicione mais detalhes sobre a tarefa..." />
+        <Textarea id="description" {...register('description')} placeholder="Descreva o objetivo principal do projeto..." />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
@@ -124,59 +97,21 @@ export function TaskForm({ onTaskCreated }: TaskFormProps) {
             render={({ field }) => (
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione o status" />
+                  <SelectValue placeholder="Selecione o status inicial" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="todo">A Fazer</SelectItem>
+                  <SelectItem value="not_started">Não Iniciado</SelectItem>
                   <SelectItem value="in_progress">Em Progresso</SelectItem>
-                  <SelectItem value="review">Revisão</SelectItem>
-                  <SelectItem value="done">Concluída</SelectItem>
+                  <SelectItem value="on_hold">Em Espera</SelectItem>
+                  <SelectItem value="completed">Concluído</SelectItem>
+                  <SelectItem value="cancelled">Cancelado</SelectItem>
                 </SelectContent>
               </Select>
             )}
           />
         </div>
         <div className="space-y-2">
-          <Label>Prioridade</Label>
-          <Controller
-            name="priority"
-            control={control}
-            render={({ field }) => (
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <SelectTrigger>
-                    <SelectValue placeholder="Selecione a prioridade" />
-                    </SelectTrigger>
-                    <SelectContent>
-                    <SelectItem value="low">Baixa</SelectItem>
-                    <SelectItem value="medium">Média</SelectItem>
-                    <SelectItem value="high">Alta</SelectItem>
-                    <SelectItem value="urgent">Urgente</SelectItem>
-                    </SelectContent>
-                </Select>
-            )}
-           />
-        </div>
-         <div className="space-y-2">
-          <Label>Responsável</Label>
-          <Controller
-            name="responsibleUserId"
-            control={control}
-            render={({ field }) => (
-              <Select onValueChange={field.onChange} value={field.value}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um responsável" />
-                </SelectTrigger>
-                <SelectContent>
-                  {users.map(user => (
-                    <SelectItem key={user.uid} value={user.uid}>{user.name || user.email}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
-        </div>
-        <div className="space-y-2">
-           <Label>Data de Vencimento</Label>
+           <Label>Data de Entrega</Label>
             <Controller
                 name="dueDate"
                 control={control}
@@ -206,26 +141,6 @@ export function TaskForm({ onTaskCreated }: TaskFormProps) {
                 )}
             />
         </div>
-        <div className="space-y-2 md:col-span-2">
-            <Label>Projeto (Opcional)</Label>
-            <Controller
-                name="projectId"
-                control={control}
-                render={({ field }) => (
-                <Select onValueChange={field.onChange} value={field.value ?? ''}>
-                    <SelectTrigger>
-                    <SelectValue placeholder="Associe a um projeto" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="">Nenhum Projeto</SelectItem>
-                        {projects.map(project => (
-                            <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-                )}
-            />
-        </div>
       </div>
        {error && (
             <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg flex items-center">
@@ -236,7 +151,7 @@ export function TaskForm({ onTaskCreated }: TaskFormProps) {
       <div className="flex justify-end pt-4">
         <Button type="submit" disabled={isLoading} className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
           {isLoading ? <Loader2 className="mr-2 w-5 h-5 animate-spin" /> : null}
-          {isLoading ? 'Salvando...' : 'Salvar Tarefa'}
+          {isLoading ? 'Salvando...' : 'Salvar Projeto'}
         </Button>
       </div>
     </form>

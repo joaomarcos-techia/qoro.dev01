@@ -171,13 +171,33 @@ export type QuoteProfile = z.infer<typeof QuoteProfileSchema>;
 
 
 // Schemas for Task Management
+export const ProjectSchema = z.object({
+    name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres.'),
+    description: z.string().optional(),
+    status: z.enum(['not_started', 'in_progress', 'completed', 'on_hold', 'cancelled']).default('not_started'),
+    dueDate: z.union([z.string().datetime(), z.null()]).optional(),
+});
+
+export const ProjectProfileSchema = ProjectSchema.extend({
+    id: z.string(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    ownerId: z.string(),
+    taskCount: z.number().default(0),
+    completedTaskCount: z.number().default(0),
+    progress: z.number().default(0),
+});
+export type ProjectProfile = z.infer<typeof ProjectProfileSchema>;
+
+
 export const TaskSchema = z.object({
   title: z.string().min(1, 'O título é obrigatório.'),
   description: z.string().optional(),
   status: z.enum(['todo', 'in_progress', 'review', 'done']).default('todo'),
   priority: z.enum(['low', 'medium', 'high', 'urgent']).default('medium'),
-  dueDate: z.union([z.string().datetime(), z.null()]).optional(),
+  dueDate: z.union([z.string().datetime(), z.date(), z.null()]).optional(),
   responsibleUserId: z.string().optional(),
+  projectId: z.string().optional().nullable(),
 });
 
 export const TaskProfileSchema = TaskSchema.extend({
