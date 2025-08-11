@@ -141,12 +141,11 @@ export function TaskForm({ onTaskCreated }: TaskFormProps) {
             name="responsibleUserId"
             control={control}
             render={({ field }) => (
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione um responsável" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Ninguém</SelectItem>
                   {users.map(user => (
                     <SelectItem key={user.uid} value={user.uid}>{user.name || user.email}</SelectItem>
                   ))}
