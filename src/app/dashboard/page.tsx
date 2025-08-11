@@ -167,7 +167,7 @@ function DashboardContent() {
 
         results.forEach(result => {
             if (result.data) {
-                if (result.type === 'crm') setCrmMetrics({ totalCustomers: result.data.totalCustomers, totalLeads: result.data.totalLeads });
+                if (result.type === 'crm') setCrmMetrics({ totalCustomers: result.data.customers.length, totalLeads: result.data.leads.length });
                 if (result.type === 'task') setTaskMetrics({ pendingTasks: result.data.pendingTasks });
                 if (result.type === 'finance') setFinanceMetrics({ totalBalance: result.data.totalBalance });
             }
