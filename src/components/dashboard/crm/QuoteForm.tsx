@@ -57,13 +57,6 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
 
   const isEditMode = !!quote;
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
-    });
-    return () => unsubscribe();
-  }, []);
-
   const {
     register,
     handleSubmit,
@@ -106,10 +99,16 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
   }, []);
 
   useEffect(() => {
-    if (currentUser) {
-        fetchDependencies(currentUser);
-    }
-  }, [currentUser, fetchDependencies]);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setCurrentUser(user);
+        fetchDependencies(user);
+      } else {
+        setCurrentUser(null);
+      }
+    });
+    return () => unsubscribe();
+  }, [fetchDependencies]);
 
   useEffect(() => {
     if (quote) {
@@ -180,11 +179,12 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
     }
   };
   
-  const createFullQuoteProfile = (formValues: FormValues): QuoteProfile => {
+  const createFullQuoteProfile = (formValues: FormValues, newNumber?: string): QuoteProfile => {
     const customer = customers.find(c => c.id === formValues.customerId);
     return {
         ...formValues,
         id: quote?.id || 'new',
+        number: newNumber || quote?.number || '',
         createdAt: quote?.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         customerName: customer?.name || 'Cliente não encontrado',
@@ -216,30 +216,25 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
     
     try {
         let savedQuote: { id: string; number: string };
-        let finalData: FormValues;
-
+        
         if (isEditMode && quote?.id) {
             const updateData: z.infer<typeof UpdateQuoteSchema> = { ...data, id: quote.id };
             savedQuote = await updateQuote({ ...updateData, actor: currentUser.uid });
-            finalData = data;
         } else {
-            const submissionData = { ...data };
-            // The number is now generated and returned by the backend
-            savedQuote = await createQuote({ ...submissionData, actor: currentUser.uid });
-            finalData = { ...data, number: savedQuote.number };
+            savedQuote = await createQuote({ ...data, actor: currentUser.uid });
         }
-
+        
         onQuoteAction();
 
         if (savedQuote.id) {
-            const profileForPdf = createFullQuoteProfile(finalData);
+            const profileForPdf = createFullQuoteProfile(data, savedQuote.number);
             profileForPdf.id = savedQuote.id;
             await generatePdf(profileForPdf, 'download');
         }
 
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError(`Falha ao ${isEditMode ? 'atualizar' : 'criar'} o orçamento. Tente novamente.`);
+      setError(err.message || `Falha ao ${isEditMode ? 'atualizar' : 'criar'} o orçamento. Tente novamente.`);
     } finally {
       setIsLoading(false);
     }
