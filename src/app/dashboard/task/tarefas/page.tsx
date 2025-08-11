@@ -3,7 +3,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useTransition } from 'react';
-import { Loader2, ServerCrash } from 'lucide-react';
+import { Loader2, ServerCrash, CheckCircle } from 'lucide-react';
 import { TaskKanbanBoard } from '@/components/dashboard/task/TaskKanbanBoard';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -15,6 +15,7 @@ export default function ProgressoPage() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const fetchTasks = () => {
@@ -44,6 +45,13 @@ export default function ProgressoPage() {
     }
   }, [currentUser]);
 
+  const showTemporaryFeedback = (message: string) => {
+    setFeedbackMessage(message);
+    setTimeout(() => {
+        setFeedbackMessage(null);
+    }, 5000); // A mensagem desaparece após 5 segundos
+  };
+
   const handleMoveTask = (taskId: string, newStatus: TaskProfile['status']) => {
     startTransition(async () => {
         if (!currentUser) return;
@@ -51,6 +59,10 @@ export default function ProgressoPage() {
         const originalTasks = [...tasks];
         
         setTasks(prev => prev.map(t => t.id === taskId ? {...t, status: newStatus} : t));
+
+        if (newStatus === 'done') {
+            showTemporaryFeedback("Tarefa concluída! Ela será ocultada deste quadro em 24 horas.");
+        }
 
         try {
             await updateTaskStatus({ taskId, status: newStatus, actor: currentUser.uid });
@@ -112,6 +124,12 @@ export default function ProgressoPage() {
             </div>
              {isPending && <Loader2 className="w-6 h-6 text-primary animate-spin" />}
         </div>
+        {feedbackMessage && (
+            <div className="mb-4 p-3 rounded-lg flex items-center text-sm bg-green-100 text-green-800 border border-green-200 shadow-sm">
+                <CheckCircle className="w-5 h-5 mr-3" />
+                <span>{feedbackMessage}</span>
+            </div>
+        )}
       </div>
       <div className="flex-grow overflow-hidden">
         {renderContent()}
