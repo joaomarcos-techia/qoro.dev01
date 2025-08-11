@@ -1,7 +1,7 @@
 
 import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
-import { CustomerSchema, CustomerProfileSchema, SaleLeadProfileSchema, SaleLeadSchema, ProductSchema, ProductProfileSchema, QuoteSchema, QuoteProfileSchema, UpdateCustomerSchema, UpdateProductSchema } from '@/ai/schemas';
+import { CustomerSchema, CustomerProfileSchema, SaleLeadProfileSchema, SaleLeadSchema, ProductSchema, ProductProfileSchema, QuoteSchema, QuoteProfileSchema, UpdateCustomerSchema, UpdateProductSchema, UpdateQuoteSchema } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
 import type { SaleLeadProfile, QuoteProfile } from '@/ai/schemas';
 import { adminDb } from '@/lib/firebase-admin';
@@ -314,4 +314,23 @@ export const listQuotes = async (actorUid: string): Promise<QuoteProfile[]> => {
     });
 
     return quotes;
+};
+
+export const updateQuote = async (quoteId: string, input: z.infer<typeof UpdateQuoteSchema>, actorUid: string) => {
+    const { organizationId } = await getAdminAndOrg(actorUid);
+    const quoteRef = adminDb.collection('quotes').doc(quoteId);
+
+    const quoteDoc = await quoteRef.get();
+    if (!quoteDoc.exists || quoteDoc.data()?.companyId !== organizationId) {
+        throw new Error('Orçamento não encontrado ou acesso negado.');
+    }
+
+    const { id, ...updateData } = input;
+
+    await quoteRef.update({
+        ...updateData,
+        updatedAt: FieldValue.serverTimestamp(),
+    });
+
+    return { id: quoteId };
 };

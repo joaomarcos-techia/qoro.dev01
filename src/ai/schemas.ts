@@ -157,6 +157,10 @@ export const QuoteSchema = z.object({
     notes: z.string().optional(),
 });
 
+export const UpdateQuoteSchema = QuoteSchema.extend({
+    id: z.string(),
+});
+
 export const QuoteProfileSchema = QuoteSchema.extend({
     id: z.string(),
     createdAt: z.string(),

@@ -13,13 +13,14 @@
  * - deleteProduct - Deletes a product.
  * - createQuote - Creates a new quote.
  * - listQuotes - Lists all quotes.
+ * - updateQuote - Updates a quote.
  * - updateCustomerStatus - Updates the status of a customer.
  * - deleteCustomer - Deletes a customer.
  * - updateCustomer - Updates a customer's profile.
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { CustomerSchema, CustomerProfileSchema, SaleLeadSchema, SaleLeadProfileSchema, ProductSchema, ProductProfileSchema, QuoteSchema, QuoteProfileSchema, UpdateCustomerSchema, UpdateProductSchema } from '@/ai/schemas';
+import { CustomerSchema, CustomerProfileSchema, SaleLeadSchema, SaleLeadProfileSchema, ProductSchema, ProductProfileSchema, QuoteSchema, QuoteProfileSchema, UpdateCustomerSchema, UpdateProductSchema, UpdateQuoteSchema } from '@/ai/schemas';
 import * as crmService from '@/services/crmService';
 
 const ActorSchema = z.object({ actor: z.string() });
@@ -144,6 +145,15 @@ const listQuotesFlow = ai.defineFlow(
     async ({ actor }) => crmService.listQuotes(actor)
 );
 
+const updateQuoteFlow = ai.defineFlow(
+    {
+        name: 'updateQuoteFlow',
+        inputSchema: UpdateQuoteSchema.extend(ActorSchema.shape),
+        outputSchema: z.object({ id: z.string() })
+    },
+    async (input) => crmService.updateQuote(input.id, input, input.actor)
+);
+
 const updateCustomerStatusFlow = ai.defineFlow(
     {
         name: 'updateCustomerStatusFlow',
@@ -215,6 +225,10 @@ export async function createQuote(input: z.infer<typeof QuoteSchema> & z.infer<t
 
 export async function listQuotes(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof QuoteProfileSchema>[]> {
     return listQuotesFlow(input);
+}
+
+export async function updateQuote(input: z.infer<typeof UpdateQuoteSchema> & z.infer<typeof ActorSchema>): Promise<{ id: string; }> {
+    return updateQuoteFlow(input);
 }
 
 export async function updateCustomerStatus(input: z.infer<typeof UpdateCustomerStatusInputSchema>): Promise<{ id: string; status: z.infer<typeof CustomerProfileSchema>['status'] }> {
