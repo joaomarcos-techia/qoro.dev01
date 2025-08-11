@@ -303,12 +303,14 @@ export const listQuotes = async (actorUid: string): Promise<QuoteProfile[]> => {
     const quotes: QuoteProfile[] = quotesSnapshot.docs.map(doc => {
         const data = doc.data();
         const customerInfo = customers[data.customerId] || {};
+        // Firestore timestamps can be tricky. This ensures we handle both Timestamp objects and ISO strings if they exist.
         const validUntilDate = data.validUntil ? new Date(data.validUntil.seconds ? data.validUntil.toDate() : data.validUntil) : new Date();
 
         const parsedData = QuoteProfileSchema.parse({
             id: doc.id,
             ...data,
-            validUntil: validUntilDate.toISOString(),
+            // Ensure the data being passed to the schema is a string, as expected.
+            validUntil: validUntilDate.toISOString(), 
             createdAt: data.createdAt.toDate().toISOString(),
             updatedAt: data.updatedAt.toDate().toISOString(),
             customerName: customerInfo.name,

@@ -163,6 +163,7 @@ export function QuoteTable() {
       cell: ({ row }) => {
           const date = row.getValue('validUntil') as string | Date | null;
           if (!date) return '-';
+          // Ensure we can handle both string and Date objects before formatting
           const dateObj = typeof date === 'string' ? parseISO(date) : date;
           return format(dateObj, "dd/MM/yyyy");
       },
@@ -217,9 +218,9 @@ export function QuoteTable() {
       try {
         const quotes = await listQuotes({ actor: currentUser.uid });
         setData(quotes);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Failed to fetch quotes:', err);
-        setError('Não foi possível carregar os orçamentos.');
+        setError(err.message || 'Não foi possível carregar os orçamentos.');
       } finally {
         setIsLoading(false);
       }
