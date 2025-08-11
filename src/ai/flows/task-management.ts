@@ -6,6 +6,7 @@
  * - listTasks - Lists all tasks for the user's organization.
  * - getDashboardMetrics - Retrieves key metrics for the Task dashboard.
  * - updateTaskStatus - Updates the status of a task.
+ * - archiveTask - Archives a task.
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
@@ -17,6 +18,10 @@ const ActorSchema = z.object({ actor: z.string() });
 const UpdateTaskStatusInputSchema = z.object({
     taskId: z.string(),
     status: TaskProfileSchema.shape.status,
+}).extend(ActorSchema.shape);
+
+const ArchiveTaskInputSchema = z.object({
+    taskId: z.string(),
 }).extend(ActorSchema.shape);
 
 const DashboardMetricsOutputSchema = z.object({
@@ -63,6 +68,15 @@ const updateTaskStatusFlow = ai.defineFlow(
     async (input) => taskService.updateTaskStatus(input.taskId, input.status, input.actor)
 );
 
+const archiveTaskFlow = ai.defineFlow(
+    {
+        name: 'archiveTaskFlow',
+        inputSchema: ArchiveTaskInputSchema,
+        outputSchema: z.object({ id: z.string(), success: z.boolean() })
+    },
+    async (input) => taskService.archiveTask(input.taskId, input.actor)
+);
+
 
 // Exported functions (client-callable wrappers)
 export async function createTask(input: z.infer<typeof TaskSchema> & z.infer<typeof ActorSchema>): Promise<{ id: string; }> {
@@ -79,4 +93,8 @@ export async function getDashboardMetrics(input: z.infer<typeof ActorSchema>): P
 
 export async function updateTaskStatus(input: z.infer<typeof UpdateTaskStatusInputSchema>): Promise<{ id: string; status: z.infer<typeof TaskProfileSchema>['status'] }> {
     return updateTaskStatusFlow(input);
+}
+
+export async function archiveTask(input: z.infer<typeof ArchiveTaskInputSchema>): Promise<{ id: string; success: boolean }> {
+    return archiveTaskFlow(input);
 }

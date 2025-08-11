@@ -1,13 +1,12 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useTransition } from 'react';
-import { Loader2, ServerCrash, CheckCircle } from 'lucide-react';
+import { Loader2, ServerCrash, CheckCircle, AlertCircle } from 'lucide-react';
 import { TaskKanbanBoard } from '@/components/dashboard/task/TaskKanbanBoard';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { listTasks, updateTaskStatus } from '@/ai/flows/task-management';
+import { listTasks, updateTaskStatus, archiveTask } from '@/ai/flows/task-management';
 import { TaskProfile } from '@/ai/schemas';
 
 export default function ProgressoPage() {
@@ -15,7 +14,7 @@ export default function ProgressoPage() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{type: 'success' | 'error', message: string} | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const fetchTasks = () => {
@@ -45,10 +44,10 @@ export default function ProgressoPage() {
     }
   }, [currentUser]);
 
-  const showTemporaryFeedback = (message: string) => {
-    setFeedbackMessage(message);
+  const showTemporaryFeedback = (message: string, type: 'success' | 'error' = 'success') => {
+    setFeedback({ type, message });
     setTimeout(() => {
-        setFeedbackMessage(null);
+        setFeedback(null);
     }, 5000); // A mensagem desaparece após 5 segundos
   };
 
@@ -69,6 +68,26 @@ export default function ProgressoPage() {
         } catch (err) {
             console.error("Failed to move task", err);
             setTasks(originalTasks);
+            showTemporaryFeedback("Erro ao mover a tarefa.", "error");
+        }
+    });
+  };
+
+  const handleArchiveTask = (taskId: string) => {
+    startTransition(async () => {
+        if (!currentUser) return;
+        
+        const originalTasks = [...tasks];
+        
+        setTasks(prev => prev.filter(t => t.id !== taskId));
+        showTemporaryFeedback("Tarefa arquivada com sucesso.");
+
+        try {
+            await archiveTask({ taskId, actor: currentUser.uid });
+        } catch (err) {
+            console.error("Failed to archive task", err);
+            setTasks(originalTasks);
+            showTemporaryFeedback("Erro ao arquivar a tarefa.", "error");
         }
     });
   };
@@ -109,7 +128,7 @@ export default function ProgressoPage() {
       );
     }
 
-    return <TaskKanbanBoard columns={columns} onMoveTask={handleMoveTask} />;
+    return <TaskKanbanBoard columns={columns} onMoveTask={handleMoveTask} onArchiveTask={handleArchiveTask} />;
   };
 
   return (
@@ -124,10 +143,10 @@ export default function ProgressoPage() {
             </div>
              {isPending && <Loader2 className="w-6 h-6 text-primary animate-spin" />}
         </div>
-        {feedbackMessage && (
-            <div className="mb-4 p-3 rounded-lg flex items-center text-sm bg-green-100 text-green-800 border border-green-200 shadow-sm">
-                <CheckCircle className="w-5 h-5 mr-3" />
-                <span>{feedbackMessage}</span>
+        {feedback && (
+            <div className={`mb-4 p-3 rounded-lg flex items-center text-sm shadow-sm ${feedback.type === 'success' ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-red-100 text-red-700 border border-red-200'}`}>
+                {feedback.type === 'success' ? <CheckCircle className="w-5 h-5 mr-3" /> : <AlertCircle className="w-5 h-5 mr-3" />}
+                <span>{feedback.message}</span>
             </div>
         )}
       </div>

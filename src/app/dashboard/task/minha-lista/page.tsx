@@ -1,8 +1,8 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { PlusCircle, Loader2, ServerCrash } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -25,16 +25,8 @@ export default function MinhaListaPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [refreshCounter, setRefreshCounter] = useState(0);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
+  
+  const fetchTasks = useCallback(() => {
     if (currentUser) {
       setIsLoading(true);
       setError(null);
@@ -45,15 +37,28 @@ export default function MinhaListaPage() {
           setError('Não foi possível carregar as tarefas.');
         })
         .finally(() => setIsLoading(false));
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (currentUser) {
+      fetchTasks();
     } else if (!auth.currentUser) {
         setIsLoading(false);
     }
-  }, [currentUser, refreshCounter]);
+  }, [currentUser, fetchTasks]);
 
 
-  const handleTaskCreated = () => {
+  const handleTaskAction = () => {
     setIsModalOpen(false);
-    setRefreshCounter(prev => prev + 1);
+    fetchTasks(); // Refresh the list after an action
   };
   
   return (
@@ -79,13 +84,13 @@ export default function MinhaListaPage() {
                 Preencha as informações abaixo para adicionar uma nova tarefa.
               </DialogDescription>
             </DialogHeader>
-            <TaskForm onTaskCreated={handleTaskCreated} />
+            <TaskForm onTaskCreated={handleTaskAction} />
           </DialogContent>
         </Dialog>
       </div>
 
        <div className="bg-white p-6 rounded-2xl shadow-neumorphism border border-gray-200">
-            <TaskTable data={tasks} isLoading={isLoading} error={error} />
+            <TaskTable data={tasks} isLoading={isLoading} error={error} onRefresh={fetchTasks} />
         </div>
     </div>
   );

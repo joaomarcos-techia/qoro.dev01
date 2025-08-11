@@ -76,7 +76,7 @@ export const CustomerSchema = z.object({
   company: z.string().optional(),
   cpf: z.string().optional(),
   cnpj: z.string().optional(),
-  birthDate: z.string().datetime().optional().nullable(),
+  birthDate: z.union([z.string().datetime(), z.date()]).optional().nullable(),
   address: AddressSchema.optional(),
   tags: z.array(z.string()).optional(),
   source: z.string().optional(),
@@ -91,7 +91,6 @@ export const UpdateCustomerSchema = CustomerSchema.extend({
 export const CustomerProfileSchema = CustomerSchema.extend({
     id: z.string(),
     createdAt: z.string(),
-    birthDate: z.string().datetime().optional().nullable(),
 });
 export type CustomerProfile = z.infer<typeof CustomerProfileSchema>;
 
@@ -179,6 +178,7 @@ export const TaskSchema = z.object({
   priority: z.enum(['low', 'medium', 'high', 'urgent']).default('medium'),
   dueDate: z.union([z.string().datetime(), z.null()]).optional(),
   responsibleUserId: z.string().optional(),
+  isArchived: z.boolean().default(false).optional(),
 });
 
 export const TaskProfileSchema = TaskSchema.extend({

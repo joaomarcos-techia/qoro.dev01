@@ -22,18 +22,33 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+  } from "@/components/ui/alert-dialog"
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MoreHorizontal, ArrowUpDown, Search, Loader2, List, Flag, Calendar, User } from 'lucide-react';
+import { MoreHorizontal, ArrowUpDown, Search, Loader2, List, Flag, Calendar, User, Edit, Archive } from 'lucide-react';
 import type { TaskProfile } from '@/ai/schemas';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { archiveTask } from '@/ai/flows/task-management';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 const priorityMap: Record<TaskProfile['priority'], { text: string; color: string }> = {
     low: { text: 'Baixa', color: 'bg-green-100 text-green-800' },
@@ -50,9 +65,28 @@ const statusMap: Record<TaskProfile['status'], { text: string; color: string }> 
 };
 
 
-export function TaskTable({ data, isLoading, error }: { data: TaskProfile[], isLoading: boolean, error: string | null }) {
+export function TaskTable({ data, isLoading, error, onRefresh }: { data: TaskProfile[], isLoading: boolean, error: string | null, onRefresh: () => void }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [currentUser, setCurrentUser] = React.useState<FirebaseUser | null>(null);
+
+  React.useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleArchive = async (taskId: string) => {
+    if (!currentUser) return;
+    try {
+        await archiveTask({ taskId, actor: currentUser.uid });
+        onRefresh();
+    } catch(err) {
+        console.error("Failed to archive task:", err);
+    }
+  };
+
 
   const columns: ColumnDef<TaskProfile>[] = [
     {
@@ -104,20 +138,44 @@ export function TaskTable({ data, isLoading, error }: { data: TaskProfile[], isL
       cell: ({ row }) => {
         const task = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Abrir menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Ações</DropdownMenuLabel>
-              <DropdownMenuItem>Ver Detalhes</DropdownMenuItem>
-              <DropdownMenuItem>Editar Tarefa</DropdownMenuItem>
-              <DropdownMenuItem className="text-red-600">Excluir</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            <AlertDialog>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Abrir menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                    <DropdownMenuItem>
+                        <Edit className="mr-2 h-4 w-4" />
+                        Editar Tarefa
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <AlertDialogTrigger asChild>
+                        <DropdownMenuItem className="text-orange-600 focus:bg-orange-50 focus:text-orange-700">
+                            <Archive className="mr-2 h-4 w-4" />
+                            Arquivar Tarefa
+                        </DropdownMenuItem>
+                    </AlertDialogTrigger>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Arquivar esta tarefa?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Esta ação irá mover a tarefa para o arquivo. Ela não será excluída e poderá ser consultada posteriormente se necessário.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleArchive(task.id)} className="bg-orange-500 text-white hover:bg-orange-600">
+                        Sim, arquivar
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         );
       },
     },

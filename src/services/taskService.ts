@@ -22,6 +22,7 @@ export const createTask = async (input: z.infer<typeof TaskSchema>, actorUid: st
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
         completedAt: null,
+        isArchived: false,
     };
 
     const taskRef = await adminDb.collection('tasks').add(newTaskData);
@@ -34,6 +35,7 @@ export const listTasks = async (actorUid: string): Promise<z.infer<typeof TaskPr
     
     let tasksQuery = adminDb.collection('tasks')
                              .where('companyId', '==', organizationId)
+                             .where('isArchived', '==', false)
                              .orderBy('createdAt', 'desc');
 
     const tasksSnapshot = await tasksQuery.get();
@@ -110,6 +112,23 @@ export const updateTaskStatus = async (
 
     return { id: taskId, status };
 };
+
+export const archiveTask = async (taskId: string, actorUid: string) => {
+    const { organizationId } = await getAdminAndOrg(actorUid);
+    const taskRef = adminDb.collection('tasks').doc(taskId);
+    
+    const taskDoc = await taskRef.get();
+    if (!taskDoc.exists || taskDoc.data()?.companyId !== organizationId) {
+        throw new Error('Tarefa não encontrada ou acesso negado.');
+    }
+
+    await taskRef.update({
+        isArchived: true,
+        updatedAt: FieldValue.serverTimestamp(),
+    });
+
+    return { id: taskId, success: true };
+}
 
 
 export const getDashboardMetrics = async (actorUid: string): Promise<{ totalTasks: number; completedTasks: number; inProgressTasks: number; pendingTasks: number; }> => {
