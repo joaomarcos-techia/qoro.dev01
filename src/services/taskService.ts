@@ -36,8 +36,8 @@ export const listTasks = async (actorUid: string): Promise<z.infer<typeof TaskPr
     try {
         const tasksQuery = adminDb.collection('tasks')
                                  .where('companyId', '==', organizationId)
-                                 .where('isArchived', '==', false)
-                                 .orderBy('createdAt', 'desc');
+                                 .where('isArchived', '==', false);
+                                 // .orderBy('createdAt', 'desc'); - Temporariamente removido para evitar erro de índice.
 
         const tasksSnapshot = await tasksQuery.get();
         
@@ -81,6 +81,9 @@ export const listTasks = async (actorUid: string): Promise<z.infer<typeof TaskPr
         })
         .filter((task): task is z.infer<typeof TaskProfileSchema> => task !== null);
         
+        // Sort in code as a temporary measure
+        tasks.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
         return tasks;
     } catch (error: any) {
         console.error("Erro ao listar tarefas no Firestore:", error);
