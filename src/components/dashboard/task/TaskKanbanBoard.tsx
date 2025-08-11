@@ -14,9 +14,10 @@ export type KanbanColumn = {
 interface TaskKanbanBoardProps {
   columns: KanbanColumn[];
   onMoveTask: (taskId: string, newStatus: TaskProfile['status']) => void;
+  onDeleteTask: (taskId: string) => void;
 }
 
-export function TaskKanbanBoard({ columns, onMoveTask }: TaskKanbanBoardProps) {
+export function TaskKanbanBoard({ columns, onMoveTask, onDeleteTask }: TaskKanbanBoardProps) {
 
   const totalTasks = columns.reduce((acc, col) => acc + col.tasks.length, 0);
   const stageIds = columns.map(c => c.id);
@@ -49,6 +50,7 @@ export function TaskKanbanBoard({ columns, onMoveTask }: TaskKanbanBoardProps) {
                     task={task} 
                     stageIds={stageIds}
                     onMove={onMoveTask}
+                    onDelete={onDeleteTask}
                 />
               ))}
             </div>
