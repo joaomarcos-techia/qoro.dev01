@@ -264,14 +264,18 @@ export const deleteProduct = async (productId: string, actorUid: string) => {
 
 export const createQuote = async (input: z.infer<typeof QuoteSchema>, actorUid: string) => {
     const { organizationId } = await getAdminAndOrg(actorUid);
+    
+    const quoteNumber = `QT-${Date.now().toString().slice(-6)}`;
+    
     const newQuoteData = {
         ...input,
+        number: quoteNumber,
         companyId: organizationId,
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
     };
     const quoteRef = await adminDb.collection('quotes').add(newQuoteData);
-    return { id: quoteRef.id };
+    return { id: quoteRef.id, number: quoteNumber };
 };
 
 export const listQuotes = async (actorUid: string): Promise<QuoteProfile[]> => {
@@ -332,5 +336,5 @@ export const updateQuote = async (quoteId: string, input: z.infer<typeof UpdateQ
         updatedAt: FieldValue.serverTimestamp(),
     });
 
-    return { id: quoteId };
+    return { id: quoteId, number: input.number };
 };

@@ -131,7 +131,7 @@ const createQuoteFlow = ai.defineFlow(
     {
         name: 'createQuoteFlow',
         inputSchema: QuoteSchema.extend(ActorSchema.shape),
-        outputSchema: z.object({ id: z.string() })
+        outputSchema: z.object({ id: z.string(), number: z.string() })
     },
     async (input) => crmService.createQuote(input, input.actor)
 );
@@ -149,7 +149,7 @@ const updateQuoteFlow = ai.defineFlow(
     {
         name: 'updateQuoteFlow',
         inputSchema: UpdateQuoteSchema.extend(ActorSchema.shape),
-        outputSchema: z.object({ id: z.string() })
+        outputSchema: z.object({ id: z.string(), number: z.string() })
     },
     async (input) => crmService.updateQuote(input.id, input, input.actor)
 );
@@ -219,7 +219,7 @@ export async function deleteProduct(input: z.infer<typeof DeleteProductInputSche
     return deleteProductFlow(input);
 }
 
-export async function createQuote(input: z.infer<typeof QuoteSchema> & z.infer<typeof ActorSchema>): Promise<{ id: string; }> {
+export async function createQuote(input: z.infer<typeof QuoteSchema> & z.infer<typeof ActorSchema>): Promise<{ id: string; number: string; }> {
     return createQuoteFlow(input);
 }
 
@@ -227,7 +227,7 @@ export async function listQuotes(input: z.infer<typeof ActorSchema>): Promise<z.
     return listQuotesFlow(input);
 }
 
-export async function updateQuote(input: z.infer<typeof UpdateQuoteSchema> & z.infer<typeof ActorSchema>): Promise<{ id: string; }> {
+export async function updateQuote(input: z.infer<typeof UpdateQuoteSchema> & z.infer<typeof ActorSchema>): Promise<{ id: string; number: string; }> {
     return updateQuoteFlow(input);
 }
 

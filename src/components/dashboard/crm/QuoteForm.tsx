@@ -215,27 +215,25 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
     setError(null);
     
     try {
-        let savedQuoteId: string | undefined;
+        let savedQuote: { id: string; number: string };
         let finalData: FormValues;
 
         if (isEditMode && quote?.id) {
             const updateData: z.infer<typeof UpdateQuoteSchema> = { ...data, id: quote.id };
-            const result = await updateQuote({ ...updateData, actor: currentUser.uid });
-            savedQuoteId = result.id;
+            savedQuote = await updateQuote({ ...updateData, actor: currentUser.uid });
             finalData = data;
         } else {
-            const quoteNumber = `QT-${Date.now().toString().slice(-6)}`;
-            const submissionData = { ...data, number: quoteNumber };
-            const result = await createQuote({ ...submissionData, actor: currentUser.uid });
-            savedQuoteId = result.id;
-            finalData = submissionData;
+            const submissionData = { ...data };
+            // The number is now generated and returned by the backend
+            savedQuote = await createQuote({ ...submissionData, actor: currentUser.uid });
+            finalData = { ...data, number: savedQuote.number };
         }
 
         onQuoteAction();
 
-        if (savedQuoteId) {
+        if (savedQuote.id) {
             const profileForPdf = createFullQuoteProfile(finalData);
-            profileForPdf.id = savedQuoteId; // Ensure the ID is the saved one
+            profileForPdf.id = savedQuote.id;
             await generatePdf(profileForPdf, 'download');
         }
 
