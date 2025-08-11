@@ -55,7 +55,6 @@ export const listTasks = async (actorUid: string): Promise<z.infer<typeof TaskPr
             });
         }
         
-        // Filter out tasks completed more than 24 hours ago
         const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
         const tasks: z.infer<typeof TaskProfileSchema>[] = tasksSnapshot.docs
@@ -83,10 +82,12 @@ export const listTasks = async (actorUid: string): Promise<z.infer<typeof TaskPr
         .filter((task): task is z.infer<typeof TaskProfileSchema> => task !== null);
         
         return tasks;
-    } catch (error) {
+    } catch (error: any) {
         console.error("Erro ao listar tarefas no Firestore:", error);
-        // Lançar um erro mais informativo que pode ser tratado pelo frontend se necessário
-        throw new Error("Falha ao buscar tarefas. Verifique se o índice do Firestore foi criado corretamente.");
+        if (error.code === 9) { // 9 é o código para FAILED_PRECONDITION
+             throw new Error("O índice do banco de dados para tarefas ainda está sendo criado. Por favor, aguarde alguns minutos e recarregue a página.");
+        }
+        throw new Error("Falha ao carregar tarefas. Ocorreu um erro no servidor.");
     }
 };
 
