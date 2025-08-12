@@ -224,17 +224,17 @@ export function InvoiceTable() {
             <h3 className="text-xl font-bold text-red-700">Ocorreu um erro ao carregar as faturas</h3>
             <p className="text-gray-600 mt-2 max-w-md">{error}</p>
         </div>
-    )
+    );
   }
   
-  if (data.length === 0) {
+  if (data.length === 0 && !isLoading) {
     return (
         <div className="flex flex-col items-center justify-center text-center min-h-[400px]">
             <Receipt className="w-16 h-16 text-gray-300 mb-4" />
             <h3 className="text-xl font-bold text-black">Nenhuma fatura encontrada</h3>
             <p className="text-gray-500 mt-2">Gere sua primeira fatura a partir de um orçamento aceito no QoroCRM.</p>
         </div>
-    )
+    );
   }
 
   return (
@@ -277,39 +277,39 @@ export function InvoiceTable() {
                     <TableCell key={cell.id}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    Nenhum resultado encontrado.
-                  </TableCell>
+                  ))}
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        <div className="flex items-center justify-end space-x-2 py-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Anterior
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Próximo
-          </Button>
-        </div>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  Nenhum resultado encontrado.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+      <div className="flex items-center justify-end space-x-2 py-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
+        >
+          Anterior
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+        >
+          Próximo
+        </Button>
       </div>
     </div>
   );
