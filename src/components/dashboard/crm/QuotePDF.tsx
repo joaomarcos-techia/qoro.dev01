@@ -1,14 +1,12 @@
 'use client';
-import { QuoteProfile, InvoiceProfile } from '@/ai/schemas';
+import { QuoteProfile } from '@/ai/schemas';
 import React from 'react';
 
-type DocumentProfile = QuoteProfile | InvoiceProfile;
+type DocumentProfile = QuoteProfile;
 
 interface DocumentPDFProps {
     document: DocumentProfile;
 }
-
-const isInvoice = (doc: DocumentProfile): doc is InvoiceProfile => 'paymentStatus' in doc;
 
 export const DocumentPDF = React.forwardRef<HTMLDivElement, DocumentPDFProps>(({ document }, ref) => {
     const formatCurrency = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -17,11 +15,9 @@ export const DocumentPDF = React.forwardRef<HTMLDivElement, DocumentPDFProps>(({
         return new Intl.DateTimeFormat('pt-BR').format(dateObj);
     }
     
-    const docIsInvoice = isInvoice(document);
-    const title = docIsInvoice ? 'Fatura' : 'Orçamento';
-    const validUntilDate = !docIsInvoice ? document.validUntil : null;
-    const dueDate = docIsInvoice ? document.dueDate : null;
-    const organizationName = 'organizationName' in document ? document.organizationName : 'Sua Empresa';
+    const title = 'Orçamento';
+    const validUntilDate = document.validUntil;
+    const organizationName = document.organizationName || 'Sua Empresa';
 
 
     return (
@@ -65,7 +61,6 @@ export const DocumentPDF = React.forwardRef<HTMLDivElement, DocumentPDFProps>(({
                         <p><strong>Número:</strong> {document.number}</p>
                         <p><strong>Data:</strong> {formatDate(document.createdAt)}</p>
                         {validUntilDate && <p><strong>Válido até:</strong> {formatDate(validUntilDate)}</p>}
-                        {dueDate && <p><strong>Vencimento:</strong> {formatDate(dueDate)}</p>}
                     </div>
                 </header>
                 <section className="customer-info">

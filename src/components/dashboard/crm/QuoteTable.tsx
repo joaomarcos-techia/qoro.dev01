@@ -38,9 +38,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MoreHorizontal, ArrowUpDown, Search, Loader2, FileText, Download, Eye, Edit, Receipt } from 'lucide-react';
+import { MoreHorizontal, ArrowUpDown, Search, Loader2, FileText, Download, Eye, Edit } from 'lucide-react';
 import { listQuotes } from '@/ai/flows/crm-management';
-import { createInvoiceFromQuote } from '@/ai/flows/finance-management';
 import type { QuoteProfile } from '@/ai/schemas';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
@@ -83,19 +82,6 @@ export function QuoteTable() {
   const handleEdit = (quote: QuoteProfile) => {
     setSelectedQuote(quote);
     setIsModalOpen(true);
-  };
-
-  const handleCreateInvoice = async (quoteId: string) => {
-    if (!currentUser) return;
-    try {
-        await createInvoiceFromQuote({ quoteId, actor: currentUser.uid });
-        // Optionally, provide feedback to the user
-        alert("Fatura criada com sucesso! Verifique o módulo financeiro.");
-        triggerRefresh(); // Refresh to potentially update quote status if it changes
-    } catch(err: any) {
-        console.error("Failed to create invoice:", err);
-        alert(`Erro ao criar fatura: ${err.message}`);
-    }
   };
   
   const handleModalAction = () => {
@@ -209,12 +195,6 @@ export function QuoteTable() {
                 Editar
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              {quote.status === 'accepted' && (
-                <DropdownMenuItem onClick={() => handleCreateInvoice(quote.id)} className="text-green-600 focus:bg-green-50 focus:text-green-700">
-                    <Receipt className="mr-2 h-4 w-4" />
-                    Gerar Fatura
-                </DropdownMenuItem>
-              )}
               <DropdownMenuItem className="text-red-600 focus:bg-red-50 focus:text-red-700">Excluir</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -380,4 +360,3 @@ export function QuoteTable() {
     </>
   );
 }
-

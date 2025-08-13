@@ -267,27 +267,3 @@ export const SupplierProfileSchema = SupplierSchema.extend({
     createdAt: z.string(),
 });
 export type SupplierProfile = z.infer<typeof SupplierProfileSchema>;
-
-
-// Schemas for Invoicing (Finance)
-export const InvoiceSchema = z.object({
-    customerId: z.string(),
-    quoteId: z.string().optional(),
-    items: z.array(QuoteItemSchema),
-    subtotal: z.number(),
-    discount: z.number().optional(),
-    total: z.number(),
-    issueDate: z.string().datetime(),
-    dueDate: z.string().datetime(),
-    paymentStatus: z.enum(['pending', 'paid', 'overdue', 'cancelled']).default('pending'),
-    notes: z.string().optional(),
-});
-
-export const InvoiceProfileSchema = InvoiceSchema.extend({
-    id: z.string(),
-    number: z.string(),
-    createdAt: z.string(),
-    updatedAt: z.string(),
-    customerName: z.string().optional(),
-});
-export type InvoiceProfile = z.infer<typeof InvoiceProfileSchema>;
