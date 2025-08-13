@@ -22,6 +22,7 @@ import {
   Landmark,
   Truck,
   List,
+  GitCompareArrows,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Header } from '@/components/dashboard/Header';
@@ -73,6 +74,7 @@ const navConfig: Record<string, NavGroup> = {
             { href: '/dashboard/finance/visao-geral', label: 'Visão Geral', icon: LayoutDashboard },
             { href: '/dashboard/finance/transacoes', label: 'Transações', icon: ArrowLeftRight },
             { href: '/dashboard/finance/contas', label: 'Contas', icon: Landmark },
+            { href: '/dashboard/finance/conciliacao', label: 'Conciliação', icon: GitCompareArrows },
             { href: '/dashboard/finance/fornecedores', label: 'Fornecedores', icon: Truck },
         ]
     },
