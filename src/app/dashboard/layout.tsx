@@ -73,6 +73,7 @@ const navConfig: Record<string, NavGroup> = {
         items: [
             { href: '/dashboard/finance/visao-geral', label: 'Visão Geral', icon: LayoutDashboard },
             { href: '/dashboard/finance/transacoes', label: 'Transações', icon: ArrowLeftRight },
+            { href: '/dashboard/finance/contas-a-pagar', label: 'Contas a Pagar', icon: Receipt },
             { href: '/dashboard/finance/contas', label: 'Contas', icon: Landmark },
             { href: '/dashboard/finance/conciliacao', label: 'Conciliação', icon: GitCompareArrows },
             { href: '/dashboard/finance/fornecedores', label: 'Fornecedores', icon: Truck },
