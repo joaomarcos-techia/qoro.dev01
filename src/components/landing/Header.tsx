@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -9,10 +10,10 @@ export function Header() {
   const navLinks = [
     { href: '/#home', label: 'Início' },
     { href: '/#produtos', label: 'Soluções' },
-    { href: '/#servicos', label: 'Serviços' },
     { href: '/#sobre', label: 'Sobre' },
     { href: '/#precos', label: 'Planos' },
     { href: '/#contato', label: 'Contato' },
+    { href: 'http://bit.ly/41Emn3C', label: 'Serviços' },
   ];
   
   const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>, href: string) => {
@@ -46,9 +47,16 @@ export function Header() {
           
           <nav className="hidden md:flex space-x-8">
             {navLinks.map(link => (
-              <Link key={link.href} href={link.href} onClick={(e) => handleLinkClick(e, link.href)} className="text-gray-300 hover:text-white text-sm transition-colors">
+              <a 
+                key={link.href} 
+                href={link.href} 
+                onClick={(e) => handleLinkClick(e, link.href)}
+                target={link.href.startsWith('http') ? '_blank' : '_self'}
+                rel={link.href.startsWith('http') ? 'noopener noreferrer' : ''}
+                className="text-gray-300 hover:text-white text-sm transition-colors"
+              >
                 {link.label}
-              </Link>
+              </a>
             ))}
           </nav>
 
