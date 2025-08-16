@@ -15,6 +15,10 @@ export default {
       boxShadow: {
         'lg': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
         'xl': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+        'neumorphism': '5px 5px 10px #e0e0e0, -5px -5px 10px #ffffff',
+        'neumorphism-hover': '7px 7px 14px #d9d9d9, -7px -7px 14px #ffffff',
+        'neumorphism-inset': 'inset 5px 5px 10px #e0e0e0, inset -5px -5px 10px #ffffff',
+        'neumorphism-right': '10px 0px 20px rgba(0,0,0,0.05)',
       },
       colors: {
         border: 'hsl(var(--border))',
