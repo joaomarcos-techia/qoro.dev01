@@ -70,12 +70,27 @@ body {
     --border: 0 0% 17%; /* #2C2C2C */
     --input: 0 0% 17%;
     --ring: 188 100% 50%;
-    --chart-1: 188 100% 50%; /* Azul Neon */
-    --chart-2: 284 68% 61%; /* Roxo Elétrico */
-    --chart-3: 115 100% 53%; /* Verde Neon */
-    --chart-4: 24 100% 50%;  /* Laranja Futurista */
-    --chart-5: 48 100% 50%;  /* Amarelo Neon */
     --radius: 0.75rem;
+
+    /* QoroFinance Colors */
+    --finance-primary: 188 100% 50%; /* Azul Neon #00F0FF */
+    --finance-secondary: 195 100% 34%; /* Azul Escuro #004F6D */
+    --finance-cta: 167 100% 50%; /* Verde Água #00FFC8 */
+
+    /* QoroTask Colors */
+    --task-primary: 24 100% 50%; /* Laranja Futurista #FF6600 */
+    --task-secondary: 50 100% 50%; /* Amarelo Neon #FFD600 */
+    --task-cta: 0 0% 100%; /* Branco */
+
+    /* QoroPulse Colors */
+    --pulse-primary: 271 78% 65%; /* Roxo Elétrico #9D4EDD */
+    --pulse-secondary: 300 100% 50%; /* Magenta Neon #FF00FF */
+    --pulse-cta: 194 98% 70%; /* Azul Claro #6EE7FF */
+
+    /* QoroCRM Colors */
+    --crm-primary: 110 88% 52%; /* Verde Neon #39FF14 */
+    --crm-secondary: 120 100% 20%; /* Verde Escuro #006400 */
+    --crm-cta: 188 100% 50%; /* Azul Neon #00F0FF */
   }
 
   .dark {

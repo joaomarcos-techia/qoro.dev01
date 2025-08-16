@@ -11,17 +11,10 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
-        body: ['Inter', 'sans-serif'],
-        headline: ['Inter', 'sans-serif'],
-        code: ['monospace'],
       },
       boxShadow: {
         'lg': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
         'xl': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-        'neumorphism': '5px 5px 10px #0d0d0d, -5px -5px 10px #232323',
-        'neumorphism-inset': 'inset 5px 5px 10px #0d0d0d, inset -5px -5px 10px #232323',
-        'neumorphism-hover': '7px 7px 14px #0d0d0d, -7px -7px 14px #232323',
-        'neumorphism-right': '5px 0px 15px #0d0d0d'
       },
       colors: {
         border: 'hsl(var(--border))',
@@ -57,13 +50,18 @@ export default {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
-        chart: {
-          '1': 'hsl(var(--chart-1))',
-          '2': 'hsl(var(--chart-2))',
-          '3': 'hsl(var(--chart-3))',
-          '4': 'hsl(var(--chart-4))',
-          '5': 'hsl(var(--chart-5))',
-        },
+        'finance-primary': 'hsl(var(--finance-primary))',
+        'finance-secondary': 'hsl(var(--finance-secondary))',
+        'finance-cta': 'hsl(var(--finance-cta))',
+        'task-primary': 'hsl(var(--task-primary))',
+        'task-secondary': 'hsl(var(--task-secondary))',
+        'task-cta': 'hsl(var(--task-cta))',
+        'pulse-primary': 'hsl(var(--pulse-primary))',
+        'pulse-secondary': 'hsl(var(--pulse-secondary))',
+        'pulse-cta': 'hsl(var(--pulse-cta))',
+        'crm-primary': 'hsl(var(--crm-primary))',
+        'crm-secondary': 'hsl(var(--crm-secondary))',
+        'crm-cta': 'hsl(var(--crm-cta))'
       },
       borderRadius: {
         lg: 'var(--radius)',
