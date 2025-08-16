@@ -61,7 +61,7 @@ const plans: Plan[] = [
     ],
     buttonText: 'Fale com um especialista',
     isPopular: false,
-    signupPath: '#contato',
+    signupPath: 'http://bit.ly/41Emn3C',
   },
 ];
 
@@ -107,8 +107,8 @@ const PricingCard = ({ plan }: { plan: Plan }) => {
       </div>
     );
 
-    return plan.signupPath.startsWith('#') 
-        ? <a href={plan.signupPath}>{CardContent}</a> 
+    return plan.signupPath.startsWith('http') 
+        ? <a href={plan.signupPath} target="_blank" rel="noopener noreferrer">{CardContent}</a> 
         : <Link href={plan.signupPath}>{CardContent}</Link>;
 }
 
