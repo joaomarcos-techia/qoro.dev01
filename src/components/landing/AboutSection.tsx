@@ -23,7 +23,7 @@ const features = [
 
 export function AboutSection() {
   return (
-    <section id="sobre" className="py-20">
+    <section id="sobre" className="py-20 bg-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div>
@@ -53,27 +53,27 @@ export function AboutSection() {
           </div>
           
           <div className="relative">
-            <div className="bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-sm">
+            <div className="bg-gray-900/50 border border-gray-800 rounded-3xl p-8 backdrop-blur-sm">
                 <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="bg-white/5 border border-white/10 p-4 rounded-2xl backdrop-blur-sm">
+                    <div className="bg-gray-800/60 border border-gray-700 p-4 rounded-2xl backdrop-blur-sm">
                         <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl mb-3 shadow-lg"></div>
-                        <div className="h-2 bg-white/20 rounded mb-2"></div>
-                        <div className="h-2 bg-white/10 rounded w-3/4"></div>
+                        <div className="h-2 bg-gray-700 rounded mb-2"></div>
+                        <div className="h-2 bg-gray-800 rounded w-3/4"></div>
                     </div>
-                    <div className="bg-white/5 border border-white/10 p-4 rounded-2xl backdrop-blur-sm">
-                        <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-teal-600 rounded-xl mb-3 shadow-lg"></div>
-                        <div className="h-2 bg-white/20 rounded mb-2"></div>
-                        <div className="h-2 bg-white/10 rounded w-3/4"></div>
+                    <div className="bg-gray-800/60 border border-gray-700 p-4 rounded-2xl backdrop-blur-sm">
+                        <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-teal-500 rounded-xl mb-3 shadow-lg"></div>
+                        <div className="h-2 bg-gray-700 rounded mb-2"></div>
+                        <div className="h-2 bg-gray-800 rounded w-3/4"></div>
                     </div>
-                    <div className="bg-white/5 border border-white/10 p-4 rounded-2xl backdrop-blur-sm">
-                        <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl mb-3 shadow-lg"></div>
-                        <div className="h-2 bg-white/20 rounded mb-2"></div>
-                        <div className="h-2 bg-white/10 rounded w-3/4"></div>
+                    <div className="bg-gray-800/60 border border-gray-700 p-4 rounded-2xl backdrop-blur-sm">
+                        <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl mb-3 shadow-lg"></div>
+                        <div className="h-2 bg-gray-700 rounded mb-2"></div>
+                        <div className="h-2 bg-gray-800 rounded w-3/4"></div>
                     </div>
-                    <div className="bg-white/5 border border-white/10 p-4 rounded-2xl backdrop-blur-sm">
-                        <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl mb-3 shadow-lg"></div>
-                        <div className="h-2 bg-white/20 rounded mb-2"></div>
-                        <div className="h-2 bg-white/10 rounded w-3/4"></div>
+                    <div className="bg-gray-800/60 border border-gray-700 p-4 rounded-2xl backdrop-blur-sm">
+                        <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl mb-3 shadow-lg"></div>
+                        <div className="h-2 bg-gray-700 rounded mb-2"></div>
+                        <div className="h-2 bg-gray-800 rounded w-3/4"></div>
                     </div>
                 </div>
                 <div className="text-center">

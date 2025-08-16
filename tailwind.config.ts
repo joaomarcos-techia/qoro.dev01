@@ -18,6 +18,10 @@ export default {
       boxShadow: {
         'lg': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
         'xl': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+        'neumorphism': '5px 5px 10px #0d0d0d, -5px -5px 10px #232323',
+        'neumorphism-inset': 'inset 5px 5px 10px #0d0d0d, inset -5px -5px 10px #232323',
+        'neumorphism-hover': '7px 7px 14px #0d0d0d, -7px -7px 14px #232323',
+        'neumorphism-right': '5px 0px 15px #0d0d0d'
       },
       colors: {
         border: 'hsl(var(--border))',

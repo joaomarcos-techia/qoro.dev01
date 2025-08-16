@@ -20,7 +20,7 @@ const products: Product[] = [
       'Histórico completo de interações',
       'Follow-ups automáticos para não perder negócios',
     ],
-    gradientClass: 'from-blue-500 to-purple-600',
+    gradientClass: 'from-green-500 to-blue-500',
   },
   {
     iconName: 'Activity',
@@ -31,7 +31,7 @@ const products: Product[] = [
       'Identificação de gargalos e oportunidades',
       'Sugestões inteligentes para otimização',
     ],
-    gradientClass: 'from-green-500 to-teal-600',
+    gradientClass: 'from-purple-500 to-magenta-500',
   },
   {
     iconName: 'CheckSquare',
@@ -42,7 +42,7 @@ const products: Product[] = [
       'Tarefas com prazos e responsáveis',
       'Notificações para manter todos alinhados',
     ],
-    gradientClass: 'from-orange-500 to-red-600',
+    gradientClass: 'from-orange-500 to-yellow-500',
   },
   {
     iconName: 'DollarSign',
@@ -53,13 +53,13 @@ const products: Product[] = [
       'Controle de contas a pagar e receber',
       'Registro rápido de transações',
     ],
-    gradientClass: 'from-purple-500 to-pink-600',
+    gradientClass: 'from-blue-400 to-teal-400',
   },
 ];
 
 export function ProductsSection() {
   return (
-    <section id="produtos" className="py-20 bg-white/5">
+    <section id="produtos" className="py-20 bg-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <div className="text-sm font-medium text-blue-400 mb-4 tracking-wider uppercase">Soluções</div>

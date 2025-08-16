@@ -13,7 +13,7 @@ body {
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #60A5FA, #A78BFA, #34D399);
+  background: linear-gradient(135deg, #00F0FF, #9D4EDD, #39FF14);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -30,7 +30,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #333, #555);
+  background: linear-gradient(135deg, #2C2C2C, #444);
   border-radius: 10px;
   border: 1px solid #1a1a1a;
 }
@@ -51,54 +51,53 @@ body {
 
 @layer base {
   :root {
-    --background: 0 0% 3.9%; /* #0A0A0A */
-    --foreground: 0 0% 98%; /* #FAFAFA */
+    --background: 0 0% 0%; /* #000000 */
+    --foreground: 0 0% 100%; /* #FFFFFF */
     --card: 0 0% 7%; /* #121212 */
     --card-foreground: 0 0% 98%;
     --popover: 0 0% 3.9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 217 91% 60%; /* #3B82F6 - blue-500 */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 14.9%;
+    --primary: 188 100% 50%; /* #00F0FF - Azul Neon */
+    --primary-foreground: 0 0% 0%; /* Preto para contraste com neon */
+    --secondary: 0 0% 17%; /* #2C2C2C */
     --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 217 91% 65%; /* A slightly lighter blue */
-    --accent-foreground: 0 0% 100%;
+    --muted: 0 0% 17%;
+    --muted-foreground: 0 0% 70%; /* #B3B3B3 */
+    --accent: 188 100% 50%;
+    --accent-foreground: 0 0% 0%;
     --destructive: 0 72% 51%; /* #E5484D */
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%; /* #262626 */
-    --input: 0 0% 14.9%;
-    --ring: 217 91% 60%;
-    --chart-1: 217 91% 60%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --border: 0 0% 17%; /* #2C2C2C */
+    --input: 0 0% 17%;
+    --ring: 188 100% 50%;
+    --chart-1: 188 100% 50%; /* Azul Neon */
+    --chart-2: 284 68% 61%; /* Roxo Elétrico */
+    --chart-3: 115 100% 53%; /* Verde Neon */
+    --chart-4: 24 100% 50%;  /* Laranja Futurista */
+    --chart-5: 48 100% 50%;  /* Amarelo Neon */
     --radius: 0.75rem;
   }
 
   .dark {
-    /* Keep dark theme consistent */
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
     --card: 0 0% 7%;
     --card-foreground: 0 0% 98%;
     --popover: 0 0% 3.9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 14.9%;
+    --primary: 188 100% 50%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 17%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
+    --muted: 0 0% 17%;
+    --muted-foreground: 0 0% 70%;
+    --accent: 0 0% 17%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 217 91% 60%;
+    --border: 0 0% 17%;
+    --input: 0 0% 17%;
+    --ring: 188 100% 50%;
   }
 }
 
