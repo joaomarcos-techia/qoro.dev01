@@ -48,7 +48,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full pl-12 pr-4 py-3 bg-secondary rounded-xl border-border focus:ring-2 focus:ring-primary transition-all duration-200"
+              className="w-full pl-12 pr-4 py-3 bg-input rounded-xl border-border focus:ring-2 focus:ring-primary transition-all duration-200"
             />
           </div>
           <div className="relative">
@@ -59,7 +59,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full pl-12 pr-4 py-3 bg-secondary rounded-xl border-border focus:ring-2 focus:ring-primary transition-all duration-200"
+              className="w-full pl-12 pr-4 py-3 bg-input rounded-xl border-border focus:ring-2 focus:ring-primary transition-all duration-200"
             />
           </div>
 
