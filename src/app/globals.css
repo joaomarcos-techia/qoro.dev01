@@ -40,13 +40,8 @@ body {
   background: linear-gradient(135deg, #444, #666);
 }
 
-.carousel-container .keen-slider__slide {
-  opacity: 0.3;
-  transition: opacity 0.2s;
-}
-
-.carousel-container .keen-slider__slide.active {
-  opacity: 1;
+.keen-slider {
+  overflow: visible !important;
 }
 
 
@@ -166,8 +161,4 @@ body {
 /* Chart axis color for dark theme */
 .recharts-cartesian-axis-tick-value {
     fill: hsl(var(--muted-foreground));
-}
-
-.keen-slider {
-  overflow: visible !important;
 }

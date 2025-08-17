@@ -44,13 +44,17 @@ const features = [
   },
 ];
 
-const animation = { duration: 25000, easing: (t: number) => t }
+const animation = { duration: 20000, easing: (t: number) => t }
 
 export function FeaturesCarousel() {
   const [sliderRef] = useKeenSlider<HTMLDivElement>({
     loop: true,
     renderMode: "performance",
     drag: false,
+    slides: {
+      perView: "auto",
+      spacing: 15,
+    },
     created(s) {
       s.moveToIdx(5, true, animation)
     },
@@ -60,14 +64,10 @@ export function FeaturesCarousel() {
     animationEnded(s) {
       s.moveToIdx(s.track.details.abs + 5, true, animation)
     },
-     slides: {
-      perView: "auto",
-      spacing: 15,
-    },
   })
 
   return (
-    <div ref={sliderRef} className="keen-slider" style={{ maxWidth: "100%" }}>
+    <div ref={sliderRef} className="keen-slider" style={{ maxWidth: "100vw" }}>
       {[...features, ...features].map((feature, index) => (
          <div key={index} className="keen-slider__slide" style={{ minWidth: 250, maxWidth: 250 }}>
             <div className="relative group flex flex-col items-center text-center p-6 bg-secondary/30 rounded-2xl border border-border transition-all duration-300 hover:bg-secondary/60 hover:-translate-y-1 overflow-hidden h-full">
