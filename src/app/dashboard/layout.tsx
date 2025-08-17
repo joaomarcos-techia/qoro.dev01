@@ -74,7 +74,6 @@ const navConfig: Record<string, NavGroup> = {
 
 const navItems: Record<string, NavItem[]> = {
     crm: [
-        { href: '/dashboard/crm/dashboard', label: 'Dashboard', icon: BarChart3 },
         { href: '/dashboard/crm/clientes', label: 'Clientes', icon: Users },
         { href: '/dashboard/crm/funil', label: 'Funil', icon: LayoutGrid },
         { href: '/dashboard/crm/produtos', label: 'Produtos', icon: ShoppingCart },
@@ -164,7 +163,7 @@ export default function DashboardLayout({
       <Header />
       <div className="flex h-[calc(100vh-65px)]">
          {currentModule !== 'home' && renderSidebarContent()}
-         <main className="flex-1 overflow-y-auto bg-background">
+         <main className="flex-1 overflow-y-auto">
             <div className="p-8">
               {children}
             </div>

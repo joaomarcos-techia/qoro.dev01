@@ -1,3 +1,4 @@
+
 'use client';
 import Link from 'next/link';
 import {
@@ -231,7 +232,7 @@ function DashboardContent() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {permissions?.qoroCrm && (
-            <Link href="/dashboard/crm/dashboard">
+            <Link href="/dashboard/crm/clientes">
               <div className="group bg-card rounded-2xl border border-border hover:border-crm-primary transition-all duration-200 flex flex-col h-full hover:-translate-y-1">
                 <div className="p-6 flex-grow flex flex-col">
                   <div className="flex items-center mb-4">
