@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -175,7 +176,7 @@ export function SaleLeadTable() {
     return <div className="text-red-500 text-center min-h-[400px]">{error}</div>;
   }
   
-  if (data.length === 0) {
+  if (data.length === 0 && !isLoading) {
     return (
         <div className="flex flex-col items-center justify-center text-center min-h-[400px]">
             <Target className="w-16 h-16 text-muted-foreground/30 mb-4" />
