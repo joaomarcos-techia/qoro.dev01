@@ -3,6 +3,7 @@
 
 import { ArrowRight, PlayCircle } from 'lucide-react';
 import Link from 'next/link';
+import { DashboardMockup } from './DashboardMockup';
 
 export function HeroSection() {
   return (
@@ -36,13 +37,7 @@ export function HeroSection() {
         
         <div className="mt-20 max-w-5xl mx-auto">
             <div className="relative rounded-2xl p-2 bg-gradient-to-b from-white/10 to-transparent border border-white/10 shadow-2xl shadow-primary/20">
-                <div data-ai-hint="analytics dashboard" className="aspect-video w-full rounded-lg bg-black/50 flex items-center justify-center">
-                   <img
-                     src="https://placehold.co/1200x675.png"
-                     alt="Dashboard da plataforma Qoro"
-                     className="w-full h-full object-cover rounded-lg"
-                   />
-                </div>
+                <DashboardMockup />
             </div>
         </div>
       </div>
