@@ -70,7 +70,7 @@ export function AccountForm({ onAccountCreated }: AccountFormProps) {
         <div className="space-y-2 md:col-span-2">
           <Label htmlFor="name">Nome da Conta*</Label>
           <Input id="name" {...register('name')} placeholder="Ex: Conta Principal, Caixa da Loja" />
-          {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
+          {errors.name && <p className="text-destructive text-sm">{errors.name.message}</p>}
         </div>
 
         <div className="space-y-2">
@@ -92,7 +92,7 @@ export function AccountForm({ onAccountCreated }: AccountFormProps) {
               </Select>
             )}
           />
-          {errors.type && <p className="text-red-500 text-sm">{errors.type.message}</p>}
+          {errors.type && <p className="text-destructive text-sm">{errors.type.message}</p>}
         </div>
         
         <div className="space-y-2">
@@ -103,17 +103,17 @@ export function AccountForm({ onAccountCreated }: AccountFormProps) {
         <div className="space-y-2 md:col-span-2">
           <Label htmlFor="balance">Saldo Inicial (R$)*</Label>
           <Input id="balance" type="number" step="0.01" {...register('balance')} />
-          {errors.balance && <p className="text-red-500 text-sm">{errors.balance.message}</p>}
+          {errors.balance && <p className="text-destructive text-sm">{errors.balance.message}</p>}
         </div>
       </div>
        {error && (
-            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg flex items-center mt-4">
+            <div className="bg-destructive/20 text-destructive-foreground p-4 rounded-lg flex items-center mt-4">
               <AlertCircle className="w-5 h-5 mr-3" />
               <span className="text-sm">{error}</span>
             </div>
         )}
       <div className="flex justify-end pt-4">
-        <Button type="submit" disabled={isLoading} className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
+        <Button type="submit" disabled={isLoading} className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 border border-transparent hover:border-primary/50 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
           {isLoading ? <Loader2 className="mr-2 w-5 h-5 animate-spin" /> : null}
           {isLoading ? 'Salvando...' : 'Salvar Conta'}
         </Button>

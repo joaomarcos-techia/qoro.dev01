@@ -51,17 +51,17 @@ import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 
 const priorityMap: Record<TaskProfile['priority'], { text: string; color: string }> = {
-    low: { text: 'Baixa', color: 'bg-green-100 text-green-800' },
-    medium: { text: 'Média', color: 'bg-yellow-100 text-yellow-800' },
-    high: { text: 'Alta', color: 'bg-orange-100 text-orange-800' },
-    urgent: { text: 'Urgente', color: 'bg-red-100 text-red-800' },
+    low: { text: 'Baixa', color: 'bg-green-500/20 text-green-300' },
+    medium: { text: 'Média', color: 'bg-yellow-500/20 text-yellow-300' },
+    high: { text: 'Alta', color: 'bg-orange-500/20 text-orange-300' },
+    urgent: { text: 'Urgente', color: 'bg-red-500/20 text-red-300' },
 };
 
 const statusMap: Record<TaskProfile['status'], { text: string; color: string }> = {
-    todo: { text: 'A Fazer', color: 'bg-gray-100 text-gray-800' },
-    in_progress: { text: 'Em Progresso', color: 'bg-blue-100 text-blue-800' },
-    review: { text: 'Revisão', color: 'bg-purple-100 text-purple-800' },
-    done: { text: 'Concluída', color: 'bg-green-100 text-green-800' },
+    todo: { text: 'A Fazer', color: 'bg-gray-500/20 text-gray-300' },
+    in_progress: { text: 'Em Progresso', color: 'bg-blue-500/20 text-blue-300' },
+    review: { text: 'Revisão', color: 'bg-purple-500/20 text-purple-300' },
+    done: { text: 'Concluída', color: 'bg-green-500/20 text-green-300' },
 };
 
 
@@ -96,7 +96,7 @@ export function TaskTable({ data, isLoading, error, onRefresh }: { data: TaskPro
               Título <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
       ),
-      cell: ({ row }) => <div className="font-medium text-black">{row.getValue('title')}</div>,
+      cell: ({ row }) => <div className="font-medium text-foreground">{row.getValue('title')}</div>,
     },
     {
         accessorKey: 'status',
@@ -121,7 +121,7 @@ export function TaskTable({ data, isLoading, error, onRefresh }: { data: TaskPro
         header: 'Responsável',
         cell: ({ row }) => {
             const name = row.getValue('responsibleUserName') as string;
-            return name ? <span className='flex items-center'><User className='w-4 h-4 mr-2 text-gray-400'/>{name}</span> : '-';
+            return name ? <span className='flex items-center'><User className='w-4 h-4 mr-2 text-muted-foreground'/>{name}</span> : '-';
         }
     },
     {
@@ -130,7 +130,7 @@ export function TaskTable({ data, isLoading, error, onRefresh }: { data: TaskPro
       cell: ({ row }) => {
         const date = row.getValue('dueDate') as string | null;
         if (!date) return '-';
-        return <span className='flex items-center'><Calendar className='w-4 h-4 mr-2 text-gray-400'/>{format(parseISO(date), "dd/MM/yyyy")}</span>;
+        return <span className='flex items-center'><Calendar className='w-4 h-4 mr-2 text-muted-foreground'/>{format(parseISO(date), "dd/MM/yyyy")}</span>;
       }
     },
     {
@@ -154,7 +154,7 @@ export function TaskTable({ data, isLoading, error, onRefresh }: { data: TaskPro
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <AlertDialogTrigger asChild>
-                        <DropdownMenuItem className="text-red-600 focus:bg-red-50 focus:text-red-700">
+                        <DropdownMenuItem className="text-red-500 focus:bg-destructive/20 focus:text-red-400">
                             <Trash2 className="mr-2 h-4 w-4" />
                             Excluir Tarefa
                         </DropdownMenuItem>
@@ -201,7 +201,7 @@ export function TaskTable({ data, isLoading, error, onRefresh }: { data: TaskPro
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
         <Loader2 className="w-12 h-12 text-primary animate-spin" />
-        <p className="mt-4 text-gray-600">Carregando tarefas...</p>
+        <p className="mt-4 text-muted-foreground">Carregando tarefas...</p>
       </div>
     );
   }
@@ -213,9 +213,9 @@ export function TaskTable({ data, isLoading, error, onRefresh }: { data: TaskPro
   if (data.length === 0) {
     return (
         <div className="flex flex-col items-center justify-center text-center min-h-[400px]">
-            <List className="w-16 h-16 text-gray-300 mb-4" />
-            <h3 className="text-xl font-bold text-black">Nenhuma tarefa encontrada</h3>
-            <p className="text-gray-500 mt-2">Comece adicionando sua primeira tarefa para vê-la aqui.</p>
+            <List className="w-16 h-16 text-muted-foreground/30 mb-4" />
+            <h3 className="text-xl font-bold text-foreground">Nenhuma tarefa encontrada</h3>
+            <p className="text-muted-foreground mt-2">Comece adicionando sua primeira tarefa para vê-la aqui.</p>
         </div>
     )
   }
@@ -223,24 +223,24 @@ export function TaskTable({ data, isLoading, error, onRefresh }: { data: TaskPro
   return (
     <div>
        <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-black">Todas as Tarefas</h2>
+            <h2 className="text-xl font-bold text-foreground">Todas as Tarefas</h2>
             <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                 placeholder="Buscar por título..."
                 value={(table.getColumn('title')?.getFilterValue() as string) ?? ''}
                 onChange={(event) =>
                     table.getColumn('title')?.setFilterValue(event.target.value)
                 }
-                className="w-full pl-10 pr-4 py-2 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"
+                className="w-full pl-10 pr-4 py-2 bg-secondary rounded-xl border-border focus:ring-2 focus:ring-primary transition-all duration-300"
                 />
             </div>
       </div>
-      <div className="rounded-md border">
+      <div className="rounded-md border border-border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="border-border">
                 {headerGroup.headers.map((header) => (
                   <TableHead key={header.id}>
                     {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
@@ -252,7 +252,7 @@ export function TaskTable({ data, isLoading, error, onRefresh }: { data: TaskPro
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
+                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'} className="border-border">
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}

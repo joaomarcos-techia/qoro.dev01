@@ -100,7 +100,7 @@ export function TransactionForm({ onTransactionCreated }: TransactionFormProps) 
         <div className="space-y-2 md:col-span-2">
           <Label htmlFor="description">Descrição*</Label>
           <Input id="description" {...register('description')} placeholder="Ex: Pagamento de fornecedor, Venda de produto" />
-          {errors.description && <p className="text-red-500 text-sm">{errors.description.message}</p>}
+          {errors.description && <p className="text-destructive text-sm">{errors.description.message}</p>}
         </div>
 
         <div className="space-y-2">
@@ -121,7 +121,7 @@ export function TransactionForm({ onTransactionCreated }: TransactionFormProps) 
                 </Select>
                 )}
             />
-             {errors.accountId && <p className="text-red-500 text-sm">{errors.accountId.message}</p>}
+             {errors.accountId && <p className="text-destructive text-sm">{errors.accountId.message}</p>}
         </div>
 
         <div className="space-y-2">
@@ -140,7 +140,7 @@ export function TransactionForm({ onTransactionCreated }: TransactionFormProps) 
         <div className="space-y-2">
           <Label htmlFor="amount">Valor (R$)*</Label>
           <Input id="amount" type="number" step="0.01" {...register('amount')} />
-          {errors.amount && <p className="text-red-500 text-sm">{errors.amount.message}</p>}
+          {errors.amount && <p className="text-destructive text-sm">{errors.amount.message}</p>}
         </div>
         
         <div className="space-y-2">
@@ -156,7 +156,7 @@ export function TransactionForm({ onTransactionCreated }: TransactionFormProps) 
                 <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus /></PopoverContent>
             </Popover>
           )}/>
-           {errors.date && <p className="text-red-500 text-sm">{errors.date.message}</p>}
+           {errors.date && <p className="text-destructive text-sm">{errors.date.message}</p>}
         </div>
         
         <div className="space-y-2">
@@ -197,7 +197,7 @@ export function TransactionForm({ onTransactionCreated }: TransactionFormProps) 
         <div className="space-y-2">
           <Label htmlFor="category">Categoria*</Label>
           <Input id="category" {...register('category')} placeholder="Ex: Vendas, Marketing, Software" />
-          {errors.category && <p className="text-red-500 text-sm">{errors.category.message}</p>}
+          {errors.category && <p className="text-destructive text-sm">{errors.category.message}</p>}
         </div>
 
         <div className="space-y-2">
@@ -233,13 +233,13 @@ export function TransactionForm({ onTransactionCreated }: TransactionFormProps) 
 
       </div>
        {error && (
-            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg flex items-center mt-4">
+            <div className="bg-destructive/20 text-destructive-foreground p-4 rounded-lg flex items-center mt-4">
               <AlertCircle className="w-5 h-5 mr-3" />
               <span className="text-sm">{error}</span>
             </div>
         )}
       <div className="flex justify-end pt-4">
-        <Button type="submit" disabled={isLoading} className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
+        <Button type="submit" disabled={isLoading} className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 border border-transparent hover:border-primary/50 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
           {isLoading ? <Loader2 className="mr-2 w-5 h-5 animate-spin" /> : null}
           {isLoading ? 'Salvando...' : 'Salvar Transação'}
         </Button>

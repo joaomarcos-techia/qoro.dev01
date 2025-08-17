@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MoreHorizontal, ArrowUpDown, Search, Loader2, ArrowLeftRight } from 'lucide-react';
+import { MoreHorizontal, ArrowUpDown, Search, Loader2, ArrowLeftRight, TrendingUp, TrendingDown } from 'lucide-react';
 import { listTransactions } from '@/ai/flows/finance-management';
 import type { TransactionProfile } from '@/ai/schemas';
 import { auth } from '@/lib/firebase';
@@ -44,9 +44,9 @@ const formatCurrency = (value: number) => {
 };
 
 const statusMap: Record<TransactionProfile['status'], { text: string; color: string }> = {
-    pending: { text: 'Pendente', color: 'bg-yellow-100 text-yellow-800' },
-    paid: { text: 'Pago', color: 'bg-green-100 text-green-800' },
-    cancelled: { text: 'Cancelada', color: 'bg-gray-100 text-gray-800' },
+    pending: { text: 'Pendente', color: 'bg-yellow-500/20 text-yellow-300' },
+    paid: { text: 'Pago', color: 'bg-green-500/20 text-green-300' },
+    cancelled: { text: 'Cancelada', color: 'bg-gray-500/20 text-gray-300' },
 };
 
 export const columns: ColumnDef<TransactionProfile>[] = [
@@ -57,7 +57,7 @@ export const columns: ColumnDef<TransactionProfile>[] = [
             Descrição <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
     ),
-    cell: ({ row }) => <div className="font-medium text-black">{row.getValue('description')}</div>,
+    cell: ({ row }) => <div className="font-medium text-foreground">{row.getValue('description')}</div>,
   },
   {
     accessorKey: 'amount',
@@ -66,8 +66,14 @@ export const columns: ColumnDef<TransactionProfile>[] = [
         const amount = parseFloat(row.getValue('amount'));
         const type = row.original.type;
         const formatted = formatCurrency(amount);
-        const color = type === 'income' ? 'text-green-600' : 'text-red-600';
-        return <span className={`font-semibold ${color}`}>{type === 'income' ? `+ ${formatted}` : `- ${formatted}`}</span>;
+        const color = type === 'income' ? 'text-green-400' : 'text-red-400';
+        const Icon = type === 'income' ? TrendingUp : TrendingDown;
+        return (
+            <span className={`font-semibold flex items-center ${color}`}>
+                <Icon className="w-4 h-4 mr-2" />
+                {formatted}
+            </span>
+        );
     },
   },
    {
@@ -116,7 +122,7 @@ export const columns: ColumnDef<TransactionProfile>[] = [
             <DropdownMenuLabel>Ações</DropdownMenuLabel>
             <DropdownMenuItem>Ver Detalhes</DropdownMenuItem>
             <DropdownMenuItem>Editar Transação</DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600">Cancelar Transação</DropdownMenuItem>
+            <DropdownMenuItem className="text-red-500 focus:text-red-400 focus:bg-destructive/20">Cancelar Transação</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
@@ -176,7 +182,7 @@ export function TransactionTable() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
         <Loader2 className="w-12 h-12 text-primary animate-spin" />
-        <p className="mt-4 text-gray-600">Carregando transações...</p>
+        <p className="mt-4 text-muted-foreground">Carregando transações...</p>
       </div>
     );
   }
@@ -188,9 +194,9 @@ export function TransactionTable() {
   if (data.length === 0) {
     return (
         <div className="flex flex-col items-center justify-center text-center min-h-[400px]">
-            <ArrowLeftRight className="w-16 h-16 text-gray-300 mb-4" />
-            <h3 className="text-xl font-bold text-black">Nenhuma transação registrada</h3>
-            <p className="text-gray-500 mt-2">Comece adicionando sua primeira receita ou despesa.</p>
+            <ArrowLeftRight className="w-16 h-16 text-muted-foreground/30 mb-4" />
+            <h3 className="text-xl font-bold text-foreground">Nenhuma transação registrada</h3>
+            <p className="text-muted-foreground mt-2">Comece adicionando sua primeira receita ou despesa.</p>
         </div>
     )
   }
@@ -198,24 +204,24 @@ export function TransactionTable() {
   return (
     <div>
        <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-black">Suas Transações</h2>
+            <h2 className="text-xl font-bold text-foreground">Suas Transações</h2>
             <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                 placeholder="Buscar por descrição..."
                 value={(table.getColumn('description')?.getFilterValue() as string) ?? ''}
                 onChange={(event) =>
                     table.getColumn('description')?.setFilterValue(event.target.value)
                 }
-                className="w-full pl-10 pr-4 py-2 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"
+                className="w-full pl-10 pr-4 py-2 bg-secondary rounded-xl border-border focus:ring-2 focus:ring-primary transition-all duration-300"
                 />
             </div>
       </div>
-      <div className="rounded-md border">
+      <div className="rounded-md border border-border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="border-border">
                 {headerGroup.headers.map((header) => (
                   <TableHead key={header.id}>
                     {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
@@ -227,7 +233,7 @@ export function TransactionTable() {
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
+                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'} className="border-border">
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}

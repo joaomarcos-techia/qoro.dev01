@@ -26,10 +26,10 @@ interface TaskKanbanCardProps {
 }
 
 const priorityMap: Record<TaskProfile['priority'], { text: string; color: string }> = {
-    low: { text: 'Baixa', color: 'bg-green-100 text-green-800 border-green-200' },
-    medium: { text: 'Média', color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-    high: { text: 'Alta', color: 'bg-orange-100 text-orange-800 border-orange-200' },
-    urgent: { text: 'Urgente', color: 'bg-red-100 text-red-800 border-red-200' },
+    low: { text: 'Baixa', color: 'bg-green-500/20 text-green-300 border-green-500/30' },
+    medium: { text: 'Média', color: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30' },
+    high: { text: 'Alta', color: 'bg-orange-500/20 text-orange-300 border-orange-500/30' },
+    urgent: { text: 'Urgente', color: 'bg-red-500/20 text-red-300 border-red-500/30' },
 };
 
 export function TaskKanbanCard({ task, stageIds, onMove, onDelete }: TaskKanbanCardProps) {
@@ -46,14 +46,14 @@ export function TaskKanbanCard({ task, stageIds, onMove, onDelete }: TaskKanbanC
 
 
   return (
-    <div className="bg-white rounded-xl p-4 transition-shadow duration-300 border border-gray-200 hover:border-gray-300">
-      <h3 className="font-bold text-black text-base mb-3 break-words">{task.title}</h3>
+    <div className="bg-card rounded-xl p-4 transition-shadow duration-300 border border-border hover:border-primary/50">
+      <h3 className="font-bold text-foreground text-base mb-3 break-words">{task.title}</h3>
       
-      <div className="space-y-2 text-sm text-gray-700 min-h-[4rem]">
-        {task.description && <p className="text-xs text-gray-500 mb-2">{task.description}</p>}
+      <div className="space-y-2 text-sm text-muted-foreground min-h-[4rem]">
+        {task.description && <p className="text-xs text-muted-foreground/80 mb-2">{task.description}</p>}
         {task.dueDate && (
             <div className="flex items-center">
-                <Calendar className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
+                <Calendar className="w-4 h-4 mr-2 text-muted-foreground/70 flex-shrink-0" />
                 <span className="text-xs">
                     {format(parseISO(task.dueDate.toString()), "dd 'de' MMM, yyyy", { locale: ptBR })}
                 </span>
@@ -61,20 +61,20 @@ export function TaskKanbanCard({ task, stageIds, onMove, onDelete }: TaskKanbanC
         )}
         {task.responsibleUserName && (
             <div className="flex items-center">
-                <User className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
+                <User className="w-4 h-4 mr-2 text-muted-foreground/70 flex-shrink-0" />
                 <span className="text-xs font-medium">{task.responsibleUserName}</span>
             </div>
         )}
       </div>
       
-      <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center">
+      <div className="mt-4 pt-3 border-t border-border flex justify-between items-center">
         <div className="flex items-center gap-1">
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleMove('prev')} disabled={currentStageIndex <= 0}>
                 <ChevronLeft className="w-4 h-4" />
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-500 hover:bg-red-100 hover:text-red-600" title="Excluir Tarefa">
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:bg-destructive/20 hover:text-red-400" title="Excluir Tarefa">
                     <Trash2 className="w-4 h-4" />
                 </Button>
               </AlertDialogTrigger>

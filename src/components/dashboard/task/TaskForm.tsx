@@ -101,7 +101,7 @@ export function TaskForm({ onTaskCreated }: TaskFormProps) {
       <div className="space-y-2">
         <Label htmlFor="title">Título da Tarefa*</Label>
         <Input id="title" {...register('title')} placeholder="Ex: Fazer follow-up com cliente X" />
-        {errors.title && <p className="text-red-500 text-sm">{errors.title.message}</p>}
+        {errors.title && <p className="text-destructive text-sm">{errors.title.message}</p>}
       </div>
       <div className="space-y-2">
         <Label htmlFor="description">Descrição</Label>
@@ -200,13 +200,13 @@ export function TaskForm({ onTaskCreated }: TaskFormProps) {
         </div>
       </div>
        {error && (
-            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg flex items-center">
+            <div className="bg-destructive/20 text-destructive-foreground p-4 rounded-lg flex items-center">
               <AlertCircle className="w-5 h-5 mr-3" />
               <span className="text-sm">{error}</span>
             </div>
         )}
       <div className="flex justify-end pt-4">
-        <Button type="submit" disabled={isLoading} className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
+        <Button type="submit" disabled={isLoading} className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 border border-transparent hover:border-primary/50 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
           {isLoading ? <Loader2 className="mr-2 w-5 h-5 animate-spin" /> : null}
           {isLoading ? 'Salvando...' : 'Salvar Tarefa'}
         </Button>

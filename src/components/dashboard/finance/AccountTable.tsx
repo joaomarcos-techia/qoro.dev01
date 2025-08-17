@@ -57,7 +57,7 @@ export const columns: ColumnDef<AccountProfile>[] = [
             Nome da Conta <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
     ),
-    cell: ({ row }) => <div className="font-medium text-black">{row.getValue('name')}</div>,
+    cell: ({ row }) => <div className="font-medium text-foreground">{row.getValue('name')}</div>,
   },
   {
     accessorKey: 'type',
@@ -70,7 +70,11 @@ export const columns: ColumnDef<AccountProfile>[] = [
   {
     accessorKey: 'balance',
     header: 'Saldo',
-    cell: ({ row }) => formatCurrency(row.getValue('balance')),
+    cell: ({ row }) => {
+      const balance = parseFloat(row.getValue('balance'));
+      const color = balance >= 0 ? 'text-green-400' : 'text-red-400';
+      return <span className={color}>{formatCurrency(balance)}</span>
+    }
   },
   {
     accessorKey: 'isActive',
@@ -78,7 +82,7 @@ export const columns: ColumnDef<AccountProfile>[] = [
     cell: ({ row }) => {
         const isActive = row.getValue('isActive');
         return (
-          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${isActive ? 'bg-green-500/20 text-green-300' : 'bg-gray-500/20 text-gray-300'}`}>
             {isActive ? 'Ativa' : 'Inativa'}
           </span>
         );
@@ -100,7 +104,7 @@ export const columns: ColumnDef<AccountProfile>[] = [
             <DropdownMenuLabel>Ações</DropdownMenuLabel>
             <DropdownMenuItem>Ver Extrato</DropdownMenuItem>
             <DropdownMenuItem>Editar Conta</DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600">Desativar Conta</DropdownMenuItem>
+            <DropdownMenuItem className="text-red-500 focus:text-red-400 focus:bg-destructive/20">Desativar Conta</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
@@ -160,7 +164,7 @@ export function AccountTable() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
         <Loader2 className="w-12 h-12 text-primary animate-spin" />
-        <p className="mt-4 text-gray-600">Carregando contas...</p>
+        <p className="mt-4 text-muted-foreground">Carregando contas...</p>
       </div>
     );
   }
@@ -172,9 +176,9 @@ export function AccountTable() {
   if (data.length === 0) {
     return (
         <div className="flex flex-col items-center justify-center text-center min-h-[400px]">
-            <Landmark className="w-16 h-16 text-gray-300 mb-4" />
-            <h3 className="text-xl font-bold text-black">Nenhuma conta financeira cadastrada</h3>
-            <p className="text-gray-500 mt-2">Comece adicionando sua primeira conta para registrar transações.</p>
+            <Landmark className="w-16 h-16 text-muted-foreground/30 mb-4" />
+            <h3 className="text-xl font-bold text-foreground">Nenhuma conta financeira cadastrada</h3>
+            <p className="text-muted-foreground mt-2">Comece adicionando sua primeira conta para registrar transações.</p>
         </div>
     )
   }
@@ -182,24 +186,24 @@ export function AccountTable() {
   return (
     <div>
        <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-black">Suas Contas</h2>
+            <h2 className="text-xl font-bold text-foreground">Suas Contas</h2>
             <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                 placeholder="Buscar por nome..."
                 value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
                 onChange={(event) =>
                     table.getColumn('name')?.setFilterValue(event.target.value)
                 }
-                className="w-full pl-10 pr-4 py-2 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"
+                className="w-full pl-10 pr-4 py-2 bg-secondary rounded-xl border-border focus:ring-2 focus:ring-primary transition-all duration-300"
                 />
             </div>
       </div>
-      <div className="rounded-md border">
+      <div className="rounded-md border border-border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="border-border">
                 {headerGroup.headers.map((header) => (
                   <TableHead key={header.id}>
                     {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
@@ -211,7 +215,7 @@ export function AccountTable() {
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
+                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'} className="border-border">
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}

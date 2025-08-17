@@ -75,57 +75,57 @@ export function OrganizationForm() {
         return (
             <div className="flex items-center justify-center h-64">
                 <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                <p className="ml-4 text-gray-600">Carregando dados da organização...</p>
+                <p className="ml-4 text-muted-foreground">Carregando dados da organização...</p>
             </div>
         )
     }
 
     return (
-        <div className="bg-white p-8 rounded-2xl border border-gray-200 max-w-2xl mx-auto">
+        <div className="bg-card p-8 rounded-2xl border-border max-w-2xl mx-auto">
             <div className="flex items-center mb-6">
-                <div className="p-3 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 text-white mr-4">
+                <div className="p-3 rounded-xl bg-primary text-black mr-4">
                     <Building className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-bold text-black">Dados da Organização</h3>
+                <h3 className="text-xl font-bold text-foreground">Dados da Organização</h3>
             </div>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                         <Label htmlFor="name">Nome da Empresa</Label>
                         <div className="relative">
-                            <Building className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                            <Input id="name" {...register('name')} className="pl-12"/>
+                            <Building className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                            <Input id="name" {...register('name')} className="pl-12 bg-secondary rounded-xl"/>
                         </div>
-                        {errors.name && <p className="text-sm text-red-600">{errors.name.message}</p>}
+                        {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="cnpj">CNPJ</Label>
                         <div className="relative">
-                            <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                            <Input id="cnpj" {...register('cnpj')} className="pl-12"/>
+                            <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                            <Input id="cnpj" {...register('cnpj')} className="pl-12 bg-secondary rounded-xl"/>
                         </div>
-                         {errors.cnpj && <p className="text-sm text-red-600">{errors.cnpj.message}</p>}
+                         {errors.cnpj && <p className="text-sm text-destructive">{errors.cnpj.message}</p>}
                     </div>
                      <div className="space-y-2">
                         <Label htmlFor="contactEmail">E-mail de Contato</Label>
                         <div className="relative">
-                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                            <Input id="contactEmail" type="email" {...register('contactEmail')} className="pl-12"/>
+                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                            <Input id="contactEmail" type="email" {...register('contactEmail')} className="pl-12 bg-secondary rounded-xl"/>
                         </div>
-                         {errors.contactEmail && <p className="text-sm text-red-600">{errors.contactEmail.message}</p>}
+                         {errors.contactEmail && <p className="text-sm text-destructive">{errors.contactEmail.message}</p>}
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="contactPhone">Telefone de Contato</Label>
                          <div className="relative">
-                            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                            <Input id="contactPhone" {...register('contactPhone')} className="pl-12"/>
+                            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                            <Input id="contactPhone" {...register('contactPhone')} className="pl-12 bg-secondary rounded-xl"/>
                         </div>
-                        {errors.contactPhone && <p className="text-sm text-red-600">{errors.contactPhone.message}</p>}
+                        {errors.contactPhone && <p className="text-sm text-destructive">{errors.contactPhone.message}</p>}
                     </div>
                 </div>
 
                 {feedback && (
-                    <div className={`p-4 rounded-lg flex items-center text-sm ${feedback.type === 'success' ? 'bg-green-100 border-l-4 border-green-500 text-green-800' : 'bg-red-100 border-l-4 border-red-500 text-red-700'}`}>
+                    <div className={`p-4 rounded-lg flex items-center text-sm ${feedback.type === 'success' ? 'bg-green-800/20 border-l-4 border-green-500 text-green-300' : 'bg-red-800/20 border-l-4 border-red-500 text-red-300'}`}>
                         {feedback.type === 'success' ? <CheckCircle className="w-5 h-5 mr-3" /> : <AlertCircle className="w-5 h-5 mr-3" />}
                         <span>{feedback.message}</span>
                     </div>
@@ -135,7 +135,7 @@ export function OrganizationForm() {
                      <Button 
                         type="submit" 
                         disabled={isLoading.form} 
-                        className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 border border-transparent hover:border-primary/50 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed"
+                        className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 transition-all duration-200 border border-transparent hover:border-primary/50 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed"
                     >
                         {isLoading.form && <Loader2 className="mr-2 w-5 h-5 animate-spin" />}
                         {isLoading.form ? 'Salvando...' : 'Salvar Alterações'}
