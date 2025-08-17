@@ -55,11 +55,11 @@ const formatCurrency = (value: number | null | undefined) => {
 };
 
 const statusMap: Record<QuoteProfile['status'], { text: string; color: string }> = {
-    draft: { text: 'Rascunho', color: 'bg-gray-100 text-gray-800' },
-    sent: { text: 'Enviado', color: 'bg-blue-100 text-blue-800' },
-    accepted: { text: 'Aceito', color: 'bg-green-100 text-green-800' },
-    rejected: { text: 'Rejeitado', color: 'bg-red-100 text-red-800' },
-    expired: { text: 'Expirado', color: 'bg-orange-100 text-orange-800' },
+    draft: { text: 'Rascunho', color: 'bg-gray-500/20 text-gray-300' },
+    sent: { text: 'Enviado', color: 'bg-blue-500/20 text-blue-300' },
+    accepted: { text: 'Aceito', color: 'bg-green-500/20 text-green-300' },
+    rejected: { text: 'Rejeitado', color: 'bg-red-500/20 text-red-300' },
+    expired: { text: 'Expirado', color: 'bg-orange-500/20 text-orange-300' },
 };
 
 export function QuoteTable() {
@@ -136,7 +136,7 @@ export function QuoteTable() {
               Número <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
       ),
-      cell: ({ row }) => <div className="font-medium text-black">{row.getValue('number')}</div>,
+      cell: ({ row }) => <div className="font-medium text-foreground">{row.getValue('number')}</div>,
     },
     {
       accessorKey: 'customerName',
@@ -195,7 +195,7 @@ export function QuoteTable() {
                 Editar
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-red-600 focus:bg-red-50 focus:text-red-700">Excluir</DropdownMenuItem>
+              <DropdownMenuItem className="text-red-500 focus:bg-destructive/20 focus:text-red-400">Excluir</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         );
@@ -247,7 +247,7 @@ export function QuoteTable() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
         <Loader2 className="w-12 h-12 text-primary animate-spin" />
-        <p className="mt-4 text-gray-600">Carregando orçamentos...</p>
+        <p className="mt-4 text-muted-foreground">Carregando orçamentos...</p>
       </div>
     );
   }
@@ -259,9 +259,9 @@ export function QuoteTable() {
   if (data.length === 0) {
     return (
         <div className="flex flex-col items-center justify-center text-center min-h-[400px]">
-            <FileText className="w-16 h-16 text-gray-300 mb-4" />
-            <h3 className="text-xl font-bold text-black">Nenhum orçamento criado</h3>
-            <p className="text-gray-500 mt-2">Comece criando seu primeiro orçamento para vê-lo aqui.</p>
+            <FileText className="w-16 h-16 text-muted-foreground/30 mb-4" />
+            <h3 className="text-xl font-bold text-foreground">Nenhum orçamento criado</h3>
+            <p className="text-muted-foreground mt-2">Comece criando seu primeiro orçamento para vê-lo aqui.</p>
         </div>
     )
   }
@@ -276,7 +276,7 @@ export function QuoteTable() {
        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogContent className="sm:max-w-[800px]">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-black">{selectedQuote ? 'Editar Orçamento' : 'Criar Novo Orçamento'}</DialogTitle>
+              <DialogTitle className="text-2xl font-bold text-foreground">{selectedQuote ? 'Editar Orçamento' : 'Criar Novo Orçamento'}</DialogTitle>
               <DialogDescription>
                 {selectedQuote ? 'Altere as informações abaixo.' : 'Selecione o cliente, adicione os itens e defina os termos.'}
               </DialogDescription>
@@ -288,24 +288,24 @@ export function QuoteTable() {
 
       <div>
         <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-black">Seus Orçamentos</h2>
+              <h2 className="text-xl font-bold text-foreground">Seus Orçamentos</h2>
               <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
                   placeholder="Buscar por cliente ou número..."
                   value={(table.getColumn('customerName')?.getFilterValue() as string) ?? ''}
                   onChange={(event) =>
                       table.getColumn('customerName')?.setFilterValue(event.target.value)
                   }
-                  className="w-full pl-10 pr-4 py-2 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"
+                  className="w-full pl-10 pr-4 py-2 bg-secondary rounded-xl border-border focus:ring-2 focus:ring-primary transition-all duration-300"
                   />
               </div>
         </div>
-        <div className="rounded-md border">
+        <div className="rounded-md border border-border">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
+                <TableRow key={headerGroup.id} className="border-border">
                   {headerGroup.headers.map((header) => (
                     <TableHead key={header.id}>
                       {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
@@ -317,7 +317,7 @@ export function QuoteTable() {
             <TableBody>
               {table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
+                  <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'} className="border-border">
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}

@@ -98,17 +98,17 @@ export function Header() {
   
   const renderDropdownContent = () => {
     if (isLoading) {
-      return <div className="p-4 text-center text-sm text-gray-500">Carregando...</div>;
+      return <div className="p-4 text-center text-sm text-muted-foreground">Carregando...</div>;
     }
   
     if (error) {
       return (
         <div className="p-4 text-center">
-            <p className="text-sm text-red-700 mb-2 font-semibold">{error}</p>
-            <p className="text-xs text-gray-600 mb-3">Isso pode ser um problema de rede temporário.</p>
+            <p className="text-sm text-destructive mb-2 font-semibold">{error}</p>
+            <p className="text-xs text-muted-foreground mb-3">Isso pode ser um problema de rede temporário.</p>
             <button
                 onClick={handleSignOut}
-                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center rounded-md"
+                className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-destructive/10 flex items-center rounded-md"
                 >
                 <LogOut className="w-4 h-4 mr-3" />
                 Sair e tentar novamente
@@ -120,16 +120,16 @@ export function Header() {
     if (userProfile) {
       return (
         <>
-          <div className="p-4 border-b border-gray-200">
+          <div className="p-4 border-b border-border">
             <div className="flex items-center">
-              <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center">
-                <User className="w-6 h-6 text-gray-600" />
+              <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center">
+                <User className="w-6 h-6 text-muted-foreground" />
               </div>
               <div className="ml-3 overflow-hidden">
-                <p className="font-medium text-gray-900 truncate">
+                <p className="font-medium text-foreground truncate">
                   {userProfile.name}
                 </p>
-                <p className="text-sm text-gray-600 truncate">
+                <p className="text-sm text-muted-foreground truncate">
                   {userProfile.organizationName}
                 </p>
               </div>
@@ -138,7 +138,7 @@ export function Header() {
           <div className="py-2">
             <button
               onClick={handleSignOut}
-              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
+              className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-destructive/10 flex items-center"
             >
               <LogOut className="w-4 h-4 mr-3" />
               Sair da Conta
@@ -152,42 +152,42 @@ export function Header() {
   };
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header className="bg-card border-b border-border sticky top-0 z-40">
+      <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
              <Link href="/dashboard">
-                <h1 className="text-2xl font-bold text-black cursor-pointer">Qoro</h1>
+                <h1 className="text-2xl font-bold text-foreground cursor-pointer">Qoro</h1>
              </Link>
           </div>
 
           <div className="flex items-center space-x-4">
             <button
-              className="text-gray-500 hover:text-gray-700 p-2 rounded-xl hover:bg-gray-100 transition-all duration-300"
+              className="text-muted-foreground hover:text-foreground p-2 rounded-xl hover:bg-secondary transition-all duration-300"
               title="Recarregar página"
               onClick={() => window.location.reload()}
             >
               <RefreshCw className="w-5 h-5" />
             </button>
             
-            <Link href="/dashboard/settings" className="text-gray-500 hover:text-gray-700 p-2 rounded-xl hover:bg-gray-100 transition-all duration-300" title="Configurações">
+            <Link href="/dashboard/settings" className="text-muted-foreground hover:text-foreground p-2 rounded-xl hover:bg-secondary transition-all duration-300" title="Configurações">
                 <Settings className="w-5 h-5" />
             </Link>
 
             <div className="relative" ref={menuRef}>
               <button
                 onClick={toggleMenu}
-                className="flex items-center text-gray-500 hover:text-gray-700 p-2 rounded-xl hover:bg-gray-100 transition-all duration-300"
+                className="flex items-center text-muted-foreground hover:text-foreground p-2 rounded-xl hover:bg-secondary transition-all duration-300"
                 title="Menu do usuário"
               >
-                <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
-                  <User className="w-4 h-4 text-gray-600" />
+                <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
+                  <User className="w-4 h-4 text-muted-foreground" />
                 </div>
                 <ChevronDown className="w-4 h-4 ml-1" />
               </button>
 
               {menuOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl border border-gray-200 z-50">
+                <div className="absolute right-0 mt-2 w-64 bg-card rounded-xl border border-border shadow-2xl z-50">
                     {renderDropdownContent()}
                 </div>
               )}

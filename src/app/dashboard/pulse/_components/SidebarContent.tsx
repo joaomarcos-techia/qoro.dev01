@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState, useTransition, useCallback } from 'react';
@@ -83,16 +84,16 @@ export function PulseSidebarContent() {
         <div className="flex justify-center items-center h-full p-4">
           <div className="text-center">
             <Loader2 className="mx-auto w-6 h-6 animate-spin text-primary" />
-            <p className="text-sm text-gray-500 mt-2">Carregando conversas...</p>
-            <p className="text-xs text-gray-400 mt-1">(Isso pode levar um minuto na primeira vez)</p>
+            <p className="text-sm text-muted-foreground mt-2">Carregando conversas...</p>
+            <p className="text-xs text-muted-foreground/70 mt-1">(Isso pode levar um minuto na primeira vez)</p>
           </div>
         </div>
       );
     }
     if (error) {
         return (
-            <div className="p-4 m-4 text-center text-sm text-red-600 bg-red-50 rounded-lg border border-red-200">
-                <AlertTriangle className="mx-auto w-8 h-8 mb-2" />
+            <div className="p-4 m-4 text-center text-sm text-destructive-foreground bg-destructive/20 rounded-lg border border-destructive/50">
+                <AlertTriangle className="mx-auto w-8 h-8 mb-2 text-destructive" />
                 <p className="font-semibold">Ocorreu um Erro</p>
                 <p>{error}</p>
             </div>
@@ -107,8 +108,8 @@ export function PulseSidebarContent() {
                     className={cn(
                         "group flex items-center justify-between w-full text-left p-3 rounded-xl cursor-pointer transition-all duration-200",
                         convo.id === conversationId 
-                        ? 'bg-primary text-white' 
-                        : 'text-gray-700 hover:bg-gray-100'
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'text-muted-foreground hover:bg-secondary'
                     )}
                 >
                     <span className="text-sm font-medium truncate flex items-center">
@@ -122,7 +123,7 @@ export function PulseSidebarContent() {
                         disabled={isDeleting}
                         className={cn(
                             "h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0",
-                            convo.id === conversationId ? "hover:bg-primary/80" : "hover:bg-red-100 text-red-500"
+                            convo.id === conversationId ? "hover:bg-primary/80" : "hover:bg-destructive/20 text-destructive"
                         )}
                     >
                         <Trash2 className="w-4 h-4" />
@@ -130,7 +131,7 @@ export function PulseSidebarContent() {
                 </Link>
             </li>
             )) : (
-                <div className="text-center text-gray-400 mt-10 px-4">
+                <div className="text-center text-muted-foreground mt-10 px-4">
                     <MessageSquare className="mx-auto w-10 h-10 mb-2"/>
                     <p className="text-sm">Seu histórico de conversas aparecerá aqui.</p>
                 </div>
@@ -141,7 +142,7 @@ export function PulseSidebarContent() {
 
   return (
     <>
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border-border">
              <Link href="/dashboard/pulse/new">
                 <Button className="w-full bg-primary text-primary-foreground px-4 py-2 rounded-xl hover:bg-primary/90 transition-all duration-300 border border-transparent hover:border-primary/50 flex items-center justify-center font-semibold">
                     <PlusCircle className="mr-2 w-5 h-5"/>

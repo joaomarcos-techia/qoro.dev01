@@ -70,14 +70,14 @@ export function CustomerTable() {
 
 
   const statusMap: Record<CustomerProfile['status'], { text: string; color: string }> = {
-    new: { text: 'Novo', color: 'bg-blue-100 text-blue-800' },
-    initial_contact: { text: 'Contato Inicial', color: 'bg-cyan-100 text-cyan-800' },
-    qualification: { text: 'Qualificação', color: 'bg-purple-100 text-purple-800' },
-    proposal: { text: 'Proposta', color: 'bg-indigo-100 text-indigo-800' },
-    negotiation: { text: 'Negociação', color: 'bg-yellow-100 text-yellow-800' },
-    won: { text: 'Ganho', color: 'bg-green-100 text-green-800' },
-    lost: { text: 'Perdido', color: 'bg-red-100 text-red-800' },
-    archived: { text: 'Arquivado', color: 'bg-gray-100 text-gray-800' },
+    new: { text: 'Novo', color: 'bg-blue-500/20 text-blue-300' },
+    initial_contact: { text: 'Contato Inicial', color: 'bg-cyan-500/20 text-cyan-300' },
+    qualification: { text: 'Qualificação', color: 'bg-purple-500/20 text-purple-300' },
+    proposal: { text: 'Proposta', color: 'bg-indigo-500/20 text-indigo-300' },
+    negotiation: { text: 'Negociação', color: 'bg-yellow-500/20 text-yellow-300' },
+    won: { text: 'Ganho', color: 'bg-green-500/20 text-green-300' },
+    lost: { text: 'Perdido', color: 'bg-red-500/20 text-red-300' },
+    archived: { text: 'Arquivado', color: 'bg-gray-500/20 text-gray-300' },
   };
 
   const handleEdit = (customer: CustomerProfile) => {
@@ -124,7 +124,7 @@ export function CustomerTable() {
             </Button>
           )
         },
-      cell: ({ row }) => <div className="font-medium text-black">{row.getValue('name')}</div>,
+      cell: ({ row }) => <div className="font-medium text-foreground">{row.getValue('name')}</div>,
     },
     {
       accessorKey: 'email',
@@ -145,7 +145,7 @@ export function CustomerTable() {
       header: 'Status',
       cell: ({ row }) => {
           const status = row.getValue('status') as keyof typeof statusMap;
-          const { text, color } = statusMap[status] || { text: 'Desconhecido', color: 'bg-gray-100 text-gray-800' };
+          const { text, color } = statusMap[status] || { text: 'Desconhecido', color: 'bg-gray-500/20 text-gray-300' };
           return (
             <span className={`px-2 py-1 text-xs font-semibold rounded-full ${color}`}>
               {text}
@@ -187,7 +187,7 @@ export function CustomerTable() {
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <AlertDialogTrigger asChild>
-                            <DropdownMenuItem className="text-red-600 focus:bg-red-50 focus:text-red-700">
+                            <DropdownMenuItem className="text-red-500 focus:bg-destructive/20 focus:text-red-400">
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Excluir Cliente
                             </DropdownMenuItem>
@@ -259,7 +259,7 @@ export function CustomerTable() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
         <Loader2 className="w-12 h-12 text-primary animate-spin" />
-        <p className="mt-4 text-gray-600">Carregando clientes...</p>
+        <p className="mt-4 text-muted-foreground">Carregando clientes...</p>
       </div>
     );
   }
@@ -271,9 +271,9 @@ export function CustomerTable() {
   if (data.length === 0 && !isLoading) {
     return (
         <div className="flex flex-col items-center justify-center text-center min-h-[400px]">
-            <Users className="w-16 h-16 text-gray-300 mb-4" />
-            <h3 className="text-xl font-bold text-black">Nenhum cliente cadastrado</h3>
-            <p className="text-gray-500 mt-2">Comece adicionando seu primeiro cliente para vê-lo aqui.</p>
+            <Users className="w-16 h-16 text-muted-foreground/30 mb-4" />
+            <h3 className="text-xl font-bold text-foreground">Nenhum cliente cadastrado</h3>
+            <p className="text-muted-foreground mt-2">Comece adicionando seu primeiro cliente para vê-lo aqui.</p>
         </div>
     )
   }
@@ -283,7 +283,7 @@ export function CustomerTable() {
     <Dialog open={isModalOpen} onOpenChange={handleModalClose}>
         <DialogContent className="sm:max-w-[750px]">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-black">Editar Cliente</DialogTitle>
+              <DialogTitle className="text-2xl font-bold text-foreground">Editar Cliente</DialogTitle>
               <DialogDescription>
                 Altere as informações do cliente abaixo.
               </DialogDescription>
@@ -294,24 +294,24 @@ export function CustomerTable() {
 
     <div>
        <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-black">Sua Lista de Clientes</h2>
+            <h2 className="text-xl font-bold text-foreground">Sua Lista de Clientes</h2>
             <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                 placeholder="Buscar por nome..."
                 value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
                 onChange={(event) =>
                     table.getColumn('name')?.setFilterValue(event.target.value)
                 }
-                className="w-full pl-10 pr-4 py-2 bg-gray-50 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary transition-all duration-200"
+                className="w-full pl-10 pr-4 py-2 bg-secondary rounded-xl border-border focus:ring-2 focus:ring-primary transition-all duration-200"
                 />
             </div>
       </div>
-      <div className="rounded-md border">
+      <div className="rounded-md border border-border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="border-border">
                 {headerGroup.headers.map((header) => {
                   return (
                     <TableHead key={header.id}>
@@ -333,6 +333,7 @@ export function CustomerTable() {
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
+                  className="border-border"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

@@ -131,17 +131,17 @@ export function CustomerForm({ onCustomerAction, customer }: CustomerFormProps) 
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 py-4">
       {/* Informações Pessoais */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Informações Pessoais</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4 border-b border-border pb-2">Informações Pessoais</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
             <Label htmlFor="name">Nome Completo*</Label>
             <Input id="name" {...register('name')} />
-            {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
+            {errors.name && <p className="text-destructive text-sm">{errors.name.message}</p>}
             </div>
             <div className="space-y-2">
             <Label htmlFor="email">Email*</Label>
             <Input id="email" type="email" {...register('email')} />
-            {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
+            {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
             </div>
             <div className="space-y-2">
                 <Label htmlFor="phone">Telefone</Label>
@@ -194,7 +194,7 @@ export function CustomerForm({ onCustomerAction, customer }: CustomerFormProps) 
       
        {/* Informações da Empresa */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Informações da Empresa (Opcional)</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4 border-b border-border pb-2">Informações da Empresa (Opcional)</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
                 <Label htmlFor="company">Nome da Empresa</Label>
@@ -219,7 +219,7 @@ export function CustomerForm({ onCustomerAction, customer }: CustomerFormProps) 
 
        {/* Endereço */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Endereço</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4 border-b border-border pb-2">Endereço</h3>
          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
              <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="address.street">Rua</Label>
@@ -246,7 +246,7 @@ export function CustomerForm({ onCustomerAction, customer }: CustomerFormProps) 
       
        {/* Status e Fonte */}
        <div>
-         <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Status e Fonte</h3>
+         <h3 className="text-lg font-semibold text-foreground mb-4 border-b border-border pb-2">Status e Fonte</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
             <Label>Status</Label>
@@ -280,7 +280,7 @@ export function CustomerForm({ onCustomerAction, customer }: CustomerFormProps) 
       </div>
 
        {error && (
-            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg flex items-center">
+            <div className="bg-destructive/20 border-l-4 border-destructive text-destructive-foreground p-4 rounded-lg flex items-center">
               <AlertCircle className="w-5 h-5 mr-3" />
               <span className="text-sm">{error}</span>
             </div>

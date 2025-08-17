@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -52,7 +53,7 @@ export const columns: ColumnDef<ProductProfile>[] = [
             Nome <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
     ),
-    cell: ({ row }) => <div className="font-medium text-black">{row.getValue('name')}</div>,
+    cell: ({ row }) => <div className="font-medium text-foreground">{row.getValue('name')}</div>,
   },
   {
     accessorKey: 'category',
@@ -96,7 +97,7 @@ export const columns: ColumnDef<ProductProfile>[] = [
               Copiar ID do Serviço
             </DropdownMenuItem>
             <DropdownMenuItem>Editar Serviço</DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600">Excluir Serviço</DropdownMenuItem>
+            <DropdownMenuItem className="text-red-500 focus:bg-destructive/20 focus:text-red-400">Excluir Serviço</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
@@ -160,7 +161,7 @@ export function ServiceTable() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
         <Loader2 className="w-12 h-12 text-primary animate-spin" />
-        <p className="mt-4 text-gray-600">Carregando serviços...</p>
+        <p className="mt-4 text-muted-foreground">Carregando serviços...</p>
       </div>
     );
   }
@@ -172,9 +173,9 @@ export function ServiceTable() {
   if (data.length === 0) {
     return (
         <div className="flex flex-col items-center justify-center text-center min-h-[400px]">
-            <Wrench className="w-16 h-16 text-gray-300 mb-4" />
-            <h3 className="text-xl font-bold text-black">Nenhum serviço cadastrado</h3>
-            <p className="text-gray-500 mt-2">Comece adicionando seu primeiro serviço para vê-lo aqui.</p>
+            <Wrench className="w-16 h-16 text-muted-foreground/30 mb-4" />
+            <h3 className="text-xl font-bold text-foreground">Nenhum serviço cadastrado</h3>
+            <p className="text-muted-foreground mt-2">Comece adicionando seu primeiro serviço para vê-lo aqui.</p>
         </div>
     )
   }
@@ -182,24 +183,24 @@ export function ServiceTable() {
   return (
     <div>
        <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-black">Sua Lista de Serviços</h2>
+            <h2 className="text-xl font-bold text-foreground">Sua Lista de Serviços</h2>
             <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                 placeholder="Buscar por nome..."
                 value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
                 onChange={(event) =>
                     table.getColumn('name')?.setFilterValue(event.target.value)
                 }
-                className="w-full pl-10 pr-4 py-2 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"
+                className="w-full pl-10 pr-4 py-2 bg-secondary rounded-xl border-border focus:ring-2 focus:ring-primary transition-all duration-300"
                 />
             </div>
       </div>
-      <div className="rounded-md border">
+      <div className="rounded-md border border-border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="border-border">
                 {headerGroup.headers.map((header) => (
                   <TableHead key={header.id}>
                     {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
@@ -211,7 +212,7 @@ export function ServiceTable() {
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
+                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'} className="border-border">
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}

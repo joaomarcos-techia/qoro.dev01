@@ -123,13 +123,13 @@ export default function PulsePage({ params }: { params: { conversationId: string
   }
 
   const renderWelcomeScreen = () => (
-     <div className="text-center text-gray-500 h-full flex flex-col justify-center max-w-2xl mx-auto">
+     <div className="text-center text-muted-foreground h-full flex flex-col justify-center max-w-2xl mx-auto">
         <div className="mb-6 text-center">
-            <h1 className="text-3xl font-bold text-black flex items-center justify-center">
-                <BrainCircuit className="w-8 h-8 mr-3 text-primary"/>
+            <h1 className="text-3xl font-bold text-foreground flex items-center justify-center">
+                <BrainCircuit className="w-8 h-8 mr-3 text-pulse-primary"/>
                 QoroPulse
             </h1>
-            <p className="text-gray-600 mt-2">
+            <p className="text-muted-foreground mt-2">
                 Converse com seus dados e obtenha insights de negócio em tempo real.
             </p>
         </div>
@@ -139,7 +139,7 @@ export default function PulsePage({ params }: { params: { conversationId: string
                 <button 
                     key={i}
                     onClick={() => handleSuggestionClick(q)}
-                    className="bg-white hover:bg-gray-100 p-4 rounded-xl text-left text-sm font-medium border border-gray-200 hover:border-gray-300 transition-all duration-300"
+                    className="bg-card hover:bg-secondary p-4 rounded-xl text-left text-sm font-medium border border-border hover:border-primary/50 transition-all duration-300"
                 >
                 {q}
                 </button>
@@ -149,7 +149,7 @@ export default function PulsePage({ params }: { params: { conversationId: string
   );
 
   return (
-    <div className="flex flex-col h-full max-w-4xl mx-auto bg-white rounded-2xl border border-gray-200">
+    <div className="flex flex-col h-full max-w-4xl mx-auto bg-card rounded-2xl border border-border">
         <div 
             ref={scrollAreaRef}
             className="flex-1 overflow-y-auto p-6 space-y-6"
@@ -167,21 +167,21 @@ export default function PulsePage({ params }: { params: { conversationId: string
                     className={`flex items-start gap-4 ${message.role === 'user' ? 'justify-end' : ''}`}
                 >
                     {message.role === 'assistant' && (
-                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-pulse-primary text-black flex items-center justify-center">
                             <BrainCircuit size={18} />
                         </div>
                     )}
                     <div
                     className={`max-w-xl px-5 py-3 rounded-2xl ${
                         message.role === 'user'
-                        ? 'bg-primary/90 text-white rounded-br-none'
-                        : 'bg-gray-100 text-black rounded-bl-none'
+                        ? 'bg-primary/90 text-primary-foreground rounded-br-none'
+                        : 'bg-secondary text-foreground rounded-bl-none'
                     }`}
                     >
                     <p className="whitespace-pre-wrap">{message.content}</p>
                     </div>
                     {message.role === 'user' && (
-                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center font-semibold">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-secondary text-muted-foreground flex items-center justify-center font-semibold">
                             {currentUser?.email?.[0].toUpperCase() ?? 'U'}
                         </div>
                     )}
@@ -190,18 +190,18 @@ export default function PulsePage({ params }: { params: { conversationId: string
             )}
             {isLoading && (
             <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-pulse-primary text-black flex items-center justify-center">
                     <BrainCircuit size={18} />
                 </div>
-                <div className="max-w-lg px-5 py-3 rounded-2xl bg-gray-100 text-black rounded-bl-none flex items-center">
-                    <Loader className="w-5 h-5 animate-spin text-gray-500" />
+                <div className="max-w-lg px-5 py-3 rounded-2xl bg-secondary text-foreground rounded-bl-none flex items-center">
+                    <Loader className="w-5 h-5 animate-spin text-muted-foreground" />
                 </div>
             </div>
             )}
         </div>
-        <div className="bg-transparent px-4 pb-4">
+        <div className="bg-transparent p-4 border-t border-border">
             {error && (
-                <div className="bg-red-100 text-red-700 p-2 rounded-md text-sm mb-2 flex items-center">
+                <div className="bg-destructive/20 text-destructive-foreground p-2 rounded-md text-sm mb-2 flex items-center">
                     <AlertCircle className="w-4 h-4 mr-2" />
                     {error}
                 </div>
@@ -217,19 +217,19 @@ export default function PulsePage({ params }: { params: { conversationId: string
                 }
                 }}
                 placeholder="Pergunte qualquer coisa sobre seu negócio..."
-                className="w-full pr-20 py-3 pl-4 bg-white rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary"
+                className="w-full pr-20 py-3 pl-4 bg-secondary rounded-xl border border-border focus:ring-2 focus:ring-primary"
                 rows={1}
                 disabled={isLoading}
             />
             <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
-                <p className="text-xs text-gray-400 mr-2 hidden sm:block">
+                <p className="text-xs text-muted-foreground mr-2 hidden sm:block">
                     <kbd className="font-sans">Shift</kbd> + <kbd className="font-sans">Enter</kbd> para nova linha
                 </p>
                 <Button
                     type="submit"
                     size="icon"
                     disabled={isLoading || !input.trim()}
-                    className="w-10 h-10 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:bg-gray-300"
+                    className="w-10 h-10 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:bg-gray-600"
                 >
                     <Send size={20} />
                 </Button>

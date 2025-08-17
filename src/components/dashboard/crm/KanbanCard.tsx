@@ -39,30 +39,30 @@ export function KanbanCard({ customer, stageIds, onMove, onArchive }: KanbanCard
   }
 
   return (
-    <div className="bg-white rounded-xl p-4 transition-shadow duration-300 border border-gray-200 hover:border-gray-300">
-      <h3 className="font-bold text-black text-base mb-3 break-words">{customer.name}</h3>
+    <div className="bg-card rounded-xl p-4 transition-shadow duration-300 border border-border hover:border-primary/50">
+      <h3 className="font-bold text-foreground text-base mb-3 break-words">{customer.name}</h3>
       
-      <div className="space-y-2 text-sm text-gray-700">
+      <div className="space-y-2 text-sm text-muted-foreground">
         <div className="flex items-center">
-            <Mail className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
+            <Mail className="w-4 h-4 mr-2 text-muted-foreground/70 flex-shrink-0" />
             <span className="truncate">{customer.email}</span>
         </div>
          {customer.phone && (
             <div className="flex items-center">
-                <Phone className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
+                <Phone className="w-4 h-4 mr-2 text-muted-foreground/70 flex-shrink-0" />
                 <span className="truncate">{customer.phone}</span>
             </div>
         )}
       </div>
       
-      <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center">
+      <div className="mt-4 pt-3 border-t border-border flex justify-between items-center">
         <div className="flex items-center gap-1">
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleMove('prev')} disabled={currentStageIndex <= 0}>
                 <ChevronLeft className="w-4 h-4" />
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-500 hover:bg-gray-100 hover:text-gray-600" title="Arquivar Cliente">
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:bg-secondary hover:text-foreground" title="Arquivar Cliente">
                     <Archive className="w-4 h-4" />
                 </Button>
               </AlertDialogTrigger>

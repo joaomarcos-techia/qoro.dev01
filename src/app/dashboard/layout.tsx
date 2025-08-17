@@ -123,15 +123,15 @@ export default function DashboardLayout({
     const { group, icon: GroupIcon, color, textColor, shadowColor } = moduleConfig;
     
     return (
-        <aside className="w-64 flex-shrink-0 bg-black border-r border-[#2C2C2C] flex flex-col">
-            <div className="p-4 border-b border-[#2C2C2C] space-y-4">
+        <aside className="w-64 flex-shrink-0 bg-card border-r border-border flex flex-col">
+            <div className="p-4 border-b border-border space-y-4">
                 <div className="flex items-center">
                     <div className={`p-3 rounded-xl text-black mr-4 shadow-lg ${color} ${shadowColor}`}>
                         <GroupIcon className="w-6 h-6" />
                     </div>
                     <h2 className={`text-xl font-bold ${textColor}`}>{group}</h2>
                 </div>
-                <Link href="/dashboard" className="flex items-center text-[#B3B3B3] hover:text-white transition-colors text-sm font-medium">
+                <Link href="/dashboard" className="flex items-center text-muted-foreground hover:text-foreground transition-colors text-sm font-medium">
                     <ChevronLeft className="w-4 h-4 mr-2" />
                     <span>Voltar ao Dashboard</span>
                 </Link>
@@ -145,10 +145,10 @@ export default function DashboardLayout({
                         className={`flex items-center px-4 py-3 my-1 rounded-xl text-sm font-medium transition-all duration-200 group ${
                             pathname.startsWith(item.href)
                             ? `${color} text-black shadow-lg ${shadowColor}`
-                            : 'text-[#B3B3B3] hover:bg-secondary hover:text-white'
+                            : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
                         }`}
                         >
-                        <item.icon className={`w-5 h-5 mr-3 transition-colors ${pathname.startsWith(item.href) ? 'text-black' : 'text-[#888] group-hover:text-white'}`} />
+                        <item.icon className={`w-5 h-5 mr-3 transition-colors ${pathname.startsWith(item.href) ? 'text-black' : 'text-muted-foreground group-hover:text-foreground'}`} />
                         {item.label}
                         </Link>
                     </li>
@@ -160,11 +160,11 @@ export default function DashboardLayout({
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black text-foreground">
       <Header />
-      <div className="flex h-[calc(100vh-64px)]">
+      <div className="flex h-[calc(100vh-65px)]">
          {currentModule !== 'home' && renderSidebarContent()}
-         <main className="flex-1 overflow-y-auto">
+         <main className="flex-1 overflow-y-auto bg-background">
             <div className="p-8">
               {children}
             </div>

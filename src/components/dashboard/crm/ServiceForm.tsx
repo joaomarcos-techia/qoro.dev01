@@ -84,7 +84,7 @@ export function ServiceForm({ onServiceCreated }: ServiceFormProps) {
         <div className="space-y-2 md:col-span-2">
           <Label htmlFor="name">Nome do Serviço*</Label>
           <Input id="name" {...register('name')} placeholder="Ex: Consultoria de Marketing Digital" />
-          {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
+          {errors.name && <p className="text-destructive text-sm">{errors.name.message}</p>}
         </div>
         <div className="space-y-2 md:col-span-2">
           <Label htmlFor="description">Descrição</Label>
@@ -109,7 +109,7 @@ export function ServiceForm({ onServiceCreated }: ServiceFormProps) {
         <div className="space-y-2">
           <Label htmlFor="price">{pricingModel === 'per_hour' ? 'Preço por Hora (R$)*' : 'Preço (R$)*'}</Label>
           <Input id="price" type="number" step="0.01" {...register('price')} />
-          {errors.price && <p className="text-red-500 text-sm">{errors.price.message}</p>}
+          {errors.price && <p className="text-destructive text-sm">{errors.price.message}</p>}
         </div>
         
         {pricingModel === 'per_hour' && (
@@ -121,13 +121,13 @@ export function ServiceForm({ onServiceCreated }: ServiceFormProps) {
 
       </div>
        {error && (
-            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg flex items-center mt-4">
+            <div className="bg-destructive/20 border-l-4 border-destructive text-destructive-foreground p-4 rounded-lg flex items-center mt-4">
               <AlertCircle className="w-5 h-5 mr-3" />
               <span className="text-sm">{error}</span>
             </div>
         )}
       <div className="flex justify-end pt-4">
-        <Button type="submit" disabled={isLoading} className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
+        <Button type="submit" disabled={isLoading} className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
           {isLoading ? <Loader2 className="mr-2 w-5 h-5 animate-spin" /> : null}
           {isLoading ? 'Salvando...' : 'Salvar Serviço'}
         </Button>

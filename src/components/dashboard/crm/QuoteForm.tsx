@@ -285,7 +285,7 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
                         </Popover>
                     )}
                 />
-                 {errors.customerId && <p className="text-red-500 text-sm">{errors.customerId.message}</p>}
+                 {errors.customerId && <p className="text-destructive text-sm">{errors.customerId.message}</p>}
             </div>
             <div className="space-y-2">
                 <Label>Válido até*</Label>
@@ -310,17 +310,17 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
         {/* Items Section */}
         <div className="space-y-4">
             <Label>Itens do Orçamento*</Label>
-            <div className="p-4 border rounded-xl bg-gray-50/50 space-y-4">
+            <div className="p-4 border border-border rounded-xl bg-secondary/50 space-y-4">
                 {fields.map((item, index) => (
                     <div key={item.id} className="grid grid-cols-12 gap-2 items-center">
-                        <div className="col-span-5"><Input value={item.name} disabled className="bg-white" /></div>
+                        <div className="col-span-5"><Input value={item.name} disabled className="bg-card" /></div>
                         <div className="col-span-2"><Input type="number" value={item.quantity} onChange={(e) => setValue(`items.${index}.quantity`, Number(e.target.value), { shouldValidate: true })} /></div>
                         <div className="col-span-2"><Input type="number" step="0.01" value={item.unitPrice} onChange={(e) => setValue(`items.${index}.unitPrice`, Number(e.target.value), { shouldValidate: true })} /></div>
-                        <div className="col-span-2"><Input value={(item.quantity * item.unitPrice).toFixed(2)} disabled className="bg-white" /></div>
+                        <div className="col-span-2"><Input value={(item.quantity * item.unitPrice).toFixed(2)} disabled className="bg-card" /></div>
                         <div className="col-span-1"><Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}><Trash2 className="w-4 h-4 text-red-500"/></Button></div>
                     </div>
                 ))}
-                {errors.items && <p className="text-red-500 text-sm">{errors.items.message}</p>}
+                {errors.items && <p className="text-destructive text-sm">{errors.items.message}</p>}
 
                  <Popover open={isItemPopoverOpen} onOpenChange={setIsItemPopoverOpen}>
                     <PopoverTrigger asChild>
@@ -329,12 +329,12 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[400px] p-0">
-                         <div className="p-2 border-b">
-                            <div className="flex border-b mb-2">
-                                <button type="button" onClick={() => setActiveItemTab('product')} className={`px-4 py-2 text-sm font-medium flex items-center ${activeItemTab === 'product' ? 'border-b-2 border-primary text-primary' : 'text-gray-500'}`}>
+                         <div className="p-2 border-b border-border">
+                            <div className="flex border-b border-border mb-2">
+                                <button type="button" onClick={() => setActiveItemTab('product')} className={`px-4 py-2 text-sm font-medium flex items-center ${activeItemTab === 'product' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground'}`}>
                                     <Package className="w-4 h-4 mr-2"/> Produtos
                                 </button>
-                                <button type="button" onClick={() => setActiveItemTab('service')} className={`px-4 py-2 text-sm font-medium flex items-center ${activeItemTab === 'service' ? 'border-b-2 border-primary text-primary' : 'text-gray-500'}`}>
+                                <button type="button" onClick={() => setActiveItemTab('service')} className={`px-4 py-2 text-sm font-medium flex items-center ${activeItemTab === 'service' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground'}`}>
                                     <Wrench className="w-4 h-4 mr-2"/> Serviços
                                 </button>
                             </div>
@@ -366,7 +366,7 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
         </div>
 
        {error && (
-            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg flex items-center">
+            <div className="bg-destructive/20 border-l-4 border-destructive text-destructive-foreground p-4 rounded-lg flex items-center">
               <AlertCircle className="w-5 h-5 mr-3" />
               <span className="text-sm">{error}</span>
             </div>
@@ -384,6 +384,11 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
                 </div>
             )}
         </div>
-        <Button type="submit" disabled={isLoading} className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
+        <Button type="submit" disabled={isLoading} className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
           {isLoading ? <Loader2 className="mr-2 w-5 h-5 animate-spin" /> : null}
-          {isLoading ? 'Salvando...' : (isEditMode ? 'Salvar Alterações' :
+          {isLoading ? 'Salvando...' : (isEditMode ? 'Salvar Alterações' : 'Salvar e Gerar PDF')}
+        </Button>
+      </div>
+    </>
+  );
+}

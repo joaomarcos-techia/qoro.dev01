@@ -56,7 +56,7 @@ export default function ClientesPage() {
         </Dialog>
       </div>
 
-      <div className="bg-card p-6 rounded-2xl border-border">
+      <div className="bg-card p-6 rounded-2xl border border-border">
         <CustomerTable key={refreshCounter} />
       </div>
     </div>
