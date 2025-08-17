@@ -22,6 +22,7 @@ import {
   Truck,
   List,
   GitCompareArrows,
+  Target,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Header } from '@/components/dashboard/Header';
@@ -76,6 +77,7 @@ const navItems: Record<string, NavItem[]> = {
     crm: [
         { href: '/dashboard/crm/clientes', label: 'Clientes', icon: Users },
         { href: '/dashboard/crm/funil', label: 'Funil', icon: LayoutGrid },
+        { href: '/dashboard/crm/oportunidades', label: 'Oportunidades', icon: Target },
         { href: '/dashboard/crm/produtos', label: 'Produtos', icon: ShoppingCart },
         { href: '/dashboard/crm/servicos', label: 'Serviços', icon: Wrench },
         { href: '/dashboard/crm/orcamentos', label: 'Orçamentos', icon: FileText },
