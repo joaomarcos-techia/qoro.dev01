@@ -22,52 +22,49 @@ export default function LoginPage() {
     try {
       await signIn(email, password);
       router.push('/dashboard');
-      // On successful login, we don't set isLoading to false.
-      // The component will unmount on navigation, so the state is discarded.
-      // This prevents the button from becoming active again before the page transition is complete.
     } catch (err: any) {
       setError(err.message || 'Ocorreu um erro desconhecido. Tente novamente.');
       console.error(err);
-      setIsLoading(false); // Only set loading to false on error
+      setIsLoading(false);
     }
   };
 
   return (
-    <main className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4">
-      <div className="w-full max-w-md mx-auto bg-white rounded-3xl shadow-neumorphism p-8 md:p-12">
+    <main className="flex items-center justify-center min-h-screen bg-black p-4">
+      <div className="w-full max-w-md mx-auto bg-card rounded-2xl border border-border p-8 md:p-12">
         <div className="text-center mb-8">
           <Link href="/">
-            <div className="text-3xl font-bold text-gray-900 cursor-pointer mb-2">Qoro</div>
+            <div className="text-3xl font-bold text-foreground cursor-pointer mb-2">Qoro</div>
           </Link>
-          <p className="text-gray-600">Bem-vindo de volta! Faça login para continuar.</p>
+          <p className="text-muted-foreground">Bem-vindo de volta! Faça login para continuar.</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div className="relative">
-            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <input
               type="email"
               placeholder="E-mail"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"
+              className="w-full pl-12 pr-4 py-3 bg-secondary rounded-xl border border-border focus:ring-2 focus:ring-primary transition-all duration-200"
             />
           </div>
           <div className="relative">
-            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <input
               type="password"
               placeholder="Senha"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"
+              className="w-full pl-12 pr-4 py-3 bg-secondary rounded-xl border border-border focus:ring-2 focus:ring-primary transition-all duration-200"
             />
           </div>
 
           {error && (
-            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg flex items-center">
+            <div className="bg-destructive/20 border-l-4 border-destructive text-destructive-foreground p-4 rounded-lg flex items-center">
               <AlertCircle className="w-5 h-5 mr-3" />
               <span className="text-sm">{error}</span>
             </div>
@@ -76,7 +73,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-primary text-primary-foreground py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed"
+            className="w-full bg-primary text-primary-foreground py-3 rounded-xl hover:bg-primary/90 transition-all duration-200 border border-transparent hover:border-primary/50 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed"
           >
             <LogIn className="mr-2 w-5 h-5" />
             {isLoading ? 'Entrando...' : 'Entrar'}
@@ -84,7 +81,7 @@ export default function LoginPage() {
         </form>
 
         <div className="text-center mt-8">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             Não tem uma conta?{' '}
             <Link href="/signup">
               <span className="font-medium text-primary hover:underline">

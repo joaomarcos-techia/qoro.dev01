@@ -66,18 +66,18 @@ export default function SignUpPage() {
   };
 
   return (
-    <main className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4">
-      <div className="w-full max-w-3xl mx-auto bg-white rounded-3xl shadow-neumorphism p-8 md:p-12">
+    <main className="flex items-center justify-center min-h-screen bg-black p-4">
+      <div className="w-full max-w-3xl mx-auto bg-card rounded-2xl border border-border p-8 md:p-12">
         <div className="text-center mb-8">
            <Link href="/">
-              <div className="text-3xl font-bold text-gray-900 cursor-pointer mb-2">Qoro</div>
+              <div className="text-3xl font-bold text-foreground cursor-pointer mb-2">Qoro</div>
           </Link>
-          <p className="text-gray-600">Crie sua conta para começar a organizar sua empresa.</p>
+          <p className="text-muted-foreground">Crie sua conta para começar a organizar sua empresa.</p>
         </div>
 
         {success ? (
-          <div className="bg-green-100 border-l-4 border-green-500 text-green-800 p-4 rounded-lg flex items-center text-center flex-col">
-            <CheckCircle className="w-8 h-8 mb-3 text-green-600" />
+          <div className="bg-green-800/20 border-l-4 border-green-500 text-green-300 p-4 rounded-lg flex items-center text-center flex-col">
+            <CheckCircle className="w-8 h-8 mb-3 text-green-400" />
             <p className="text-sm font-semibold">{success}</p>
              <Link href="/login" className="mt-4 text-sm font-medium text-primary hover:underline">
                 Ir para o Login
@@ -87,48 +87,48 @@ export default function SignUpPage() {
           <form onSubmit={handleSignUp} className="space-y-8">
             {/* Seção Empresa */}
             <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center"><Building className="w-5 h-5 mr-3 text-primary"/>Informações da Empresa</h3>
+                <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center"><Building className="w-5 h-5 mr-3 text-primary"/>Informações da Empresa</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                     <div className="relative">
-                        <Building className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input name="organizationName" type="text" placeholder="Nome da Empresa *" value={formData.organizationName} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"/>
+                        <Building className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <input name="organizationName" type="text" placeholder="Nome da Empresa *" value={formData.organizationName} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 bg-secondary rounded-xl border-border focus:ring-2 focus:ring-primary transition-all duration-200"/>
                     </div>
                     <div className="relative">
-                        <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input name="cnpj" type="text" placeholder="CNPJ *" value={formData.cnpj} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"/>
+                        <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <input name="cnpj" type="text" placeholder="CNPJ *" value={formData.cnpj} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 bg-secondary rounded-xl border-border focus:ring-2 focus:ring-primary transition-all duration-200"/>
                     </div>
                     <div className="relative">
-                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input name="contactEmail" type="email" placeholder="E-mail de Contato (opcional)" value={formData.contactEmail} onChange={handleInputChange} className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"/>
+                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <input name="contactEmail" type="email" placeholder="E-mail de Contato (opcional)" value={formData.contactEmail} onChange={handleInputChange} className="w-full pl-12 pr-4 py-3 bg-secondary rounded-xl border-border focus:ring-2 focus:ring-primary transition-all duration-200"/>
                     </div>
                     <div className="relative">
-                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input name="contactPhone" type="tel" placeholder="Telefone de Contato (opcional)" value={formData.contactPhone} onChange={handleInputChange} className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"/>
+                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <input name="contactPhone" type="tel" placeholder="Telefone de Contato (opcional)" value={formData.contactPhone} onChange={handleInputChange} className="w-full pl-12 pr-4 py-3 bg-secondary rounded-xl border-border focus:ring-2 focus:ring-primary transition-all duration-200"/>
                     </div>
                 </div>
             </div>
 
             {/* Seção Pessoal */}
              <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center"><User className="w-5 h-5 mr-3 text-primary"/>Informações Pessoais e de Acesso</h3>
+                <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center"><User className="w-5 h-5 mr-3 text-primary"/>Informações Pessoais e de Acesso</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                     <div className="relative md:col-span-2">
-                        <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input name="name" type="text" placeholder="Seu Nome *" value={formData.name} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"/>
+                        <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <input name="name" type="text" placeholder="Seu Nome *" value={formData.name} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 bg-secondary rounded-xl border-border focus:ring-2 focus:ring-primary transition-all duration-200"/>
                     </div>
                     <div className="relative">
-                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input name="email" type="email" placeholder="Seu E-mail de login *" value={formData.email} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"/>
+                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <input name="email" type="email" placeholder="Seu E-mail de login *" value={formData.email} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 bg-secondary rounded-xl border-border focus:ring-2 focus:ring-primary transition-all duration-200"/>
                     </div>
                     <div className="relative">
-                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input name="password" type="password" placeholder="Sua Senha *" value={formData.password} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl shadow-neumorphism-inset focus:ring-2 focus:ring-primary transition-all duration-300"/>
+                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <input name="password" type="password" placeholder="Sua Senha *" value={formData.password} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 bg-secondary rounded-xl border-border focus:ring-2 focus:ring-primary transition-all duration-200"/>
                     </div>
                 </div>
             </div>
 
             {error && (
-              <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg flex items-center">
+              <div className="bg-destructive/20 border-l-4 border-destructive text-destructive-foreground p-4 rounded-lg flex items-center">
                 <AlertCircle className="w-5 h-5 mr-3" />
                 <span className="text-sm">{error}</span>
               </div>
@@ -138,7 +138,7 @@ export default function SignUpPage() {
                 <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-primary text-primary-foreground py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 shadow-neumorphism hover:shadow-neumorphism-hover flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed"
+                className="w-full bg-primary text-primary-foreground py-3 rounded-xl hover:bg-primary/90 transition-all duration-200 border border-transparent hover:border-primary/50 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed"
                 >
                 {isLoading ? 'Criando conta...' : 'Criar conta grátis'}
                 </button>
@@ -146,7 +146,7 @@ export default function SignUpPage() {
           </form>
         )}
          <div className="text-center mt-8">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             Já tem uma conta?{' '}
             <Link href="/login">
               <span className="font-medium text-primary hover:underline">
