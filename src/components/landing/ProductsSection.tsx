@@ -1,6 +1,7 @@
 import { Users, Activity, CheckSquare, DollarSign, type LucideProps } from 'lucide-react';
 import type { ForwardRefExoticComponent, RefAttributes } from 'react';
-import { ProductCarousel } from './ProductCarousel';
+import { cn } from '@/lib/utils';
+
 
 export type Product = {
   iconName: 'Users' | 'Activity' | 'CheckSquare' | 'DollarSign';
@@ -20,7 +21,7 @@ const products: Product[] = [
       'Histórico completo de interações',
       'Follow-ups automáticos para não perder negócios',
     ],
-    gradientClass: 'from-green-500 to-blue-500',
+    gradientClass: 'from-crm-primary/80 to-green-400',
   },
   {
     iconName: 'Activity',
@@ -31,7 +32,7 @@ const products: Product[] = [
       'Identificação de gargalos e oportunidades',
       'Sugestões inteligentes para otimização',
     ],
-    gradientClass: 'from-purple-500 to-magenta-500',
+    gradientClass: 'from-pulse-primary/80 to-purple-400',
   },
   {
     iconName: 'CheckSquare',
@@ -42,7 +43,7 @@ const products: Product[] = [
       'Tarefas com prazos e responsáveis',
       'Notificações para manter todos alinhados',
     ],
-    gradientClass: 'from-orange-500 to-yellow-500',
+    gradientClass: 'from-task-primary/80 to-orange-400',
   },
   {
     iconName: 'DollarSign',
@@ -53,9 +54,40 @@ const products: Product[] = [
       'Controle de contas a pagar e receber',
       'Registro rápido de transações',
     ],
-    gradientClass: 'from-blue-400 to-teal-400',
+    gradientClass: 'from-finance-primary/80 to-sky-400',
   },
 ];
+
+const iconMap: Record<Product['iconName'], ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>> = {
+    Users,
+    Activity,
+    CheckSquare,
+    DollarSign,
+};
+
+const ProductCard = ({ product }: { product: Product }) => {
+    const Icon = iconMap[product.iconName];
+    return (
+        <div className="bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-sm transition-all duration-300 hover:-translate-y-2 h-full flex flex-col">
+            <div className={`bg-gradient-to-br ${product.gradientClass} text-white w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-lg flex-shrink-0`}>
+                <Icon className="w-7 h-7" />
+            </div>
+            <div className="flex-grow">
+              <h3 className="text-2xl font-bold text-white mb-3">{product.title}</h3>
+              <p className="text-white/70 mb-6 leading-relaxed">{product.description}</p>
+            </div>
+            <ul className="space-y-3 border-t border-white/10 pt-6">
+                {product.features.map((feature, index) => (
+                    <li key={index} className="flex items-start text-sm text-white/60">
+                        <div className="w-1.5 h-1.5 bg-primary rounded-full mr-3 mt-1.5 flex-shrink-0"></div>
+                        {feature}
+                    </li>
+                ))}
+            </ul>
+        </div>
+    )
+};
+
 
 export function ProductsSection() {
   return (
@@ -70,7 +102,13 @@ export function ProductsSection() {
             Centralize suas operações e ganhe clareza para focar no que realmente importa: o crescimento do seu negócio.
           </p>
         </div>
-        <ProductCarousel products={products} />
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {products.map((product) => (
+                <ProductCard key={product.title} product={product} />
+            ))}
+        </div>
+
       </div>
     </section>
   );

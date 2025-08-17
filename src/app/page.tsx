@@ -12,9 +12,9 @@ export default function Home() {
       <Header />
       <main>
         <HeroSection />
+        <AboutSection />
         <ProductsSection />
         <ServicesSection />
-        <AboutSection />
         <PricingSection />
       </main>
       <Footer />
