@@ -41,7 +41,7 @@ body {
 
 .carousel-container .keen-slider__slide {
   opacity: 0.3;
-  transition: opacity 0.5s;
+  transition: opacity 0.2s;
 }
 
 .carousel-container .keen-slider__slide.active {
@@ -134,6 +134,16 @@ body {
     box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
     --tw-ring-color: hsl(var(--ring) / 0.5);
     --tw-ring-offset-width: 2px;
+  }
+
+  /* Override browser autofill styles */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover, 
+  input:-webkit-autofill:focus, 
+  input:-webkit-autofill:active {
+      -webkit-box-shadow: 0 0 0 30px hsl(var(--input)) inset !important;
+      -webkit-text-fill-color: hsl(var(--foreground)) !important;
+      caret-color: hsl(var(--foreground)) !important;
   }
 }
 
