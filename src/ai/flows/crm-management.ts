@@ -18,6 +18,7 @@
  * - deleteCustomer - Deletes a customer.
  * - updateCustomer - Updates a customer's profile.
  * - getOrganizationDetails - Fetches details for the user's organization.
+ * - updateSaleLeadStage - Updates the stage of a sale lead.
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
@@ -35,6 +36,12 @@ const UpdateCustomerStatusInputSchema = z.object({
     customerId: z.string(),
     status: CustomerProfileSchema.shape.status,
 }).extend(ActorSchema.shape);
+
+const UpdateSaleLeadStageInputSchema = z.object({
+    leadId: z.string(),
+    stage: SaleLeadProfileSchema.shape.stage,
+}).extend(ActorSchema.shape);
+
 
 const DeleteCustomerInputSchema = z.object({
     customerId: z.string(),
@@ -177,6 +184,16 @@ const updateCustomerStatusFlow = ai.defineFlow(
     async (input) => crmService.updateCustomerStatus(input.customerId, input.status, input.actor)
 );
 
+const updateSaleLeadStageFlow = ai.defineFlow(
+    {
+        name: 'updateSaleLeadStageFlow',
+        inputSchema: UpdateSaleLeadStageInputSchema,
+        outputSchema: z.object({ id: z.string(), stage: SaleLeadProfileSchema.shape.stage })
+    },
+    async (input) => crmService.updateSaleLeadStage(input.leadId, input.stage, input.actor)
+);
+
+
 const deleteCustomerFlow = ai.defineFlow(
     {
         name: 'deleteCustomerFlow',
@@ -251,6 +268,10 @@ export async function updateQuote(input: z.infer<typeof UpdateQuoteSchema> & z.i
 
 export async function updateCustomerStatus(input: z.infer<typeof UpdateCustomerStatusInputSchema>): Promise<{ id: string; status: z.infer<typeof CustomerProfileSchema>['status'] }> {
     return updateCustomerStatusFlow(input);
+}
+
+export async function updateSaleLeadStage(input: z.infer<typeof UpdateSaleLeadStageInputSchema>): Promise<{ id: string; stage: z.infer<typeof SaleLeadProfileSchema>['stage'] }> {
+    return updateSaleLeadStageFlow(input);
 }
 
 export async function deleteCustomer(input: z.infer<typeof DeleteCustomerInputSchema>): Promise<{ id: string; success: boolean }> {

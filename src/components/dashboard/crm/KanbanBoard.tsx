@@ -1,33 +1,32 @@
 
 'use client';
 
-import { CustomerProfile } from '@/ai/schemas';
+import { SaleLeadProfile } from '@/ai/schemas';
 import { KanbanCard } from './KanbanCard';
 import { LayoutGrid } from 'lucide-react';
 
 export type KanbanColumn = {
   id: string;
   title: string;
-  customers: CustomerProfile[];
+  leads: SaleLeadProfile[];
 };
 
 interface KanbanBoardProps {
   columns: KanbanColumn[];
-  onMoveCustomer: (customerId: string, newStatus: CustomerProfile['status']) => void;
-  onArchiveCustomer: (customerId: string) => void;
+  onMoveLead: (leadId: string, newStage: SaleLeadProfile['stage']) => void;
 }
 
-export function KanbanBoard({ columns, onMoveCustomer, onArchiveCustomer }: KanbanBoardProps) {
+export function KanbanBoard({ columns, onMoveLead }: KanbanBoardProps) {
 
-  const totalCustomers = columns.reduce((acc, col) => acc + col.customers.length, 0);
+  const totalLeads = columns.reduce((acc, col) => acc + col.leads.length, 0);
   const stageIds = columns.map(c => c.id);
 
-  if (totalCustomers === 0) {
+  if (totalLeads === 0) {
     return (
         <div className="flex flex-col items-center justify-center text-center h-full bg-card/50 rounded-2xl p-8 border border-border">
             <LayoutGrid className="w-16 h-16 text-muted-foreground/30 mb-4" />
-            <h3 className="text-xl font-bold text-foreground">Nenhum cliente no funil</h3>
-            <p className="text-muted-foreground mt-2">Adicione novos clientes para gerenciá-los aqui.</p>
+            <h3 className="text-xl font-bold text-foreground">Nenhuma oportunidade no funil</h3>
+            <p className="text-muted-foreground mt-2">Crie novas oportunidades para gerenciá-las aqui.</p>
         </div>
     )
   }
@@ -40,17 +39,16 @@ export function KanbanBoard({ columns, onMoveCustomer, onArchiveCustomer }: Kanb
             <h2 className="text-base font-bold text-foreground mb-4 px-2 flex justify-between items-center flex-shrink-0">
               <span>{column.title}</span>
               <span className="text-sm font-medium text-muted-foreground bg-secondary rounded-full px-2.5 py-0.5">
-                {column.customers.length}
+                {column.leads.length}
               </span>
             </h2>
             <div className="space-y-3 min-h-[100px] overflow-y-auto flex-grow pr-1">
-              {column.customers.map((customer) => (
+              {column.leads.map((lead) => (
                 <KanbanCard 
-                  key={customer.id} 
-                  customer={customer} 
+                  key={lead.id} 
+                  lead={lead} 
                   stageIds={stageIds}
-                  onMove={onMoveCustomer}
-                  onArchive={onArchiveCustomer}
+                  onMove={onMoveLead}
                 />
               ))}
             </div>

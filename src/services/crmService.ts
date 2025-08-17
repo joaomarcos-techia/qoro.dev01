@@ -179,6 +179,27 @@ export const listSaleLeads = async (actorUid: string): Promise<SaleLeadProfile[]
     return leads;
 };
 
+export const updateSaleLeadStage = async (
+    leadId: string, 
+    stage: z.infer<typeof SaleLeadProfileSchema>['stage'], 
+    actorUid: string
+) => {
+    const { organizationId } = await getAdminAndOrg(actorUid);
+    const leadRef = adminDb.collection('sales_pipeline').doc(leadId);
+    
+    const leadDoc = await leadRef.get();
+    if (!leadDoc.exists || leadDoc.data()?.companyId !== organizationId) {
+        throw new Error('Oportunidade não encontrada ou acesso negado.');
+    }
+
+    await leadRef.update({
+        stage: stage,
+        updatedAt: FieldValue.serverTimestamp(),
+    });
+
+    return { id: leadId, stage };
+};
+
 
 export const getDashboardMetrics = async (actorUid: string): Promise<{ customers: z.infer<typeof CustomerProfileSchema>[], leads: SaleLeadProfile[] }> => {
     // This function is now simpler: it just fetches the raw data.

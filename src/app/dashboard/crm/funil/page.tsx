@@ -1,14 +1,15 @@
+
 'use client';
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import { KanbanBoard } from '@/components/dashboard/crm/KanbanBoard';
-import { CustomerProfile } from '@/ai/schemas';
-import { listCustomers, updateCustomerStatus } from '@/ai/flows/crm-management';
+import { SaleLeadProfile } from '@/ai/schemas';
+import { listSaleLeads, updateSaleLeadStage } from '@/ai/flows/crm-management';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Loader2, ServerCrash, AlertCircle } from 'lucide-react';
 
 export default function FunilPage() {
-  const [customers, setCustomers] = useState<CustomerProfile[]>([]);
+  const [leads, setLeads] = useState<SaleLeadProfile[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +24,7 @@ export default function FunilPage() {
       } else {
         setCurrentUser(null);
         setIsLoading(false);
-        setCustomers([]);
+        setLeads([]);
         setError(null);
       }
     });
@@ -34,11 +35,11 @@ export default function FunilPage() {
     if (currentUser) {
       setIsLoading(true);
       setError(null);
-      listCustomers({ actor: currentUser.uid })
-        .then(setCustomers)
+      listSaleLeads({ actor: currentUser.uid })
+        .then(setLeads)
         .catch((err) => {
           console.error(err);
-          setError('Não foi possível carregar os clientes do funil.');
+          setError('Não foi possível carregar as oportunidades do funil.');
         })
         .finally(() => setIsLoading(false));
     } else if (!auth.currentUser) {
@@ -46,51 +47,30 @@ export default function FunilPage() {
     }
   }, [currentUser]);
 
-  const handleMoveCustomer = (customerId: string, newStatus: CustomerProfile['status']) => {
+  const handleMoveLead = (leadId: string, newStage: SaleLeadProfile['stage']) => {
     startTransition(async () => {
         setFeedback(null);
         if (!currentUser) return;
         
-        const originalCustomers = [...customers];
+        const originalLeads = [...leads];
         
         // Optimistic UI update
-        setCustomers(prev => prev.map(c => c.id === customerId ? {...c, status: newStatus} : c));
+        setLeads(prev => prev.map(l => l.id === leadId ? {...l, stage: newStage} : l));
 
         try {
-            await updateCustomerStatus({ customerId, status: newStatus, actor: currentUser.uid });
+            await updateSaleLeadStage({ leadId, stage: newStage, actor: currentUser.uid });
         } catch (err) {
-            console.error("Failed to move customer", err);
-            setFeedback({ type: 'error', message: "Erro ao mover cliente." });
-            setCustomers(originalCustomers); // Revert on failure
+            console.error("Failed to move lead", err);
+            setFeedback({ type: 'error', message: "Erro ao mover oportunidade." });
+            setLeads(originalLeads); // Revert on failure
         }
     });
   }
 
-  const handleArchiveCustomer = (customerId: string) => {
-    startTransition(async () => {
-        setFeedback(null);
-        if (!currentUser) return;
-
-        const originalCustomers = [...customers];
-        
-        // Optimistic UI update: remove the customer from the list
-        setCustomers(prev => prev.filter(c => c.id !== customerId));
-        
-        try {
-            await updateCustomerStatus({ customerId, status: 'archived', actor: currentUser.uid });
-            setFeedback({ type: 'success', message: "Cliente arquivado e removido do funil." });
-        } catch (err) {
-            console.error("Failed to archive customer", err);
-            setFeedback({ type: 'error', message: "Erro ao arquivar cliente." });
-            setCustomers(originalCustomers); // Revert on failure
-        }
-    });
-  };
-
-  const stageOrder: CustomerProfile['status'][] = [
+  const stageOrder: SaleLeadProfile['stage'][] = [
     'new',
     'initial_contact',
-    'qualification',
+    'qualified',
     'proposal',
     'negotiation',
     'won',
@@ -100,7 +80,7 @@ export default function FunilPage() {
   const stageNames: Record<string, string> = {
       new: 'Novo / Lead Recebido',
       initial_contact: 'Contato Inicial',
-      qualification: 'Qualificação / Diagnóstico',
+      qualified: 'Qualificação / Diagnóstico',
       proposal: 'Apresentação / Proposta',
       negotiation: 'Negociação',
       won: 'Ganho (Fechamento)',
@@ -108,20 +88,19 @@ export default function FunilPage() {
   };
     
   const columns = useMemo(() => {
-    const activeCustomers = customers.filter(c => c.status !== 'archived');
     return stageOrder.map((stage) => ({
       id: stage,
       title: stageNames[stage],
-      customers: activeCustomers.filter((customer) => customer.status === stage),
+      leads: leads.filter((lead) => lead.stage === stage),
     }));
-  }, [customers]);
+  }, [leads]);
 
   const renderContent = () => {
     if (isLoading) {
       return (
         <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
           <Loader2 className="w-12 h-12 text-primary animate-spin" />
-          <p className="mt-4 text-muted-foreground">Carregando funil de clientes...</p>
+          <p className="mt-4 text-muted-foreground">Carregando funil de oportunidades...</p>
         </div>
       );
     }
@@ -136,7 +115,7 @@ export default function FunilPage() {
       );
     }
 
-    return <KanbanBoard columns={columns} onMoveCustomer={handleMoveCustomer} onArchiveCustomer={handleArchiveCustomer} />;
+    return <KanbanBoard columns={columns} onMoveLead={handleMoveLead} />;
   };
 
   return (
@@ -144,9 +123,9 @@ export default function FunilPage() {
       <div className="flex-shrink-0">
         <div className="flex justify-between items-center mb-6">
             <div>
-            <h1 className="text-4xl font-bold text-foreground">Funil de Clientes</h1>
+            <h1 className="text-4xl font-bold text-foreground">Funil de Vendas</h1>
             <p className="text-muted-foreground">
-                Visualize e gerencie a jornada dos seus clientes pelas fases de negociação.
+                Visualize e gerencie a jornada das suas oportunidades pelas fases de negociação.
             </p>
             </div>
              {isPending && <Loader2 className="w-6 h-6 text-primary animate-spin" />}
