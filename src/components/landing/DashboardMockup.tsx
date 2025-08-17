@@ -5,73 +5,89 @@ import { BarChart3, CheckSquare, DollarSign, Users, TrendingUp, ListTodo, Activi
 const MetricCard = ({ title, value, icon: Icon, color, change, changeType }: { title: string, value: string, icon: React.ElementType, color: string, change: string, changeType: 'up' | 'down' }) => {
     const changeColor = changeType === 'up' ? 'text-green-400' : 'text-red-400';
     return (
-        <div className="bg-card/50 border border-border rounded-xl p-4 transition-all duration-300 hover:border-primary/50 hover:-translate-y-1">
-            <div className="flex items-center text-muted-foreground text-sm mb-2">
-                <Icon className={`w-5 h-5 mr-2 ${color}`} />
-                <span>{title}</span>
+        <div className="bg-card/50 border border-border rounded-xl p-4 transition-all duration-300 hover:border-primary/50 hover:-translate-y-1 flex items-center">
+            <div className={`p-2 rounded-lg ${color}/20 text-${color} mr-3 shadow-lg`}>
+                <Icon className={`w-5 h-5 ${color}`} />
             </div>
-            <p className="text-2xl font-bold text-foreground">{value}</p>
-            <div className={`flex items-center text-xs mt-1 ${changeColor}`}>
-                <TrendingUp className="w-4 h-4 mr-1" />
-                <span>{change}</span>
+            <div>
+              <p className="text-xs text-muted-foreground">{title}</p>
+              <p className="text-lg font-bold text-foreground">{value}</p>
             </div>
         </div>
     )
 }
 
+const AppCard = ({ title, description, icon: Icon, color }: { title: string, description: string, icon: React.ElementType, color: string}) => (
+    <div className="group bg-card/50 rounded-xl border border-border hover:border-primary/50 transition-all duration-200 flex flex-col h-full hover:-translate-y-1 p-4">
+        <div className="flex items-center mb-2">
+            <div className={`p-2 rounded-lg ${color}/20 text-${color} mr-3 shadow-lg`}>
+                <Icon className="w-5 h-5" />
+            </div>
+            <div>
+                <h4 className="text-sm font-bold text-foreground">{title}</h4>
+            </div>
+        </div>
+        <p className="text-xs text-muted-foreground mb-3 flex-grow">
+            {description}
+        </p>
+        <div className="group/button w-full bg-secondary text-secondary-foreground py-1.5 px-3 rounded-md hover:bg-secondary/80 transition-colors flex items-center justify-center text-xs font-medium">
+            <span>Acessar</span>
+            <ArrowRight className="w-3 h-3 ml-1 transform transition-transform duration-300 group-hover/button:translate-x-0.5" />
+        </div>
+    </div>
+)
+
 export function DashboardMockup() {
     return (
-        <div className="w-full h-full aspect-[16/10] rounded-xl bg-card flex overflow-hidden border-2 border-border shadow-2xl">
-            {/* Sidebar */}
-            <aside className="w-20 bg-secondary/30 p-4 flex-shrink-0 flex flex-col items-center justify-between">
-                <div className="space-y-4">
-                    <div className="w-10 h-10 rounded-lg bg-primary text-black flex items-center justify-center font-bold text-xl shadow-lg shadow-primary/30">Q</div>
-                     <div className="w-10 h-10 rounded-full bg-crm-primary/20 flex items-center justify-center text-crm-primary" title="QoroCRM">
-                        <Users className="w-5 h-5" />
-                    </div>
-                     <div className="w-10 h-10 rounded-full bg-task-primary/20 flex items-center justify-center text-task-primary" title="QoroTask">
-                        <CheckSquare className="w-5 h-5" />
-                    </div>
-                     <div className="w-10 h-10 rounded-full bg-finance-primary/20 flex items-center justify-center text-finance-primary" title="QoroFinance">
-                        <DollarSign className="w-5 h-5" />
-                    </div>
-                    <div className="w-10 h-10 rounded-full bg-pulse-primary/20 flex items-center justify-center text-pulse-primary" title="QoroPulse">
-                        <Activity className="w-5 h-5" />
+        <div className="w-full h-full aspect-[16/10] rounded-xl bg-card flex flex-col overflow-hidden border-2 border-border shadow-2xl text-[10px] sm:text-xs">
+            {/* Header */}
+            <header className="bg-card/80 border-b border-border flex items-center justify-between h-12 px-4 flex-shrink-0">
+                 <div className="flex items-center">
+                    <h1 className="text-lg font-bold text-foreground cursor-pointer">Qoro</h1>
+                </div>
+                 <div className="flex items-center space-x-2">
+                    <button className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-secondary transition-all duration-300">
+                        <Settings className="w-4 h-4" />
+                    </button>
+                     <button className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-secondary transition-all duration-300">
+                        <Bell className="w-4 h-4"/>
+                    </button>
+                    <div className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center text-muted-foreground font-semibold">
+                        E
                     </div>
                 </div>
-                <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:bg-muted/30 cursor-pointer" title="Configurações">
-                    <Settings className="w-5 h-5" />
-                </div>
-            </aside>
+            </header>
 
             {/* Main Content */}
-            <main className="flex-1 p-6 overflow-hidden">
-                <header className="flex justify-between items-center mb-6">
-                    <div>
-                        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-                        <p className="text-muted-foreground">Bem-vindo, Empreendedor!</p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <button className="text-muted-foreground hover:text-foreground"><Bell className="w-5 h-5"/></button>
-                        <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center text-muted-foreground">E</div>
-                    </div>
-                </header>
-                
-                {/* Metric Cards */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <MetricCard title="Total de Clientes" value="124" icon={Users} color="text-crm-primary" change="+12.5%" changeType="up" />
-                    <MetricCard title="Leads no Funil" value="32" icon={TrendingUp} color="text-crm-primary" change="+5" changeType="up" />
-                    <MetricCard title="Tarefas Pendentes" value="18" icon={ListTodo} color="text-task-primary" change="-2" changeType="down" />
-                    <MetricCard title="Saldo em Contas" value="R$ 78.4k" icon={DollarSign} color="text-finance-primary" change="+R$ 5.2k" changeType="up" />
+            <main className="flex-1 p-4 overflow-hidden">
+                <div className="mb-4">
+                    <h2 className="text-xl font-bold text-foreground">
+                    Bem-vindo à Qoro!
+                    </h2>
+                    <p className="text-muted-foreground text-xs">
+                    Gerencie toda a sua empresa em uma única plataforma integrada
+                    </p>
                 </div>
-
-                {/* Chart */}
-                <div className="h-full max-h-[220px] bg-secondary/30 p-4 rounded-xl border border-border">
-                    <h3 className="text-lg font-semibold text-foreground mb-4">Evolução da Receita</h3>
-                     <div className="h-40 flex items-end space-x-2">
-                        {[3, 5, 4, 7, 6, 8, 9, 7, 5, 6, 8, 10, 11, 9, 12, 13].map((height, i) => (
-                            <div key={i} className="flex-1 rounded-t-md bg-gradient-to-b from-primary/80 to-primary/40" style={{ height: `${height * 8}%` }}></div>
-                        ))}
+                
+                {/* Metrics Section */}
+                <div className="mb-6">
+                    <h3 className="text-sm font-bold text-foreground mb-3">Métricas e Insights Rápidos</h3>
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                        <MetricCard title="Total de Clientes" value="124" icon={Users} color="text-crm-primary" change="+12.5%" changeType="up" />
+                        <MetricCard title="Leads no Funil" value="32" icon={TrendingUp} color="text-crm-primary" change="+5" changeType="up" />
+                        <MetricCard title="Tarefas Pendentes" value="18" icon={ListTodo} color="text-task-primary" change="-2" changeType="down" />
+                        <MetricCard title="Saldo em Contas" value="R$ 78.4k" icon={DollarSign} color="text-finance-primary" change="+R$ 5.2k" changeType="up" />
+                    </div>
+                </div>
+                
+                {/* Apps Section */}
+                 <div>
+                    <h3 className="text-sm font-bold text-foreground mb-3">Seus Aplicativos Qoro</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                        <AppCard title="QoroCRM" description="Gestão de funil de vendas e conversão." icon={Users} color="text-crm-primary" />
+                        <AppCard title="QoroPulse" description="Revele insights com o poder da IA." icon={Activity} color="text-pulse-primary" />
+                        <AppCard title="QoroTask" description="Gestão de tarefas e produtividade." icon={CheckSquare} color="text-task-primary" />
+                        <AppCard title="QoroFinance" description="Controle financeiro completo." icon={DollarSign} color="text-finance-primary" />
                     </div>
                 </div>
             </main>
