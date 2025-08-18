@@ -20,10 +20,10 @@ interface CalendarEvent {
 }
 
 const priorityColors: Record<TaskProfile['priority'], { bg: string; border: string }> = {
-    low: { bg: 'hsl(142 71% 45%)', border: 'hsl(142 81% 35%)' },      // green-500, green-600
-    medium: { bg: 'hsl(38 92% 50%)', border: 'hsl(32 95% 45%)' },    // amber-500, amber-600
-    high: { bg: 'hsl(0 84% 60%)', border: 'hsl(0 72% 51%)' },      // red-500, red-600
-    urgent: { bg: 'hsl(262 88% 65%)', border: 'hsl(263 75% 57%)' },  // violet-500, violet-600
+    low: { bg: 'hsl(var(--crm-primary))', border: 'hsl(var(--crm-primary) / 0.8)' },
+    medium: { bg: 'hsl(var(--task-primary))', border: 'hsl(var(--task-primary) / 0.8)' },
+    high: { bg: 'hsl(var(--destructive))', border: 'hsl(var(--destructive) / 0.8)' },
+    urgent: { bg: 'hsl(var(--pulse-primary))', border: 'hsl(var(--pulse-primary) / 0.8)' },
 };
 
 

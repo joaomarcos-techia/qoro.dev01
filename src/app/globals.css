@@ -137,31 +137,33 @@ body {
 
 /* FullCalendar Customization */
 .fc {
-  --fc-border-color: hsl(var(--border));
+  --fc-border-color: hsl(var(--border) / 0.5);
   --fc-daygrid-event-dot-width: 8px;
   --fc-list-event-dot-width: 10px;
-  --fc-event-border-color: transparent;
-  --fc-event-text-color: hsl(var(--primary-foreground));
-  --fc-event-bg-color: hsl(var(--primary));
-  --fc-today-bg-color: hsl(var(--card));
+  --fc-event-text-color: hsl(var(--foreground));
+  --fc-event-bg-color: hsl(var(--secondary));
+  --fc-event-border-color: hsl(var(--border));
+  --fc-today-bg-color: hsl(var(--secondary) / 0.5);
+  --fc-page-bg-color: hsl(var(--card));
+  --fc-neutral-bg-color: hsl(var(--muted));
 
   @apply text-sm text-foreground;
 }
 
 .fc .fc-col-header-cell-cushion {
-  @apply text-muted-foreground font-semibold py-3;
+  @apply text-muted-foreground font-semibold py-3 text-base;
 }
 
 .fc .fc-daygrid-day-number {
-  @apply text-muted-foreground p-2;
+  @apply text-muted-foreground/80 p-2 text-sm;
 }
 
 .fc .fc-toolbar-title {
-  @apply text-xl font-bold text-foreground;
+  @apply text-2xl font-bold text-foreground;
 }
 
 .fc .fc-button {
-  @apply bg-secondary text-secondary-foreground border-border shadow-none hover:bg-secondary/80 transition-all duration-300;
+  @apply bg-secondary text-secondary-foreground border-border shadow-none hover:bg-secondary/80 transition-all duration-300 rounded-xl;
 }
 
 .fc .fc-button-primary {
@@ -173,12 +175,24 @@ body {
 }
 
 .fc-day-today {
-    background-color: hsl(var(--secondary) / 0.5) !important;
+    background-color: var(--fc-today-bg-color) !important;
+    border: 1px solid hsl(var(--primary) / 0.3);
+}
+
+.fc .fc-daygrid-day-frame {
+    border: 1px solid transparent;
+}
+  
+.fc .fc-daygrid-day:hover .fc-daygrid-day-frame {
+    border-color: hsl(var(--border));
 }
 
 .fc-event {
-    @apply p-1 rounded-md text-xs font-medium cursor-pointer border-none shadow-md;
+    @apply p-1.5 rounded-lg text-xs font-semibold cursor-pointer shadow-md;
+    background: linear-gradient(135deg, var(--fc-event-bg-color), color-mix(in srgb, var(--fc-event-bg-color) 80%, black));
+    border: 1px solid var(--fc-event-border-color);
 }
+
 
 /* Chart axis color for dark theme */
 .recharts-cartesian-axis-tick-value {
