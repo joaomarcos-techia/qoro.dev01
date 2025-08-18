@@ -6,7 +6,7 @@ interface LogoProps {
   height?: number;
 }
 
-export function Logo({ className, height = 40 }: LogoProps) {
+export function Logo({ className, height = 24 }: LogoProps) {
   const aspectRatio = 100 / 40; 
   const width = height * aspectRatio;
 
