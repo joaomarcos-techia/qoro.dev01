@@ -63,13 +63,16 @@ export const listBills = async (actorUid: string): Promise<z.infer<typeof BillPr
             entityName = data.entityType === 'customer' ? customers[data.entityId] : suppliers[data.entityId];
         }
 
-        return BillProfileSchema.parse({
+        // Correctly convert Firestore Timestamps to ISO strings before parsing
+        const rawData = {
             id: doc.id,
             ...data,
-            dueDate: data.dueDate.toDate().toISOString(),
-            createdAt: data.createdAt.toDate().toISOString(),
+            dueDate: data.dueDate?.toDate().toISOString(),
+            createdAt: data.createdAt?.toDate().toISOString(),
             entityName: entityName || undefined,
-        });
+        };
+
+        return BillProfileSchema.parse(rawData);
     });
     
     return bills;
@@ -105,3 +108,4 @@ export const deleteBill = async (billId: string, actorUid: string) => {
     await billRef.delete();
     return { id: billId, success: true };
 };
+
