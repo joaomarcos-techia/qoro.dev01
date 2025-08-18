@@ -21,20 +21,40 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+  } from '@/components/ui/dialog';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MoreHorizontal, ArrowUpDown, Search, Loader2, ArrowLeftRight, TrendingUp, TrendingDown } from 'lucide-react';
-import { listTransactions } from '@/ai/flows/finance-management';
+import { MoreHorizontal, ArrowUpDown, Search, Loader2, ArrowLeftRight, TrendingUp, TrendingDown, Edit, Trash2 } from 'lucide-react';
+import { listTransactions, deleteTransaction } from '@/ai/flows/finance-management';
 import type { TransactionProfile } from '@/ai/schemas';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { format, parseISO } from 'date-fns';
+import { TransactionForm } from './TransactionForm';
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -49,87 +69,6 @@ const statusMap: Record<TransactionProfile['status'], { text: string; color: str
     cancelled: { text: 'Cancelada', color: 'bg-gray-500/20 text-gray-300' },
 };
 
-export const columns: ColumnDef<TransactionProfile>[] = [
-  {
-    accessorKey: 'description',
-    header: ({ column }) => (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-            Descrição <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-    ),
-    cell: ({ row }) => <div className="font-medium text-foreground">{row.getValue('description')}</div>,
-  },
-  {
-    accessorKey: 'amount',
-    header: 'Valor',
-    cell: ({ row }) => {
-        const amount = parseFloat(row.getValue('amount'));
-        const type = row.original.type;
-        const formatted = formatCurrency(amount);
-        const color = type === 'income' ? 'text-green-400' : 'text-red-400';
-        const Icon = type === 'income' ? TrendingUp : TrendingDown;
-        return (
-            <span className={`font-semibold flex items-center ${color}`}>
-                <Icon className="w-4 h-4 mr-2" />
-                {formatted}
-            </span>
-        );
-    },
-  },
-   {
-    accessorKey: 'customerName',
-    header: 'Cliente',
-    cell: ({ row }) => row.getValue('customerName') || '-',
-  },
-  {
-    accessorKey: 'category',
-    header: 'Categoria',
-  },
-  {
-    accessorKey: 'accountName',
-    header: 'Conta',
-  },
-  {
-    accessorKey: 'date',
-    header: 'Data',
-    cell: ({ row }) => {
-        const date = row.getValue('date') as string;
-        return format(parseISO(date), "dd/MM/yyyy");
-    },
-  },
-  {
-    accessorKey: 'status',
-    header: 'Status',
-    cell: ({ row }) => {
-        const status = row.getValue('status') as keyof typeof statusMap;
-        const { text, color } = statusMap[status] || statusMap.pending;
-        return <span className={`px-2 py-1 text-xs font-semibold rounded-full ${color}`}>{text}</span>;
-      },
-  },
-  {
-    id: 'actions',
-    cell: ({ row }) => {
-      const transaction = row.original;
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Abrir menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Ações</DropdownMenuLabel>
-            <DropdownMenuItem>Ver Detalhes</DropdownMenuItem>
-            <DropdownMenuItem>Editar Transação</DropdownMenuItem>
-            <DropdownMenuItem className="text-red-500 focus:text-red-400 focus:bg-destructive/20">Cancelar Transação</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
-  },
-];
-
 export function TransactionTable() {
   const [data, setData] = React.useState<TransactionProfile[]>([]);
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -137,6 +76,139 @@ export function TransactionTable() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [currentUser, setCurrentUser] = React.useState<FirebaseUser | null>(null);
+
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [selectedTransaction, setSelectedTransaction] = React.useState<TransactionProfile | null>(null);
+  
+  const [refreshKey, setRefreshKey] = React.useState(0);
+  const triggerRefresh = () => setRefreshKey(prev => prev + 1);
+
+  const handleEdit = (transaction: TransactionProfile) => {
+    setSelectedTransaction(transaction);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (transactionId: string) => {
+    if (!currentUser) return;
+    try {
+        await deleteTransaction({ transactionId, actor: currentUser.uid });
+        triggerRefresh();
+    } catch(err) {
+        console.error("Failed to delete transaction:", err);
+        // Display error to user
+    }
+  };
+  
+  const handleModalAction = () => {
+    setIsModalOpen(false);
+    setSelectedTransaction(null);
+    triggerRefresh();
+  }
+
+  const columns: ColumnDef<TransactionProfile>[] = [
+    {
+      accessorKey: 'description',
+      header: ({ column }) => (
+          <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+              Descrição <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+      ),
+      cell: ({ row }) => <div className="font-medium text-foreground">{row.getValue('description')}</div>,
+    },
+    {
+      accessorKey: 'amount',
+      header: 'Valor',
+      cell: ({ row }) => {
+          const amount = parseFloat(row.getValue('amount'));
+          const type = row.original.type;
+          const formatted = formatCurrency(amount);
+          const color = type === 'income' ? 'text-green-400' : 'text-red-400';
+          const Icon = type === 'income' ? TrendingUp : TrendingDown;
+          return (
+              <span className={`font-semibold flex items-center ${color}`}>
+                  <Icon className="w-4 h-4 mr-2" />
+                  {formatted}
+              </span>
+          );
+      },
+    },
+     {
+      accessorKey: 'customerName',
+      header: 'Cliente',
+      cell: ({ row }) => row.getValue('customerName') || '-',
+    },
+    {
+      accessorKey: 'category',
+      header: 'Categoria',
+    },
+    {
+      accessorKey: 'accountName',
+      header: 'Conta',
+    },
+    {
+      accessorKey: 'date',
+      header: 'Data',
+      cell: ({ row }) => {
+          const date = row.getValue('date') as string;
+          return format(parseISO(date), "dd/MM/yyyy");
+      },
+    },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => {
+          const status = row.getValue('status') as keyof typeof statusMap;
+          const { text, color } = statusMap[status] || statusMap.pending;
+          return <span className={`px-2 py-1 text-xs font-semibold rounded-full ${color}`}>{text}</span>;
+        },
+    },
+    {
+      id: 'actions',
+      cell: ({ row }) => {
+        const transaction = row.original;
+        return (
+            <AlertDialog>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Abrir menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                     <DropdownMenuItem onClick={() => handleEdit(transaction)}>
+                        <Edit className="mr-2 h-4 w-4" />
+                        Editar Transação
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <AlertDialogTrigger asChild>
+                        <DropdownMenuItem className="text-red-500 focus:text-red-400 focus:bg-destructive/20">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Excluir Transação
+                        </DropdownMenuItem>
+                    </AlertDialogTrigger>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+                 <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Esta ação não pode ser desfeita. Isso excluirá permanentemente a transação e ajustará o saldo da conta associada.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleDelete(transaction.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        Sim, excluir
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+          </AlertDialog>
+        );
+      },
+    },
+  ];
 
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -161,7 +233,7 @@ export function TransactionTable() {
       }
     }
     fetchData();
-  }, [currentUser]);
+  }, [currentUser, refreshKey]);
 
   const table = useReactTable({
     data,
@@ -202,6 +274,18 @@ export function TransactionTable() {
   }
 
   return (
+    <>
+     <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-[700px]">
+            <DialogHeader>
+                <DialogTitle className="text-2xl font-bold text-foreground">Editar Transação</DialogTitle>
+                <DialogDescription>
+                    Altere as informações da movimentação financeira.
+                </DialogDescription>
+            </DialogHeader>
+            <TransactionForm onAction={handleModalAction} transaction={selectedTransaction} />
+        </DialogContent>
+      </Dialog>
     <div>
        <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-foreground">Suas Transações</h2>
@@ -273,5 +357,6 @@ export function TransactionTable() {
         </Button>
       </div>
     </div>
+    </>
   );
 }

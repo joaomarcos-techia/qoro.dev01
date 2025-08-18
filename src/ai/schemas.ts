@@ -251,6 +251,10 @@ export const TransactionSchema = z.object({
     customerId: z.string().optional(),
 });
 
+export const UpdateTransactionSchema = TransactionSchema.extend({
+    id: z.string(),
+});
+
 export const TransactionProfileSchema = TransactionSchema.extend({
     id: z.string(),
     createdAt: z.string(),

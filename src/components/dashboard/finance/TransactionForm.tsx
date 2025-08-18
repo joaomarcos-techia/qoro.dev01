@@ -10,20 +10,26 @@ import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { createTransaction, listAccounts } from '@/ai/flows/finance-management';
+import { createTransaction, listAccounts, updateTransaction } from '@/ai/flows/finance-management';
 import { listCustomers } from '@/ai/flows/crm-management';
-import { TransactionSchema, AccountProfile, CustomerProfile } from '@/ai/schemas';
+import { TransactionSchema, AccountProfile, CustomerProfile, TransactionProfile } from '@/ai/schemas';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Loader2, AlertCircle, CalendarIcon, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 
 type TransactionFormProps = {
-  onTransactionCreated: () => void;
+  onAction: () => void;
+  transaction?: TransactionProfile | null;
 };
 
-export function TransactionForm({ onTransactionCreated }: TransactionFormProps) {
+const FormSchema = TransactionSchema.extend({
+    date: z.date(),
+});
+type FormValues = z.infer<typeof FormSchema>;
+
+export function TransactionForm({ onAction, transaction }: TransactionFormProps) {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,12 +38,24 @@ export function TransactionForm({ onTransactionCreated }: TransactionFormProps) 
   const [customerSearch, setCustomerSearch] = useState('');
   const [isCustomerPopoverOpen, setIsCustomerPopoverOpen] = useState(false);
   
+  const isEditMode = !!transaction;
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
     });
     return () => unsubscribe();
   }, []);
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: zodResolver(FormSchema),
+  });
 
   useEffect(() => {
     if (currentUser) {
@@ -58,34 +76,48 @@ export function TransactionForm({ onTransactionCreated }: TransactionFormProps) 
     }
   }, [currentUser]);
 
-  const {
-    register,
-    handleSubmit,
-    control,
-    formState: { errors },
-  } = useForm<z.infer<typeof TransactionSchema>>({
-    resolver: zodResolver(TransactionSchema),
-    defaultValues: {
-      type: 'expense',
-      status: 'paid',
-      paymentMethod: 'pix',
-      date: new Date(),
-    },
-  });
+  useEffect(() => {
+    if (transaction) {
+        const date = transaction.date ? parseISO(transaction.date) : new Date();
+        reset({ ...transaction, date });
+    } else {
+        reset({
+            type: 'expense',
+            status: 'paid',
+            paymentMethod: 'pix',
+            date: new Date(),
+            description: '',
+            amount: 0,
+            accountId: '',
+            customerId: '',
+            category: ''
+        });
+    }
+  }, [transaction, reset]);
 
-  const onSubmit = async (data: z.infer<typeof TransactionSchema>) => {
+
+  const onSubmit = async (data: FormValues) => {
     if (!currentUser) {
-      setError('Você precisa estar autenticado para criar uma transação.');
+      setError('Você precisa estar autenticado para executar esta ação.');
       return;
     }
     setIsLoading(true);
     setError(null);
     try {
-      await createTransaction({ ...data, actor: currentUser.uid });
-      onTransactionCreated();
+        const submissionData = {
+            ...data,
+            date: data.date.toISOString(),
+        };
+
+        if (isEditMode) {
+            await updateTransaction({ ...submissionData, id: transaction.id, actor: currentUser.uid });
+        } else {
+            await createTransaction({ ...submissionData, actor: currentUser.uid });
+        }
+      onAction();
     } catch (err) {
       console.error(err);
-      setError('Falha ao criar a transação. Tente novamente.');
+      setError(`Falha ao ${isEditMode ? 'atualizar' : 'criar'} a transação. Tente novamente.`);
     } finally {
       setIsLoading(false);
     }
@@ -109,7 +141,7 @@ export function TransactionForm({ onTransactionCreated }: TransactionFormProps) 
                 name="accountId"
                 control={control}
                 render={({ field }) => (
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value}>
                     <SelectTrigger>
                         <SelectValue placeholder="Selecione a conta" />
                     </SelectTrigger>
@@ -127,7 +159,7 @@ export function TransactionForm({ onTransactionCreated }: TransactionFormProps) 
         <div className="space-y-2">
           <Label>Tipo*</Label>
           <Controller name="type" control={control} render={({ field }) => (
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select onValueChange={field.onChange} value={field.value}>
                 <SelectTrigger><SelectValue/></SelectTrigger>
                 <SelectContent>
                     <SelectItem value="income">Receita</SelectItem>
@@ -203,7 +235,7 @@ export function TransactionForm({ onTransactionCreated }: TransactionFormProps) 
         <div className="space-y-2">
           <Label>Método de Pagamento*</Label>
           <Controller name="paymentMethod" control={control} render={({ field }) => (
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select onValueChange={field.onChange} value={field.value}>
                 <SelectTrigger><SelectValue/></SelectTrigger>
                 <SelectContent>
                     <SelectItem value="pix">PIX</SelectItem>
@@ -220,7 +252,7 @@ export function TransactionForm({ onTransactionCreated }: TransactionFormProps) 
          <div className="space-y-2">
           <Label>Status*</Label>
           <Controller name="status" control={control} render={({ field }) => (
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select onValueChange={field.onChange} value={field.value}>
                 <SelectTrigger><SelectValue/></SelectTrigger>
                 <SelectContent>
                     <SelectItem value="paid">Pago</SelectItem>
@@ -241,7 +273,7 @@ export function TransactionForm({ onTransactionCreated }: TransactionFormProps) 
       <div className="flex justify-end pt-4">
         <Button type="submit" disabled={isLoading} className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 border border-transparent hover:border-primary/50 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
           {isLoading ? <Loader2 className="mr-2 w-5 h-5 animate-spin" /> : null}
-          {isLoading ? 'Salvando...' : 'Salvar Transação'}
+          {isLoading ? 'Salvando...' : (isEditMode ? 'Salvar Alterações' : 'Salvar Transação')}
         </Button>
       </div>
     </form>

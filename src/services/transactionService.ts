@@ -1,7 +1,7 @@
 
 import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
-import { TransactionSchema, TransactionProfileSchema, TransactionProfile } from '@/ai/schemas';
+import { TransactionSchema, TransactionProfileSchema, TransactionProfile, UpdateTransactionSchema } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
 import { adminDb } from '@/lib/firebase-admin';
 
@@ -50,6 +50,92 @@ export const createTransaction = async (input: z.infer<typeof TransactionSchema>
     } catch (error: any) {
         console.error("Erro ao criar transação no Firestore:", error, error.stack);
         throw new Error(`Falha ao salvar a transação no banco de dados: ${error.message}`);
+    }
+};
+
+export const updateTransaction = async (input: z.infer<typeof UpdateTransactionSchema>, actorUid: string) => {
+    const { organizationId } = await getAdminAndOrg(actorUid);
+    const { id: transactionId, ...updateData } = input;
+    const transactionRef = adminDb.collection('transactions').doc(transactionId);
+    
+    try {
+        await adminDb.runTransaction(async (t) => {
+            const transactionDoc = await t.get(transactionRef);
+            if (!transactionDoc.exists) {
+                throw new Error("Transação não encontrada.");
+            }
+            const oldData = transactionDoc.data();
+            if (oldData?.companyId !== organizationId) {
+                throw new Error("Acesso negado à transação.");
+            }
+
+            // Se a conta mudou, precisamos ajustar os saldos de ambas as contas.
+            const oldAccountRef = adminDb.collection('accounts').doc(oldData?.accountId);
+            const newAccountRef = adminDb.collection('accounts').doc(updateData.accountId);
+            
+            // Reverter o valor antigo da conta antiga
+            const oldAccountDoc = await t.get(oldAccountRef);
+            if (!oldAccountDoc.exists) throw new Error("Conta antiga não encontrada.");
+            let oldAccountBalance = oldAccountDoc.data()!.balance;
+            oldAccountBalance += (oldData?.type === 'expense' ? oldData?.amount : -oldData?.amount);
+            t.update(oldAccountRef, { balance: oldAccountBalance });
+
+            // Aplicar o novo valor à nova conta
+            const newAccountDoc = await t.get(newAccountRef);
+            if (!newAccountDoc.exists) throw new Error("Nova conta não encontrada.");
+            let newAccountBalance = newAccountDoc.data()!.balance;
+            newAccountBalance += (updateData.type === 'income' ? updateData.amount : -updateData.amount);
+            
+            // Se a conta antiga e a nova forem as mesmas, o saldo já foi ajustado
+            if (oldData?.accountId === updateData.accountId) {
+                t.update(newAccountRef, { balance: newAccountBalance });
+            } else {
+                 t.update(newAccountRef, { balance: newAccountBalance });
+            }
+            
+            // Finalmente, atualiza a transação
+            t.update(transactionRef, { ...updateData, updatedAt: FieldValue.serverTimestamp() });
+        });
+        return { id: transactionId };
+    } catch (error: any) {
+        console.error("Erro ao atualizar transação no Firestore:", error, error.stack);
+        throw new Error(`Falha ao atualizar a transação: ${error.message}`);
+    }
+};
+
+
+export const deleteTransaction = async (transactionId: string, actorUid: string) => {
+    const { organizationId } = await getAdminAndOrg(actorUid);
+    const transactionRef = adminDb.collection('transactions').doc(transactionId);
+
+    try {
+        await adminDb.runTransaction(async (t) => {
+            const transactionDoc = await t.get(transactionRef);
+            if (!transactionDoc.exists) {
+                throw new Error("Transação não encontrada.");
+            }
+            const data = transactionDoc.data()!;
+            if (data.companyId !== organizationId) {
+                throw new Error("Acesso negado à transação.");
+            }
+
+            // Reverte o valor da conta associada
+            const accountRef = adminDb.collection('accounts').doc(data.accountId);
+            const accountDoc = await t.get(accountRef);
+            if (accountDoc.exists) {
+                const accountData = accountDoc.data()!;
+                const currentBalance = accountData.balance;
+                const newBalance = data.type === 'income' ? currentBalance - data.amount : currentBalance + data.amount;
+                t.update(accountRef, { balance: newBalance });
+            }
+
+            t.delete(transactionRef);
+        });
+
+        return { id: transactionId, success: true };
+    } catch (error: any) {
+        console.error("Erro ao excluir transação:", error, error.stack);
+        throw new Error(`Falha ao excluir a transação: ${error.message}`);
     }
 };
 

@@ -8,11 +8,13 @@
  * - deleteAccount - Deletes a financial account.
  * - createTransaction - Creates a new financial transaction.
  * - listTransactions - Lists all financial transactions for the user's organization.
+ * - updateTransaction - Updates an existing financial transaction.
+ * - deleteTransaction - Deletes a financial transaction.
  * - getDashboardMetrics - Retrieves key metrics for the Finance dashboard.
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { AccountSchema, AccountProfileSchema, TransactionSchema, TransactionProfileSchema, UpdateAccountSchema } from '@/ai/schemas';
+import { AccountSchema, AccountProfileSchema, TransactionSchema, TransactionProfileSchema, UpdateAccountSchema, UpdateTransactionSchema } from '@/ai/schemas';
 import * as financeService from '@/services/financeService';
 import * as transactionService from '@/services/transactionService';
 
@@ -20,6 +22,10 @@ const ActorSchema = z.object({ actor: z.string() });
 
 const DeleteAccountInputSchema = z.object({
     accountId: z.string(),
+}).extend(ActorSchema.shape);
+
+const DeleteTransactionInputSchema = z.object({
+    transactionId: z.string(),
 }).extend(ActorSchema.shape);
 
 const DashboardMetricsOutputSchema = z.object({
@@ -86,6 +92,24 @@ const listTransactionsFlow = ai.defineFlow(
     async ({ actor }) => transactionService.listTransactions(actor)
 );
 
+const updateTransactionFlow = ai.defineFlow(
+    {
+        name: 'updateTransactionFlow',
+        inputSchema: UpdateTransactionSchema.extend(ActorSchema.shape),
+        outputSchema: z.object({ id: z.string() })
+    },
+    async (input) => transactionService.updateTransaction(input, input.actor)
+);
+
+const deleteTransactionFlow = ai.defineFlow(
+    {
+        name: 'deleteTransactionFlow',
+        inputSchema: DeleteTransactionInputSchema,
+        outputSchema: z.object({ id: z.string(), success: z.boolean() })
+    },
+    async (input) => transactionService.deleteTransaction(input.transactionId, input.actor)
+);
+
 const getDashboardMetricsFlow = ai.defineFlow(
     {
         name: 'getFinanceDashboardMetricsFlow',
@@ -118,6 +142,14 @@ export async function createTransaction(input: z.infer<typeof TransactionSchema>
 
 export async function listTransactions(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof TransactionProfileSchema>[]> {
     return listTransactionsFlow(input);
+}
+
+export async function updateTransaction(input: z.infer<typeof UpdateTransactionSchema> & z.infer<typeof ActorSchema>): Promise<{ id: string; }> {
+    return updateTransactionFlow(input);
+}
+
+export async function deleteTransaction(input: z.infer<typeof DeleteTransactionInputSchema>): Promise<{ id: string; success: boolean }> {
+    return deleteTransactionFlow(input);
 }
 
 export async function getDashboardMetrics(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof DashboardMetricsOutputSchema>> {
