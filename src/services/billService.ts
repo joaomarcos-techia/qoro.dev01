@@ -25,7 +25,7 @@ export const listBills = async (actorUid: string): Promise<BillProfile[]> => {
     const { organizationId } = await getAdminAndOrg(actorUid);
     const billsSnapshot = await adminDb.collection('bills')
         .where('companyId', '==', organizationId)
-        .orderBy('dueDate', 'asc')
+        .orderBy('createdAt', 'desc')
         .get();
 
     if (billsSnapshot.empty) return [];

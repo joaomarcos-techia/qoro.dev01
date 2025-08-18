@@ -66,7 +66,7 @@ const statusMap: Record<BillProfile['status'], { text: string; color: string }> 
 
 export function BillTable({ onEdit }: { onEdit: (bill: BillProfile) => void; }) {
   const [data, setData] = React.useState<BillProfile[]>([]);
-  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [sorting, setSorting] = React.useState<SortingState>([{ id: 'dueDate', desc: false }]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -187,7 +187,9 @@ export function BillTable({ onEdit }: { onEdit: (bill: BillProfile) => void; }) 
       setError(null);
       try {
         const result = await listBills({ actor: currentUser.uid });
-        setData(result);
+        // Sort by due date client-side
+        const sortedData = result.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+        setData(sortedData);
       } catch (err) {
         console.error('Failed to fetch bills:', err);
         setError('Não foi possível carregar as contas a pagar/receber.');
