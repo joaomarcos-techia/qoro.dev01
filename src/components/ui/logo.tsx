@@ -6,7 +6,7 @@ interface LogoProps {
 }
 
 export function Logo({ height = 32 }: LogoProps) {
-  const width = (height / 32) * 95;
+  const width = (height / 32) * 120; // Adjusted aspect ratio
 
   return (
     <div 
