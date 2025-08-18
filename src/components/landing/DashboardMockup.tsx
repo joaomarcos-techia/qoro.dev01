@@ -1,6 +1,7 @@
 
 'use client';
 import { BarChart3, CheckSquare, DollarSign, Users, TrendingUp, ListTodo, Activity, Folder, Settings, ArrowRight, Bell } from "lucide-react";
+import { Logo } from "../ui/logo";
 
 const Placeholder = ({ className }: { className?: string }) => <div className={`bg-white/10 rounded-full ${className}`} />;
 
@@ -44,7 +45,7 @@ export function DashboardMockup() {
             {/* Header */}
             <header className="bg-card/80 border-b border-border flex items-center justify-between h-12 px-4 flex-shrink-0">
                  <div className="flex items-center">
-                    <h1 className="text-lg font-bold text-foreground cursor-pointer">Qoro</h1>
+                    <Logo height={24}/>
                 </div>
                  <div className="flex items-center space-x-2">
                     <button className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-secondary transition-all duration-300">
