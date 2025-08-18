@@ -137,25 +137,42 @@ body {
 
 /* FullCalendar Customization */
 .fc {
+  --fc-border-color: hsl(var(--border));
+  --fc-daygrid-event-dot-width: 8px;
+  --fc-list-event-dot-width: 10px;
+  --fc-event-border-color: hsl(var(--primary));
+  --fc-event-text-color: hsl(var(--primary-foreground));
+  --fc-event-bg-color: hsl(var(--primary));
+  --fc-today-bg-color: hsla(var(--primary) / 0.1);
+
   @apply text-sm text-foreground;
 }
+
+.fc .fc-col-header-cell-cushion {
+  @apply text-muted-foreground;
+}
+
+.fc .fc-daygrid-day-number {
+  @apply text-muted-foreground p-2;
+}
+
 .fc .fc-toolbar-title {
   @apply text-lg font-bold text-foreground;
 }
 .fc .fc-button {
-    @apply bg-primary text-primary-foreground border-0 shadow-lg hover:bg-primary/90 transition-all duration-300;
+  @apply bg-secondary text-secondary-foreground border-border shadow-none hover:bg-secondary/80 transition-all duration-300;
+}
+.fc .fc-button-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90;
 }
 .fc .fc-button-primary:disabled {
-    @apply bg-gray-600;
-}
-.fc-daygrid-day-number {
-    @apply text-muted-foreground font-medium;
+    @apply bg-muted text-muted-foreground;
 }
 .fc-day-today {
-    @apply bg-primary/10;
+    background-color: hsl(var(--secondary)) !important;
 }
 .fc-event {
-    @apply p-1 rounded-md text-xs font-medium cursor-pointer border-2;
+    @apply p-1 rounded-md text-xs font-medium cursor-pointer border;
 }
 
 /* Chart axis color for dark theme */

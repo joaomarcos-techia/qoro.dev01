@@ -20,11 +20,12 @@ interface CalendarEvent {
 }
 
 const priorityColors: Record<TaskProfile['priority'], { bg: string; border: string }> = {
-    low: { bg: '#22C55E', border: '#16A34A' }, // green-500, green-600
-    medium: { bg: '#F59E0B', border: '#D97706' }, // amber-500, amber-600
-    high: { bg: '#EF4444', border: '#DC2626' }, // red-500, red-600
-    urgent: { bg: '#8B5CF6', border: '#7C3AED' }, // violet-500, violet-600
+    low: { bg: 'hsl(142 71% 45%)', border: 'hsl(142 81% 35%)' },      // green-500, green-600
+    medium: { bg: 'hsl(38 92% 50%)', border: 'hsl(32 95% 45%)' },    // amber-500, amber-600
+    high: { bg: 'hsl(0 84% 60%)', border: 'hsl(0 72% 51%)' },      // red-500, red-600
+    urgent: { bg: 'hsl(262 88% 65%)', border: 'hsl(263 75% 57%)' },  // violet-500, violet-600
 };
+
 
 export function TaskCalendar() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -69,17 +70,17 @@ export function TaskCalendar() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[600px]">
         <Loader2 className="w-12 h-12 text-primary animate-spin" />
-        <p className="mt-4 text-gray-600">Carregando calendário...</p>
+        <p className="mt-4 text-muted-foreground">Carregando calendário...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-        <div className="flex flex-col items-center justify-center min-h-[600px] bg-red-50 rounded-lg p-8 text-center">
-            <ServerCrash className="w-16 h-16 text-red-500 mb-4" />
-            <h3 className="text-xl font-bold text-red-700">Ocorreu um erro</h3>
-            <p className="text-gray-600 mt-2">{error}</p>
+        <div className="flex flex-col items-center justify-center min-h-[600px] bg-destructive/10 rounded-lg p-8 text-center border border-destructive">
+            <ServerCrash className="w-16 h-16 text-destructive mb-4" />
+            <h3 className="text-xl font-bold text-destructive">Ocorreu um erro</h3>
+            <p className="text-muted-foreground mt-2">{error}</p>
         </div>
     );
   }
