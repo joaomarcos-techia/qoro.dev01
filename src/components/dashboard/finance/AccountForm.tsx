@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -8,20 +9,23 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { createAccount } from '@/ai/flows/finance-management';
-import { AccountSchema } from '@/ai/schemas';
+import { createAccount, updateAccount } from '@/ai/flows/finance-management';
+import { AccountSchema, AccountProfile } from '@/ai/schemas';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Loader2, AlertCircle } from 'lucide-react';
 
 type AccountFormProps = {
-  onAccountCreated: () => void;
+  onAccountAction: () => void;
+  account?: AccountProfile | null;
 };
 
-export function AccountForm({ onAccountCreated }: AccountFormProps) {
+export function AccountForm({ onAccountAction, account }: AccountFormProps) {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isEditMode = !!account;
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -34,31 +38,44 @@ export function AccountForm({ onAccountCreated }: AccountFormProps) {
     register,
     handleSubmit,
     control,
+    reset,
     formState: { errors },
   } = useForm<z.infer<typeof AccountSchema>>({
     resolver: zodResolver(AccountSchema),
-    defaultValues: {
-      name: '',
-      type: 'checking',
-      bank: '',
-      balance: 0,
-      isActive: true,
-    },
   });
+
+  useEffect(() => {
+    if (account) {
+        reset(account);
+    } else {
+        reset({
+            name: '',
+            type: 'checking',
+            bank: '',
+            balance: 0,
+            isActive: true,
+        });
+    }
+  }, [account, reset]);
+
 
   const onSubmit = async (data: z.infer<typeof AccountSchema>) => {
     if (!currentUser) {
-      setError('Você precisa estar autenticado para criar uma conta.');
+      setError('Você precisa estar autenticado para executar esta ação.');
       return;
     }
     setIsLoading(true);
     setError(null);
     try {
-      await createAccount({ ...data, actor: currentUser.uid });
-      onAccountCreated();
+      if (isEditMode) {
+        await updateAccount({ ...data, id: account.id, actor: currentUser.uid });
+      } else {
+        await createAccount({ ...data, actor: currentUser.uid });
+      }
+      onAccountAction();
     } catch (err) {
       console.error(err);
-      setError('Falha ao criar a conta. Tente novamente.');
+      setError(`Falha ao ${isEditMode ? 'atualizar' : 'criar'} a conta. Tente novamente.`);
     } finally {
       setIsLoading(false);
     }
@@ -79,7 +96,7 @@ export function AccountForm({ onAccountCreated }: AccountFormProps) {
             name="type"
             control={control}
             render={({ field }) => (
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o tipo" />
                 </SelectTrigger>
@@ -100,9 +117,10 @@ export function AccountForm({ onAccountCreated }: AccountFormProps) {
           <Input id="bank" {...register('bank')} placeholder="Ex: Banco do Brasil, Nubank" />
         </div>
 
-        <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="balance">Saldo Inicial (R$)*</Label>
-          <Input id="balance" type="number" step="0.01" {...register('balance')} />
+        <div className="space-y-2">
+          <Label htmlFor="balance">Saldo (R$)*</Label>
+          <Input id="balance" type="number" step="0.01" {...register('balance')} disabled={isEditMode} />
+           {isEditMode && <p className="text-xs text-muted-foreground">O saldo só pode ser alterado através de transações.</p>}
           {errors.balance && <p className="text-destructive text-sm">{errors.balance.message}</p>}
         </div>
       </div>
@@ -115,7 +133,7 @@ export function AccountForm({ onAccountCreated }: AccountFormProps) {
       <div className="flex justify-end pt-4">
         <Button type="submit" disabled={isLoading} className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 border border-transparent hover:border-primary/50 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
           {isLoading ? <Loader2 className="mr-2 w-5 h-5 animate-spin" /> : null}
-          {isLoading ? 'Salvando...' : 'Salvar Conta'}
+          {isLoading ? 'Salvando...' : (isEditMode ? 'Salvar Alterações' : 'Salvar Conta')}
         </Button>
       </div>
     </form>

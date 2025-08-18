@@ -1,3 +1,4 @@
+
 'use client';
 import { useState } from 'react';
 import { PlusCircle } from 'lucide-react';
@@ -18,7 +19,7 @@ export default function ContasPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [refreshCounter, setRefreshCounter] = useState(0);
 
-    const handleAccountCreated = () => {
+    const handleAccountAction = () => {
       setIsModalOpen(false);
       setRefreshCounter(prev => prev + 1);
     };
@@ -35,6 +36,7 @@ export default function ContasPage() {
              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogTrigger asChild>
                     <Button 
+                        onClick={() => setIsModalOpen(true)}
                         className="bg-primary text-primary-foreground px-4 py-2 rounded-xl hover:bg-primary/90 transition-all duration-300 border border-transparent hover:border-primary/50 flex items-center justify-center font-semibold"
                     >
                     <PlusCircle className="mr-2 w-5 h-5" />
@@ -48,7 +50,7 @@ export default function ContasPage() {
                             Preencha as informações para cadastrar uma nova conta financeira.
                         </DialogDescription>
                     </DialogHeader>
-                    <AccountForm onAccountCreated={handleAccountCreated} />
+                    <AccountForm onAccountAction={handleAccountAction} />
                 </DialogContent>
             </Dialog>
         </div>

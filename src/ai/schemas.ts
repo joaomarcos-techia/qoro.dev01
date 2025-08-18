@@ -228,6 +228,10 @@ export const AccountSchema = z.object({
     isActive: z.boolean().default(true),
 });
 
+export const UpdateAccountSchema = AccountSchema.extend({
+    id: z.string(),
+});
+
 export const AccountProfileSchema = AccountSchema.extend({
     id: z.string(),
     createdAt: z.string(),

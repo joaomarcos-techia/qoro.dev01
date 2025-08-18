@@ -1,7 +1,7 @@
 
 import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
-import { AccountSchema, AccountProfileSchema } from '@/ai/schemas';
+import { AccountSchema, AccountProfileSchema, UpdateAccountSchema } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
 import { adminDb } from '@/lib/firebase-admin';
 
@@ -56,6 +56,40 @@ export const listAccounts = async (actorUid: string): Promise<z.infer<typeof Acc
         throw new Error("Não foi possível carregar as contas financeiras devido a um erro no servidor.");
     }
 };
+
+export const updateAccount = async (accountId: string, input: z.infer<typeof UpdateAccountSchema>, actorUid: string) => {
+    const { organizationId } = await getAdminAndOrg(actorUid);
+    const accountRef = adminDb.collection('accounts').doc(accountId);
+
+    const accountDoc = await accountRef.get();
+    if (!accountDoc.exists || accountDoc.data()?.companyId !== organizationId) {
+        throw new Error('Conta não encontrada ou acesso negado.');
+    }
+
+    const { id, ...updateData } = input;
+
+    await accountRef.update({
+        ...updateData,
+        updatedAt: FieldValue.serverTimestamp(),
+    });
+
+    return { id: accountId };
+};
+
+export const deleteAccount = async (accountId: string, actorUid: string) => {
+    const { organizationId } = await getAdminAndOrg(actorUid);
+    const accountRef = adminDb.collection('accounts').doc(accountId);
+
+    const accountDoc = await accountRef.get();
+    if (!accountDoc.exists || accountDoc.data()?.companyId !== organizationId) {
+        throw new Error('Conta não encontrada ou acesso negado.');
+    }
+
+    await accountRef.delete();
+
+    return { id: accountId, success: true };
+};
+
 
 export const getDashboardMetrics = async (actorUid: string) => {
     const { organizationId } = await getAdminAndOrg(actorUid);
