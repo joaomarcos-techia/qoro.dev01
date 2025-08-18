@@ -67,7 +67,7 @@ export function FeaturesCarousel() {
   })
 
   return (
-    <div ref={sliderRef} className="keen-slider" style={{ maxWidth: "100vw" }}>
+    <div ref={sliderRef} className="keen-slider">
       {[...features, ...features].map((feature, index) => (
          <div key={index} className="keen-slider__slide" style={{ minWidth: 250, maxWidth: 250 }}>
             <div className="relative group flex flex-col items-center text-center p-6 bg-secondary/30 rounded-2xl border border-border transition-all duration-300 hover:bg-secondary/60 overflow-hidden h-full">
