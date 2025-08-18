@@ -69,26 +69,21 @@ export const updateTransaction = async (input: z.infer<typeof UpdateTransactionS
                 throw new Error("Acesso negado à transação.");
             }
 
-            // Garante que os valores sejam números antes do cálculo
             const oldAmount = Number(oldData?.amount || 0);
             const newAmount = Number(updateData.amount || 0);
 
-            // Se a conta mudou, precisamos ajustar os saldos de ambas as contas.
             const oldAccountRef = adminDb.collection('accounts').doc(oldData?.accountId);
             const newAccountRef = adminDb.collection('accounts').doc(updateData.accountId);
             
-            // Reverter o valor antigo da conta antiga
             const oldAccountDoc = await t.get(oldAccountRef);
             if (!oldAccountDoc.exists) throw new Error("Conta antiga não encontrada.");
             let oldAccountBalance = oldAccountDoc.data()!.balance;
             oldAccountBalance += (oldData?.type === 'expense' ? oldAmount : -oldAmount);
             
-            // Aplicar o novo valor à nova conta
             const newAccountDoc = await t.get(newAccountRef);
             if (!newAccountDoc.exists) throw new Error("Nova conta não encontrada.");
             let newAccountBalance = newAccountDoc.data()!.balance;
             
-            // Se a conta antiga e a nova forem as mesmas, o saldo já foi ajustado
             if (oldData?.accountId === updateData.accountId) {
                 newAccountBalance = oldAccountBalance + (updateData.type === 'income' ? newAmount : -newAmount);
                 t.update(newAccountRef, { balance: newAccountBalance });
@@ -98,7 +93,6 @@ export const updateTransaction = async (input: z.infer<typeof UpdateTransactionS
                 t.update(newAccountRef, { balance: newAccountBalance });
             }
             
-            // Finalmente, atualiza a transação
             t.update(transactionRef, { ...updateData, updatedAt: FieldValue.serverTimestamp() });
         });
         return { id: transactionId };
@@ -124,7 +118,6 @@ export const deleteTransaction = async (transactionId: string, actorUid: string)
                 throw new Error("Acesso negado à transação.");
             }
 
-            // Reverte o valor da conta associada
             const accountRef = adminDb.collection('accounts').doc(data.accountId);
             const accountDoc = await t.get(accountRef);
             if (accountDoc.exists) {
@@ -157,7 +150,6 @@ export const listTransactions = async (actorUid: string): Promise<TransactionPro
         return [];
     }
     
-    // Denormalization: Fetch account and customer names
     const accountIds = [...new Set(transactionsSnapshot.docs.map(doc => doc.data().accountId).filter(id => id))];
     const customerIds = [...new Set(transactionsSnapshot.docs.map(doc => doc.data().customerId).filter(id => id))];
     
@@ -182,7 +174,9 @@ export const listTransactions = async (actorUid: string): Promise<TransactionPro
         const data = doc.data();
         const accountInfo = accounts[data.accountId] || {};
         const customerInfo = customers[data.customerId] || {};
-        const date = data.date ? data.date.toDate() : new Date();
+        
+        // Handle both Firestore Timestamps and ISO strings
+        const date = data.date ? (typeof data.date.toDate === 'function' ? data.date.toDate() : new Date(data.date)) : new Date();
 
         const parsedData = TransactionProfileSchema.parse({
             id: doc.id,
@@ -194,7 +188,6 @@ export const listTransactions = async (actorUid: string): Promise<TransactionPro
             customerName: customerInfo.name,
         });
 
-        // Convert Date object back to ISO string for the client
         return {
             ...parsedData,
             date: parsedData.date.toISOString(),
