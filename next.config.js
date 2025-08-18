@@ -26,6 +26,12 @@ const nextConfig = {
         hostname: 'storage.googleapis.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'qoro-iy1gs.appspot.com',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
