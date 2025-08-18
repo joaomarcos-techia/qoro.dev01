@@ -11,7 +11,7 @@
     },
     {
       "collectionGroup": "bills",
-      "queryScope": "COLLECTION",
+      "queryScope": "COLLECTION_GROUP",
       "fields": [
         { "fieldPath": "companyId", "order": "ASCENDING" },
         { "fieldPath": "dueDate", "order": "DESCENDING" }
