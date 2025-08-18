@@ -51,17 +51,9 @@ export default {
           foreground: 'hsl(var(--card-foreground))',
         },
         'finance-primary': 'hsl(var(--finance-primary))',
-        'finance-secondary': 'hsl(var(--finance-secondary))',
-        'finance-cta': 'hsl(var(--finance-cta))',
         'task-primary': 'hsl(var(--task-primary))',
-        'task-secondary': 'hsl(var(--task-secondary))',
-        'task-cta': 'hsl(var(--task-cta))',
         'pulse-primary': 'hsl(var(--pulse-primary))',
-        'pulse-secondary': 'hsl(var(--pulse-secondary))',
-        'pulse-cta': 'hsl(var(--pulse-cta))',
         'crm-primary': 'hsl(var(--crm-primary))',
-        'crm-secondary': 'hsl(var(--crm-secondary))',
-        'crm-cta': 'hsl(var(--crm-cta))'
       },
       borderRadius: {
         lg: 'var(--radius)',
