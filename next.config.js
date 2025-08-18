@@ -19,7 +19,7 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'firebasestorage.googleapis.com',
         port: '',
-        pathname: '/**',
+        pathname: '/v0/b/qoro-iy1gs.appspot.com/**',
       },
       {
         protocol: 'https',
