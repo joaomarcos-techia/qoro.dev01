@@ -23,11 +23,9 @@ export const createBill = async (input: z.infer<typeof BillSchema>, actorUid: st
 
 export const listBills = async (actorUid: string): Promise<BillProfile[]> => {
     const { organizationId } = await getAdminAndOrg(actorUid);
-    // Changed orderBy to createdAt to use a default index and avoid FAILED_PRECONDITION error.
-    // Sorting by dueDate will be handled on the client-side.
     const billsSnapshot = await adminDb.collection('bills')
         .where('companyId', '==', organizationId)
-        .orderBy('createdAt', 'desc')
+        .orderBy('dueDate', 'asc')
         .get();
 
     if (billsSnapshot.empty) return [];
@@ -55,9 +53,6 @@ export const listBills = async (actorUid: string): Promise<BillProfile[]> => {
             contactName: data.contactId ? contacts[data.contactId]?.name : undefined,
         });
     });
-    
-    // Perform sorting by dueDate on the server before returning
-    bills.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
 
     return bills;
 };
