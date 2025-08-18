@@ -41,8 +41,8 @@ export function Header() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="rounded-full py-3 px-6 flex items-center justify-between shadow-lg border border-border bg-black/50 backdrop-blur-lg transition-all duration-300 ease-in-out overflow-hidden">
           <div className="flex items-center">
-            <Link href="/#home" onClick={(e) => handleLinkClick(e, '/#home')}>
-              <Logo height={28}/>
+            <Link href="/#home" onClick={(e) => handleLinkClick(e, '/#home')} className="text-xl">
+              <Logo/>
             </Link>
           </div>
           

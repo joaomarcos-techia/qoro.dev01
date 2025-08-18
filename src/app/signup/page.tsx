@@ -71,8 +71,8 @@ export default function SignUpPage() {
     <main className="flex items-center justify-center min-h-screen bg-black p-4">
       <div className="w-full max-w-3xl mx-auto bg-card rounded-2xl border border-border p-8 md:p-12">
         <div className="text-center mb-8">
-           <Link href="/" className="inline-block mb-2">
-              <Logo height={40} />
+           <Link href="/" className="inline-block mb-2 text-3xl">
+              <Logo />
           </Link>
           <p className="text-muted-foreground">Crie sua conta para começar a organizar sua empresa.</p>
         </div>

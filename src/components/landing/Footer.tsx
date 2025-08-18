@@ -7,8 +7,8 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           <div>
-            <div className="flex items-center gap-2 mb-4">
-                <Logo height={28} />
+            <div className="flex items-center gap-2 mb-4 text-xl">
+                <Logo />
             </div>
             <p className="text-white/60 mb-6 leading-relaxed">
               O fim da desorganização. O começo da clareza.
