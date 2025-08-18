@@ -6,9 +6,10 @@
 
 import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
-import { BillSchema, BillProfileSchema, UpdateBillSchema } from '@/ai/schemas';
+import { BillSchema, BillProfileSchema, UpdateBillSchema, TransactionSchema } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
 import { adminDb } from '@/lib/firebase-admin';
+import * as transactionService from './transactionService';
 
 export const createBill = async (input: z.infer<typeof BillSchema>, actorUid: string) => {
     const { organizationId } = await getAdminAndOrg(actorUid);
@@ -36,7 +37,6 @@ export const listBills = async (actorUid: string): Promise<z.infer<typeof BillPr
         return [];
     }
     
-    // Fetch customers and suppliers to denormalize names
     const customerIds = [...new Set(billsSnapshot.docs.map(doc => doc.data().entityType === 'customer' ? doc.data().entityId : null).filter(Boolean))];
     const supplierIds = [...new Set(billsSnapshot.docs.map(doc => doc.data().entityType === 'supplier' ? doc.data().entityId : null).filter(Boolean))];
 
@@ -63,7 +63,6 @@ export const listBills = async (actorUid: string): Promise<z.infer<typeof BillPr
             entityName = data.entityType === 'customer' ? customers[data.entityId] : suppliers[data.entityId];
         }
 
-        // Correctly convert Firestore Timestamps to ISO strings before parsing
         const rawData = {
             id: doc.id,
             ...data,
@@ -87,11 +86,33 @@ export const updateBill = async (input: z.infer<typeof UpdateBillSchema>, actorU
     if (!doc.exists || doc.data()?.companyId !== organizationId) {
         throw new Error("Conta não encontrada ou acesso negado.");
     }
+    const oldStatus = doc.data()?.status;
     
     await billRef.update({
         ...updateData,
         updatedAt: FieldValue.serverTimestamp(),
     });
+
+    if (updateData.status === 'paid' && oldStatus !== 'paid') {
+        const accounts = await adminDb.collection('accounts').where('companyId', '==', organizationId).limit(1).get();
+        if (accounts.empty) {
+            throw new Error("Nenhuma conta financeira encontrada para registrar o pagamento. Crie uma conta primeiro.");
+        }
+        const primaryAccountId = accounts.docs[0].id;
+        
+        const transactionData: z.infer<typeof TransactionSchema> = {
+            accountId: primaryAccountId,
+            type: updateData.type === 'payable' ? 'expense' : 'income',
+            amount: updateData.amount,
+            description: `Pagamento: ${updateData.description}`,
+            date: new Date(),
+            category: updateData.type === 'payable' ? 'Pagamento de Contas' : 'Recebimento de Contas',
+            status: 'paid',
+            paymentMethod: 'bank_transfer',
+            customerId: updateData.entityType === 'customer' ? updateData.entityId : undefined,
+        };
+        await transactionService.createTransaction(transactionData, actorUid);
+    }
 
     return { id };
 };
@@ -108,4 +129,3 @@ export const deleteBill = async (billId: string, actorUid: string) => {
     await billRef.delete();
     return { id: billId, success: true };
 };
-
