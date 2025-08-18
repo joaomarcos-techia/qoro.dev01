@@ -172,7 +172,7 @@ export function TransactionForm({ onAction, transaction }: TransactionFormProps)
         
         <div className="space-y-2">
           <Label htmlFor="amount">Valor (R$)*</Label>
-          <Input id="amount" type="number" step="0.01" {...register('amount')} />
+          <Input id="amount" type="text" {...register('amount')} placeholder="0,00" />
           {errors.amount && <p className="text-destructive text-sm">{errors.amount.message}</p>}
         </div>
         
