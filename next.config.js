@@ -19,20 +19,8 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'firebasestorage.googleapis.com',
         port: '',
-        pathname: '/v0/b/qoro-iy1gs.appspot.com/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'storage.googleapis.com',
-        port: '',
         pathname: '/**',
       },
-      {
-        protocol: 'https',
-        hostname: 'qoro-iy1gs.appspot.com',
-        port: '',
-        pathname: '/**',
-      }
     ],
   },
   async headers() {
