@@ -67,13 +67,13 @@ const plans: Plan[] = [
 ];
 
 const PricingCard = ({ plan }: { plan: Plan }) => {
-    const cardBaseClasses = "bg-white/5 border rounded-3xl p-8 backdrop-blur-sm transition-all duration-300 hover:-translate-y-2";
+    const cardBaseClasses = "bg-card border rounded-3xl p-8 backdrop-blur-sm transition-all duration-300 hover:-translate-y-2";
     const popularClasses = "border-2 border-primary shadow-2xl shadow-primary/20";
-    const normalClasses = "border-white/10 hover:border-white/20";
+    const normalClasses = "border-border hover:border-border/80";
     
     const buttonBaseClasses = "w-full py-3 rounded-xl transition-all duration-300 font-semibold";
     const popularButtonClasses = "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl";
-    const normalButtonClasses = "bg-white/10 hover:bg-white/20 text-white border border-white/20";
+    const normalButtonClasses = "bg-secondary hover:bg-secondary/80 text-white border border-border";
 
     const CardContent = (
       <div className={`${cardBaseClasses} ${plan.isPopular ? popularClasses : normalClasses} relative`}>
@@ -96,7 +96,7 @@ const PricingCard = ({ plan }: { plan: Plan }) => {
         <ul className="space-y-4 mb-8 min-h-[200px]">
             {plan.features.map((feature, index) => (
                 <li key={index} className="flex items-center text-white/80">
-                    <Check className="w-5 h-5 text-green-400 mr-3 flex-shrink-0" />
+                    <Check className="w-5 h-5 text-crm-primary mr-3 flex-shrink-0" />
                     {feature}
                 </li>
             ))}
