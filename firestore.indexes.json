@@ -10,6 +10,14 @@
       ]
     },
     {
+      "collectionGroup": "bills",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "companyId", "order": "ASCENDING" },
+        { "fieldPath": "dueDate", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "customers",
       "queryScope": "COLLECTION",
       "fields": [
