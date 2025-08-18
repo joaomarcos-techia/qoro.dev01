@@ -148,7 +148,7 @@ export default function DashboardLayout({
                             : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
                         }`}
                         >
-                        <item.icon className={`w-5 h-5 mr-3 transition-colors ${pathname.startsWith(item.href) ? 'text-black' : 'text-muted-foreground group-hover:text-foreground'}`} />
+                        <item.icon className={`w-5 h-5 mr-3 transition-colors ${pathname === item.href ? 'text-white' : 'text-muted-foreground group-hover:text-foreground'}`} />
                         {item.label}
                         </Link>
                     </li>
