@@ -4,6 +4,7 @@
  * @fileOverview Supplier management flows.
  * - createSupplier - Creates a new supplier.
  * - listSuppliers - Lists all suppliers for the user's organization.
+ * - deleteSupplier - Deletes a supplier.
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
@@ -11,6 +12,7 @@ import { SupplierSchema, SupplierProfileSchema } from '@/ai/schemas';
 import * as supplierService from '@/services/supplierService';
 
 const ActorSchema = z.object({ actor: z.string() });
+const DeleteInputSchema = z.object({ supplierId: z.string() }).extend(ActorSchema.shape);
 
 // Define flows
 const createSupplierFlow = ai.defineFlow(
@@ -31,6 +33,16 @@ const listSuppliersFlow = ai.defineFlow(
     async ({ actor }) => supplierService.listSuppliers(actor)
 );
 
+const deleteSupplierFlow = ai.defineFlow(
+    {
+        name: 'deleteSupplierFlow',
+        inputSchema: DeleteInputSchema,
+        outputSchema: z.object({ id: z.string(), success: z.boolean() })
+    },
+    async (input) => supplierService.deleteSupplier(input.supplierId, input.actor)
+);
+
+
 // Exported functions (client-callable wrappers)
 export async function createSupplier(input: z.infer<typeof SupplierSchema> & z.infer<typeof ActorSchema>): Promise<{ id: string; }> {
     return createSupplierFlow(input);
@@ -38,4 +50,8 @@ export async function createSupplier(input: z.infer<typeof SupplierSchema> & z.i
 
 export async function listSuppliers(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof SupplierProfileSchema>[]> {
     return listSuppliersFlow(input);
+}
+
+export async function deleteSupplier(input: z.infer<typeof DeleteInputSchema>): Promise<{ id: string; success: boolean }> {
+    return deleteSupplierFlow(input);
 }

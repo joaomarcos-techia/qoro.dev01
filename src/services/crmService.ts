@@ -370,3 +370,16 @@ export const updateQuote = async (quoteId: string, input: z.infer<typeof UpdateQ
 
     return { id: quoteId, number: input.number || quoteDoc.data()?.number };
 };
+
+export const deleteQuote = async (quoteId: string, actorUid: string) => {
+    const { organizationId } = await getAdminAndOrg(actorUid);
+    const quoteRef = adminDb.collection('quotes').doc(quoteId);
+
+    const doc = await quoteRef.get();
+    if (!doc.exists || doc.data()?.companyId !== organizationId) {
+        throw new Error('Orçamento não encontrado ou acesso negado.');
+    }
+
+    await quoteRef.delete();
+    return { id: quoteId, success: true };
+};

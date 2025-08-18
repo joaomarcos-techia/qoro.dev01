@@ -22,6 +22,17 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+  } from "@/components/ui/alert-dialog"
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -30,59 +41,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MoreHorizontal, ArrowUpDown, Search, Loader2, Truck } from 'lucide-react';
-import { listSuppliers } from '@/ai/flows/supplier-management';
+import { MoreHorizontal, ArrowUpDown, Search, Loader2, Truck, Trash2 } from 'lucide-react';
+import { listSuppliers, deleteSupplier } from '@/ai/flows/supplier-management';
 import type { SupplierProfile } from '@/ai/schemas';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-
-export const columns: ColumnDef<SupplierProfile>[] = [
-  {
-    accessorKey: 'name',
-    header: ({ column }) => (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-            Nome <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-    ),
-    cell: ({ row }) => <div className="font-medium text-foreground">{row.getValue('name')}</div>,
-  },
-  {
-    accessorKey: 'email',
-    header: 'Email',
-  },
-  {
-    accessorKey: 'phone',
-    header: 'Telefone',
-    cell: ({ row }) => row.getValue('phone') || '-',
-  },
-  {
-    accessorKey: 'cnpj',
-    header: 'CNPJ',
-    cell: ({ row }) => row.getValue('cnpj') || '-',
-  },
-  {
-    id: 'actions',
-    cell: ({ row }) => {
-      const supplier = row.original;
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Abrir menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Ações</DropdownMenuLabel>
-            <DropdownMenuItem>Ver Detalhes</DropdownMenuItem>
-            <DropdownMenuItem>Editar Fornecedor</DropdownMenuItem>
-            <DropdownMenuItem className="text-red-500 focus:text-red-400 focus:bg-destructive/20">Excluir Fornecedor</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
-  },
-];
 
 export function SupplierTable() {
   const [data, setData] = React.useState<SupplierProfile[]>([]);
@@ -91,6 +54,22 @@ export function SupplierTable() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [currentUser, setCurrentUser] = React.useState<FirebaseUser | null>(null);
+  const [isDeleting, setIsDeleting] = React.useState(false);
+
+  const fetchSuppliers = React.useCallback(async () => {
+    if (!currentUser) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const suppliers = await listSuppliers({ actor: currentUser.uid });
+      setData(suppliers);
+    } catch (err) {
+      console.error('Failed to fetch suppliers:', err);
+      setError('Não foi possível carregar os fornecedores.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentUser]);
 
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -100,22 +79,93 @@ export function SupplierTable() {
   }, []);
 
   React.useEffect(() => {
-    async function fetchData() {
-      if (!currentUser) return;
-      setIsLoading(true);
-      setError(null);
-      try {
-        const suppliers = await listSuppliers({ actor: currentUser.uid });
-        setData(suppliers);
-      } catch (err) {
-        console.error('Failed to fetch suppliers:', err);
-        setError('Não foi possível carregar os fornecedores.');
-      } finally {
-        setIsLoading(false);
-      }
+    if(currentUser) {
+        fetchSuppliers();
     }
-    fetchData();
-  }, [currentUser]);
+  }, [currentUser, fetchSuppliers]);
+  
+  const handleDelete = async (supplierId: string) => {
+    if (!currentUser) return;
+    setIsDeleting(true);
+    try {
+        await deleteSupplier({ supplierId, actor: currentUser.uid });
+        await fetchSuppliers();
+    } catch (err) {
+        console.error("Failed to delete supplier:", err);
+        setError("Não foi possível excluir o fornecedor.");
+    } finally {
+        setIsDeleting(false);
+    }
+  }
+
+  const columns: ColumnDef<SupplierProfile>[] = [
+    {
+      accessorKey: 'name',
+      header: ({ column }) => (
+          <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+              Nome <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+      ),
+      cell: ({ row }) => <div className="font-medium text-foreground">{row.getValue('name')}</div>,
+    },
+    {
+      accessorKey: 'email',
+      header: 'Email',
+    },
+    {
+      accessorKey: 'phone',
+      header: 'Telefone',
+      cell: ({ row }) => row.getValue('phone') || '-',
+    },
+    {
+      accessorKey: 'cnpj',
+      header: 'CNPJ',
+      cell: ({ row }) => row.getValue('cnpj') || '-',
+    },
+    {
+      id: 'actions',
+      cell: ({ row }) => {
+        const supplier = row.original;
+        return (
+          <AlertDialog>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <span className="sr-only">Abrir menu</span>
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                <DropdownMenuItem>Editar Fornecedor</DropdownMenuItem>
+                 <AlertDialogTrigger asChild>
+                    <DropdownMenuItem className="text-red-500 focus:text-red-400 focus:bg-destructive/20">
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Excluir Fornecedor
+                    </DropdownMenuItem>
+                </AlertDialogTrigger>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Esta ação não pode ser desfeita. Isso excluirá permanentemente o fornecedor <span className='font-bold'>{supplier.name}</span>.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => handleDelete(supplier.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90" disabled={isDeleting}>
+                        {isDeleting ? <Loader2 className="w-4 h-4 animate-spin"/> : "Sim, excluir"}
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        );
+      },
+    },
+  ];
+
 
   const table = useReactTable({
     data,

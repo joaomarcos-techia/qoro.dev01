@@ -43,3 +43,16 @@ export const listSuppliers = async (actorUid: string): Promise<z.infer<typeof Su
     
     return suppliers;
 };
+
+export const deleteSupplier = async (supplierId: string, actorUid: string) => {
+    const { organizationId } = await getAdminAndOrg(actorUid);
+    const supplierRef = adminDb.collection('suppliers').doc(supplierId);
+
+    const doc = await supplierRef.get();
+    if (!doc.exists || doc.data()?.companyId !== organizationId) {
+        throw new Error('Fornecedor não encontrado ou acesso negado.');
+    }
+
+    await supplierRef.delete();
+    return { id: supplierId, success: true };
+};

@@ -14,6 +14,7 @@
  * - createQuote - Creates a new quote.
  * - listQuotes - Lists all quotes.
  * - updateQuote - Updates a quote.
+ * - deleteQuote - Deletes a quote.
  * - updateCustomerStatus - Updates the status of a customer.
  * - deleteCustomer - Deletes a customer.
  * - updateCustomer - Updates a customer's profile.
@@ -49,6 +50,10 @@ const DeleteCustomerInputSchema = z.object({
 
 const DeleteProductInputSchema = z.object({
     productId: z.string(),
+}).extend(ActorSchema.shape);
+
+const DeleteQuoteInputSchema = z.object({
+    quoteId: z.string(),
 }).extend(ActorSchema.shape);
 
 
@@ -175,6 +180,15 @@ const updateQuoteFlow = ai.defineFlow(
     async (input) => crmService.updateQuote(input.id, input, input.actor)
 );
 
+const deleteQuoteFlow = ai.defineFlow(
+    {
+        name: 'deleteQuoteFlow',
+        inputSchema: DeleteQuoteInputSchema,
+        outputSchema: z.object({ id: z.string(), success: z.boolean() })
+    },
+    async (input) => crmService.deleteQuote(input.quoteId, input.actor)
+);
+
 const updateCustomerStatusFlow = ai.defineFlow(
     {
         name: 'updateCustomerStatusFlow',
@@ -264,6 +278,10 @@ export async function listQuotes(input: z.infer<typeof ActorSchema>): Promise<z.
 
 export async function updateQuote(input: z.infer<typeof UpdateQuoteSchema> & z.infer<typeof ActorSchema>): Promise<{ id: string; number: string; }> {
     return updateQuoteFlow(input);
+}
+
+export async function deleteQuote(input: z.infer<typeof DeleteQuoteInputSchema>): Promise<{ id: string; success: boolean; }> {
+    return deleteQuoteFlow(input);
 }
 
 export async function updateCustomerStatus(input: z.infer<typeof UpdateCustomerStatusInputSchema>): Promise<{ id: string; status: z.infer<typeof CustomerProfileSchema>['status'] }> {
