@@ -1,4 +1,5 @@
 import { Linkedin, Twitter, Mail, Phone, MapPin } from 'lucide-react';
+import { Logo } from '@/components/ui/logo';
 
 export function Footer() {
   return (
@@ -6,15 +7,17 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           <div>
-            <div className="text-2xl font-bold mb-4">Qoro</div>
+            <div className="flex items-center gap-2 mb-4">
+                <Logo height={28} />
+            </div>
             <p className="text-white/60 mb-6 leading-relaxed">
               O fim da desorganização. O começo da clareza.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-white/60 hover:text-blue-400 transition-colors p-2 rounded-xl" aria-label="LinkedIn">
+              <a href="#" className="text-white/60 hover:text-primary transition-colors p-2 rounded-xl" aria-label="LinkedIn">
                 <Linkedin className="w-5 h-5" />
               </a>
-              <a href="#" className="text-white/60 hover:text-blue-400 transition-colors p-2 rounded-xl" aria-label="Twitter">
+              <a href="#" className="text-white/60 hover:text-primary transition-colors p-2 rounded-xl" aria-label="Twitter">
                 <Twitter className="w-5 h-5" />
               </a>
             </div>
@@ -43,15 +46,15 @@ export function Footer() {
             <h3 className="text-lg font-semibold mb-4">Contato</h3>
             <ul className="space-y-3">
               <li className="flex items-center text-white/60">
-                <Mail className="mr-3 w-4 h-4 text-blue-400" />
+                <Mail className="mr-3 w-4 h-4 text-primary" />
                 contato@qoro.com
               </li>
               <li className="flex items-center text-white/60">
-                <Phone className="mr-3 w-4 h-4 text-blue-400" />
+                <Phone className="mr-3 w-4 h-4 text-primary" />
                 (88) 99682-2198
               </li>
               <li className="flex items-center text-white/60">
-                <MapPin className="mr-3 w-4 h-4 text-blue-400" />
+                <MapPin className="mr-3 w-4 h-4 text-primary" />
                 Ceará, Brasil
               </li>
             </ul>

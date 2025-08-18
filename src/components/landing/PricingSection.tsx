@@ -66,19 +66,19 @@ const plans: Plan[] = [
 ];
 
 const PricingCard = ({ plan }: { plan: Plan }) => {
-    const cardBaseClasses = "bg-white/5 border rounded-3xl p-8 backdrop-blur-sm transition-all duration-300 hover:-translate-y-2";
-    const popularClasses = "border-2 border-blue-500 shadow-2xl shadow-blue-500/20";
-    const normalClasses = "border-white/10 hover:border-white/20";
+    const cardBaseClasses = "bg-card border rounded-3xl p-8 backdrop-blur-sm transition-all duration-300 hover:-translate-y-2";
+    const popularClasses = "border-2 border-primary shadow-2xl shadow-primary/20";
+    const normalClasses = "border-border hover:border-border/80";
     
     const buttonBaseClasses = "w-full py-3 rounded-xl transition-all duration-300 font-semibold";
-    const popularButtonClasses = "bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl";
-    const normalButtonClasses = "bg-white/10 hover:bg-white/20 text-white border border-white/20";
+    const popularButtonClasses = "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl";
+    const normalButtonClasses = "bg-secondary hover:bg-secondary/80 text-white border border-border";
 
     const CardContent = (
       <div className={`${cardBaseClasses} ${plan.isPopular ? popularClasses : normalClasses} relative`}>
         {plan.isPopular && (
             <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                <div className="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-medium">
+                <div className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-medium">
                     Mais Popular
                 </div>
             </div>
@@ -95,7 +95,7 @@ const PricingCard = ({ plan }: { plan: Plan }) => {
         <ul className="space-y-4 mb-8 min-h-[200px]">
             {plan.features.map((feature, index) => (
                 <li key={index} className="flex items-center text-white/80">
-                    <Check className="w-5 h-5 text-green-400 mr-3 flex-shrink-0" />
+                    <Check className="w-5 h-5 text-crm-primary mr-3 flex-shrink-0" />
                     {feature}
                 </li>
             ))}
@@ -117,7 +117,7 @@ export function PricingSection() {
       <section id="precos" className="py-20 bg-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <div className="text-sm font-medium text-blue-400 mb-4 tracking-wider uppercase">Preços</div>
+            <div className="text-sm font-medium text-primary mb-4 tracking-wider uppercase">Preços</div>
             <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
               Um plano para cada fase do seu negócio
             </h2>

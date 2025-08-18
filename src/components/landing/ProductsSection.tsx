@@ -94,7 +94,7 @@ export function ProductsSection() {
     <section id="produtos" className="py-20 bg-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <div className="text-sm font-medium text-blue-400 mb-4 tracking-wider uppercase">Soluções</div>
+          <div className="text-sm font-medium text-primary mb-4 tracking-wider uppercase">Soluções</div>
           <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
             Uma plataforma, controle total.
           </h2>

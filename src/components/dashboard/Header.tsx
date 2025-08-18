@@ -8,6 +8,7 @@ import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import Link from 'next/link';
+import { Logo } from '@/components/ui/logo';
 
 interface UserProfile {
   name: string;
@@ -156,8 +157,8 @@ export function Header() {
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
-             <Link href="/dashboard">
-                <h1 className="text-2xl font-bold text-foreground cursor-pointer">Qoro</h1>
+             <Link href="/dashboard" className="cursor-pointer">
+                <Logo height={30} />
              </Link>
           </div>
 

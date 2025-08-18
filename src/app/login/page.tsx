@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, LogIn, AlertCircle } from 'lucide-react';
 import { signIn } from '@/lib/auth';
+import { Logo } from '@/components/ui/logo';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -33,8 +34,8 @@ export default function LoginPage() {
     <main className="flex items-center justify-center min-h-screen bg-black p-4">
       <div className="w-full max-w-md mx-auto bg-card rounded-2xl border border-border p-8 md:p-12">
         <div className="text-center mb-8">
-          <Link href="/">
-            <div className="text-3xl font-bold text-foreground cursor-pointer mb-2">Qoro</div>
+          <Link href="/" className="inline-block mb-2">
+            <Logo height={40}/>
           </Link>
           <p className="text-muted-foreground">Bem-vindo de volta! Faça login para continuar.</p>
         </div>
