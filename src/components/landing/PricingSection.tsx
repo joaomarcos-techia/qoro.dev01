@@ -36,7 +36,7 @@ const plans: Plan[] = [
     description: 'Para equipes que buscam mais poder e automação.',
     price: 'R$ 299',
     priceUnit: '/mês',
-    priceDetails: 'Inclui até 5 usuários. Desconto de 15% para pagamento anual.',
+    priceDetails: 'Inclui até 5 usuários.',
     features: [
       'QoroCRM: Funil de Vendas ilimitado, Cadastro Completo ilimitado, Criação de Orçamentos.',
       'QoroFinance: Dashboard Financeiro completo, Gestão de Contas (a pagar e a receber) ilimitada, Registro de Transações ilimitado.',
@@ -139,5 +139,6 @@ export function PricingSection() {
       </section>
     );
   }
+
 
 
