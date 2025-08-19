@@ -45,7 +45,12 @@ export const listSuppliers = async (actorUid: string): Promise<z.infer<typeof Su
 };
 
 export const deleteSupplier = async (supplierId: string, actorUid: string) => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
+    const { organizationId, userRole } = await getAdminAndOrg(actorUid);
+
+    if (userRole !== 'admin') {
+        throw new Error("Permissão negada. Apenas administradores podem excluir fornecedores.");
+    }
+    
     const supplierRef = adminDb.collection('suppliers').doc(supplierId);
 
     const doc = await supplierRef.get();

@@ -78,17 +78,20 @@ export const updateTransaction = async (input: z.infer<typeof UpdateTransactionS
             const oldAccountDoc = await t.get(oldAccountRef);
             if (!oldAccountDoc.exists) throw new Error("Conta antiga não encontrada.");
             let oldAccountBalance = oldAccountDoc.data()!.balance;
+            // Revert old transaction amount
             oldAccountBalance += (oldData?.type === 'expense' ? oldAmount : -oldAmount);
             
-            const newAccountDoc = await t.get(newAccountRef);
-            if (!newAccountDoc.exists) throw new Error("Nova conta não encontrada.");
-            let newAccountBalance = newAccountDoc.data()!.balance;
-            
+            // If account is the same, use the already reverted balance
             if (oldData?.accountId === updateData.accountId) {
-                newAccountBalance = oldAccountBalance + (updateData.type === 'income' ? newAmount : -newAmount);
-                t.update(newAccountRef, { balance: newAccountBalance });
+                const newBalance = oldAccountBalance + (updateData.type === 'income' ? newAmount : -newAmount);
+                t.update(newAccountRef, { balance: newBalance });
             } else {
+                // If account is different, update both
+                const newAccountDoc = await t.get(newAccountRef);
+                if (!newAccountDoc.exists) throw new Error("Nova conta não encontrada.");
+                let newAccountBalance = newAccountDoc.data()!.balance;
                 newAccountBalance += (updateData.type === 'income' ? newAmount : -newAmount);
+
                 t.update(oldAccountRef, { balance: oldAccountBalance });
                 t.update(newAccountRef, { balance: newAccountBalance });
             }
