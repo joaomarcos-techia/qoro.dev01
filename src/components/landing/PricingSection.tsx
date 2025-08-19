@@ -1,6 +1,5 @@
 
-import { Star, Zap, Crown, Check, type LucideProps } from 'lucide-react';
-import type { ForwardRefExoticComponent, RefAttributes } from 'react';
+import { Check } from 'lucide-react';
 import Link from 'next/link';
 
 type Plan = {
@@ -17,15 +16,16 @@ type Plan = {
 
 const plans: Plan[] = [
   {
-    name: 'Starter',
+    name: 'Gratuito',
     description: 'Para quem está começando a organizar a casa.',
     price: 'Grátis',
     priceDetails: 'Para sempre. Sem pegadinhas.',
     features: [
-      '1 usuário',
-      'QoroTask: até 10 tarefas ativas',
-      'QoroFinance: até 20 lançamentos',
-      'QoroCRM: funcionalidades essenciais',
+      'Até 2 usuários',
+      'QoroCRM com funcionalidades essenciais',
+      'QoroFinance com limites de uso',
+      'QoroTask com limites de uso',
+      'QoroPulse com até 5 perguntas/mês',
     ],
     buttonText: 'Começar Grátis',
     isPopular: false,
@@ -34,15 +34,15 @@ const plans: Plan[] = [
   {
     name: 'Profissional',
     description: 'Para equipes que buscam mais poder e automação.',
-    price: 'R$ 45',
-    priceUnit: '/usuário/mês',
-    priceDetails: 'Cancele quando quiser',
+    price: 'R$ 299',
+    priceUnit: '/mês',
+    priceDetails: 'Inclui até 5 usuários. Cancele quando quiser.',
     features: [
-      'Até 5 usuários',
+      'QoroCRM com funcionalidades ilimitadas',
+      'QoroFinance com gestão completa',
+      'QoroTask com quadros e tarefas ilimitados',
+      'QoroPulse com IA para insights e ações',
       'Suporte prioritário via e-mail',
-      'QoroTask: tarefas e subtarefas ilimitadas',
-      'QoroFinance: todas as funcionalidades',
-      'QoroCRM: automações e integrações',
     ],
     buttonText: 'Escolher Profissional',
     isPopular: true,
@@ -50,15 +50,15 @@ const plans: Plan[] = [
   },
   {
     name: 'Enterprise',
-    description: 'Solução robusta para empresas consolidadas.',
+    description: 'Solução robusta para empresas com necessidades complexas.',
     price: 'Customizado',
-    priceDetails: 'Faturamento anual com desconto',
+    priceDetails: 'A partir de R$ 799/mês. Fale conosco.',
     features: [
-      'Usuários ilimitados',
-      'Suporte dedicado via WhatsApp',
-      'QoroPulse: análises preditivas',
-      'Acesso antecipado a novas features',
-      'Gerente de conta exclusivo',
+      'Todas as funcionalidades, sem limites',
+      'Análise preditiva avançada com IA',
+      'Integrações com outros sistemas (ERP, BI)',
+      'Segurança avançada (SSO, auditoria)',
+      'Gerente de Sucesso dedicado',
     ],
     buttonText: 'Fale com um especialista',
     isPopular: false,
@@ -86,18 +86,19 @@ const PricingCard = ({ plan }: { plan: Plan }) => {
         )}
         <div className="text-center mb-8">
             <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
-            <div className="mb-4">
+            <p className="text-white/70 h-12">{plan.description}</p>
+            <div className="mt-4 mb-2">
                 <span className="text-4xl font-bold text-white">{plan.price}</span>
                 {plan.priceUnit && <span className="text-white/60 ml-1">{plan.priceUnit}</span>}
             </div>
-            <p className="text-white/70 h-12">{plan.description}</p>
+            <p className="text-sm text-white/60">{plan.priceDetails}</p>
         </div>
         
-        <ul className="space-y-4 mb-8 min-h-[200px]">
+        <ul className="space-y-4 mb-8 min-h-[220px]">
             {plan.features.map((feature, index) => (
-                <li key={index} className="flex items-center text-white/80">
-                    <Check className="w-5 h-5 text-crm-primary mr-3 flex-shrink-0" />
-                    {feature}
+                <li key={index} className="flex items-start text-white/80">
+                    <Check className="w-5 h-5 text-crm-primary mr-3 flex-shrink-0 mt-0.5" />
+                    <span>{feature}</span>
                 </li>
             ))}
         </ul>
