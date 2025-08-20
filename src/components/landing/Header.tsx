@@ -13,11 +13,10 @@ export function Header() {
 
   const navLinks = [
     { href: '/#home', label: 'Início' },
-    { href: '/#produtos', label: 'Soluções' },
     { href: '/#sobre', label: 'Sobre' },
-    { href: '/#precos', label: 'Planos' },
-    { href: '/#contato', label: 'Contato' },
+    { href: '/#produtos', label: 'Soluções' },
     { href: '/#servicos', label: 'Serviços' },
+    { href: '/#precos', label: 'Planos' },
   ];
   
   const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>, href: string) => {
