@@ -22,6 +22,23 @@ export function ServicesSection() {
     <section id="servicos" className="py-20 bg-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <div className="flex flex-col gap-8 items-center lg:order-first order-last">
+            {images.map((image, index) => (
+              <div key={index} className="group relative transition-all duration-500 ease-in-out transform hover:scale-105">
+                <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-primary rounded-xl blur opacity-25 group-hover:opacity-60 transition duration-1000 animate-tilt"></div>
+                <div className="relative">
+                    <Image
+                      src={image.src}
+                      alt={image.alt}
+                      width={800}
+                      height={600}
+                      className="object-contain rounded-xl border-2 border-border"
+                      quality={100}
+                    />
+                </div>
+              </div>
+            ))}
+          </div>
           <div>
             <div className="text-sm font-medium text-purple-400 mb-4 tracking-wider uppercase">Soluções Sob Medida</div>
             <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
@@ -41,24 +58,6 @@ export function ServicesSection() {
                     <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </div>
             </a>
-          </div>
-          
-          <div className="flex flex-col gap-8 items-center">
-            {images.map((image, index) => (
-              <div key={index} className="group relative transition-all duration-500 ease-in-out transform hover:scale-105">
-                <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-primary rounded-xl blur opacity-25 group-hover:opacity-60 transition duration-1000 animate-tilt"></div>
-                <div className="relative">
-                    <Image
-                      src={image.src}
-                      alt={image.alt}
-                      width={800}
-                      height={600}
-                      className="object-contain rounded-xl border-2 border-border"
-                      quality={100}
-                    />
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </div>
