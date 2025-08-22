@@ -1,4 +1,3 @@
-
 'use client';
 
 import { ArrowRight } from 'lucide-react';
@@ -9,8 +8,8 @@ export function HeroSection() {
   return (
     <section id="home" className="pt-40 pb-20 relative overflow-hidden bg-black">
       <div className="absolute inset-0 bg-gradient-to-b from-gray-900/30 via-black to-black -z-10"></div>
-      <div className="absolute -top-24 -left-48 w-96 h-96 bg-gray-900/30 rounded-full filter blur-3xl opacity-40 animate-background-pan"></div>
-      <div className="absolute -bottom-24 -right-48 w-96 h-96 bg-gray-900/30 rounded-full filter blur-3xl opacity-40 animate-background-pan" style={{ animationDelay: '3s' }}></div>
+      <div className="absolute -top-24 -left-48 w-96 h-96 bg-white/10 rounded-full filter blur-3xl opacity-40 animate-background-pan"></div>
+      <div className="absolute -bottom-24 -right-48 w-96 h-96 bg-white/10 rounded-full filter blur-3xl opacity-40 animate-background-pan" style={{ animationDelay: '3s' }}></div>
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative text-center">
         <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 leading-tight text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400 animate-fade-in-up">
