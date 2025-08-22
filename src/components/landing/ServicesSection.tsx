@@ -1,35 +1,20 @@
 
 'use client';
 
-import { ArrowRight, Code, DatabaseZap, Bot } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-
-const services = [
-  {
-    icon: Bot,
-    title: 'Automações com IA',
-    description: 'Criamos agentes de IA e automações personalizadas para otimizar seus processos internos e reduzir custos operacionais.',
-    colorClass: 'from-purple-500 to-pink-500',
-  },
-  {
-    icon: Code,
-    title: 'Desenvolvimento de SaaS',
-    description: 'Desenvolvemos plataformas de software como serviço (SaaS) completas e sob medida para atender às suas necessidades de negócio.',
-    colorClass: 'from-blue-500 to-cyan-500',
-  },
-];
 
 const images = [
     {
       src: 'https://firebasestorage.googleapis.com/v0/b/qoro-iy1gs.firebasestorage.app/o/site.png?alt=media&token=b004694d-d2ac-49bd-aa20-fb5061fc0a4c',
       alt: 'Exemplo de website desenvolvido',
-      className: 'rounded-xl md:rotate-3 md:hover:rotate-0'
+      className: 'md:rotate-3'
     },
     {
       src: 'https://firebasestorage.googleapis.com/v0/b/qoro-iy1gs.firebasestorage.app/o/site1.png?alt=media&token=f9fb65bd-d523-4d24-81af-7b1ef44b248e',
       alt: 'Exemplo de plataforma SaaS desenvolvida',
-      className: 'rounded-xl md:-rotate-3 md:hover:rotate-0 mt-8 md:mt-0'
+      className: 'md:-rotate-3 mt-8 md:mt-0'
     }
   ];
 
@@ -56,14 +41,16 @@ export function ServicesSection() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
             {images.map((image, index) => (
-              <div key={index} className={`transition-all duration-500 ease-in-out transform hover:scale-105 ${image.className}`}>
+              <div key={index} className={`group relative transition-all duration-500 ease-in-out transform hover:scale-105 ${image.className}`}>
+                <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-primary rounded-xl blur opacity-25 group-hover:opacity-60 transition duration-1000 animate-tilt"></div>
                 <div className="relative aspect-[4/3] w-full">
                     <Image
-                    src={image.src}
-                    alt={image.alt}
-                    fill
-                    className="object-cover rounded-xl border-2 border-border"
-                    sizes="(max-width: 768px) 100vw, 50vw"
+                      src={image.src}
+                      alt={image.alt}
+                      fill
+                      className="object-cover rounded-xl border-2 border-border"
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      quality={90}
                     />
                 </div>
               </div>
