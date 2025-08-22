@@ -40,7 +40,7 @@ export function Header() {
 
   return (
     <header className="fixed w-full top-0 left-0 z-50 transition-all duration-300 ease-in-out py-4">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="rounded-full py-3 px-6 flex items-center justify-between shadow-lg border border-border bg-black/50 backdrop-blur-lg transition-all duration-300 ease-in-out overflow-hidden">
           <div className="flex-shrink-0">
             <Link href="/#home" onClick={(e) => handleLinkClick(e, '/#home')} className="text-xl">
