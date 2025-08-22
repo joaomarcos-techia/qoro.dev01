@@ -18,6 +18,7 @@ export function Header() {
       setHasScrolled(window.scrollY > 10);
     };
     window.addEventListener('scroll', handleScroll);
+    handleScroll(); 
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -32,7 +33,7 @@ export function Header() {
   const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>, href: string) => {
     if (href.startsWith('/#')) {
         e.preventDefault();
-        setIsMenuOpen(false); // Close mobile menu on link click
+        setIsMenuOpen(false); 
         const targetId = href.substring(2);
         const targetElement = document.getElementById(targetId);
         if (targetElement) {
@@ -50,7 +51,10 @@ export function Header() {
   }
 
   return (
-    <header className="fixed w-full top-0 left-0 z-50 transition-all duration-300 ease-in-out py-4">
+    <header className={cn(
+      "fixed w-full top-0 left-0 z-50 transition-all duration-300 ease-in-out",
+      hasScrolled ? "py-2" : "py-4"
+    )}>
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className={cn(
           "rounded-full py-3 px-6 flex items-center justify-between transition-all duration-300 ease-in-out overflow-hidden border",
@@ -98,7 +102,6 @@ export function Header() {
           </div>
         </div>
       </div>
-      {/* Mobile Menu */}
       {isMenuOpen && (
           <div className="md:hidden mt-2 mx-4 rounded-xl bg-black/80 backdrop-blur-lg border border-border p-4">
               <nav className="flex flex-col space-y-4 text-center">
