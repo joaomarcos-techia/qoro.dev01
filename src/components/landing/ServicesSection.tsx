@@ -43,13 +43,13 @@ export function ServicesSection() {
             {images.map((image, index) => (
               <div key={index} className={`group relative transition-all duration-500 ease-in-out transform hover:scale-105 ${image.className}`}>
                 <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-primary rounded-xl blur opacity-25 group-hover:opacity-60 transition duration-1000 animate-tilt"></div>
-                <div className="relative aspect-[4/3] w-full">
+                <div className="relative">
                     <Image
                       src={image.src}
                       alt={image.alt}
-                      fill
-                      className="object-cover rounded-xl border-2 border-border"
-                      sizes="(max-width: 768px) 100vw, 50vw"
+                      width={800}
+                      height={600}
+                      className="object-contain rounded-xl border-2 border-border"
                       quality={90}
                     />
                 </div>
