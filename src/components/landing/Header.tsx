@@ -42,13 +42,13 @@ export function Header() {
     <header className="fixed w-full top-0 left-0 z-50 transition-all duration-300 ease-in-out py-4">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="rounded-full py-3 px-6 flex items-center justify-between shadow-lg border border-border bg-black/50 backdrop-blur-lg transition-all duration-300 ease-in-out overflow-hidden">
-          <div className="flex items-center">
+          <div className="flex-shrink-0">
             <Link href="/#home" onClick={(e) => handleLinkClick(e, '/#home')} className="text-xl">
               <Logo/>
             </Link>
           </div>
           
-          <nav className="hidden md:flex items-center space-x-10">
+          <nav className="hidden md:flex flex-1 justify-center items-center space-x-10">
             {navLinks.map(link => (
               <a 
                 key={link.href} 
@@ -61,12 +61,15 @@ export function Header() {
                 {link.label}
               </a>
             ))}
+          </nav>
+          
+          <div className="hidden md:flex flex-shrink-0">
              <Link href="/login">
                 <div className="bg-primary text-primary-foreground px-5 py-2 rounded-full font-medium text-sm transition-all duration-300 ease-in-out hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/30 hover:scale-105">
                     Entrar
                 </div>
             </Link>
-          </nav>
+          </div>
 
           <div className="flex items-center gap-4 md:hidden">
             <button
