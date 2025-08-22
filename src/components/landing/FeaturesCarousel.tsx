@@ -1,7 +1,6 @@
+
 'use client';
 
-import { useKeenSlider } from 'keen-slider/react';
-import 'keen-slider/keen-slider.min.css';
 import { Eye, BrainCircuit, Rocket, ShieldCheck, Link, Scaling } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -47,7 +46,7 @@ const features = [
 export function FeaturesCarousel() {
   return (
     <div className="w-full inline-flex flex-nowrap overflow-hidden [mask-image:_linear-gradient(to_right,transparent_0,_black_128px,_black_calc(100%-200px),transparent_100%)]">
-      <ul className="flex items-stretch justify-center md:justify-start [&_li]:mx-4 [&_img]:max-w-none animate-infinite-scroll">
+      <ul className="flex items-stretch justify-center md:justify-start [&_li]:mx-4 animate-infinite-scroll">
         {features.map((feature, index) => {
            const Icon = feature.icon;
            return (
@@ -65,7 +64,7 @@ export function FeaturesCarousel() {
             </li>
         )})}
       </ul>
-      <ul className="flex items-stretch justify-center md:justify-start [&_li]:mx-4 [&_img]:max-w-none animate-infinite-scroll" aria-hidden="true">
+      <ul className="flex items-stretch justify-center md:justify-start [&_li]:mx-4 animate-infinite-scroll" aria-hidden="true">
         {features.map((feature, index) => {
            const Icon = feature.icon;
            return (

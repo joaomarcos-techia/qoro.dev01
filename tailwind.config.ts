@@ -99,7 +99,7 @@ export default {
         'accordion-up': 'accordion-up 0.2s ease-out',
         'fade-in-up': 'fade-in-up 0.8s ease-out forwards',
         'float': 'float 6s ease-in-out infinite',
-        'infinite-scroll': 'infinite-scroll 25s linear infinite',
+        'infinite-scroll': 'infinite-scroll 40s linear infinite',
         'shine': 'shine 6s linear infinite',
       },
     },
