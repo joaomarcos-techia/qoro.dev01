@@ -25,7 +25,7 @@ export function ServicesSection() {
           <div>
             <div className="text-sm font-medium text-purple-400 mb-4 tracking-wider uppercase">Soluções Sob Medida</div>
             <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
-              Sua empresa tem uma necessidade única. Nós temos a solução.
+              Sua empresa tem uma necessidade única? Nós temos a solução.
             </h2>
             <div className="space-y-6 text-xl text-white/70 mb-8 leading-relaxed">
                <p>
@@ -48,12 +48,13 @@ export function ServicesSection() {
               <div key={index} className="group relative transition-all duration-500 ease-in-out transform hover:scale-105">
                 <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-primary rounded-xl blur opacity-25 group-hover:opacity-60 transition duration-1000 animate-tilt"></div>
                 <div className="relative">
-                    <img
+                    <Image
                       src={image.src}
                       alt={image.alt}
                       width={800}
                       height={600}
                       className="object-contain rounded-xl border-2 border-border"
+                      quality={100}
                     />
                 </div>
               </div>
