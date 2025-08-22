@@ -14,7 +14,7 @@ const images = [
     {
       src: 'https://firebasestorage.googleapis.com/v0/b/qoro-iy1gs.firebasestorage.app/o/site1.png?alt=media&token=f9fb65bd-d523-4d24-81af-7b1ef44b248e',
       alt: 'Exemplo de plataforma SaaS desenvolvida',
-      className: 'md:-rotate-3 mt-8 md:mt-0'
+      className: 'md:-rotate-3'
     }
   ];
 
@@ -39,7 +39,7 @@ export function ServicesSection() {
             </a>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+          <div className="flex flex-col gap-8 items-center">
             {images.map((image, index) => (
               <div key={index} className={`group relative transition-all duration-500 ease-in-out transform hover:scale-105 ${image.className}`}>
                 <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-primary rounded-xl blur opacity-25 group-hover:opacity-60 transition duration-1000 animate-tilt"></div>
