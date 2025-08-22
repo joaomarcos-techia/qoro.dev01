@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -49,7 +48,7 @@ export function Header() {
             </Link>
           </div>
           
-          <nav className="hidden md:flex space-x-14">
+          <nav className="hidden md:flex items-center space-x-10">
             {navLinks.map(link => (
               <a 
                 key={link.href} 
@@ -62,14 +61,14 @@ export function Header() {
                 {link.label}
               </a>
             ))}
-          </nav>
-
-          <div className="flex items-center gap-4">
-            <Link href="/login">
-                <div className="hidden md:block bg-primary text-primary-foreground px-5 py-2 rounded-full font-medium text-sm transition-all duration-300 ease-in-out hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/30 hover:scale-105">
+             <Link href="/login">
+                <div className="bg-primary text-primary-foreground px-5 py-2 rounded-full font-medium text-sm transition-all duration-300 ease-in-out hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/30 hover:scale-105">
                     Entrar
                 </div>
             </Link>
+          </nav>
+
+          <div className="flex items-center gap-4 md:hidden">
             <button
                 className="md:hidden text-white"
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
