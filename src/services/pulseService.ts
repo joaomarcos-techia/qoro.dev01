@@ -57,7 +57,7 @@ export const listConversations = async (actorUid: string): Promise<z.infer<typeo
         const snapshot = await adminDb.collectionGroup('pulse_conversations')
             .where('organizationId', '==', organizationId)
             .where('userId', '==', actorUid)
-            .orderBy('createdAt', 'desc') 
+            .orderBy('createdAt', 'desc')
             .get();
             
         if (snapshot.empty) {
@@ -66,6 +66,7 @@ export const listConversations = async (actorUid: string): Promise<z.infer<typeo
 
         const conversations = snapshot.docs.map(doc => {
             const data = doc.data();
+            // Use createdAt as a fallback for updatedAt
             const updatedAt = data.updatedAt ? data.updatedAt.toDate().toISOString() : data.createdAt.toDate().toISOString();
             
             return ConversationSchema.parse({
@@ -77,14 +78,14 @@ export const listConversations = async (actorUid: string): Promise<z.infer<typeo
             });
         });
 
-        // Sort manually by updatedAt in descending order
+        // Manually sort by the reliable `updatedAt` field we've just constructed.
+        // This ensures recent conversations (new or updated) appear first.
         conversations.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
         return conversations;
 
     } catch (error: any) {
         console.error("Critical error in listConversations:", error, error.stack);
-        // Lançar um erro mais genérico para o cliente, mas logar o erro real no servidor
         throw new Error("Failed to fetch conversation history due to a server error. The required database index might be building.");
     }
 };
