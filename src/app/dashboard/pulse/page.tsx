@@ -3,7 +3,7 @@
 
 import { useState, useRef, useEffect, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { Send, BrainCircuit, Loader, AlertCircle, Sparkles, User } from 'lucide-react';
+import { Send, BrainCircuit, Loader, AlertCircle, Sparkles, User, BarChart2, PlusCircle, PenSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { User as FirebaseUser, onAuthStateChanged } from 'firebase/auth';
@@ -11,6 +11,24 @@ import { auth, db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { askPulse } from '@/ai/flows/pulse-flow';
 import type { PulseMessage } from '@/ai/schemas';
+
+const suggestionCards = [
+    {
+        icon: BarChart2,
+        title: 'Analisar',
+        prompt: 'Compare o total de vendas deste mês com o mês passado e me diga o que mudou.',
+    },
+    {
+        icon: PlusCircle,
+        title: 'Criar',
+        prompt: 'Crie uma tarefa para eu ligar para o cliente "Tech Solutions" amanhã às 10h para discutir a proposta.',
+    },
+    {
+        icon: PenSquare,
+        title: 'Resumir',
+        prompt: 'Resuma o status das minhas tarefas com prioridade alta.',
+    }
+]
 
 export default function PulsePage() {
   const [messages, setMessages] = useState<PulseMessage[]>([]);
@@ -81,11 +99,31 @@ export default function PulsePage() {
     }
   };
   
+  const handleSuggestionClick = (prompt: string) => {
+    setInput(prompt);
+  }
+
   const renderWelcomeScreen = () => (
     <div className="flex-grow flex flex-col items-center justify-center text-center">
         <div className="flex items-center text-4xl font-bold text-foreground mb-10">
              <Sparkles className="w-9 h-9 mr-4 text-pulse-primary" />
             <span>Como posso ajudar?</span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl w-full">
+            {suggestionCards.map((card, index) => {
+                const Icon = card.icon;
+                return (
+                     <div key={index} onClick={() => handleSuggestionClick(card.prompt)}
+                        className="bg-card p-4 rounded-xl border border-border hover:border-primary/50 cursor-pointer transition-all duration-200 hover:-translate-y-1 text-left"
+                    >
+                        <div className="flex items-center mb-2">
+                           <Icon className="w-5 h-5 mr-3 text-primary" />
+                           <h3 className="font-semibold text-foreground">{card.title}</h3>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{card.prompt}</p>
+                    </div>
+                )
+            })}
         </div>
     </div>
   );
