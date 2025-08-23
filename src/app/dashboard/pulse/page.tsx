@@ -12,24 +12,6 @@ import { doc, getDoc } from 'firebase/firestore';
 import { askPulse } from '@/ai/flows/pulse-flow';
 import type { PulseMessage } from '@/ai/schemas';
 
-const suggestionCards = [
-    {
-        icon: BarChart2,
-        title: 'Analisar',
-        prompt: 'Compare o total de vendas deste mês com o mês passado e me diga o que mudou.',
-    },
-    {
-        icon: PlusCircle,
-        title: 'Criar',
-        prompt: 'Crie uma tarefa para eu ligar para o cliente "Tech Solutions" amanhã às 10h para discutir a proposta.',
-    },
-    {
-        icon: PenSquare,
-        title: 'Resumir',
-        prompt: 'Resuma o status das minhas tarefas com prioridade alta.',
-    }
-]
-
 export default function PulsePage() {
   const [messages, setMessages] = useState<PulseMessage[]>([]);
   const [input, setInput] = useState('');
@@ -52,10 +34,11 @@ export default function PulsePage() {
       } else {
         setCurrentUser(null);
         setUserName('');
+        router.push('/login');
       }
     });
     return () => unsubscribe();
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -98,10 +81,6 @@ export default function PulsePage() {
         setIsLoading(false);
     }
   };
-  
-  const handleSuggestionClick = (prompt: string) => {
-    setInput(prompt);
-  }
 
   const renderWelcomeScreen = () => (
     <div className="flex-grow flex flex-col items-center justify-center text-center">
@@ -109,33 +88,15 @@ export default function PulsePage() {
              <Sparkles className="w-9 h-9 mr-4 text-pulse-primary" />
             <span>Como posso ajudar?</span>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl w-full">
-            {suggestionCards.map((card, index) => {
-                const Icon = card.icon;
-                return (
-                     <div key={index} onClick={() => handleSuggestionClick(card.prompt)}
-                        className="bg-card p-4 rounded-xl border border-border hover:border-primary/50 cursor-pointer transition-all duration-200 hover:-translate-y-1 text-left"
-                    >
-                        <div className="flex items-center mb-2">
-                           <Icon className="w-5 h-5 mr-3 text-primary" />
-                           <h3 className="font-semibold text-foreground">{card.title}</h3>
-                        </div>
-                        <p className="text-sm text-muted-foreground">{card.prompt}</p>
-                    </div>
-                )
-            })}
-        </div>
     </div>
   );
 
   return (
     <div className="flex flex-col h-full bg-black">
-        {/* Main Content: Chat Area and Input Form */}
         <div className="flex-grow flex flex-col items-center w-full px-4 relative">
-            {/* Chat Area */}
             <div 
                 ref={scrollAreaRef}
-                className="flex-grow w-full max-w-4xl overflow-y-auto space-y-8 flex flex-col pt-8 pb-32" // Added pb-32 for spacing from input
+                className="flex-grow w-full max-w-4xl overflow-y-auto space-y-8 flex flex-col pt-8 pb-32"
             >
                 {messages.length === 0 && !isLoading ? (
                     renderWelcomeScreen()
@@ -179,7 +140,6 @@ export default function PulsePage() {
                 )}
             </div>
 
-            {/* Input Area */}
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black to-transparent">
                 <div className="w-full max-w-4xl mx-auto px-4 pt-4 pb-8">
                     <div className="relative bg-card border border-border rounded-2xl shadow-2xl">
