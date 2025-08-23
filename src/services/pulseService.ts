@@ -57,16 +57,15 @@ export const listConversations = async (actorUid: string): Promise<z.infer<typeo
         const snapshot = await adminDb.collectionGroup('pulse_conversations')
             .where('organizationId', '==', organizationId)
             .where('userId', '==', actorUid)
-            .orderBy('updatedAt', 'desc')
+            .orderBy('createdAt', 'desc') 
             .get();
             
         if (snapshot.empty) {
             return [];
         }
 
-        return snapshot.docs.map(doc => {
+        const conversations = snapshot.docs.map(doc => {
             const data = doc.data();
-            // Fallback for older documents that might not have updatedAt
             const updatedAt = data.updatedAt ? data.updatedAt.toDate().toISOString() : data.createdAt.toDate().toISOString();
             
             return ConversationSchema.parse({
@@ -74,10 +73,15 @@ export const listConversations = async (actorUid: string): Promise<z.infer<typeo
                 title: data.title,
                 createdAt: data.createdAt.toDate().toISOString(),
                 updatedAt: updatedAt,
-                // Ensure messages is always an array, even if missing in Firestore
                 messages: data.messages || [],
             });
         });
+
+        // Sort manually by updatedAt in descending order
+        conversations.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+
+        return conversations;
+
     } catch (error: any) {
         console.error("Critical error in listConversations:", error, error.stack);
         // Lançar um erro mais genérico para o cliente, mas logar o erro real no servidor
