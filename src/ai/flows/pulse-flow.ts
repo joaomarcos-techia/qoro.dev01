@@ -96,7 +96,6 @@ Transformar dados empresariais em decisões estratégicas com impacto real. Iden
     let title = '';
 
     if (isNewConversation) {
-        // Generate a title for the new conversation
         const titleGenerationPrompt = `Com base na seguinte conversa, gere um título curto e conciso (máximo de 5 palavras) que resuma o assunto principal.
 
         Conversa:
@@ -115,8 +114,8 @@ Transformar dados empresariais em decisões estratégicas com impacto real. Iden
 
         const result = await pulseService.createConversation(actor, title, updatedMessages);
         newConversationId = result.id;
-    } else {
-        await pulseService.updateConversation(actor, newConversationId!, updatedMessages);
+    } else if (newConversationId) {
+        await pulseService.updateConversation(actor, newConversationId, updatedMessages);
     }
     
     return {
