@@ -59,9 +59,9 @@ export default function PulsePage() {
             throw new Error("A IA não retornou um ID de conversa.");
         }
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error calling Pulse Flow:", error);
-        setError('Ocorreu um erro ao comunicar com a IA. Tente novamente.');
+        setError(error.message || 'Ocorreu um erro ao comunicar com a IA. Tente novamente.');
     } finally {
         setIsSending(false);
     }
@@ -73,14 +73,7 @@ export default function PulsePage() {
         <div className="flex-grow flex flex-col items-center w-full px-4 relative">
             <div className="flex-grow w-full max-w-4xl overflow-y-auto space-y-8 flex flex-col pt-8 pb-32 justify-center">
                 
-                {/* Welcome Screen */}
-                <div className="flex-grow flex flex-col items-center justify-center text-center">
-                    <div className="flex items-center text-4xl font-bold text-foreground mb-10">
-                        <Sparkles className="w-9 h-9 mr-4 text-pulse-primary" />
-                        <span>Como posso ajudar?</span>
-                    </div>
-                </div>
-
+                {/* This space is intentionally left blank for a clean start */}
                 {isSending && (
                 <div className="flex items-start gap-4 mx-auto w-full">
                     <div className="flex-shrink-0 w-8 h-8 rounded-full bg-pulse-primary text-black flex items-center justify-center">
@@ -105,7 +98,7 @@ export default function PulsePage() {
                                 handleSendMessage();
                             }
                             }}
-                            placeholder="Pergunte qualquer coisa sobre seu negócio..."
+                            placeholder="Comece uma nova conversa com o QoroPulse..."
                             className="w-full pr-16 pl-4 py-4 bg-transparent rounded-2xl border-none focus:ring-0 text-base resize-none shadow-none"
                             rows={1}
                             disabled={isSending || isPending}
