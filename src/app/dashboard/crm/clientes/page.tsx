@@ -17,14 +17,10 @@ import { CustomerForm } from '@/components/dashboard/crm/CustomerForm';
 
 export default function ClientesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  // The CustomerTable now manages its own refresh state internally.
-  // This refreshCounter is kept to re-render the table component itself if needed,
-  // for instance, if we needed to force a full re-mount.
   const [refreshCounter, setRefreshCounter] = useState(0);
 
   const handleCustomerAction = () => {
     setIsModalOpen(false);
-    // Refresh the table by changing its key
     setRefreshCounter(prev => prev + 1);
   };
 

@@ -24,11 +24,8 @@ type CustomerFormProps = {
   customer?: CustomerProfile | null;
 };
 
-const FormSchema = CustomerSchema.extend({
-  birthDate: z.union([z.string(), z.date()]).optional().nullable(),
-});
-
-type FormValues = z.infer<typeof FormSchema>;
+// Use the base CustomerSchema for the form and handle date conversion on submit
+type FormValues = z.infer<typeof CustomerSchema>;
 
 // --- Funções de formatação ---
 const formatCPF = (value: string) => {
@@ -80,7 +77,12 @@ export function CustomerForm({ onCustomerAction, customer }: CustomerFormProps) 
     reset,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(FormSchema),
+    resolver: zodResolver(CustomerSchema),
+    defaultValues: {
+      name: '', email: '', phone: '', company: '', cpf: '', cnpj: '',
+      birthDate: null, address: { street: '', number: '', neighborhood: '', city: '', state: '', zipCode: '' },
+      tags: [], source: '', status: 'new', customFields: {}
+    }
   });
 
   useEffect(() => {
@@ -110,6 +112,7 @@ export function CustomerForm({ onCustomerAction, customer }: CustomerFormProps) 
         cpf: data.cpf?.replace(/\D/g, ''),
         cnpj: data.cnpj?.replace(/\D/g, ''),
         phone: data.phone?.replace(/\D/g, ''),
+        // Correctly convert Date object to ISO string for the backend
         birthDate: data.birthDate ? new Date(data.birthDate).toISOString() : null,
       };
 
