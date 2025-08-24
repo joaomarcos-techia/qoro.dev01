@@ -121,20 +121,25 @@ IMPORTANTE: A conversa ainda não tem um título. Baseado na pergunta do usuári
     
     const updatedMessages = [...messages, assistantMessage];
     let currentConversationId = conversationId;
-    let newTitle = output.title || '';
+    let finalTitle = existingConversation?.title || '';
+
+    if (output.title && !hasTitle) {
+      finalTitle = output.title;
+    }
+
 
     if (!conversationId) {
         // This is a new conversation
-        const result = await pulseService.createConversation(actor, newTitle, updatedMessages);
+        const result = await pulseService.createConversation(actor, finalTitle, updatedMessages);
         currentConversationId = result.id;
     } else {
-        // This is an existing conversation
-        await pulseService.updateConversation(actor, conversationId, updatedMessages, newTitle && !hasTitle ? newTitle : undefined);
+        // This is an existing conversation, update messages and maybe the title
+        await pulseService.updateConversation(actor, conversationId, updatedMessages, finalTitle && !hasTitle ? finalTitle : undefined);
     }
     
     return {
         conversationId: currentConversationId!,
-        title: newTitle || undefined,
+        title: finalTitle || undefined, // Return the title so the UI can update
         response: assistantMessage,
     };
   }

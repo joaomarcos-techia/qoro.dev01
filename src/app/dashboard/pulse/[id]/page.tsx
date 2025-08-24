@@ -100,6 +100,11 @@ export default function PulseConversationPage() {
         } else {
             // Otherwise, just update the messages with the real response.
             setMessages(prev => [...prev, response.response]);
+            
+            // If a title was newly generated, refresh the sidebar data
+            if (response.title) {
+                router.refresh();
+            }
         }
 
     } catch (error: any) {
