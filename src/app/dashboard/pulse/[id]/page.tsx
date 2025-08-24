@@ -54,10 +54,12 @@ export default function PulseConversationPage() {
       setMessages([]);
       try {
         const conversation = await getConversation({ conversationId, actor: currentUser.uid });
-        setMessages(conversation.messages || []);
-      } catch (err) {
+        if (conversation && conversation.messages) {
+           setMessages(conversation.messages);
+        }
+      } catch (err: any) {
         console.error("Error loading conversation", err);
-        setError("Não foi possível carregar o histórico desta conversa.");
+        setError(err.message || "Não foi possível carregar o histórico desta conversa.");
       } finally {
         setIsLoadingHistory(false);
       }
@@ -103,9 +105,9 @@ export default function PulseConversationPage() {
             });
         }
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error calling Pulse Flow:", error);
-        setError('Ocorreu um erro ao comunicar com a IA. Tente novamente.');
+        setError(error.message || 'Ocorreu um erro ao comunicar com a IA. Tente novamente.');
         setMessages(prev => prev.slice(0, -1));
     } finally {
         setIsSending(false);
@@ -186,12 +188,12 @@ export default function PulseConversationPage() {
                             placeholder="Pergunte qualquer coisa sobre seu negócio..."
                             className="w-full pr-16 pl-4 py-4 bg-transparent rounded-2xl border-none focus:ring-0 text-base resize-none shadow-none"
                             rows={1}
-                            disabled={isSending}
+                            disabled={isSending || isPending}
                         />
                         <Button
                             type="submit"
                             size="icon"
-                            disabled={isSending || !input.trim()}
+                            disabled={isSending || isPending || !input.trim()}
                             className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-pulse-primary text-primary-foreground rounded-lg hover:bg-pulse-primary/90 disabled:bg-gray-600"
                         >
                             <Send size={20} />
