@@ -27,6 +27,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import { Header } from '@/components/dashboard/Header';
 import { cn } from '@/lib/utils';
+import { useState } from 'react';
 
 interface NavItem {
   href: string;
@@ -39,23 +40,16 @@ interface NavGroup {
     icon: LucideIcon;
 }
 
+interface SidebarHistoryItem {
+  id: string;
+  title: string;
+}
+
 const navConfig: Record<string, NavGroup> = {
-    crm: {
-        group: 'QoroCRM',
-        icon: Users,
-    },
-    task: {
-        group: 'QoroTask',
-        icon: CheckSquare,
-    },
-    finance: {
-        group: 'QoroFinance',
-        icon: DollarSign,
-    },
-    pulse: {
-      group: 'QoroPulse',
-      icon: Activity,
-  },
+    crm: { group: 'QoroCRM', icon: Users },
+    task: { group: 'QoroTask', icon: CheckSquare },
+    finance: { group: 'QoroFinance', icon: DollarSign },
+    pulse: { group: 'QoroPulse', icon: Activity },
 };
 
 const navItems: Record<string, NavItem[]> = {
@@ -80,7 +74,9 @@ const navItems: Record<string, NavItem[]> = {
         { href: '/dashboard/finance/contas-a-pagar', label: 'Contas a Pagar/Receber', icon: Receipt },
         { href: '/dashboard/finance/conciliacao', label: 'Conciliação', icon: GitCompareArrows },
     ],
-    pulse: []
+    pulse: [
+        { href: '/dashboard/pulse', label: 'Nova Conversa', icon: LayoutGrid },
+    ]
 }
 
 
@@ -93,11 +89,9 @@ export default function DashboardLayout({
   const segments = pathname.split('/');
   const currentModule = segments.length > 2 ? segments[2] : 'home';
 
-  const isPulseModule = currentModule === 'pulse';
-
   const renderSidebarContent = () => {
-    if (currentModule === 'home' || isPulseModule) {
-        return null; // No primary sidebar on the main dashboard or pulse page
+    if (currentModule === 'home') {
+        return null;
     }
     
     const moduleConfig = navConfig[currentModule];
@@ -151,13 +145,8 @@ export default function DashboardLayout({
       <Header />
       <div className="flex h-[calc(100vh-65px)]">
          {renderSidebarContent()}
-         <main className={cn(
-            "flex-1",
-            !isPulseModule && "overflow-y-auto" // Let Pulse handle its own internal scrolling
-          )}>
-            <div className={cn(!isPulseModule && "p-8", isPulseModule && "h-full")}>
-              {children}
-            </div>
+         <main className="flex-1 overflow-y-auto">
+           {children}
          </main>
       </div>
     </div>
