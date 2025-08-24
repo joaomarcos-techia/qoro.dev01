@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, FormEvent, useTransition } from 'react';
@@ -19,6 +20,8 @@ export default function PulsePage() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
+  const isLoading = isSending || isPending;
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
@@ -33,7 +36,7 @@ export default function PulsePage() {
 
   const handleSendMessage = async (e?: FormEvent) => {
     e?.preventDefault();
-    if (!input.trim() || isSending || !currentUser) return;
+    if (!input.trim() || isLoading || !currentUser) return;
   
     const userMessage: PulseMessage = { role: 'user', content: input };
     const currentMessages = [userMessage];
@@ -59,8 +62,7 @@ export default function PulsePage() {
     } catch (error: any) {
         console.error("Error calling Pulse Flow:", error);
         setError(error.message || 'Ocorreu um erro ao comunicar com a IA. Tente novamente.');
-    } finally {
-        setIsSending(false);
+        setIsSending(false); // Reset sending state on error
     }
   };
 
@@ -70,7 +72,7 @@ export default function PulsePage() {
         <div className="flex-grow flex flex-col items-center w-full px-4 relative">
             <div className="flex-grow w-full max-w-4xl flex flex-col justify-center items-center pb-32">
                 
-                {isSending ? (
+                {isLoading ? (
                      <div className="flex flex-col items-center justify-center">
                         <Loader2 className="w-12 h-12 text-primary animate-spin" />
                         <p className="mt-4 text-muted-foreground">Pensando...</p>
@@ -101,12 +103,12 @@ export default function PulsePage() {
                             placeholder="Comece uma nova conversa com o QoroPulse..."
                             className="w-full pr-16 pl-4 py-4 bg-transparent rounded-2xl border-none focus:ring-0 text-base resize-none shadow-none"
                             rows={1}
-                            disabled={isSending || isPending}
+                            disabled={isLoading}
                         />
                         <Button
                             type="submit"
                             size="icon"
-                            disabled={isSending || isPending || !input.trim()}
+                            disabled={isLoading || !input.trim()}
                             className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-pulse-primary text-primary-foreground rounded-lg hover:bg-pulse-primary/90 disabled:bg-gray-600"
                         >
                             <Send size={20} />
