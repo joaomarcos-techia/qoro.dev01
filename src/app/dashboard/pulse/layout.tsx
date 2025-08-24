@@ -1,15 +1,8 @@
 
 'use client';
 
-import { PulseSidebar } from '@/components/dashboard/pulse/PulseSidebar';
-
+// This layout is now simplified to just render children.
+// The main DashboardLayout handles the sidebar and overall page structure.
 export default function PulseLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex h-full">
-      <PulseSidebar />
-      <div className="flex-1 overflow-y-auto">
-        {children}
-      </div>
-    </div>
-  );
+  return <>{children}</>;
 }
