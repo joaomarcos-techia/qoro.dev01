@@ -141,13 +141,21 @@ export const deleteTransaction = async (transactionId: string, actorUid: string)
 };
 
 
-export const listTransactions = async (actorUid: string): Promise<TransactionProfile[]> => {
+export const listTransactions = async (actorUid: string, dateRange?: { from?: string; to?: string }): Promise<TransactionProfile[]> => {
     const { organizationId } = await getAdminAndOrg(actorUid);
     
-    const transactionsSnapshot = await adminDb.collection('transactions')
-                                     .where('companyId', '==', organizationId)
-                                     .orderBy('date', 'desc')
-                                     .get();
+    let query = adminDb.collection('transactions')
+                      .where('companyId', '==', organizationId)
+                      .orderBy('date', 'desc');
+
+    if (dateRange?.from) {
+        query = query.where('date', '>=', new Date(dateRange.from));
+    }
+    if (dateRange?.to) {
+        query = query.where('date', '<=', new Date(dateRange.to));
+    }
+
+    const transactionsSnapshot = await query.get();
     
     if (transactionsSnapshot.empty) {
         return [];

@@ -91,30 +91,29 @@ export const deleteAccount = async (accountId: string, actorUid: string) => {
 };
 
 
-export const getDashboardMetrics = async (actorUid: string) => {
+export const getDashboardMetrics = async (actorUid: string, dateRange?: { from?: string; to?: string }) => {
     const { organizationId } = await getAdminAndOrg(actorUid);
 
     const accountsRef = adminDb.collection('accounts').where('companyId', '==', organizationId);
-    const transactionsRef = adminDb.collection('transactions').where('companyId', '==', organizationId);
+    let transactionsQuery = adminDb.collection('transactions').where('companyId', '==', organizationId);
 
-    // Get date range for the current month
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    // Apply date range filter if provided
+    if (dateRange?.from) {
+        transactionsQuery = transactionsQuery.where('date', '>=', new Date(dateRange.from));
+    }
+    if (dateRange?.to) {
+        transactionsQuery = transactionsQuery.where('date', '<=', new Date(dateRange.to));
+    }
 
     const accountsSnapshot = await accountsRef.get();
     const totalBalance = accountsSnapshot.docs.reduce((sum, doc) => sum + (doc.data().balance || 0), 0);
     
-    const incomePromise = transactionsRef
+    const incomePromise = transactionsQuery
         .where('type', '==', 'income')
-        .where('date', '>=', startOfMonth)
-        .where('date', '<=', endOfMonth)
         .get();
 
-    const expensePromise = transactionsRef
+    const expensePromise = transactionsQuery
         .where('type', '==', 'expense')
-        .where('date', '>=', startOfMonth)
-        .where('date', '<=', endOfMonth)
         .get();
 
     const [incomeSnapshot, expenseSnapshot] = await Promise.all([incomePromise, expensePromise]);

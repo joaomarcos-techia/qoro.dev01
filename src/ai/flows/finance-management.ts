@@ -35,6 +35,19 @@ import * as billService from '@/services/billService';
 
 const ActorSchema = z.object({ actor: z.string() });
 
+const DateRangeSchema = z.object({
+    from: z.string().optional(),
+    to: z.string().optional(),
+}).optional();
+
+const ListTransactionsInputSchema = ActorSchema.extend({
+    dateRange: DateRangeSchema
+});
+
+const GetDashboardMetricsInputSchema = ActorSchema.extend({
+    dateRange: DateRangeSchema
+});
+
 const DeleteAccountInputSchema = z.object({
     accountId: z.string(),
 }).extend(ActorSchema.shape);
@@ -105,10 +118,10 @@ const createTransactionFlow = ai.defineFlow(
 const listTransactionsFlow = ai.defineFlow(
     { 
         name: 'listTransactionsFlow', 
-        inputSchema: ActorSchema, 
+        inputSchema: ListTransactionsInputSchema,
         outputSchema: z.array(TransactionProfileSchema) 
     },
-    async ({ actor }) => transactionService.listTransactions(actor)
+    async ({ actor, dateRange }) => transactionService.listTransactions(actor, dateRange)
 );
 
 const updateTransactionFlow = ai.defineFlow(
@@ -169,10 +182,10 @@ const deleteBillFlow = ai.defineFlow(
 const getDashboardMetricsFlow = ai.defineFlow(
     {
         name: 'getFinanceDashboardMetricsFlow',
-        inputSchema: ActorSchema,
+        inputSchema: GetDashboardMetricsInputSchema,
         outputSchema: DashboardMetricsOutputSchema
     },
-    async ({ actor }) => financeService.getDashboardMetrics(actor)
+    async ({ actor, dateRange }) => financeService.getDashboardMetrics(actor, dateRange)
 );
 
 // Exported functions (client-callable wrappers)
@@ -196,7 +209,7 @@ export async function createTransaction(input: z.infer<typeof TransactionSchema>
     return createTransactionFlow(input);
 }
 
-export async function listTransactions(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof TransactionProfileSchema>[]> {
+export async function listTransactions(input: z.infer<typeof ListTransactionsInputSchema>): Promise<z.infer<typeof TransactionProfileSchema>[]> {
     return listTransactionsFlow(input);
 }
 
@@ -208,7 +221,7 @@ export async function deleteTransaction(input: z.infer<typeof DeleteTransactionI
     return deleteTransactionFlow(input);
 }
 
-export async function getDashboardMetrics(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof DashboardMetricsOutputSchema>> {
+export async function getDashboardMetrics(input: z.infer<typeof GetDashboardMetricsInputSchema>): Promise<z.infer<typeof DashboardMetricsOutputSchema>> {
     return getDashboardMetricsFlow(input);
 }
 
