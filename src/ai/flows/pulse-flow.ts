@@ -45,7 +45,7 @@ const pulseFlow = ai.defineFlow(
     const prompt = lastMessage.content;
     
     const llmResponse = await ai.generate({
-        model: 'googleai/gemini-2.0-flash',
+        model: 'googleai/gemini-1.5-flash',
         prompt: prompt,
         history: history,
         output: {
@@ -60,7 +60,7 @@ const pulseFlow = ai.defineFlow(
         },
         system: `Você é o QoroPulse— um agente de inteligência estratégica interna. Seu papel é agir como o cérebro analítico da empresa: interpretar dados comerciais, financeiros e operacionais para fornecer respostas inteligentes, acionáveis e estrategicamente valiosas ao empreendedor.
 
-${isNewConversation ? 'Esta é a primeira mensagem de uma nova conversa. Após fornecer sua resposta, você DEVE gerar um título curto e conciso (máximo 5 palavras) para a conversa no campo "title" do JSON de saída.' : ''}
+${isNewConversation ? 'Esta é a primeira mensagem de uma nova conversa. Após fornecer sua resposta, você DEVE gerar um título curto e conciso (máximo 5 palavras) para a conversa no campo "title" do JSON de saída. Se a mensagem for apenas uma saudação simples (oi, olá, etc.), não gere um título, deixe o campo em branco.' : ''}
 
 Nunca se posicione como IA ou assistente. Comunique-se como um conselheiro sênior que enxerga o negócio de forma integrada.
 
@@ -112,7 +112,12 @@ Transformar dados empresariais em decisões estratégicas com impacto real. Iden
 
     if (isNewConversation) {
         if (!title) {
-            title = messages[0].content.split(' ').slice(0, 5).join(' ') + '...';
+            // Fallback in case the AI doesn't generate a title for a non-greeting message
+             const firstUserMessage = messages[0].content;
+             const isGreeting = /^(oi|olá|ola|hello|hi|hey|bom dia|boa tarde|boa noite)/i.test(firstUserMessage.trim());
+             if (!isGreeting) {
+                title = firstUserMessage.split(' ').slice(0, 5).join(' ') + '...';
+             }
         }
         const result = await pulseService.createConversation(actor, title, updatedMessages);
         newConversationId = result.id;

@@ -74,6 +74,7 @@ export function PulseSidebar() {
     }
     return conversations.map((convo) => {
         const isActive = pathname.includes(convo.id);
+        const displayTitle = convo.title || "Nova Conversa";
         return (
           <Link key={convo.id} href={`/dashboard/pulse/${convo.id}`} passHref>
             <div
@@ -85,7 +86,7 @@ export function PulseSidebar() {
               )}
             >
               <MessageSquare className="w-4 h-4 mr-3 flex-shrink-0" />
-              <span className="truncate">{convo.title}</span>
+              <span className="truncate">{displayTitle}</span>
             </div>
           </Link>
         );
