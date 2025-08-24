@@ -17,9 +17,8 @@ export default function PulseConversationPage() {
   const [messages, setMessages] = useState<PulseMessage[]>([]);
   const [input, setInput] = useState('');
   const [isSending, setIsSending] = useState(false);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
-  const [userName, setUserName] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -27,21 +26,14 @@ export default function PulseConversationPage() {
   const params = useParams();
   const conversationId = params.id as string | undefined;
 
-  const [isPending, startTransition] = useTransition();
+  const [isNavigating, startNavigation] = useTransition();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setCurrentUser(user);
-        const userDocRef = doc(db, 'users', user.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-          setUserName(userDoc.data().name || user.email || 'Usuário');
-        }
-      } else {
-        setCurrentUser(null);
-        setUserName('');
+      if (!user) {
         router.push('/login');
+      } else {
+        setCurrentUser(user);
       }
     });
     return () => unsubscribe();
@@ -64,7 +56,8 @@ export default function PulseConversationPage() {
         setIsLoadingHistory(false);
       }
     } else {
-      setMessages([]);
+        setIsLoadingHistory(false);
+        setMessages([]);
     }
   }, [conversationId, currentUser]);
 
@@ -81,34 +74,40 @@ export default function PulseConversationPage() {
 
   const handleSendMessage = async (e?: FormEvent) => {
     e?.preventDefault();
-    if (!input.trim() || isSending || !currentUser) return;
+    if (!input.trim() || isSending || !currentUser || isNavigating) return;
   
     const userMessage: PulseMessage = { role: 'user', content: input };
-    const currentMessages = [...messages, userMessage];
-    setMessages(currentMessages);
+    const optimisticMessages = [...messages, userMessage];
+    setMessages(optimisticMessages);
+    const originalInput = input;
     setInput('');
     setIsSending(true);
     setError(null);
   
     try {
         const response = await askPulse({
-            messages: currentMessages,
+            messages: optimisticMessages,
             actor: currentUser.uid,
             conversationId: conversationId,
         });
 
-        setMessages(prev => [...prev, response.response]);
-
-        if (!conversationId && response.conversationId) {
-            startTransition(() => {
+        // If this was a new conversation, the ID will be new.
+        // We need to navigate to the new URL to make sure the history is saved correctly.
+        if (conversationId !== response.conversationId) {
+             startNavigation(() => {
                 router.push(`/dashboard/pulse/${response.conversationId}`);
-            });
+             });
+        } else {
+            // Otherwise, just update the messages with the real response.
+            setMessages(prev => [...prev, response.response]);
         }
 
     } catch (error: any) {
         console.error("Error calling Pulse Flow:", error);
         setError(error.message || 'Ocorreu um erro ao comunicar com a IA. Tente novamente.');
-        setMessages(prev => prev.slice(0, -1));
+        // Rollback optimistic update
+        setMessages(messages);
+        setInput(originalInput);
     } finally {
         setIsSending(false);
     }
@@ -188,12 +187,12 @@ export default function PulseConversationPage() {
                             placeholder="Pergunte qualquer coisa sobre seu negócio..."
                             className="w-full pr-16 pl-4 py-4 bg-transparent rounded-2xl border-none focus:ring-0 text-base resize-none shadow-none"
                             rows={1}
-                            disabled={isSending || isPending}
+                            disabled={isSending || isNavigating}
                         />
                         <Button
                             type="submit"
                             size="icon"
-                            disabled={isSending || isPending || !input.trim()}
+                            disabled={isSending || isNavigating || !input.trim()}
                             className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-pulse-primary text-primary-foreground rounded-lg hover:bg-pulse-primary/90 disabled:bg-gray-600"
                         >
                             <Send size={20} />

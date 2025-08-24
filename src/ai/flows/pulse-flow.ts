@@ -13,6 +13,7 @@ import { createTaskTool, listTasksTool } from '@/ai/tools/task-tools';
 import { listAccountsTool, getFinanceSummaryTool } from '@/ai/tools/finance-tools';
 import { listSuppliersTool } from '@/ai/tools/supplier-tools';
 import * as pulseService from '@/services/pulseService';
+import { MessageData } from 'genkit';
 
 export async function askPulse(input: z.infer<typeof AskPulseInputSchema>): Promise<z.infer<typeof AskPulseOutputSchema>> {
   return pulseFlow(input);
@@ -32,8 +33,8 @@ const pulseFlow = ai.defineFlow(
     const { actor, messages, conversationId } = input;
     const isNewConversation = !conversationId;
 
-    const history = messages.slice(0, -1).map(message => ({
-        role: message.role === 'user' ? 'user' : 'model',
+    const history: MessageData[] = messages.slice(0, -1).map(message => ({
+        role: message.role as 'user' | 'model',
         parts: [{ text: message.content }],
     }));
 
