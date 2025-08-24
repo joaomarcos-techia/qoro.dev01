@@ -15,13 +15,16 @@ import { listSuppliersTool } from '@/ai/tools/supplier-tools';
 import * as pulseService from '@/services/pulseService';
 import { MessageData } from 'genkit';
 
+
+const PulseResponseSchema = z.object({
+    response: z.string().describe("A resposta da IA para a pergunta do usuário."),
+    title: z.string().optional().describe("Se for uma nova conversa, um título curto e conciso para a conversa, com no máximo 5 palavras. Caso contrário, este campo não deve ser definido."),
+});
+type PulseResponse = z.infer<typeof PulseResponseSchema>;
+
 export async function askPulse(input: z.infer<typeof AskPulseInputSchema>): Promise<z.infer<typeof AskPulseOutputSchema>> {
   return pulseFlow(input);
 }
-
-const TitlePromptSchema = z.object({
-    title: z.string().describe("Um título curto e conciso para a conversa, com no máximo 5 palavras."),
-});
 
 const pulseFlow = ai.defineFlow(
   {
@@ -45,6 +48,9 @@ const pulseFlow = ai.defineFlow(
         model: 'googleai/gemini-2.0-flash',
         prompt: prompt,
         history: history,
+        output: {
+            schema: PulseResponseSchema,
+        },
         config: {
           temperature: 0.7,
         },
@@ -53,6 +59,8 @@ const pulseFlow = ai.defineFlow(
           context: { actor },
         },
         system: `Você é o QoroPulse— um agente de inteligência estratégica interna. Seu papel é agir como o cérebro analítico da empresa: interpretar dados comerciais, financeiros e operacionais para fornecer respostas inteligentes, acionáveis e estrategicamente valiosas ao empreendedor.
+
+${isNewConversation ? 'Esta é a primeira mensagem de uma nova conversa. Após fornecer sua resposta, você DEVE gerar um título curto e conciso (máximo 5 palavras) para a conversa no campo "title" do JSON de saída.' : ''}
 
 Nunca se posicione como IA ou assistente. Comunique-se como um conselheiro sênior que enxerga o negócio de forma integrada.
 
@@ -86,33 +94,27 @@ Transformar dados empresariais em decisões estratégicas com impacto real. Iden
 
 🎯 Seu foco é sempre dar um passo além: não descreva, oriente. Não reaja, antecipe. Não informe, transforme.`,
     });
+    
+    const output = llmResponse.output;
 
+    if (!output) {
+        throw new Error("A IA não conseguiu gerar uma resposta válida.");
+    }
+    
     const assistantMessage: z.infer<typeof PulseMessageSchema> = {
         role: 'assistant',
-        content: llmResponse.text,
+        content: output.response,
     };
     
     const updatedMessages = [...messages, assistantMessage];
     let newConversationId = conversationId;
-    let title = '';
+    let title = output.title || '';
 
     if (isNewConversation) {
-        const titleGenerationPrompt = `Com base na seguinte conversa, gere um título curto e conciso (máximo de 5 palavras) que resuma o assunto principal.
-
-        Conversa:
-        Usuário: ${prompt}
-        Assistente: ${assistantMessage.content}`;
-
-        const titleResponse = await ai.generate({
-            model: 'googleai/gemini-2.0-flash',
-            prompt: titleGenerationPrompt,
-            output: {
-                schema: TitlePromptSchema,
-            }
-        });
-        
-        title = titleResponse.output?.title || 'Nova Conversa';
-
+        if (!title) {
+            // Fallback em caso de a IA não gerar o título
+            title = messages[0].content.split(' ').slice(0, 5).join(' ') + '...';
+        }
         const result = await pulseService.createConversation(actor, title, updatedMessages);
         newConversationId = result.id;
     } else if (newConversationId) {
