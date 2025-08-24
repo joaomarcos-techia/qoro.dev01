@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect, useTransition } from 'react';
-import { PenSquare, MessageSquare, Loader2, Activity, ChevronLeft } from 'lucide-react';
+import { PenSquare, MessageSquare, Loader2, Activity, ChevronLeft, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -17,6 +17,7 @@ export function PulseSidebar() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [conversations, setConversations] = useState<ConversationProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -30,18 +31,24 @@ export function PulseSidebar() {
     async function fetchConversations() {
       if (currentUser) {
         setIsLoading(true);
+        setError(null);
         try {
           const convos = await listConversations({ actor: currentUser.uid });
           setConversations(convos);
         } catch (error) {
           console.error("Failed to fetch conversations", error);
+          if (error instanceof Error && error.message.includes('index')) {
+              setError("O banco de dados precisa de um índice. Contacte o suporte.");
+          } else {
+              setError("Não foi possível carregar o histórico.");
+          }
         } finally {
           setIsLoading(false);
         }
       }
     }
     fetchConversations();
-  }, [currentUser, pathname]); // Refetch when pathname changes to update history
+  }, [currentUser, pathname]);
 
   const handleNewConversation = () => {
     startTransition(() => {
@@ -81,27 +88,33 @@ export function PulseSidebar() {
                 <div className="flex justify-center items-center h-full">
                     <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                 </div>
+            ) : error ? (
+                <div className="p-3 text-center text-xs text-destructive-foreground bg-destructive/30 rounded-lg">
+                    <AlertCircle className="w-4 h-4 mx-auto mb-2" />
+                    {error}
+                </div>
             ) : (
-                conversations.map((convo) => (
-                    <Link key={convo.id} href={`/dashboard/pulse/${convo.id}`}>
-                        <div
-                            className={cn(
-                            'flex items-center p-2 rounded-lg text-sm truncate cursor-pointer transition-colors',
-                            pathname === `/dashboard/pulse/${convo.id}`
-                                ? 'bg-secondary text-foreground'
-                                : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground'
-                            )}
-                        >
-                            <MessageSquare className="w-4 h-4 mr-3 flex-shrink-0" />
-                            <span className="truncate">{convo.title}</span>
-                        </div>
-                    </Link>
-                ))
-            )}
-            {!isLoading && conversations.length === 0 && (
-                <p className="text-xs text-muted-foreground text-center px-2 py-4">
-                    Nenhuma conversa ainda. Inicie uma para ver seu histórico aqui.
-                </p>
+                conversations.length > 0 ? (
+                    conversations.map((convo) => (
+                        <Link key={convo.id} href={`/dashboard/pulse/${convo.id}`}>
+                            <div
+                                className={cn(
+                                'flex items-center p-2 rounded-lg text-sm truncate cursor-pointer transition-colors',
+                                pathname === `/dashboard/pulse/${convo.id}`
+                                    ? 'bg-secondary text-foreground'
+                                    : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground'
+                                )}
+                            >
+                                <MessageSquare className="w-4 h-4 mr-3 flex-shrink-0" />
+                                <span className="truncate">{convo.title}</span>
+                            </div>
+                        </Link>
+                    ))
+                ) : (
+                    <p className="text-xs text-muted-foreground text-center px-2 py-4">
+                        Nenhuma conversa ainda. Inicie uma para ver seu histórico aqui.
+                    </p>
+                )
             )}
         </div>
     </aside>

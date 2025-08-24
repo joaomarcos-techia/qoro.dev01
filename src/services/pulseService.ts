@@ -55,24 +55,35 @@ export const getConversation = async ({ conversationId, actor }: { conversationI
 
 
 export const listConversations = async ({ actor }: { actor: string }): Promise<z.infer<typeof ConversationProfileSchema>[]> => {
-    const { organizationId } = await getAdminAndOrg(actor);
-    const snapshot = await adminDb.collection('pulse_conversations')
-        .where('organizationId', '==', organizationId)
-        .where('userId', '==', actor)
-        .orderBy('updatedAt', 'desc')
-        .limit(50)
-        .get();
+    try {
+        const { organizationId } = await getAdminAndOrg(actor);
+        // Query simplified to avoid requiring a composite index. Sorting is handled client-side.
+        const snapshot = await adminDb.collection('pulse_conversations')
+            .where('organizationId', '==', organizationId)
+            .where('userId', '==', actor)
+            .limit(50)
+            .get();
 
-    if (snapshot.empty) {
-        return [];
-    }
-    
-    return snapshot.docs.map(doc => {
-        const data = doc.data();
-        return ConversationProfileSchema.parse({
-            id: doc.id,
-            title: data.title || 'Conversa sem título',
-            updatedAt: data.updatedAt.toDate().toISOString(),
+        if (snapshot.empty) {
+            return [];
+        }
+        
+        const conversations = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return ConversationProfileSchema.parse({
+                id: doc.id,
+                title: data.title || 'Conversa sem título',
+                updatedAt: data.updatedAt.toDate().toISOString(),
+            });
         });
-    });
+        
+        // Sort conversations by date in the backend code
+        conversations.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+
+        return conversations;
+    } catch (error: any) {
+        console.error("Error listing conversations in service:", error);
+        // Re-throw the error to be handled by the calling component
+        throw new Error(`Failed to fetch conversations: ${error.message}`);
+    }
 };
