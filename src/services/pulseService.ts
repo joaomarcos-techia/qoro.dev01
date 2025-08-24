@@ -80,9 +80,11 @@ export const getConversation = async ({ conversationId, actor }: { conversationI
 export const listConversations = async ({ actor }: { actor: string }): Promise<z.infer<typeof ConversationProfileSchema>[]> => {
     try {
         const { organizationId } = await getAdminAndOrg(actor);
+        // Correctly order by 'updatedAt' in descending order directly in the query
         const snapshot = await adminDb.collection('pulse_conversations')
             .where('organizationId', '==', organizationId)
             .where('userId', '==', actor)
+            .orderBy('updatedAt', 'desc') 
             .limit(50)
             .get();
 
@@ -92,7 +94,6 @@ export const listConversations = async ({ actor }: { actor: string }): Promise<z
         
         const conversations = snapshot.docs.map(doc => {
             const data = doc.data();
-            // Sanitize data for client components
             const sanitizedData = convertTimestampsToISO(data);
             return ConversationProfileSchema.parse({
                 id: doc.id,
@@ -100,12 +101,12 @@ export const listConversations = async ({ actor }: { actor: string }): Promise<z
             });
         });
         
-        // Sort conversations by date in the backend code
-        conversations.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-
         return conversations;
     } catch (error: any) {
         console.error("Error listing conversations in service:", error);
+        if (error.code === 'FAILED_PRECONDITION') {
+            throw new Error('A consulta do histórico de conversas requer um índice. Verifique a configuração do Firestore Indexes.');
+        }
         throw new Error(`Failed to fetch conversations: ${error.message}`);
     }
 };
