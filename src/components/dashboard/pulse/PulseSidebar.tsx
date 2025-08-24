@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect, useTransition } from 'react';
-import { PenSquare, MessageSquare, Loader2 } from 'lucide-react';
+import { PenSquare, MessageSquare, Loader2, Activity, ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -32,7 +32,7 @@ export function PulseSidebar() {
         setIsLoading(true);
         try {
           const convos = await listConversations({ actor: currentUser.uid });
-          setConversations(convo);
+          setConversations(convos);
         } catch (error) {
           console.error("Failed to fetch conversations", error);
         } finally {
@@ -50,8 +50,21 @@ export function PulseSidebar() {
   };
 
   return (
-    <aside className="w-72 flex-shrink-0 bg-card/50 border-r border-border flex flex-col p-4">
-        <div className="mb-4">
+    <aside className="w-72 flex-shrink-0 bg-card/50 border-r border-border flex flex-col">
+       <div className="p-4 border-b border-border space-y-4">
+            <div className="flex items-center">
+                <div className={'p-3 rounded-xl text-black mr-4 shadow-lg bg-pulse-primary shadow-pulse-primary/30'}>
+                    <Activity className="w-6 h-6" />
+                </div>
+                <h2 className={'text-xl font-bold text-pulse-primary'}>QoroPulse</h2>
+            </div>
+            <Link href="/dashboard" className="flex items-center text-muted-foreground hover:text-foreground transition-colors text-sm font-medium">
+                <ChevronLeft className="w-4 h-4 mr-2" />
+                <span>Voltar ao Dashboard</span>
+            </Link>
+        </div>
+        
+        <div className="p-4">
             <button
                 onClick={handleNewConversation}
                 disabled={isPending}
@@ -62,7 +75,7 @@ export function PulseSidebar() {
             </button>
         </div>
       
-        <div className="flex-grow overflow-y-auto space-y-1 pr-1">
+        <div className="flex-grow overflow-y-auto space-y-1 px-4 pb-4">
             <h3 className="text-sm font-semibold text-muted-foreground px-2 mb-2">Histórico</h3>
             {isLoading ? (
                 <div className="flex justify-center items-center h-full">
