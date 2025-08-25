@@ -35,7 +35,7 @@ const plans: Plan[] = [
   {
     name: 'Crescimento',
     description: 'Profissionalize sua operação. Perfeito para equipes que buscam eficiência e colaboração.',
-    price: 'R$ 299',
+    price: 'R$ 399',
     priceUnit: '/mês',
     priceDetails: 'Inclui até 5 usuários.',
     features: [
@@ -51,8 +51,8 @@ const plans: Plan[] = [
   },
   {
     name: 'Performance',
-    description: 'Escale com inteligência. Para empresas que exigem automação e insights avançados.',
-    price: 'R$ 799',
+    description: 'A plataforma completa para otimização, automação e inteligência competitiva.',
+    price: 'R$ 699',
     priceUnit: '/mês',
     priceDetails: 'Inclui até 10 usuários.',
     features: [
