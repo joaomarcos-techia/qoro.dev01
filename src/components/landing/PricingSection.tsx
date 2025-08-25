@@ -92,22 +92,9 @@ const PricingCard = ({ plan, currentUser }: { plan: Plan, currentUser: FirebaseU
 
     const handlePlanSelection = async () => {
         setIsLoading(true);
-        // If user is logged in and selects a paid plan, go to checkout
-        if (currentUser && plan.stripePriceId) {
-            try {
-                const { url } = await createStripeCheckoutSession({ priceId: plan.stripePriceId, actor: currentUser.uid });
-                if (url) {
-                    window.open(url, '_blank');
-                }
-            } catch (error) {
-                console.error("Failed to create Stripe checkout session:", error);
-            } finally {
-                setIsLoading(false);
-            }
-        } else {
-            // If user is not logged in, or selects any plan (including free), go to signup
-            router.push('/signup');
-        }
+        // New logic: always go to signup page first.
+        // The user will choose the plan again after logging in.
+        router.push('/signup');
     }
 
     return (
