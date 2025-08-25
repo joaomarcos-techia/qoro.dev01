@@ -31,6 +31,11 @@ const createStripeCheckoutSessionFlow = ai.defineFlow(
     async ({ priceId, actor }) => {
         if (!stripe) throw new Error("Stripe is not configured.");
 
+        // Validate that priceId is a Stripe Price ID, not a Product ID.
+        if (!priceId.startsWith('price_')) {
+            throw new Error(`Invalid Stripe Price ID: "${priceId}". Please check your environment variables (e.g., NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID) and ensure you are using a Price ID (starting with 'price_') and not a Product ID.`);
+        }
+        
         const { organizationId, userData } = await getAdminAndOrg(actor);
         
         let customerId = userData.stripeCustomerId;
@@ -151,3 +156,4 @@ export const stripeWebhookFlow = ai.defineFlow(
         return { received: true };
     }
 );
+
