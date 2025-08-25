@@ -3,6 +3,7 @@
 
 import { redirect } from 'next/navigation';
 import { useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
 
 /**
  * Esta página foi unificada com a página de Relatórios.
@@ -15,5 +16,9 @@ export default function VisaoGeralRedirectPage() {
   }, []);
 
   // Renderiza um estado de carregamento para evitar um flash de conteúdo vazio.
-  return null;
+  return (
+    <div className="flex items-center justify-center h-full">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+    </div>
+  );
 }

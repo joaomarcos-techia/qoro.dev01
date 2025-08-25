@@ -62,7 +62,7 @@ const navItems: Record<string, NavItem[]> = {
         { href: '/dashboard/task/calendario', label: 'Calendário', icon: Calendar },
     ],
     finance: [
-        { href: '/dashboard/finance/relatorios', label: 'Relatórios Financeiros', icon: BarChart3 },
+        { href: '/dashboard/finance/relatorios', label: 'Relatórios', icon: BarChart3 },
         { href: '/dashboard/finance/transacoes', label: 'Transações', icon: ArrowLeftRight },
         { href: '/dashboard/finance/contas', label: 'Contas', icon: Landmark },
         { href: '/dashboard/finance/contas-a-pagar', label: 'Contas a Pagar/Receber', icon: Receipt },
@@ -141,7 +141,7 @@ export default function DashboardLayout({
       <Header />
       <div className="flex h-[calc(100vh-65px)]">
          {renderSidebarContent()}
-         <main className="flex-1 overflow-y-auto">
+         <main className="flex-1 overflow-y-auto p-8">
            {children}
          </main>
       </div>
