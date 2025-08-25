@@ -58,6 +58,7 @@ const navItems: Record<string, NavItem[]> = {
     ],
     task: [
         { href: '/dashboard/task/tarefas', label: 'Quadro', icon: LayoutGrid },
+        { href: '/dashboard/task/lista', label: 'Minha Lista', icon: List },
         { href: '/dashboard/task/calendario', label: 'Calendário', icon: Calendar },
     ],
     finance: [
