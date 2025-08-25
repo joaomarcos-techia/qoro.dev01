@@ -49,6 +49,14 @@ export const signUp = async (input: z.infer<typeof SignUpSchema>): Promise<{uid:
             },
         });
 
+        // Send verification email, but don't block the process
+        adminAuth.generateEmailVerificationLink(email).then(link => {
+            // In a real app, you'd use a service like SendGrid or Nodemailer to send this link.
+            console.log(`Verification link for ${email}: ${link}`);
+        }).catch(err => {
+            console.error(`Failed to generate verification link for ${email}`, err);
+        });
+
         return { uid: userRecord.uid };
     } catch (error: any) {
         if (error.code === 'auth/email-already-exists') {
@@ -149,7 +157,7 @@ export const getOrganizationDetails = async (actor: string): Promise<z.infer<typ
     // Ensure Date objects are converted to a serializable format (ISO string)
     const stripeCurrentPeriodEnd = orgData.stripeCurrentPeriodEnd?.toDate ? orgData.stripeCurrentPeriodEnd.toDate().toISOString() : null;
 
-    return {
+    const profileData = {
         id: orgDoc.id,
         name: orgData.name,
         cnpj: orgData.cnpj,
@@ -160,6 +168,8 @@ export const getOrganizationDetails = async (actor: string): Promise<z.infer<typ
         stripePriceId: orgData.stripePriceId,
         stripeCurrentPeriodEnd: stripeCurrentPeriodEnd,
     };
+
+    return OrganizationProfileSchema.parse(profileData);
 };
 
 export const updateOrganizationDetails = async (details: z.infer<typeof UpdateOrganizationDetailsSchema>, actor: string): Promise<{ success: boolean }> => {

@@ -6,7 +6,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { createStripeCheckoutSession } from '@/ai/flows/billing-flow';
 
 
 type Plan = {
@@ -78,7 +77,7 @@ const plans: Plan[] = [
   },
 ];
 
-const PricingCard = ({ plan, currentUser }: { plan: Plan, currentUser: FirebaseUser | null }) => {
+const PricingCard = ({ plan }: { plan: Plan }) => {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
 
@@ -92,9 +91,7 @@ const PricingCard = ({ plan, currentUser }: { plan: Plan, currentUser: FirebaseU
 
     const handlePlanSelection = async () => {
         setIsLoading(true);
-        // New logic: always go to signup page first.
-        // The user will choose the plan again after logging in.
-        router.push('/signup');
+        router.push(`/signup?plan=${plan.id}`);
     }
 
     return (
@@ -138,15 +135,6 @@ const PricingCard = ({ plan, currentUser }: { plan: Plan, currentUser: FirebaseU
 }
 
 export function PricingSection() {
-    const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
-
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            setCurrentUser(user);
-        });
-        return () => unsubscribe();
-    }, []);
-
     return (
       <section id="precos" className="py-20 bg-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -162,7 +150,7 @@ export function PricingSection() {
           <div className="grid md:grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto items-stretch">
             {plans.map(plan => (
               <div key={plan.name}>
-                 <PricingCard plan={plan} currentUser={currentUser}/>
+                 <PricingCard plan={plan} />
               </div>
             ))}
           </div>

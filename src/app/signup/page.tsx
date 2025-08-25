@@ -1,17 +1,24 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Mail, Lock, AlertCircle, CheckCircle, User, Building, FileText, Phone, ArrowRight } from 'lucide-react';
+import { Mail, Lock, AlertCircle, CheckCircle, User, Building, FileText, Phone, ArrowRight, Loader2 } from 'lucide-react';
 import { signUp } from '@/ai/flows/user-management';
-import { sendEmailVerification } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
-import { User as FirebaseUser } from 'firebase/auth';
+import { createStripeCheckoutSession } from '@/ai/flows/billing-flow';
 import { Logo } from '@/components/ui/logo';
 
+const planIdToPriceId: Record<string, string | undefined> = {
+    growth: process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID,
+    performance: process.env.NEXT_PUBLIC_STRIPE_PERFORMANCE_PLAN_PRICE_ID,
+}
 
 export default function SignUpPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const plan = searchParams.get('plan');
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -27,12 +34,12 @@ export default function SignUpPage() {
 
   const formatCNPJ = (value: string) => {
     if (!value) return "";
-    value = value.replace(/\D/g, ''); // Remove tudo que não é dígito
+    value = value.replace(/\D/g, ''); 
     value = value.replace(/^(\d{2})(\d)/, '$1.$2');
     value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
     value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
     value = value.replace(/(\d{4})(\d)/, '$1-$2');
-    return value.slice(0, 18); // Limita ao tamanho máximo
+    return value.slice(0, 18); 
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,7 +54,6 @@ export default function SignUpPage() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setSuccess(null);
     setIsLoading(true);
 
     if (formData.password.length < 6) {
@@ -62,14 +68,25 @@ export default function SignUpPage() {
     }
 
     try {
-      await signUp({
+      const { uid } = await signUp({
         ...formData,
-        cnpj: formData.cnpj.replace(/\D/g, ''), // Envia somente os números para o backend
+        cnpj: formData.cnpj.replace(/\D/g, ''), 
       });
-      if (auth.currentUser) {
-        await sendEmailVerification(auth.currentUser as FirebaseUser);
+
+      if (!plan || plan === 'free') {
+        setSuccess('Conta criada com sucesso! Você será redirecionado para o login.');
+        setTimeout(() => router.push('/login'), 3000);
+        return;
       }
-      setSuccess('Conta criada! Verifique seu e-mail para ativar sua conta e depois escolha seu plano para começar.');
+      
+      const priceId = planIdToPriceId[plan];
+      if (!priceId) {
+          throw new Error('Plano selecionado é inválido ou não foi configurado.');
+      }
+      
+      const { url } = await createStripeCheckoutSession({ priceId: priceId, actor: uid });
+      window.top.location.href = url;
+
     } catch (err: any) {
       if (err.message && err.message.includes('Este e-mail já está em uso.')) {
         setError('Este e-mail já está em uso. Tente fazer login.');
@@ -97,16 +114,9 @@ export default function SignUpPage() {
             <CheckCircle className="w-10 h-10 mb-4 text-green-400" />
             <h3 className="text-xl font-bold text-white mb-2">Conta Criada com Sucesso!</h3>
             <p className="text-sm font-semibold mb-6">{success}</p>
-             <Link href="/#precos" className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 border border-transparent hover:border-primary/50 flex items-center justify-center font-semibold group">
-                Escolher Meu Plano
-                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Link>
-            <Link href="/login" className="mt-4 text-sm font-medium text-muted-foreground hover:text-white transition-colors">
-                Ir para o Login
-            </Link>
           </div>
         ) : (
-          <form onSubmit={handleSignUp} className="space-y-8">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
             {/* Seção Empresa */}
             <div>
                 <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center"><Building className="w-5 h-5 mr-3 text-primary"/>Informações da Empresa</h3>
@@ -162,7 +172,8 @@ export default function SignUpPage() {
                 disabled={isLoading}
                 className="w-full bg-primary text-primary-foreground py-3 rounded-xl hover:bg-primary/90 transition-all duration-200 border border-transparent hover:border-primary/50 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed"
                 >
-                {isLoading ? 'Criando conta...' : 'Criar conta grátis'}
+                {isLoading && <Loader2 className="animate-spin mr-2 h-5 w-5" />}
+                {isLoading ? 'Aguarde...' : 'Criar conta e Continuar'}
                 </button>
             </div>
           </form>
