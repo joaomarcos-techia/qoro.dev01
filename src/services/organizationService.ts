@@ -1,4 +1,6 @@
 
+'use server';
+
 import { FieldValue } from 'firebase-admin/firestore';
 import type { UserRecord } from 'firebase-admin/auth';
 import { z } from 'zod';
@@ -143,12 +145,20 @@ export const getOrganizationDetails = async (actor: string): Promise<z.infer<typ
         throw new Error('Organização não encontrada.');
     }
     const orgData = orgDoc.data()!;
+    
+    // Ensure Date objects are converted to a serializable format (ISO string)
+    const stripeCurrentPeriodEnd = orgData.stripeCurrentPeriodEnd?.toDate ? orgData.stripeCurrentPeriodEnd.toDate().toISOString() : null;
+
     return {
         id: orgDoc.id,
         name: orgData.name,
         cnpj: orgData.cnpj,
         contactEmail: orgData.contactEmail,
         contactPhone: orgData.contactPhone,
+        stripeCustomerId: orgData.stripeCustomerId,
+        stripeSubscriptionId: orgData.stripeSubscriptionId,
+        stripePriceId: orgData.stripePriceId,
+        stripeCurrentPeriodEnd: stripeCurrentPeriodEnd,
     };
 };
 
