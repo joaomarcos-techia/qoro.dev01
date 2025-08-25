@@ -25,9 +25,23 @@ export default function SignUpPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  const formatCNPJ = (value: string) => {
+    if (!value) return "";
+    value = value.replace(/\D/g, ''); // Remove tudo que não é dígito
+    value = value.replace(/^(\d{2})(\d)/, '$1.$2');
+    value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+    value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
+    value = value.replace(/(\d{4})(\d)/, '$1-$2');
+    return value.slice(0, 18); // Limita ao tamanho máximo
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    if (name === 'cnpj') {
+        setFormData(prev => ({ ...prev, [name]: formatCNPJ(value) }));
+    } else {
+        setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -49,12 +63,13 @@ export default function SignUpPage() {
 
     try {
       await signUp({
-        ...formData
+        ...formData,
+        cnpj: formData.cnpj.replace(/\D/g, ''), // Envia somente os números para o backend
       });
       if (auth.currentUser) {
         await sendEmailVerification(auth.currentUser as FirebaseUser);
       }
-      setSuccess('Conta criada! Verifique seu e-mail para ativar sua conta.');
+      setSuccess('Conta criada! Verifique seu e-mail para ativar sua conta e depois escolha seu plano para começar.');
     } catch (err: any) {
       if (err.message && err.message.includes('Este e-mail já está em uso.')) {
         setError('Este e-mail já está em uso. Tente fazer login.');
