@@ -50,9 +50,6 @@ export const signUp = async (input: z.infer<typeof SignUpSchema>): Promise<{uid:
             },
         });
 
-        // We are now sending the verification email via Stripe Webhooks or manually in Firebase Console
-        // a-posteriori. Removing the direct email link generation from here.
-
         return { uid: userRecord.uid };
     } catch (error: any) {
         if (error.code === 'auth/email-already-exists') {
@@ -87,9 +84,7 @@ export const inviteUser = async (email: string, actor: string): Promise<{ uid: s
     
     try {
         const link = await adminAuth.generatePasswordResetLink(email);
-        // In a real-world app, you would use a transactional email service (e.g., SendGrid, Mailgun)
-        // to send this link to the user. For this example, we log it to the console.
-        console.log(`Link de configuração de senha enviado para ${email}. Em um aplicativo real, este link seria enviado por meio de um serviço de e-mail.`);
+        console.log(`Link de configuração de senha gerado para ${email}. Em um aplicativo real, este link seria enviado por meio de um serviço de e-mail.`);
     } catch(error){
         console.error("Falha ao gerar o link de definição de senha:", error);
     }
@@ -152,9 +147,8 @@ export const getOrganizationDetails = async (actor: string): Promise<z.infer<typ
     }
     const orgData = orgDoc.data()!;
     
-    // Ensure Date objects are converted to a serializable format (ISO string or null)
     const stripeCurrentPeriodEnd = orgData.stripeCurrentPeriodEnd?.toDate 
-        ? orgData.stripeCurrentPeriodEnd.toDate().toISOString() 
+        ? orgData.stripeCurrentPeriodEnd.toDate()
         : null;
 
     const profileData = {

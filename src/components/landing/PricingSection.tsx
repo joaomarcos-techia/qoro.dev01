@@ -2,11 +2,8 @@
 'use client';
 
 import { Check, Loader2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
-
 
 type Plan = {
   id: 'free' | 'growth' | 'performance'; 
@@ -91,7 +88,6 @@ const PricingCard = ({ plan }: { plan: Plan }) => {
 
     const handlePlanSelection = async () => {
         setIsLoading(true);
-        // Always redirect to signup with the plan ID
         router.push(`/signup?plan=${plan.id}`);
     }
 
