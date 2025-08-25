@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { FieldValue } from 'firebase-admin/firestore';
@@ -47,14 +48,6 @@ export const signUp = async (input: z.infer<typeof SignUpSchema>): Promise<{uid:
                 qoroTask: true,
                 qoroFinance: true,
             },
-        });
-
-        // Send verification email, but don't block the process
-        adminAuth.generateEmailVerificationLink(email).then(link => {
-            // In a real app, you'd use a service like SendGrid or Nodemailer to send this link.
-            console.log(`Verification link for ${email}: ${link}`);
-        }).catch(err => {
-            console.error(`Failed to generate verification link for ${email}`, err);
         });
 
         return { uid: userRecord.uid };
