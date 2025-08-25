@@ -16,52 +16,55 @@ type Plan = {
 
 const plans: Plan[] = [
   {
-    name: 'Gratuito',
-    description: 'Para quem está começando a organizar a casa.',
+    name: 'Essencial',
+    description: 'Organize seu negócio. Ideal para autônomos e equipes que estão começando.',
     price: 'Grátis',
-    priceDetails: 'Para sempre. Sem pegadinhas.',
+    priceDetails: 'Até 2 usuários.',
     features: [
-      'Até 2 usuários',
-      'QoroCRM: Gestão de Funil de Vendas (limitado a 1 funil e 50 oportunidades), Cadastro de Clientes (limitado a 100 contatos).',
-      'QoroFinance: Dashboard Financeiro (visão básica), Registro de Transações (limitado a 20 transações/mês).',
-      'QoroTask: Quadros Kanban (limitado a 1 quadro e 30 tarefas), Atribuição e Prazos (básico).',
-      'QoroPulse: Acesso limitado a 5 perguntas/mês, sem automação de ações.',
+      'QoroCRM: Gestão de Clientes e Funil de Vendas',
+      'QoroTask: Gestão de Tarefas em quadro Kanban',
+      'QoroFinance: Visão geral e registro de transações',
+      'QoroPulse: Assistente de IA para perguntas e respostas',
+      'Suporte via comunidade',
     ],
     buttonText: 'Começar Grátis',
     isPopular: false,
     signupPath: '/signup',
   },
   {
-    name: 'Profissional',
-    description: 'Para equipes que buscam mais poder e automação.',
+    name: 'Crescimento',
+    description: 'Profissionalize sua operação. Perfeito para equipes que buscam eficiência e colaboração.',
     price: 'R$ 299',
     priceUnit: '/mês',
     priceDetails: 'Inclui até 5 usuários.',
     features: [
-      'QoroCRM: Funil de Vendas ilimitado, Cadastro Completo ilimitado, Criação de Orçamentos.',
-      'QoroFinance: Dashboard Financeiro completo, Gestão de Contas (a pagar e a receber) ilimitada, Registro de Transações ilimitado.',
-      'QoroTask: Quadros Kanban ilimitados, Atribuição e Prazos avançados, Visão em Calendário.',
-      'QoroPulse: Acesso expandido a perguntas, sugestões de oportunidades e riscos, automação de ações básicas.',
-      'Suporte prioritário via e-mail',
+      'Tudo do plano Essencial, e mais:',
+      'QoroCRM: Criação de Orçamentos profissionais',
+      'QoroFinance: Gestão de Contas a Pagar e Receber',
+      'QoroTask: Visão de Calendário para prazos',
+      'QoroPulse: IA com sugestões proativas e criação de tarefas',
+      'Relatórios detalhados de CRM e Finanças',
+      'Suporte prioritário via e-mail e chat',
     ],
-    buttonText: 'Escolher Profissional',
+    buttonText: 'Escolher Crescimento',
     isPopular: true,
     signupPath: '/signup',
   },
   {
-    name: 'Enterprise',
-    description: 'Solução robusta para empresas com necessidades complexas.',
+    name: 'Performance',
+    description: 'Escale com inteligência. Para empresas que exigem automação e insights avançados.',
     price: 'R$ 799',
     priceUnit: '/mês',
     priceDetails: 'Inclui até 10 usuários.',
     features: [
-      'Todas as funcionalidades do Plano Profissional, ilimitadas.',
-      'QoroPulse: Análise preditiva avançada, automação de ações complexas, integração com sistemas de BI, suporte dedicado de IA.',
-      'Segurança: SSO (Single Sign-On), auditoria de acesso, controle de permissões granular.',
-      'Integrações com outros sistemas (ERP, e-commerce).',
-      'Suporte: Gerente de Sucesso do Cliente dedicado, suporte 24/7, treinamento personalizado.',
+      'Tudo do plano Crescimento, e mais:',
+      'QoroCRM: Automação de follow-ups de vendas',
+      'QoroFinance: Gestão de Fornecedores e Conciliação Bancária',
+      'QoroPulse: Análise preditiva e automação de fluxos de trabalho',
+      'Gestão de permissões de usuário por módulo',
+      'Suporte com gerente de contas dedicado',
     ],
-    buttonText: 'Escolher Enterprise',
+    buttonText: 'Escolher Performance',
     isPopular: false,
     signupPath: '/signup',
   },
@@ -87,7 +90,7 @@ const PricingCard = ({ plan }: { plan: Plan }) => {
         )}
         <div className="text-center mb-8">
             <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
-            <p className="text-white/70 h-12">{plan.description}</p>
+            <p className="text-white/70 min-h-[48px]">{plan.description}</p>
             <div className="mt-4 mb-2">
                 <span className="text-4xl font-bold text-white">{plan.price}</span>
                 {plan.priceUnit && <span className="text-white/60 ml-1">{plan.priceUnit}</span>}
@@ -120,7 +123,7 @@ export function PricingSection() {
       <section id="precos" className="py-20 bg-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <div className="text-sm font-medium text-primary mb-4 tracking-wider uppercase">Preços</div>
+            <div className="text-sm font-medium text-primary mb-4 tracking-wider uppercase">Planos</div>
             <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
               Um plano para cada fase do seu negócio
             </h2>
@@ -139,3 +142,4 @@ export function PricingSection() {
       </section>
     );
   }
+
