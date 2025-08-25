@@ -76,9 +76,9 @@ export default function SettingsPage() {
             setFeedback({ type: 'success', message: `Convite enviado com sucesso para ${inviteEmail}!`, context: 'invite' });
             setInviteEmail('');
             fetchUsers(); // Refresh user list
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            setFeedback({ type: 'error', message: 'Falha ao enviar convite. Verifique o e-mail ou se o usuário já existe.', context: 'invite' });
+            setFeedback({ type: 'error', message: error.message || 'Falha ao enviar convite. Verifique o e-mail ou se o usuário já existe.', context: 'invite' });
         } finally {
             setIsLoading(prev => ({ ...prev, invite: false }));
         }
@@ -208,7 +208,7 @@ export default function SettingsPage() {
                         </div>
 
                         {/* User List Section */}
-                        <div className="bg-card p-8 rounded-2xl border-border">
+                        <div className="bg-card p-8 rounded-2xl border border-border">
                              <h3 className="text-xl font-bold text-foreground mb-6">Usuários da Organização</h3>
                              {isLoading.users ? (
                                  <div className="flex justify-center items-center py-8">
@@ -257,5 +257,3 @@ export default function SettingsPage() {
         </div>
     );
 }
-
-    

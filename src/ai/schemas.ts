@@ -8,7 +8,7 @@ export const SignUpSchema = z.object({
     email: z.string().email(),
     password: z.string().min(6),
     cnpj: z.string().min(1, "O CNPJ é obrigatório."),
-    contactEmail: z.string().email("O e-mail de contato deve ser válido.").optional().or(z.literal('')),
+    contactEmail: z.string().email({ message: "E-mail de contato inválido." }).optional().or(z.literal('')),
     contactPhone: z.string().optional().or(z.literal('')),
 });
 
@@ -51,10 +51,10 @@ export const OrganizationProfileSchema = z.object({
     contactEmail: z.string().email().optional().nullable(),
     contactPhone: z.string().optional().nullable(),
     // Stripe fields
-    stripeCustomerId: z.string().optional(),
-    stripeSubscriptionId: z.string().optional(),
-    stripePriceId: z.string().optional(),
-    stripeCurrentPeriodEnd: z.date().optional(),
+    stripeCustomerId: z.string().optional().nullable(),
+    stripeSubscriptionId: z.string().optional().nullable(),
+    stripePriceId: z.string().optional().nullable(),
+    stripeCurrentPeriodEnd: z.string().datetime().optional().nullable(),
 });
 export type OrganizationProfile = z.infer<typeof OrganizationProfileSchema>;
 
@@ -332,5 +332,3 @@ export const BillProfileSchema = BillSchema.extend({
     entityName: z.string().optional(),
 });
 export type BillProfile = z.infer<typeof BillProfileSchema>;
-
-    

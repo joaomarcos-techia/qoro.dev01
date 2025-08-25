@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { FieldValue } from 'firebase-admin/firestore';
@@ -63,10 +62,19 @@ export const signUp = async (input: z.infer<typeof SignUpSchema>): Promise<{uid:
 export const inviteUser = async (email: string, actor: string): Promise<{ uid: string; email: string; organizationId: string; }> => {
     const { organizationId, adminUid } = await getAdminAndOrg(actor);
     
-    const userRecord = await adminAuth.createUser({
-      email,
-      emailVerified: false,
-    });
+    let userRecord: UserRecord;
+    try {
+        userRecord = await adminAuth.createUser({
+            email,
+            emailVerified: false,
+        });
+    } catch (error: any) {
+        if (error.code === 'auth/email-already-exists') {
+            throw new Error('Este usuário já existe no sistema.');
+        }
+        throw error;
+    }
+
 
     await adminDb.collection('users').doc(userRecord.uid).set({
       email,
@@ -83,10 +91,12 @@ export const inviteUser = async (email: string, actor: string): Promise<{ uid: s
     });
     
     try {
-        const link = await adminAuth.generatePasswordResetLink(email);
-        console.log(`Link de configuração de senha gerado para ${email}. Em um aplicativo real, este link seria enviado por meio de um serviço de e-mail.`);
+        await adminAuth.generatePasswordResetLink(email);
+        // In a real app, this link would be sent via a proper email service
+        console.log(`Password setup link would be sent to ${email}.`);
     } catch(error){
         console.error("Falha ao gerar o link de definição de senha:", error);
+        // Don't fail the whole flow if email link generation fails
     }
 
     return {
@@ -148,7 +158,7 @@ export const getOrganizationDetails = async (actor: string): Promise<z.infer<typ
     const orgData = orgDoc.data()!;
     
     const stripeCurrentPeriodEnd = orgData.stripeCurrentPeriodEnd?.toDate 
-        ? orgData.stripeCurrentPeriodEnd.toDate()
+        ? orgData.stripeCurrentPeriodEnd.toDate().toISOString()
         : null;
 
     const profileData = {

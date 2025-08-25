@@ -3,6 +3,7 @@
 /**
  * @fileOverview Billing and subscription management flows.
  * - createStripeCheckoutSession - Creates a new Stripe checkout session for a user to subscribe.
+ * - createStripePortalSession - Creates a new Stripe Customer Portal session for a user to manage their subscription.
  * - stripeWebhookFlow - Handles incoming webhook events from Stripe to sync subscription status.
  */
 import { ai } from '@/ai/genkit';
@@ -22,6 +23,11 @@ const CreateCheckoutSchema = z.object({
     actor: z.string(),
 });
 
+const ActorSchema = z.object({
+    actor: z.string(),
+});
+
+
 const createStripeCheckoutSessionFlow = ai.defineFlow(
     {
         name: 'createStripeCheckoutSessionFlow',
@@ -31,7 +37,6 @@ const createStripeCheckoutSessionFlow = ai.defineFlow(
     async ({ priceId, actor }) => {
         if (!stripe) throw new Error("Stripe is not configured.");
 
-        // Validate that priceId is a Stripe Price ID, not a Product ID.
         if (!priceId.startsWith('price_')) {
             throw new Error(`Invalid Stripe Price ID: "${priceId}". Please check your environment variables (e.g., NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID) and ensure you are using a Price ID (starting with 'price_') and not a Product ID.`);
         }
@@ -49,6 +54,7 @@ const createStripeCheckoutSessionFlow = ai.defineFlow(
             });
             customerId = customer.id;
             await adminDb.collection('users').doc(actor).update({ stripeCustomerId: customerId });
+            await adminDb.collection('organizations').doc(organizationId).update({ stripeCustomerId: customerId });
         }
         
         const session = await stripe.checkout.sessions.create({
@@ -72,7 +78,41 @@ const createStripeCheckoutSessionFlow = ai.defineFlow(
 );
 
 export async function createStripeCheckoutSession(input: z.infer<typeof CreateCheckoutSchema>): Promise<{ url: string }> {
-    return await createStripeCheckoutSessionFlow(input);
+    return createStripeCheckoutSessionFlow(input);
+}
+
+// Flow to create a Stripe Customer Portal session
+const createStripePortalSessionFlow = ai.defineFlow(
+    {
+        name: 'createStripePortalSessionFlow',
+        inputSchema: ActorSchema,
+        outputSchema: z.object({ url: z.string().url() }),
+    },
+    async ({ actor }) => {
+        if (!stripe) throw new Error("Stripe is not configured.");
+        
+        const { userData } = await getAdminAndOrg(actor);
+        const customerId = userData.stripeCustomerId;
+
+        if (!customerId) {
+            throw new Error("User does not have a Stripe Customer ID.");
+        }
+
+        const portalSession = await stripe.billingPortal.sessions.create({
+            customer: customerId,
+            return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings`,
+        });
+
+        if (!portalSession.url) {
+            throw new Error("Could not create Stripe portal session.");
+        }
+
+        return { url: portalSession.url };
+    }
+);
+
+export async function createStripePortalSession(input: z.infer<typeof ActorSchema>): Promise<{ url: string }> {
+    return createStripePortalSessionFlow(input);
 }
 
 
@@ -101,6 +141,7 @@ export const stripeWebhookFlow = ai.defineFlow(
         }
 
         const session = event.data.object as Stripe.Checkout.Session;
+        const subscription = event.data.object as Stripe.Subscription;
 
         switch (event.type) {
             case 'checkout.session.completed':
@@ -108,7 +149,7 @@ export const stripeWebhookFlow = ai.defineFlow(
                     throw new Error("Webhook Error: Missing subscription or customer ID in session.");
                 }
 
-                const subscription = await stripe.subscriptions.retrieve(session.subscription.toString());
+                const completedSubscription = await stripe.subscriptions.retrieve(session.subscription.toString());
                 const customer = await stripe.customers.retrieve(session.customer.toString()) as Stripe.Customer;
                 const organizationId = customer.metadata.organizationId;
                 
@@ -117,15 +158,14 @@ export const stripeWebhookFlow = ai.defineFlow(
                 }
 
                 await adminDb.collection('organizations').doc(organizationId).update({
-                    stripeSubscriptionId: subscription.id,
-                    stripeCustomerId: subscription.customer,
-                    stripePriceId: subscription.items.data[0].price.id,
-                    stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
+                    stripeSubscriptionId: completedSubscription.id,
+                    stripeCustomerId: completedSubscription.customer,
+                    stripePriceId: completedSubscription.items.data[0].price.id,
+                    stripeCurrentPeriodEnd: new Date(completedSubscription.current_period_end * 1000),
                 });
                 break;
             case 'invoice.payment_succeeded':
-                if (session.subscription) {
-                    const subscription = await stripe.subscriptions.retrieve(session.subscription.toString());
+                if (subscription.billing_reason === 'subscription_cycle') {
                     const customer = await stripe.customers.retrieve(subscription.customer.toString()) as Stripe.Customer;
                     const organizationId = customer.metadata.organizationId;
                     await adminDb.collection('organizations').doc(organizationId).update({
@@ -136,17 +176,17 @@ export const stripeWebhookFlow = ai.defineFlow(
                 break;
              case 'customer.subscription.deleted':
              case 'customer.subscription.updated':
-                if(session.customer) {
-                     const customer = await stripe.customers.retrieve(session.customer as string) as Stripe.Customer;
-                     if (!customer.deleted) {
-                         const organizationId = customer.metadata.organizationId;
-    
-                         await adminDb.collection('organizations').doc(organizationId).update({
-                            stripePriceId: null,
-                            stripeSubscriptionId: null,
-                            stripeCurrentPeriodEnd: null,
-                        });
-                     }
+                const customerId = (subscription.customer as Stripe.Customer)?.id || subscription.customer;
+                const customerDetails = await stripe.customers.retrieve(customerId as string) as Stripe.Customer;
+                
+                if (!customerDetails.deleted) {
+                    const organizationId = customerDetails.metadata.organizationId;
+
+                    await adminDb.collection('organizations').doc(organizationId).update({
+                       stripePriceId: null,
+                       stripeSubscriptionId: null,
+                       stripeCurrentPeriodEnd: null,
+                   });
                 }
                 break;
             default:
@@ -156,5 +196,3 @@ export const stripeWebhookFlow = ai.defineFlow(
         return { received: true };
     }
 );
-
-
