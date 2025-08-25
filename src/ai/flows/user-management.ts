@@ -27,7 +27,7 @@ const ActorSchema = z.object({ actor: z.string() });
 
 // Define flows
 const signUpFlow = ai.defineFlow(
-    { name: 'signUpFlow', inputSchema: SignUpSchema, outputSchema: z.any() },
+    { name: 'signUpFlow', inputSchema: SignUpSchema, outputSchema: z.object({ uid: z.string() }) },
     async (input) => orgService.signUp(input)
 );
 
@@ -58,7 +58,7 @@ const updateOrganizationDetailsFlow = ai.defineFlow(
 
 
 // Exported functions (client-callable wrappers)
-export async function signUp(input: z.infer<typeof SignUpSchema>): Promise<UserRecord> {
+export async function signUp(input: z.infer<typeof SignUpSchema>): Promise<{uid: string}> {
     return signUpFlow(input);
 }
 

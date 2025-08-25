@@ -15,7 +15,7 @@ import { getAdminAndOrg } from './utils';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
 
 
-export const signUp = async (input: z.infer<typeof SignUpSchema>): Promise<UserRecord> => {
+export const signUp = async (input: z.infer<typeof SignUpSchema>): Promise<{uid: string}> => {
     const { email, password, name, organizationName, cnpj, contactEmail, contactPhone } = input;
     
     try {
@@ -49,7 +49,7 @@ export const signUp = async (input: z.infer<typeof SignUpSchema>): Promise<UserR
             },
         });
 
-        return userRecord;
+        return { uid: userRecord.uid };
     } catch (error: any) {
         if (error.code === 'auth/email-already-exists') {
             throw new Error('Este e-mail já está em uso.');
