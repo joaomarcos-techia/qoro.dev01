@@ -3,7 +3,7 @@
 /**
  * @fileOverview Billing and subscription management flows.
  * - createStripeCheckoutSession - Creates a new Stripe checkout session for a user to subscribe.
- * - stripeWebhook - Handles incoming webhook events from Stripe to sync subscription status.
+ * - stripeWebhookFlow - Handles incoming webhook events from Stripe to sync subscription status.
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
@@ -43,7 +43,6 @@ const createStripeCheckoutSessionFlow = ai.defineFlow(
                 }
             });
             customerId = customer.id;
-            // Save the new customer ID to the user's document in Firestore
             await adminDb.collection('users').doc(actor).update({ stripeCustomerId: customerId });
         }
         
@@ -73,7 +72,7 @@ export async function createStripeCheckoutSession(input: z.infer<typeof CreateCh
 
 
 // Stripe Webhook Flow
-const stripeWebhookFlow = ai.defineFlow(
+export const stripeWebhookFlow = ai.defineFlow(
     {
         name: "stripeWebhookFlow",
         inputSchema: z.any(),
@@ -132,15 +131,17 @@ const stripeWebhookFlow = ai.defineFlow(
                 break;
              case 'customer.subscription.deleted':
              case 'customer.subscription.updated':
-                if(session.id) {
+                if(session.customer) {
                      const customer = await stripe.customers.retrieve(session.customer as string) as Stripe.Customer;
-                     const organizationId = customer.metadata.organizationId;
-
-                     await adminDb.collection('organizations').doc(organizationId).update({
-                        stripePriceId: null,
-                        stripeSubscriptionId: null,
-                        stripeCurrentPeriodEnd: null,
-                    });
+                     if (!customer.deleted) {
+                         const organizationId = customer.metadata.organizationId;
+    
+                         await adminDb.collection('organizations').doc(organizationId).update({
+                            stripePriceId: null,
+                            stripeSubscriptionId: null,
+                            stripeCurrentPeriodEnd: null,
+                        });
+                     }
                 }
                 break;
             default:
@@ -150,16 +151,3 @@ const stripeWebhookFlow = ai.defineFlow(
         return { received: true };
     }
 );
-
-// Note: This flow is not exported to be directly called by client code.
-// It's registered with Genkit to create a webhook endpoint.
-// We need to update dev.ts to handle the raw body for Stripe's signature verification.
-ai.flow('stripeWebhook', stripeWebhookFlow, {
-    authPolicy: (auth, a) => {
-      if (!auth) {
-        // This is a public endpoint, but we could add API key validation here if needed.
-        return;
-      }
-      throw new Error('Must not be authenticated.');
-    },
-});

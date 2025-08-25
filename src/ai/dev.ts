@@ -7,7 +7,7 @@ import './flows/task-management';
 import './flows/pulse-flow';
 import './flows/finance-management';
 import './flows/supplier-management';
-import './flows/billing-flow';
+import { stripeWebhookFlow } from './flows/billing-flow';
 
 
 // Tools will be imported for their side effects in this file.
@@ -19,7 +19,6 @@ import './tools/supplier-tools';
 // We need express for the Stripe webhook to get the raw body
 import express from 'express';
 import { runFlow } from '@genkit-ai/flow';
-import { stripeWebhookFlow } from './flows/billing-flow';
 
 const app = express();
 
