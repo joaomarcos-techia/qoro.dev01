@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Mail, Lock, AlertCircle, CheckCircle, User, Building, FileText, Phone } from 'lucide-react';
+import { Mail, Lock, AlertCircle, CheckCircle, User, Building, FileText, Phone, ArrowRight } from 'lucide-react';
 import { signUp } from '@/ai/flows/user-management';
 import { sendEmailVerification } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -54,7 +54,7 @@ export default function SignUpPage() {
       if (auth.currentUser) {
         await sendEmailVerification(auth.currentUser as FirebaseUser);
       }
-      setSuccess('Conta criada! Verifique seu e-mail para confirmar sua conta e acessar a plataforma.');
+      setSuccess('Conta criada! Verifique seu e-mail para ativar sua conta.');
     } catch (err: any) {
       if (err.message && err.message.includes('Este e-mail já está em uso.')) {
         setError('Este e-mail já está em uso. Tente fazer login.');
@@ -78,10 +78,15 @@ export default function SignUpPage() {
         </div>
 
         {success ? (
-          <div className="bg-green-800/20 border-l-4 border-green-500 text-green-300 p-4 rounded-lg flex items-center text-center flex-col">
-            <CheckCircle className="w-8 h-8 mb-3 text-green-400" />
-            <p className="text-sm font-semibold">{success}</p>
-             <Link href="/login" className="mt-4 text-sm font-medium text-primary hover:underline">
+          <div className="bg-green-800/20 border-l-4 border-green-500 text-green-300 p-6 rounded-lg flex items-center text-center flex-col">
+            <CheckCircle className="w-10 h-10 mb-4 text-green-400" />
+            <h3 className="text-xl font-bold text-white mb-2">Conta Criada com Sucesso!</h3>
+            <p className="text-sm font-semibold mb-6">{success}</p>
+             <Link href="/#precos" className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 border border-transparent hover:border-primary/50 flex items-center justify-center font-semibold group">
+                Escolher Meu Plano
+                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </Link>
+            <Link href="/login" className="mt-4 text-sm font-medium text-muted-foreground hover:text-white transition-colors">
                 Ir para o Login
             </Link>
           </div>

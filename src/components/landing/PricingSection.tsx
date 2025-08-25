@@ -92,31 +92,21 @@ const PricingCard = ({ plan, currentUser }: { plan: Plan, currentUser: FirebaseU
 
     const handlePlanSelection = async () => {
         setIsLoading(true);
-        if (!currentUser) {
-            router.push('/signup');
-            return;
-        }
-
-        if (plan.id === 'free') {
-            router.push('/signup');
-            return;
-        }
-
-        if (!plan.stripePriceId) {
-            console.error("Stripe Price ID is not configured for this plan.");
-            setIsLoading(false);
-            return;
-        }
-
-        try {
-            const { url } = await createStripeCheckoutSession({ priceId: plan.stripePriceId, actor: currentUser.uid });
-            if (url) {
-                window.open(url, '_blank');
+        // If user is logged in and selects a paid plan, go to checkout
+        if (currentUser && plan.stripePriceId) {
+            try {
+                const { url } = await createStripeCheckoutSession({ priceId: plan.stripePriceId, actor: currentUser.uid });
+                if (url) {
+                    window.open(url, '_blank');
+                }
+            } catch (error) {
+                console.error("Failed to create Stripe checkout session:", error);
+            } finally {
+                setIsLoading(false);
             }
-        } catch (error) {
-            console.error("Failed to create Stripe checkout session:", error);
-        } finally {
-            setIsLoading(false);
+        } else {
+            // If user is not logged in, or selects any plan (including free), go to signup
+            router.push('/signup');
         }
     }
 
