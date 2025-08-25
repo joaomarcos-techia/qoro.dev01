@@ -8,8 +8,8 @@ export const SignUpSchema = z.object({
     email: z.string().email(),
     password: z.string().min(6),
     cnpj: z.string().min(1, "O CNPJ é obrigatório."),
-    contactEmail: z.string().email().or(z.literal('')).optional(),
-    contactPhone: z.string().or(z.literal('')).optional(),
+    contactEmail: z.string().email("O e-mail de contato deve ser válido.").optional().or(z.literal('')),
+    contactPhone: z.string().optional().or(z.literal('')),
 });
 
 export const InviteUserSchema = z.object({
@@ -332,3 +332,5 @@ export const BillProfileSchema = BillSchema.extend({
     entityName: z.string().optional(),
 });
 export type BillProfile = z.infer<typeof BillProfileSchema>;
+
+    
