@@ -85,7 +85,7 @@ export default function SignUpPage() {
       }
       
       const { url } = await createStripeCheckoutSession({ priceId: priceId, actor: uid });
-      window.top.location.href = url;
+      window.open(url, '_blank');
 
     } catch (err: any) {
       if (err.message && err.message.includes('Este e-mail já está em uso.')) {
@@ -116,7 +116,7 @@ export default function SignUpPage() {
             <p className="text-sm font-semibold mb-6">{success}</p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+          <form onSubmit={handleSignUp} className="space-y-8">
             {/* Seção Empresa */}
             <div>
                 <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center"><Building className="w-5 h-5 mr-3 text-primary"/>Informações da Empresa</h3>
