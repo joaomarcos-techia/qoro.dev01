@@ -26,7 +26,6 @@ export default function ListaPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [refreshCounter, setRefreshCounter] = useState(0);
 
   const fetchTasks = useCallback(() => {
     if (currentUser) {
@@ -53,7 +52,7 @@ export default function ListaPage() {
     if(currentUser) {
       fetchTasks();
     }
-  }, [currentUser, fetchTasks, refreshCounter]);
+  }, [currentUser, fetchTasks]);
 
   const handleModalOpenChange = (open: boolean) => {
     setIsModalOpen(open);
@@ -64,7 +63,7 @@ export default function ListaPage() {
 
   const handleTaskAction = () => {
     handleModalOpenChange(false);
-    setRefreshCounter(prev => prev + 1);
+    fetchTasks();
   };
 
   const handleEditTask = (task: TaskProfile) => {
@@ -116,7 +115,7 @@ export default function ListaPage() {
             data={tasks} 
             isLoading={isLoading} 
             error={error} 
-            onRefresh={() => setRefreshCounter(c => c + 1)}
+            onRefresh={fetchTasks}
             onEdit={handleEditTask}
         />
       </div>
