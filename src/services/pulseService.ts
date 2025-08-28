@@ -35,7 +35,7 @@ export const createConversation = async (actorUid: string, title: string, messag
     const newConversationData: z.infer<typeof ConversationSchema> = {
         userId: actorUid,
         organizationId,
-        title,
+        title: title || 'Nova Conversa',
         messages,
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),

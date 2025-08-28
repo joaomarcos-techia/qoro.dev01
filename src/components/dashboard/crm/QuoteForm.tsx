@@ -223,7 +223,7 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
         
         onQuoteAction();
 
-        if (savedQuote.id) {
+        if (savedQuote.id && !isEditMode) {
             const profileForPdf = createFullQuoteProfile(data, savedQuote.number);
             profileForPdf.id = savedQuote.id;
             await generatePdf(profileForPdf, 'download');
@@ -386,12 +386,10 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
         </div>
         <Button type="submit" disabled={isLoading} className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
           {isLoading ? <Loader2 className="mr-2 w-5 h-5 animate-spin" /> : null}
-          {isLoading ? 'Salvando...' : (isEditMode ? 'Salvar Alterações' : 'Salvar e Gerar PDF')}
+          {isEditMode ? 'Salvar Alterações' : 'Salvar e Gerar PDF'}
         </Button>
       </div>
     </form>
     </>
   );
 }
-
-    

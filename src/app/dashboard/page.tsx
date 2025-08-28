@@ -228,13 +228,18 @@ function DashboardContent() {
     )
   }
   
-  const plan = userAccess?.planId ?? 'free';
   const permissions = userAccess?.permissions;
-
-  const planHasCrm = permissions?.qoroCrm;
-  const planHasTask = permissions?.qoroTask;
-  const planHasPulse = userAccess?.planId === 'performance' && permissions?.qoroPulse;
-  const planHasFinance = (userAccess?.planId !== 'free' && permissions?.qoroFinance) || userAccess?.planId === 'free';
+  if (!permissions) {
+    return (
+        <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+          <div className="text-center">
+            <AlertTriangle className="mx-auto w-12 h-12 text-destructive" />
+            <h3 className="mt-4 text-lg font-medium text-foreground">Não foi possível carregar suas permissões.</h3>
+            <p className="mt-2 text-sm text-muted-foreground">Tente recarregar a página.</p>
+          </div>
+        </div>
+      );
+  }
 
 
   return (
@@ -255,15 +260,15 @@ function DashboardContent() {
        <div className="mb-12">
             <h3 className="text-xl font-bold text-foreground mb-6">Métricas e Insights Rápidos</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {planHasCrm && (
+                {permissions.qoroCrm && (
                   <>
                     <MetricCard title="Total de Clientes" value={String(crmMetrics.totalCustomers)} icon={Users} isLoading={isLoading.metrics} error={errors.crm} colorClass='bg-crm-primary' />
                     <MetricCard title="Leads no Funil" value={String(crmMetrics.totalLeads)} icon={TrendingUp} isLoading={isLoading.metrics} error={errors.crm} colorClass='bg-crm-primary' />
                   </>
                 )}
-                {planHasTask && <MetricCard title="Tarefas Pendentes" value={String(taskMetrics.pendingTasks)} icon={ListTodo} isLoading={isLoading.metrics} error={errors.task} colorClass='bg-task-primary' />
+                {permissions.qoroTask && <MetricCard title="Tarefas Pendentes" value={String(taskMetrics.pendingTasks)} icon={ListTodo} isLoading={isLoading.metrics} error={errors.task} colorClass='bg-task-primary' />
                 }
-                {planHasFinance && <MetricCard title="Saldo em Contas" value={formatCurrency(financeMetrics.totalBalance)} icon={DollarSign} isLoading={isLoading.metrics} error={errors.finance} colorClass='bg-finance-primary' />
+                {permissions.qoroFinance && <MetricCard title="Saldo em Contas" value={formatCurrency(financeMetrics.totalBalance)} icon={DollarSign} isLoading={isLoading.metrics} error={errors.finance} colorClass='bg-finance-primary' />
                 }
             </div>
              {(errors.crm || errors.task || errors.finance) && (
@@ -286,8 +291,8 @@ function DashboardContent() {
                 icon={Users}
                 color="bg-crm-primary"
                 description="CRM com foco em gestão de funil de vendas e conversão para maximizar seus lucros."
-                isLocked={!planHasCrm}
-                ctaText={planHasCrm ? "Acessar" : "Permissão necessária"}
+                isLocked={!permissions.qoroCrm}
+                ctaText={permissions.qoroCrm ? "Acessar" : "Permissão necessária"}
             />
              <AppCard 
                 href="/dashboard/pulse"
@@ -295,8 +300,8 @@ function DashboardContent() {
                 icon={Activity}
                 color="bg-pulse-primary"
                 description="O sistema nervoso central da sua operação, revelando insights para otimização automática e inteligente."
-                isLocked={!planHasPulse}
-                ctaText={planHasPulse ? "Nova Conversa" : "Fazer Upgrade"}
+                isLocked={!permissions.qoroPulse}
+                ctaText={permissions.qoroPulse ? "Nova Conversa" : "Fazer Upgrade"}
             />
             <AppCard 
                 href="/dashboard/task/tarefas"
@@ -304,8 +309,8 @@ function DashboardContent() {
                 icon={CheckSquare}
                 color="bg-task-primary"
                 description="Plataforma leve e poderosa de gestão de tarefas e produtividade para manter sua equipe alinhada e focada."
-                isLocked={!planHasTask}
-                ctaText={planHasTask ? "Acessar" : "Permissão necessária"}
+                isLocked={!permissions.qoroTask}
+                ctaText={permissions.qoroTask ? "Acessar" : "Permissão necessária"}
             />
             <AppCard 
                 href="/dashboard/finance/relatorios"
@@ -313,8 +318,8 @@ function DashboardContent() {
                 icon={DollarSign}
                 color="bg-finance-primary"
                 description="Controle financeiro completo para seu negócio, com dashboards claros e relatórios simplificados."
-                isLocked={!planHasFinance}
-                ctaText={planHasFinance ? "Acessar" : "Permissão necessária"}
+                isLocked={!permissions.qoroFinance}
+                ctaText={permissions.qoroFinance ? "Acessar" : "Permissão necessária"}
             />
         </div>
       </div>

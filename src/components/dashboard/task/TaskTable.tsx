@@ -44,7 +44,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MoreHorizontal, ArrowUpDown, Search, Loader2, List, Flag, Calendar, User, Edit, Trash2 } from 'lucide-react';
 import type { TaskProfile } from '@/ai/schemas';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { deleteTask } from '@/ai/flows/task-management';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
@@ -128,9 +128,10 @@ export function TaskTable({ data, isLoading, error, onRefresh, onEdit }: { data:
       accessorKey: 'dueDate',
       header: 'Vencimento',
       cell: ({ row }) => {
-        const date = row.getValue('dueDate') as string | null;
-        if (!date) return '-';
-        return <span className='flex items-center'><Calendar className='w-4 h-4 mr-2 text-muted-foreground'/>{format(parseISO(date), "dd/MM/yyyy")}</span>;
+        const dateStr = row.getValue('dueDate') as string | null;
+        if (!dateStr || !isValid(parseISO(dateStr))) return '-';
+        const date = parseISO(dateStr);
+        return <span className='flex items-center'><Calendar className='w-4 h-4 mr-2 text-muted-foreground'/>{format(date, "dd/MM/yyyy", {locale: ptBR})}</span>;
       }
     },
     {

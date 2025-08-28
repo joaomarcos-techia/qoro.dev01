@@ -17,15 +17,17 @@ import { Loader2, AlertCircle, CalendarIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 
 type CustomerFormProps = {
   onCustomerAction: () => void;
   customer?: CustomerProfile | null;
 };
 
-// Use the base CustomerSchema for the form and handle date conversion on submit
-type FormValues = z.infer<typeof CustomerSchema>;
+const FormSchema = CustomerSchema.extend({
+    birthDate: z.union([z.date(), z.null()]).optional(),
+});
+type FormValues = z.infer<typeof FormSchema>;
 
 // --- Funções de formatação ---
 const formatCPF = (value: string) => {
@@ -77,7 +79,7 @@ export function CustomerForm({ onCustomerAction, customer }: CustomerFormProps) 
     reset,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(CustomerSchema),
+    resolver: zodResolver(FormSchema),
     defaultValues: {
       name: '', email: '', phone: '', company: '', cpf: '', cnpj: '',
       birthDate: null, address: { street: '', number: '', neighborhood: '', city: '', state: '', zipCode: '' },
@@ -87,7 +89,7 @@ export function CustomerForm({ onCustomerAction, customer }: CustomerFormProps) 
 
   useEffect(() => {
     if (customer) {
-        const birthDate = customer.birthDate ? new Date(customer.birthDate) : null;
+        const birthDate = customer.birthDate ? parseISO(customer.birthDate) : null;
         reset({ ...customer, birthDate });
     } else {
         reset({
@@ -112,8 +114,7 @@ export function CustomerForm({ onCustomerAction, customer }: CustomerFormProps) 
         cpf: data.cpf?.replace(/\D/g, ''),
         cnpj: data.cnpj?.replace(/\D/g, ''),
         phone: data.phone?.replace(/\D/g, ''),
-        // Correctly convert Date object to ISO string for the backend
-        birthDate: data.birthDate ? new Date(data.birthDate).toISOString() : null,
+        birthDate: data.birthDate ? new Date(data.birthDate).toISOString() : undefined,
       };
 
       if (isEditMode) {
@@ -122,9 +123,9 @@ export function CustomerForm({ onCustomerAction, customer }: CustomerFormProps) 
         await createCustomer({ ...submissionData, actor: currentUser.uid });
       }
       onCustomerAction();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError(`Falha ao ${isEditMode ? 'atualizar' : 'criar'} o cliente. Tente novamente.`);
+      setError(err.message || `Falha ao ${isEditMode ? 'atualizar' : 'criar'} o cliente. Tente novamente.`);
     } finally {
       setIsLoading(false);
     }

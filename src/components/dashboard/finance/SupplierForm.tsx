@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -13,12 +13,20 @@ import { SupplierSchema, SupplierProfile } from '@/ai/schemas';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Loader2, AlertCircle } from 'lucide-react';
-import * as supplierService from '@/services/supplierService';
-
 
 type SupplierFormProps = {
   onAction: () => void;
   supplier?: SupplierProfile | null;
+};
+
+const formatCNPJ = (value: string) => {
+    if (!value) return "";
+    value = value.replace(/\D/g, '');
+    value = value.replace(/^(\d{2})(\d)/, '$1.$2');
+    value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+    value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
+    value = value.replace(/(\d{4})(\d)/, '$1-$2');
+    return value.slice(0, 18);
 };
 
 export function SupplierForm({ onAction, supplier }: SupplierFormProps) {
@@ -38,6 +46,7 @@ export function SupplierForm({ onAction, supplier }: SupplierFormProps) {
   const {
     register,
     handleSubmit,
+    control,
     reset,
     formState: { errors },
   } = useForm<z.infer<typeof SupplierSchema>>({
@@ -67,15 +76,16 @@ export function SupplierForm({ onAction, supplier }: SupplierFormProps) {
     setIsLoading(true);
     setError(null);
     try {
+      const submissionData = { ...data, cnpj: data.cnpj?.replace(/\D/g, '') };
       if (isEditMode) {
-        await updateSupplier({ ...data, id: supplier.id, actor: currentUser.uid });
+        await updateSupplier({ ...submissionData, id: supplier.id, actor: currentUser.uid });
       } else {
-        await createSupplier({ ...data, actor: currentUser.uid });
+        await createSupplier({ ...submissionData, actor: currentUser.uid });
       }
       onAction();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError(`Falha ao ${isEditMode ? 'atualizar' : 'criar'} o fornecedor. Tente novamente.`);
+      setError(err.message || `Falha ao ${isEditMode ? 'atualizar' : 'criar'} o fornecedor. Tente novamente.`);
     } finally {
       setIsLoading(false);
     }
@@ -100,7 +110,17 @@ export function SupplierForm({ onAction, supplier }: SupplierFormProps) {
         </div>
         <div className="space-y-2">
           <Label htmlFor="cnpj">CNPJ</Label>
-          <Input id="cnpj" {...register('cnpj')} />
+          <Controller
+            name="cnpj"
+            control={control}
+            render={({ field }) => (
+                <Input
+                    id="cnpj"
+                    value={field.value ?? ''}
+                    onChange={(e) => field.onChange(formatCNPJ(e.target.value))}
+                />
+            )}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="paymentTerms">Termos de Pagamento</Label>
