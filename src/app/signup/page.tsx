@@ -75,6 +75,7 @@ export default function SignUpPage() {
       // Step 2: Create the organization and user document in Firestore via the backend flow
       await signUp({
         ...formData,
+        uid: user.uid,
         cnpj: formData.cnpj.replace(/\D/g, ''), 
       });
 

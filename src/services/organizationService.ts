@@ -14,38 +14,33 @@ import {
 import { getAdminAndOrg } from './utils';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
 
+// Refactored signUp to only handle Firestore document creation, not Auth user creation.
+// The user should be created on the client-side first to handle email verification.
+const ServerSignUpSchema = SignUpSchema.extend({
+    uid: z.string(), // Expect the UID from the already created Firebase Auth user
+});
 
-export const signUp = async (input: z.infer<typeof SignUpSchema>): Promise<{uid: string}> => {
-    const { email, password, name, organizationName, cnpj, contactEmail, contactPhone } = input;
+export const signUp = async (input: z.infer<typeof ServerSignUpSchema>): Promise<{uid: string}> => {
+    const { uid, name, organizationName, cnpj, contactEmail, contactPhone, email } = input;
     
-    let userRecord: UserRecord;
-    try {
-        userRecord = await adminAuth.createUser({
-            email,
-            password,
-            displayName: name || '',
-            emailVerified: true, // Manually set to true, as we handle this flow now
-        });
-    } catch(error: any) {
-        if (error.code === 'auth/email-already-exists') {
-            throw new Error('Este e-mail já está em uso.');
-        }
-        console.error("Error during sign up (createUser):", error);
-        throw new Error("Ocorreu um erro inesperado durante o cadastro.");
+    // Check if user already has an organization
+    const existingUserDoc = await adminDb.collection('users').doc(uid).get();
+    if (existingUserDoc.exists && existingUserDoc.data()?.organizationId) {
+        throw new Error("Este usuário já pertence a uma organização.");
     }
-        
+
     const orgRef = await adminDb.collection('organizations').add({
         name: organizationName,
-        owner: userRecord.uid,
+        owner: uid,
         createdAt: FieldValue.serverTimestamp(),
         cnpj: cnpj,
         contactEmail: contactEmail || null,
         contactPhone: contactPhone || null,
     });
 
-    await adminDb.collection('users').doc(userRecord.uid).set({
+    await adminDb.collection('users').doc(uid).set({
         name: name || '',
-        email,
+        email: email, // Storing email for reference
         organizationId: orgRef.id,
         role: 'admin',
         createdAt: FieldValue.serverTimestamp(),
@@ -56,8 +51,10 @@ export const signUp = async (input: z.infer<typeof SignUpSchema>): Promise<{uid:
             qoroFinance: true,
         },
     });
+    
+    await adminAuth.setCustomUserClaims(uid, { organizationId: orgRef.id, role: 'admin' });
 
-    return { uid: userRecord.uid };
+    return { uid };
 };
 
 export const inviteUser = async (email: string, actor: string): Promise<{ uid: string; email: string; organizationId: string; }> => {
@@ -91,8 +88,8 @@ export const inviteUser = async (email: string, actor: string): Promise<{ uid: s
       }
     });
     
-    // Firebase will automatically send a password reset / account setup email for invited users.
-    // We don't need to manually generate and send a link here.
+    // Set custom claims for security rules if needed
+    await adminAuth.setCustomUserClaims(userRecord.uid, { organizationId: organizationId, role: 'member' });
 
     return {
       uid: userRecord.uid,
