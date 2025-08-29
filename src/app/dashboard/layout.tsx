@@ -131,9 +131,6 @@ export default function DashboardLayout({
     }
     
     if (currentModule === 'pulse') {
-        if (!accessInfo.permissions.qoroPulse) {
-            return null; 
-        }
         return <PulseSidebar />;
     }
 

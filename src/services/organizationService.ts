@@ -46,7 +46,7 @@ export const signUp = async (input: z.infer<typeof ServerSignUpSchema>): Promise
         createdAt: FieldValue.serverTimestamp(),
         permissions: {
             qoroCrm: true,
-            qoroPulse: false,
+            qoroPulse: true,
             qoroTask: true,
             qoroFinance: true,
         },
@@ -82,7 +82,7 @@ export const inviteUser = async (email: string, actor: string): Promise<{ uid: s
       role: 'member',
       permissions: {
         qoroCrm: true,
-        qoroPulse: false,
+        qoroPulse: true,
         qoroTask: true,
         qoroFinance: true,
       }
