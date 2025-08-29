@@ -2,8 +2,15 @@
 
 import { Linkedin, Twitter, Mail, Phone, MapPin } from 'lucide-react';
 import { Logo } from '@/components/ui/logo';
+import { useState, useEffect } from 'react';
 
 export function Footer() {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   return (
     <footer id="contato" className="bg-black border-t border-white/10 py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -53,7 +60,7 @@ export function Footer() {
               </li>
               <li className="flex items-center text-white/60">
                 <Phone className="mr-3 w-4 h-4 text-primary" />
-                (88) 99682-2198
+                {isMounted && '(88) 99682-2198'}
               </li>
               <li className="flex items-center text-white/60">
                 <MapPin className="mr-3 w-4 h-4 text-primary" />
