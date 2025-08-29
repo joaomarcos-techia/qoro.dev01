@@ -70,7 +70,7 @@ export function DashboardMockup() {
                 {/* Metrics Section */}
                 <div className="mb-6">
                     <Placeholder className="w-1/4 h-4 mb-3" />
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                         <MetricCard icon={Users} color="text-crm-primary" />
                         <MetricCard icon={TrendingUp} color="text-crm-primary" />
                         <MetricCard icon={ListTodo} color="text-task-primary" />
