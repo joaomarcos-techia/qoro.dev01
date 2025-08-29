@@ -151,12 +151,21 @@ export const stripeWebhookFlow = ai.defineFlow(
 
                 const completedSubscription = await stripe.subscriptions.retrieve(session.subscription.toString());
                 const customer = await stripe.customers.retrieve(session.customer.toString()) as Stripe.Customer;
-                const organizationId = customer.metadata.organizationId;
                 
+                let organizationId = customer.metadata.organizationId;
+                
+                // Robustness: If orgId is not in metadata, find it via the customerId in the users collection
                 if (!organizationId) {
-                    throw new Error("Webhook Error: Organization ID not found in customer metadata.");
+                    console.warn(`Organization ID missing from Stripe customer metadata for customer ${customer.id}. Attempting fallback.`);
+                    const userQuery = await adminDb.collection('users').where('stripeCustomerId', '==', customer.id).limit(1).get();
+                    if (!userQuery.empty) {
+                        organizationId = userQuery.docs[0].data().organizationId;
+                        console.log(`Fallback successful: Found organizationId ${organizationId} for customer ${customer.id}`);
+                    } else {
+                         throw new Error(`Webhook Critical Error: Could not find organization for Stripe customer ${customer.id}`);
+                    }
                 }
-
+                
                 await adminDb.collection('organizations').doc(organizationId).update({
                     stripeSubscriptionId: completedSubscription.id,
                     stripeCustomerId: completedSubscription.customer,

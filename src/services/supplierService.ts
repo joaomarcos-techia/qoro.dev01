@@ -77,6 +77,12 @@ export const deleteSupplier = async (supplierId: string, actorUid: string) => {
         throw new Error('Fornecedor não encontrado ou acesso negado.');
     }
 
+    const billsQuery = await adminDb.collection('bills').where('entityId', '==', supplierId).limit(1).get();
+    if (!billsQuery.empty) {
+        throw new Error("Não é possível excluir o fornecedor, pois existem contas a pagar/receber associadas a ele.");
+    }
+
+
     await supplierRef.delete();
     return { id: supplierId, success: true };
 };

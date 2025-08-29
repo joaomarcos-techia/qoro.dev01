@@ -98,16 +98,30 @@ export const updateCustomerStatus = async (
 export const deleteCustomer = async (customerId: string, actorUid: string) => {
     const { organizationId, userRole } = await getAdminAndOrg(actorUid);
 
-    // Security Check: Only admins can delete customers.
     if (userRole !== 'admin') {
         throw new Error("Permissão negada. Apenas administradores podem excluir clientes.");
     }
 
     const customerRef = adminDb.collection('customers').doc(customerId);
-
     const customerDoc = await customerRef.get();
     if (!customerDoc.exists || customerDoc.data()?.companyId !== organizationId) {
         throw new Error('Cliente não encontrado ou acesso negado.');
+    }
+
+    const salesPipelineQuery = adminDb.collection('sales_pipeline').where('customerId', '==', customerId).limit(1).get();
+    const quotesQuery = adminDb.collection('quotes').where('customerId', '==', customerId).limit(1).get();
+    const transactionsQuery = adminDb.collection('transactions').where('customerId', '==', customerId).limit(1).get();
+
+    const [salesPipelineSnapshot, quotesSnapshot, transactionsSnapshot] = await Promise.all([salesPipelineQuery, quotesQuery, transactionsQuery]);
+
+    if (!salesPipelineSnapshot.empty) {
+        throw new Error('Não é possível excluir o cliente pois existem oportunidades de venda associadas a ele.');
+    }
+    if (!quotesSnapshot.empty) {
+        throw new Error('Não é possível excluir o cliente pois existem orçamentos associados a ele.');
+    }
+    if (!transactionsSnapshot.empty) {
+        throw new Error('Não é possível excluir o cliente pois existem transações associadas a ele.');
     }
 
     await customerRef.delete();
@@ -229,8 +243,6 @@ export const updateSaleLeadStage = async (
 
 
 export const getDashboardMetrics = async (actorUid: string): Promise<{ customers: z.infer<typeof CustomerProfileSchema>[], leads: SaleLeadProfile[] }> => {
-    // This function is now simpler: it just fetches the raw data.
-    // The calculation logic has been moved to the frontend for better control.
     const customers = await listCustomers(actorUid);
     const leads = await listSaleLeads(actorUid);
     
