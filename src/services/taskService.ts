@@ -24,6 +24,7 @@ export const createTask = async (input: z.infer<typeof TaskSchema>, actorUid: st
         completedAt: null,
         subtasks: input.subtasks || [],
         comments: input.comments || [],
+        recurrence: input.recurrence || null,
     };
 
     const taskRef = await adminDb.collection('tasks').add(newTaskData);
