@@ -117,9 +117,12 @@ export default function DashboardLayout({
 
   const segments = pathname.split('/');
   const currentModule = segments.length > 2 ? segments[2] : 'home';
+  
+  const hasModuleSidebar = navConfig.hasOwnProperty(currentModule) || currentModule === 'pulse';
 
   const renderSidebarContent = () => {
-    if (isLoadingAccess) {
+    // Only show loader if we expect a sidebar to appear for this module.
+    if (isLoadingAccess && hasModuleSidebar) {
         return (
             <aside className="w-64 flex-shrink-0 bg-card border-r border-border flex flex-col items-center justify-center">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
