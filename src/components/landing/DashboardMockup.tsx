@@ -41,7 +41,7 @@ const AppCard = ({ title, icon: Icon, color }: { title: string, icon: React.Elem
 
 export function DashboardMockup() {
     return (
-        <div className="w-full h-full aspect-[16/10] rounded-xl bg-card flex flex-col overflow-hidden border-2 border-border shadow-2xl text-[10px] sm:text-xs">
+        <div className="w-full h-full aspect-[16/10] rounded-xl bg-card flex flex-col overflow-hidden border-2 border-border shadow-2xl text-[10px]">
             {/* Header */}
             <header className="bg-card/80 border-b border-border flex items-center justify-between h-12 px-4 flex-shrink-0">
                  <div className="flex items-center">
@@ -70,7 +70,7 @@ export function DashboardMockup() {
                 {/* Metrics Section */}
                 <div className="mb-6">
                     <Placeholder className="w-1/4 h-4 mb-3" />
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
                         <MetricCard icon={Users} color="text-crm-primary" />
                         <MetricCard icon={TrendingUp} color="text-crm-primary" />
                         <MetricCard icon={ListTodo} color="text-task-primary" />
