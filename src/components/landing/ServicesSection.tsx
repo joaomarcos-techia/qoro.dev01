@@ -22,7 +22,7 @@ export function ServicesSection() {
     <section id="servicos" className="py-20 bg-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
-          <div className="flex flex-col gap-8 items-center lg:order-first order-last">
+          <div className="flex flex-col gap-8 items-center lg:order-last order-last">
             {images.map((image, index) => (
               <div key={index} className="group relative transition-all duration-500 ease-in-out transform hover:scale-105">
                 <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-primary rounded-xl blur opacity-25 group-hover:opacity-60 transition duration-1000 animate-tilt"></div>
@@ -39,12 +39,12 @@ export function ServicesSection() {
               </div>
             ))}
           </div>
-          <div>
+          <div className="order-first lg:order-last">
             <div className="text-sm font-medium text-purple-400 mb-4 tracking-wider uppercase">Soluções Sob Medida</div>
             <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
               Sua empresa tem uma necessidade única? Nós temos a solução.
             </h2>
-            <div className="space-y-6 text-xl text-white/70 mb-8 leading-relaxed">
+            <div className="space-y-6 text-lg md:text-xl text-white/70 mb-8 leading-relaxed">
                <p>
                 <strong className="text-white">Agentes de IA para Vendas:</strong> Automatize o contato, qualifique leads e agende reuniões 24/7. Deixe a IA trabalhar por você e sua equipe focar em fechar negócios.
               </p>
@@ -53,7 +53,7 @@ export function ServicesSection() {
               </p>
             </div>
              <a href="http://bit.ly/41Emn3C" target="_blank" rel="noopener noreferrer">
-                <div className="inline-flex items-center text-lg font-semibold bg-primary text-primary-foreground px-8 py-4 rounded-xl transition-all duration-300 shadow-lg hover:shadow-primary/40 hover:-translate-y-1 group">
+                <div className="inline-flex items-center text-base md:text-lg font-semibold bg-primary text-primary-foreground px-8 py-4 rounded-xl transition-all duration-300 shadow-lg hover:shadow-primary/40 hover:-translate-y-1 group">
                     Fale com um especialista
                     <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </div>

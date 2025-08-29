@@ -78,7 +78,7 @@ const PricingCard = ({ plan }: { plan: Plan }) => {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
 
-    const cardBaseClasses = "bg-card border rounded-3xl p-8 backdrop-blur-sm transition-all duration-300 hover:-translate-y-2 h-full flex flex-col";
+    const cardBaseClasses = "bg-card border rounded-3xl p-6 md:p-8 backdrop-blur-sm transition-all duration-300 hover:-translate-y-2 h-full flex flex-col";
     const popularClasses = "border-2 border-primary shadow-2xl shadow-primary/20 hover:shadow-primary/40";
     const normalClasses = "border-border hover:border-primary";
     
@@ -102,7 +102,7 @@ const PricingCard = ({ plan }: { plan: Plan }) => {
         )}
         <div className="text-center mb-8">
             <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
-            <p className="text-white/70 min-h-[48px]">{plan.description}</p>
+            <p className="text-white/70 min-h-[48px] text-sm md:text-base">{plan.description}</p>
             <div className="mt-4 mb-2">
                 <span className="text-4xl font-bold text-white">{plan.price}</span>
                 {plan.priceUnit && <span className="text-white/60 ml-1">{plan.priceUnit}</span>}
@@ -112,7 +112,7 @@ const PricingCard = ({ plan }: { plan: Plan }) => {
         
         <ul className="space-y-4 mb-8 flex-grow">
             {plan.features.map((feature, index) => (
-                <li key={index} className="flex items-start text-white/80">
+                <li key={index} className="flex items-start text-white/80 text-sm md:text-base">
                     <Check className="w-5 h-5 text-crm-primary mr-3 flex-shrink-0 mt-0.5" />
                     <span>{feature}</span>
                 </li>

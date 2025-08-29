@@ -1,3 +1,4 @@
+
 'use client';
 
 import { ArrowRight } from 'lucide-react';
@@ -6,7 +7,7 @@ import { DashboardMockup } from './DashboardMockup';
 
 export function HeroSection() {
   return (
-    <section id="home" className="pt-40 pb-20 relative overflow-hidden bg-black">
+    <section id="home" className="pt-28 md:pt-40 pb-20 relative overflow-hidden bg-black">
       {/* Background elements removed for a cleaner approach */}
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative text-center">
@@ -21,14 +22,14 @@ export function HeroSection() {
         
         <div className="flex flex-col sm:flex-row justify-center items-center gap-4 animate-fade-in-up" style={{ animationDelay: '600ms' }}>
           <Link href="/#precos">
-            <div className="bg-primary text-primary-foreground px-8 py-4 rounded-full transition-all duration-300 shadow-lg hover:shadow-primary/40 hover:-translate-y-1 group flex items-center justify-center text-lg font-semibold">
+            <div className="bg-primary text-primary-foreground px-8 py-4 rounded-full transition-all duration-300 shadow-lg hover:shadow-primary/40 hover:-translate-y-1 group flex items-center justify-center text-base md:text-lg font-semibold">
               Começar gratuitamente
               <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </div>
           </Link>
         </div>
         
-        <div className="mt-20 max-w-5xl mx-auto animate-float">
+        <div className="mt-16 md:mt-20 max-w-5xl mx-auto animate-float">
             <div className="relative rounded-2xl p-2 bg-gradient-to-b from-white/10 to-transparent shadow-2xl shadow-primary/20 animate-fade-in-up" style={{ animationDelay: '900ms' }}>
                 <DashboardMockup />
             </div>

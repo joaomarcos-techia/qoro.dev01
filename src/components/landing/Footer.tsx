@@ -1,3 +1,4 @@
+
 import { Linkedin, Twitter, Mail, Phone, MapPin } from 'lucide-react';
 import { Logo } from '@/components/ui/logo';
 
@@ -5,7 +6,7 @@ export function Footer() {
   return (
     <footer id="contato" className="bg-black border-t border-white/10 py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12 mb-12">
           <div>
             <div className="flex items-center gap-2 mb-4 text-xl">
                 <Logo />
