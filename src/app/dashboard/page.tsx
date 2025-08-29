@@ -283,7 +283,7 @@ function DashboardContent() {
                 description="O sistema nervoso central da sua operação, revelando insights para otimização automática e inteligente."
             />
             <AppCard 
-                href="/dashboard/task/tarefas"
+                href="/dashboard/task/lista"
                 title="QoroTask"
                 icon={CheckSquare}
                 color="bg-task-primary"
