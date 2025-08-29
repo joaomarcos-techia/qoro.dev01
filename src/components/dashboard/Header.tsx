@@ -5,8 +5,8 @@ import { ChevronDown, LogOut, RefreshCw, Settings, User } from 'lucide-react';
 import { signOut } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
+import { auth } from '@/lib/firebase';
+import { getUserProfile } from '@/ai/flows/user-management';
 import Link from 'next/link';
 import { Logo } from '@/components/ui/logo';
 
@@ -27,32 +27,8 @@ export function Header() {
     setIsLoading(true);
     setError(null);
     try {
-        const userDocRef = doc(db, 'users', user.uid);
-        const userDoc = await getDoc(userDocRef);
-
-        if (!userDoc.exists()) {
-            throw new Error("Documento do usuário não encontrado no Firestore.");
-        }
-        
-        const userData = userDoc.data();
-        const orgId = userData.organizationId;
-
-        if (!orgId) {
-            throw new Error("Usuário não tem um ID de organização.");
-        }
-
-        const orgDocRef = doc(db, 'organizations', orgId);
-        const orgDoc = await getDoc(orgDocRef);
-        
-        if (!orgDoc.exists()) {
-            throw new Error("Documento da organização não encontrado.");
-        }
-        
-        setUserProfile({
-            name: userData.name || 'Usuário',
-            organizationName: orgDoc.data()?.name || 'Organização',
-        });
-
+        const profile = await getUserProfile({ actor: user.uid });
+        setUserProfile(profile);
     } catch (err) {
         console.error("Falha ao buscar perfil do usuário:", err);
         setError("Não foi possível carregar os dados do perfil.");

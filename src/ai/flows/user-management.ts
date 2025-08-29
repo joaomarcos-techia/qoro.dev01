@@ -9,6 +9,7 @@
  * - getOrganizationDetails - Fetches details for the user's organization.
  * - updateOrganizationDetails - Updates details for the user's organization.
  * - getUserAccessInfo - Fetches user's plan and permissions.
+ * - getUserProfile - Fetches a user's name and organization name.
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
@@ -27,6 +28,11 @@ import type { UserProfile } from '@/ai/schemas';
 import { UserRecord } from 'firebase-admin/auth';
 
 const ActorSchema = z.object({ actor: z.string() });
+
+const UserProfileOutputSchema = z.object({
+    name: z.string(),
+    organizationName: z.string(),
+});
 
 // Define flows
 const signUpFlow = ai.defineFlow(
@@ -63,10 +69,21 @@ const getUserAccessInfoFlow = ai.defineFlow(
     { name: 'getUserAccessInfoFlow', inputSchema: ActorSchema, outputSchema: UserAccessInfoSchema },
     async ({ actor }) => {
         const { planId, userData } = await getAdminAndOrg(actor);
-        const defaultPermissions = { qoroCrm: false, qoroPulse: false, qoroTask: false, qoroFinance: false };
+        const defaultPermissions = { qoroCrm: true, qoroPulse: true, qoroTask: true, qoroFinance: true };
         return {
             planId,
             permissions: { ...defaultPermissions, ...userData.permissions }
+        }
+    }
+);
+
+const getUserProfileFlow = ai.defineFlow(
+    { name: 'getUserProfileFlow', inputSchema: ActorSchema, outputSchema: UserProfileOutputSchema },
+    async ({ actor }) => {
+        const { userData, organizationName } = await getAdminAndOrg(actor);
+        return {
+            name: userData.name || userData.email || 'Usuário',
+            organizationName: organizationName || 'Organização',
         }
     }
 );
@@ -99,4 +116,8 @@ export async function updateOrganizationDetails(input: z.infer<typeof UpdateOrga
 
 export async function getUserAccessInfo(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof UserAccessInfoSchema>> {
     return getUserAccessInfoFlow(input);
+}
+
+export async function getUserProfile(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof UserProfileOutputSchema>> {
+    return getUserProfileFlow(input);
 }
