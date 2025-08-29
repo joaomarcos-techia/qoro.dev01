@@ -80,7 +80,7 @@ export function TestimonialsSection() {
     <section id="depoimentos" className="py-20 bg-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <div className="text-sm font-medium text-primary mb-4 tracking-wider uppercase">Prova Social</div>
+          <div className="text-sm font-medium text-primary mb-4 tracking-wider uppercase">Testemunhos</div>
           <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
             O que nossos clientes dizem
           </h2>
