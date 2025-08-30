@@ -32,11 +32,12 @@ type FormValues = z.infer<typeof FormSchema>;
 // --- Funções de formatação ---
 const formatCPF = (value: string) => {
     if (!value) return "";
-    value = value.replace(/\D/g, ''); // Remove tudo o que não é dígito
-    value = value.replace(/(\d{3})(\d)/, '$1.$2');
-    value = value.replace(/(\d{3})(\d)/, '$1.$2');
-    value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-    return value.slice(0, 14); // Limita ao tamanho máximo de um CPF formatado
+    return value
+      .replace(/\D/g, '') // Remove tudo que não é dígito
+      .replace(/(\d{3})(\d)/, '$1.$2') // Coloca ponto após o terceiro dígito
+      .replace(/(\d{3})(\d)/, '$1.$2') // Coloca ponto após o sexto dígito
+      .replace(/(\d{3})(\d{1,2})$/, '$1-$2') // Coloca hífen antes dos últimos dois dígitos
+      .slice(0, 14); // Limita ao tamanho máximo de um CPF formatado
 };
 
 const formatCNPJ = (value: string) => {
