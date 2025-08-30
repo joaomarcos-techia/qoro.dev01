@@ -25,7 +25,7 @@ type CustomerFormProps = {
 };
 
 const FormSchema = CustomerSchema.extend({
-    birthDate: z.union([z.date(), z.null()]).optional(),
+    birthDate: z.string().optional().nullable(),
 });
 type FormValues = z.infer<typeof FormSchema>;
 
@@ -89,7 +89,7 @@ export function CustomerForm({ onCustomerAction, customer }: CustomerFormProps) 
 
   useEffect(() => {
     if (customer) {
-        const birthDate = customer.birthDate ? parseISO(customer.birthDate) : null;
+        const birthDate = customer.birthDate ? format(parseISO(customer.birthDate as string), 'yyyy-MM-dd') : null;
         reset({ ...customer, birthDate });
     } else {
         reset({
@@ -163,21 +163,7 @@ export function CustomerForm({ onCustomerAction, customer }: CustomerFormProps) 
             </div>
              <div className="space-y-2">
                 <Label htmlFor="birthDate">Data de Nascimento</Label>
-                <Controller
-                    name="birthDate"
-                    control={control}
-                    render={({ field }) => (
-                        <Popover>
-                            <PopoverTrigger asChild>
-                            <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !field.value && "text-muted-foreground")}>
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {field.value ? format(new Date(field.value), "dd/MM/yyyy") : <span>Selecione a data</span>}
-                            </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={field.value ? new Date(field.value) : undefined} onSelect={field.onChange} /></PopoverContent>
-                        </Popover>
-                    )}
-                />
+                <Input id="birthDate" type="date" {...register('birthDate')} />
             </div>
              <div className="space-y-2">
                 <Label htmlFor="cpf">CPF</Label>
@@ -298,3 +284,5 @@ export function CustomerForm({ onCustomerAction, customer }: CustomerFormProps) 
     </form>
   );
 }
+
+    

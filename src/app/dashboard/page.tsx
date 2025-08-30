@@ -91,27 +91,25 @@ const AppCard = ({
     description: string;
 }) => {
     return (
-      <Link href={href}>
-        <div className="group bg-card rounded-2xl border border-border hover:border-primary/50 hover:-translate-y-1 transition-all duration-200 flex flex-col h-full">
-            <div className="p-6 flex-grow flex flex-col">
-            <div className="flex items-center mb-4">
-                <div className={`p-3 rounded-xl ${color} text-black mr-4 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
-                <Icon className="w-6 h-6" />
-                </div>
-                <div>
-                <h4 className="text-lg font-bold text-foreground">{title}</h4>
-                </div>
-            </div>
-            <p className="text-sm text-muted-foreground mb-6 flex-grow">
-                {description}
-            </p>
-            <div className="group/button w-full bg-secondary text-secondary-foreground hover:bg-secondary/80 py-2.5 px-4 rounded-full transition-colors flex items-center justify-center text-sm font-medium">
-                <span>Acessar</span>
-                <ArrowRight className="w-4 h-4 ml-2 transform transition-transform duration-300 group-hover/button:translate-x-1" />
-            </div>
-            </div>
-        </div>
-      </Link>
+      <div className="group bg-card rounded-2xl border border-border hover:border-primary/50 hover:-translate-y-1 transition-all duration-200 flex flex-col h-full">
+          <div className="p-6 flex-grow flex flex-col">
+          <div className="flex items-center mb-4">
+              <div className={`p-3 rounded-xl ${color} text-black mr-4 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
+              <Icon className="w-6 h-6" />
+              </div>
+              <div>
+              <h4 className="text-lg font-bold text-foreground">{title}</h4>
+              </div>
+          </div>
+          <p className="text-sm text-muted-foreground mb-6 flex-grow">
+              {description}
+          </p>
+          <Link href={href} className="group/button w-full bg-secondary text-secondary-foreground hover:bg-secondary/80 py-2.5 px-4 rounded-full transition-colors flex items-center justify-center text-sm font-medium">
+            <span>Acessar</span>
+            <ArrowRight className="w-4 h-4 ml-2 transform transition-transform duration-300 group-hover/button:translate-x-1" />
+          </Link>
+          </div>
+      </div>
     );
 }
 
@@ -309,3 +307,5 @@ export default function Dashboard() {
         </ErrorBoundary>
     )
 }
+
+    
