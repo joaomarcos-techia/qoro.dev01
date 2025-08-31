@@ -116,21 +116,21 @@ export function ProductForm({ onProductAction, product, itemType }: ProductFormP
         
         <div className="space-y-2">
           <Label htmlFor="price">{pricingModel === 'per_hour' ? 'Preço por Hora (R$)*' : 'Preço de Venda (R$)*'}</Label>
-          <Input id="price" type="number" step="0.01" {...register('price')} />
+          <Input id="price" type="text" inputMode='decimal' {...register('price')} />
           {errors.price && <p className="text-destructive text-sm">{errors.price.message}</p>}
         </div>
         
         {pricingModel === 'fixed' && (
             <div className="space-y-2">
             <Label htmlFor="cost">Custo (R$)</Label>
-            <Input id="cost" type="number" step="0.01" {...register('cost')} />
+            <Input id="cost" type="text" inputMode='decimal' {...register('cost')} />
             </div>
         )}
         
         {pricingModel === 'per_hour' && (
             <div className="space-y-2">
                 <Label htmlFor="durationHours">Duração Estimada (horas)</Label>
-                <Input id="durationHours" type="number" {...register('durationHours')} placeholder="Ex: 8"/>
+                <Input id="durationHours" type="text" inputMode='decimal' {...register('durationHours')} placeholder="Ex: 8"/>
             </div>
         )}
       </div>
