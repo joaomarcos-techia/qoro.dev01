@@ -72,8 +72,6 @@ export default function FunilPage() {
             await updateCustomerStatus({ customerId, status: newStatus, actor: currentUser.uid });
             if (newStatus === 'archived') {
                 showTemporaryFeedback("Cliente arquivado e removido do funil.");
-            } else {
-                showTemporaryFeedback("Cliente movido com sucesso!");
             }
         } catch (err) {
             console.error("Failed to move customer", err);
