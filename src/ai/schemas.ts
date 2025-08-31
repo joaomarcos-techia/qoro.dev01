@@ -139,6 +139,7 @@ export const QuoteItemSchema = z.object({
     quantity: z.number().min(1),
     unitPrice: z.number().min(0),
     total: z.number(),
+    cost: z.number().optional(),
     pricingModel: z.enum(['fixed', 'per_hour']).default('fixed').optional(),
 });
 
@@ -146,7 +147,7 @@ export const QuoteSchema = z.object({
     customerId: z.string().min(1, "É necessário selecionar um cliente."),
     items: z.array(QuoteItemSchema).min(1, "O orçamento deve ter pelo menos um item."),
     subtotal: z.number(),
-    discount: z.number().optional(),
+    discount: z.number().min(0).optional(),
     total: z.number(),
     validUntil: z.string().datetime(),
     notes: z.string().optional(),

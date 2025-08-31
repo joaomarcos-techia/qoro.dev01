@@ -15,7 +15,7 @@ import { createQuote, listCustomers, listProducts, updateQuote, getOrganizationD
 import { QuoteSchema, CustomerProfile, ProductProfile, QuoteProfile, UpdateQuoteSchema, OrganizationProfile } from '@/ai/schemas';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { Loader2, AlertCircle, CalendarIcon, PlusCircle, Trash2, Package, Wrench, Download, Eye } from 'lucide-react';
+import { Loader2, AlertCircle, CalendarIcon, PlusCircle, Trash2, Package, Wrench, Download, Eye, Percent } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -129,14 +129,36 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
 
   const watchItems = watch("items");
   const watchDiscount = watch("discount");
+  
+  const { totalCost, maxDiscountPercentage } = useMemo(() => {
+    const cost = watchItems.reduce((acc, item) => acc + (item.cost || 0) * item.quantity, 0);
+    const subtotal = watchItems.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0);
+    const maxDiscountValue = subtotal - cost;
+    const maxPercentage = subtotal > 0 ? (maxDiscountValue / subtotal) * 100 : 0;
+    return {
+        totalCost: cost,
+        maxDiscountPercentage: Math.max(0, maxPercentage),
+    };
+  }, [watchItems]);
 
   useEffect(() => {
     const subtotal = watchItems.reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0);
-    const discount = watchDiscount || 0;
-    const total = subtotal - discount;
+    const discountPercentage = watchDiscount || 0;
+    
+    // Validate discount
+    if (discountPercentage > maxDiscountPercentage) {
+        setValue('discount', maxDiscountPercentage);
+        setError(`O desconto máximo de ${maxDiscountPercentage.toFixed(2)}% foi aplicado para não gerar prejuízo.`);
+    } else {
+        setError(null);
+    }
+
+    const discountAmount = subtotal * (discountPercentage / 100);
+    const total = subtotal - discountAmount;
+    
     setValue('subtotal', subtotal);
     setValue('total', total);
-  }, [watchItems, watchDiscount, setValue]);
+  }, [watchItems, watchDiscount, setValue, maxDiscountPercentage]);
   
   const generatePdf = async (quoteData: QuoteProfile, action: 'download' | 'view') => {
     setQuoteForPdf({ quoteData, action });
@@ -196,6 +218,7 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
         quantity: 1,
         unitPrice: item.price,
         total: item.price,
+        cost: item.cost,
         pricingModel: item.pricingModel,
     });
     setIsItemPopoverOpen(false);
@@ -360,7 +383,13 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
             </div>
             <div className="space-y-4">
                 <div className="flex justify-between items-center"><Label>Subtotal</Label><span>{watch('subtotal').toFixed(2)}</span></div>
-                <div className="flex justify-between items-center"><Label>Desconto (R$)</Label><Input type="number" step="0.01" className="w-24 h-8" {...register('discount', {valueAsNumber: true})}/></div>
+                <div className="flex justify-between items-center">
+                    <Label>Desconto (%)</Label>
+                    <div className="relative w-28">
+                         <Input type="number" step="0.01" className="pr-7" {...register('discount', {valueAsNumber: true})}/>
+                         <Percent className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/>
+                    </div>
+                </div>
                 <div className="flex justify-between items-center text-lg font-bold"><Label>Total</Label><span>R$ {watch('total').toFixed(2)}</span></div>
             </div>
         </div>

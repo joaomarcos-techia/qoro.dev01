@@ -19,6 +19,7 @@ export const DocumentPDF = React.forwardRef<HTMLDivElement, DocumentPDFProps>(({
     const title = 'Orçamento';
     const validUntilDate = document.validUntil;
     const organizationName = document.organizationName || 'Sua Empresa';
+    const discountAmount = document.subtotal * ((document.discount || 0) / 100);
 
 
     return (
@@ -98,8 +99,8 @@ export const DocumentPDF = React.forwardRef<HTMLDivElement, DocumentPDFProps>(({
                                 <td className="value">{formatCurrency(document.subtotal)}</td>
                             </tr>
                              <tr>
-                                <td className="label">Desconto:</td>
-                                <td className="value">{formatCurrency(document.discount || 0)}</td>
+                                <td className="label">Desconto ({document.discount || 0}%):</td>
+                                <td className="value">{formatCurrency(discountAmount)}</td>
                             </tr>
                             <tr className="grand-total">
                                 <td className="label">TOTAL:</td>
