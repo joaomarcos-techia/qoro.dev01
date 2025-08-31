@@ -82,7 +82,15 @@ export function CustomerKanbanCard({ customer, stageIds, onMove }: KanbanCardPro
                 <ChevronLeft className="w-4 h-4" />
             </Button>
             
-            {(isLostStage || isWonStage) ? (
+            {isWonStage && (
+                 <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-red-400" title="Arquivar Cliente">
+                        <Archive className="w-4 h-4" />
+                    </Button>
+                </AlertDialogTrigger>
+            )}
+            
+            {isLostStage ? (
                 <AlertDialogTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-red-400" title="Arquivar Cliente">
                         <Archive className="w-4 h-4" />
