@@ -10,6 +10,7 @@ import CustomYAxis from '@/components/utils/CustomYAxis';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { ListTodo, Check, AlertOctagon, Clock, Loader2, ServerCrash } from 'lucide-react';
+import type { TaskProfile } from '@/ai/schemas';
 
 interface TaskMetrics {
   totalTasks: number;
@@ -19,7 +20,7 @@ interface TaskMetrics {
   tasksByPriority: Record<string, number>;
 }
 
-const priorityMap: Record<string, { label: string; color: string }> = {
+const priorityMap: Record<TaskProfile['priority'], { label: string; color: string }> = {
     low: { label: 'Baixa', color: 'hsl(var(--chart-2))' },
     medium: { label: 'Média', color: 'hsl(var(--chart-3))' },
     high: { label: 'Alta', color: 'hsl(var(--chart-4))' },
@@ -70,9 +71,9 @@ export default function RelatoriosPage() {
   }, [currentUser]);
 
   const priorityChartData = Object.entries(metrics?.tasksByPriority || {}).map(([name, value]) => ({
-      name: priorityMap[name]?.label || name,
+      name: priorityMap[name as TaskProfile['priority']]?.label || name,
       value,
-      fill: priorityMap[name]?.color || 'hsl(var(--muted))'
+      fill: priorityMap[name as TaskProfile['priority']]?.color || 'hsl(var(--muted))'
   }));
 
   const renderContent = () => {

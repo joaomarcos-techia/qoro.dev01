@@ -14,30 +14,37 @@ import {
 } from '@/components/ui/dialog';
 import { TaskForm } from '@/components/dashboard/task/TaskForm';
 import { TaskTable } from '@/components/dashboard/task/TaskTable';
-import { TaskProfile } from '@/ai/schemas';
+import { TaskProfile, UserProfile } from '@/ai/schemas';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { listTasks } from '@/ai/flows/task-management';
+import { listUsers } from '@/ai/flows/user-management';
 
 export default function ListaPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskProfile | null>(null);
   const [tasks, setTasks] = useState<TaskProfile[]>([]);
+  const [users, setUsers] = useState<UserProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  const fetchTasks = useCallback(() => {
+  const fetchAllData = useCallback(() => {
     if (currentUser) {
       setIsLoading(true);
       setError(null);
-      listTasks({ actor: currentUser.uid })
-        .then(setTasks)
-        .catch((err) => {
-          console.error(err);
-          setError('Não foi possível carregar as tarefas.');
-        })
-        .finally(() => setIsLoading(false));
+      Promise.all([
+        listTasks({ actor: currentUser.uid }),
+        listUsers({ actor: currentUser.uid })
+      ]).then(([tasksData, usersData]) => {
+        setTasks(tasksData);
+        setUsers(usersData);
+      }).catch((err) => {
+        console.error(err);
+        setError('Não foi possível carregar os dados. Tente recarregar a página.');
+      }).finally(() => {
+        setIsLoading(false);
+      });
     }
   }, [currentUser]);
 
@@ -50,9 +57,9 @@ export default function ListaPage() {
 
   useEffect(() => {
     if(currentUser) {
-      fetchTasks();
+        fetchAllData();
     }
-  }, [currentUser, fetchTasks]);
+  }, [currentUser, fetchAllData]);
 
   const handleModalOpenChange = (open: boolean) => {
     setIsModalOpen(open);
@@ -63,7 +70,7 @@ export default function ListaPage() {
 
   const handleTaskAction = () => {
     handleModalOpenChange(false);
-    fetchTasks();
+    fetchAllData();
   };
 
   const handleEditTask = (task: TaskProfile) => {
@@ -90,7 +97,7 @@ export default function ListaPage() {
                 {selectedTask ? 'Altere as informações da tarefa abaixo.' : 'Preencha as informações abaixo para adicionar uma nova tarefa.'}
               </DialogDescription>
             </DialogHeader>
-            <TaskForm onTaskAction={handleTaskAction} task={selectedTask} />
+            <TaskForm onTaskAction={handleTaskAction} task={selectedTask} users={users} />
           </DialogContent>
         </Dialog>
 
@@ -112,10 +119,11 @@ export default function ListaPage() {
 
       <div className="bg-card p-6 rounded-2xl border-border">
         <TaskTable 
-            data={tasks} 
+            tasks={tasks}
+            users={users} 
             isLoading={isLoading} 
             error={error} 
-            onRefresh={fetchTasks}
+            onRefresh={fetchAllData}
             onEdit={handleEditTask}
         />
       </div>

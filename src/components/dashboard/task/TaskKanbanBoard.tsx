@@ -1,7 +1,7 @@
 
 'use client';
 
-import { TaskProfile } from '@/ai/schemas';
+import { TaskProfile, UserProfile } from '@/ai/schemas';
 import { TaskKanbanCard } from './TaskKanbanCard';
 import { CheckSquare } from 'lucide-react';
 
@@ -13,12 +13,13 @@ export type KanbanColumn = {
 
 interface TaskKanbanBoardProps {
   columns: KanbanColumn[];
+  users: UserProfile[];
   onMoveTask: (taskId: string, newStatus: TaskProfile['status']) => void;
   onDeleteTask: (taskId: string) => void;
   onEditTask: (task: TaskProfile) => void;
 }
 
-export function TaskKanbanBoard({ columns, onMoveTask, onDeleteTask, onEditTask }: TaskKanbanBoardProps) {
+export function TaskKanbanBoard({ columns, users, onMoveTask, onDeleteTask, onEditTask }: TaskKanbanBoardProps) {
 
   const totalTasks = columns.reduce((acc, col) => acc + col.tasks.length, 0);
   const stageIds = columns.map(c => c.id);
@@ -45,16 +46,19 @@ export function TaskKanbanBoard({ columns, onMoveTask, onDeleteTask, onEditTask 
               </span>
             </h2>
             <div className="space-y-3 min-h-[100px] overflow-y-auto flex-grow pr-1">
-              {column.tasks.map((task) => (
-                <TaskKanbanCard 
-                    key={task.id} 
-                    task={task} 
-                    stageIds={stageIds}
-                    onMove={onMoveTask}
-                    onDelete={onDeleteTask}
-                    onEdit={onEditTask}
-                />
-              ))}
+              {column.tasks.map((task) => {
+                const responsibleUser = users.find(u => u.uid === task.responsibleUserId);
+                return (
+                    <TaskKanbanCard 
+                        key={task.id} 
+                        task={{...task, responsibleUserName: responsibleUser?.name || responsibleUser?.email}}
+                        stageIds={stageIds}
+                        onMove={onMoveTask}
+                        onDelete={onDeleteTask}
+                        onEdit={onEditTask}
+                    />
+                )
+            })}
             </div>
           </div>
         </div>

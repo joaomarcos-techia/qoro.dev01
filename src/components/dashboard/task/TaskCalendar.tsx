@@ -17,6 +17,10 @@ interface CalendarEvent {
   allDay: boolean;
   backgroundColor: string;
   borderColor: string;
+  extendedProps: {
+    status: string;
+    priority: string;
+  };
 }
 
 const priorityColors: Record<TaskProfile['priority'], { bg: string; border: string }> = {
@@ -55,6 +59,10 @@ export function TaskCalendar() {
               allDay: true, // Tasks are treated as all-day events on their due date
               backgroundColor: priorityColors[task.priority]?.bg || priorityColors.medium.bg,
               borderColor: priorityColors[task.priority]?.border || priorityColors.medium.border,
+              extendedProps: {
+                status: task.status,
+                priority: task.priority,
+              }
             }));
           setEvents(calendarEvents);
         })

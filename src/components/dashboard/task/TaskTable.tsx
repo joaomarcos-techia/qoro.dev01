@@ -43,7 +43,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MoreHorizontal, ArrowUpDown, Search, Loader2, List, Flag, Calendar, User, Edit, Trash2, CheckSquare } from 'lucide-react';
-import type { TaskProfile } from '@/ai/schemas';
+import type { TaskProfile, UserProfile } from '@/ai/schemas';
 import { format, parseISO, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { deleteTask } from '@/ai/flows/task-management';
@@ -65,8 +65,16 @@ const statusMap: Record<TaskProfile['status'], { text: string; color: string }> 
     done: { text: 'Concluída', color: 'bg-green-500/20 text-green-300' },
 };
 
+interface TaskTableProps {
+  tasks: TaskProfile[];
+  users: UserProfile[];
+  isLoading: boolean;
+  error: string | null;
+  onRefresh: () => void;
+  onEdit: (task: TaskProfile) => void;
+}
 
-export function TaskTable({ data, isLoading, error, onRefresh, onEdit }: { data: TaskProfile[], isLoading: boolean, error: string | null, onRefresh: () => void, onEdit: (task: TaskProfile) => void }) {
+export function TaskTable({ tasks, users, isLoading, error, onRefresh, onEdit }: TaskTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [currentUser, setCurrentUser] = React.useState<FirebaseUser | null>(null);
@@ -135,10 +143,12 @@ export function TaskTable({ data, isLoading, error, onRefresh, onEdit }: { data:
         },
     },
     {
-        accessorKey: 'responsibleUserName',
+        accessorKey: 'responsibleUserId',
         header: 'Responsável',
         cell: ({ row }) => {
-            const name = row.getValue('responsibleUserName') as string;
+            const userId = row.getValue('responsibleUserId') as string;
+            const user = users.find(u => u.uid === userId);
+            const name = user?.name || user?.email;
             return name ? <span className='flex items-center'><User className='w-4 h-4 mr-2 text-muted-foreground'/>{name}</span> : '-';
         }
     },
@@ -202,7 +212,7 @@ export function TaskTable({ data, isLoading, error, onRefresh, onEdit }: { data:
 
 
   const table = useReactTable({
-    data,
+    data: tasks,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -229,7 +239,7 @@ export function TaskTable({ data, isLoading, error, onRefresh, onEdit }: { data:
     return <div className="text-red-500 text-center min-h-[400px]">{error}</div>;
   }
   
-  if (data.length === 0) {
+  if (tasks.length === 0) {
     return (
         <div className="flex flex-col items-center justify-center text-center min-h-[400px]">
             <List className="w-16 h-16 text-muted-foreground/30 mb-4" />

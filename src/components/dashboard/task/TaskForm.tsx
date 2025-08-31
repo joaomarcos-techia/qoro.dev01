@@ -13,8 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { createTask, updateTask } from '@/ai/flows/task-management';
-import { listUsers } from '@/ai/flows/user-management';
-import { TaskSchema, TaskProfile, UserProfile, SubtaskSchema, TaskCommentSchema, Subtask, TaskComment } from '@/ai/schemas';
+import { TaskSchema, TaskProfile, UserProfile } from '@/ai/schemas';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Loader2, AlertCircle, CalendarIcon, PlusCircle, Trash2, Send, MessageSquare, CheckSquare } from 'lucide-react';
@@ -32,13 +31,13 @@ type FormValues = z.infer<typeof FormSchema>;
 type TaskFormProps = {
   onTaskAction: () => void;
   task?: TaskProfile | null;
+  users: UserProfile[];
 };
 
-export function TaskForm({ onTaskAction, task }: TaskFormProps) {
+export function TaskForm({ onTaskAction, task, users }: TaskFormProps) {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [users, setUsers] = useState<UserProfile[]>([]);
   const [newSubtaskText, setNewSubtaskText] = useState('');
   const [newCommentText, setNewCommentText] = useState('');
   
@@ -46,20 +45,7 @@ export function TaskForm({ onTaskAction, task }: TaskFormProps) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
         setCurrentUser(user);
-        const fetchData = async () => {
-            try {
-                const usersData = await listUsers({ actor: user.uid });
-                setUsers(usersData);
-            } catch (err) {
-                console.error("Failed to fetch users:", err);
-            }
-        };
-        fetchData();
-      } else {
-        setCurrentUser(null);
-      }
     });
     return () => unsubscribe();
   }, []);
@@ -75,6 +61,12 @@ export function TaskForm({ onTaskAction, task }: TaskFormProps) {
   } = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
+        title: '',
+        description: '',
+        status: 'todo',
+        priority: 'medium',
+        responsibleUserId: '',
+        dueDate: null,
         subtasks: [],
         comments: [],
     }
@@ -94,7 +86,7 @@ export function TaskForm({ onTaskAction, task }: TaskFormProps) {
     if (task) {
         const dueDate = task.dueDate ? parseISO(task.dueDate.toString()) : null;
         const comments = task.comments?.map(c => ({...c, createdAt: new Date(c.createdAt)})) || [];
-        reset({ ...task, dueDate, comments });
+        reset({ ...task, dueDate, comments, responsibleUserId: task.responsibleUserId || '' });
     } else {
         reset({
             title: '',
@@ -140,7 +132,7 @@ export function TaskForm({ onTaskAction, task }: TaskFormProps) {
       const submissionData = {
         ...data,
         dueDate: data.dueDate ? new Date(data.dueDate).toISOString() : null,
-        responsibleUserId: data.responsibleUserId || undefined,
+        responsibleUserId: data.responsibleUserId === 'unassigned' ? undefined : data.responsibleUserId,
         comments: data.comments?.map(c => ({...c, createdAt: new Date(c.createdAt).toISOString()})),
       };
 
@@ -194,8 +186,8 @@ export function TaskForm({ onTaskAction, task }: TaskFormProps) {
          <div className="space-y-2">
           <Label>Responsável</Label>
           <Controller name="responsibleUserId" control={control} render={({ field }) => (
-              <Select onValueChange={field.onChange} value={field.value || ''}><SelectTrigger><SelectValue placeholder="Selecione um responsável"/></SelectTrigger>
-                <SelectContent><SelectItem value="">Ninguém</SelectItem>{users.map(user => (<SelectItem key={user.uid} value={user.uid}>{user.name || user.email}</SelectItem>))}</SelectContent>
+              <Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue placeholder="Selecione um responsável"/></SelectTrigger>
+                <SelectContent><SelectItem value="unassigned">Ninguém</SelectItem>{users.map(user => (<SelectItem key={user.uid} value={user.uid}>{user.name || user.email}</SelectItem>))}</SelectContent>
               </Select>
             )}/>
         </div>

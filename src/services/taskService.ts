@@ -73,22 +73,14 @@ export const listTasks = async (actorUid: string): Promise<z.infer<typeof TaskPr
     const { organizationId } = await getAdminAndOrg(actorUid);
     
     try {
-        const tasksQuery = adminDb.collection('tasks').where('companyId', '==', organizationId);
+        const tasksQuery = adminDb.collection('tasks')
+            .where('companyId', '==', organizationId)
+            .orderBy('createdAt', 'desc');
                                  
         const tasksSnapshot = await tasksQuery.get();
         
         if (tasksSnapshot.empty) {
             return [];
-        }
-
-        const userIds = [...new Set(tasksSnapshot.docs.map(doc => doc.data().responsibleUserId).filter(Boolean))];
-        const users: Record<string, { name?: string }> = {};
-
-        if (userIds.length > 0) {
-            const usersSnapshot = await adminDb.collection('users').where('__name__', 'in', userIds).get();
-            usersSnapshot.forEach(doc => {
-                users[doc.id] = { name: doc.data().name };
-            });
         }
         
         const tasks: z.infer<typeof TaskProfileSchema>[] = tasksSnapshot.docs
@@ -96,8 +88,8 @@ export const listTasks = async (actorUid: string): Promise<z.infer<typeof TaskPr
             const data = doc.data();
             const dueDate = data.dueDate ? data.dueDate.toDate().toISOString() : null;
             const completedAt = data.completedAt ? data.completedAt.toDate().toISOString() : null;
-            const responsibleUserInfo = data.responsibleUserId ? users[data.responsibleUserId] : {};
-
+            
+            // Simplified: Return responsibleUserId directly. The frontend will map it to a name.
             return TaskProfileSchema.parse({
                 id: doc.id,
                 ...data,
@@ -106,14 +98,12 @@ export const listTasks = async (actorUid: string): Promise<z.infer<typeof TaskPr
                 creatorId: data.creatorId,
                 createdAt: data.createdAt.toDate().toISOString(),
                 updatedAt: data.updatedAt.toDate().toISOString(),
-                responsibleUserName: responsibleUserInfo?.name,
+                responsibleUserId: data.responsibleUserId || undefined,
                 subtasks: data.subtasks || [],
                 comments: (data.comments || []).map((c: any) => ({...c, createdAt: c.createdAt.toDate().toISOString()})),
             });
         });
         
-        tasks.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
         return tasks;
     } catch (error: any) {
         console.error("Critical error in listTasks:", error, error.stack);
@@ -169,19 +159,15 @@ export const deleteTask = async (taskId: string, actorUid: string) => {
 
 
 export const getDashboardMetrics = async (actorUid: string): Promise<{ totalTasks: number; completedTasks: number; inProgressTasks: number; pendingTasks: number; overdueTasks: number; tasksByPriority: Record<string, number> }> => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
-
-    const tasksRef = adminDb.collection('tasks').where('companyId', '==', organizationId);
-    const tasksSnapshot = await tasksRef.get();
-    const allTasks = tasksSnapshot.docs.map(doc => doc.data());
-
+    const allTasks = await listTasks(actorUid);
+    
     const totalTasks = allTasks.length;
     const completedTasks = allTasks.filter(t => t.status === 'done').length;
     const inProgressTasks = allTasks.filter(t => t.status === 'in_progress').length;
     const pendingTasks = allTasks.filter(t => t.status === 'todo').length;
     
     const now = new Date();
-    const overdueTasks = allTasks.filter(t => t.status !== 'done' && t.dueDate && t.dueDate.toDate() < now).length;
+    const overdueTasks = allTasks.filter(t => t.status !== 'done' && t.dueDate && new Date(t.dueDate) < now).length;
 
     const tasksByPriority = allTasks.reduce((acc, task) => {
         const priority = task.priority || 'medium';

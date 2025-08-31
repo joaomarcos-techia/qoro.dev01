@@ -7,13 +7,15 @@ import { TaskKanbanBoard } from '@/components/dashboard/task/TaskKanbanBoard';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { listTasks, updateTaskStatus, deleteTask } from '@/ai/flows/task-management';
-import { TaskProfile } from '@/ai/schemas';
+import { listUsers } from '@/ai/flows/user-management';
+import { TaskProfile, UserProfile } from '@/ai/schemas';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { TaskForm } from '@/components/dashboard/task/TaskForm';
 import { Button } from '@/components/ui/button';
 
 export default function ProgressoPage() {
   const [tasks, setTasks] = useState<TaskProfile[]>([]);
+  const [users, setUsers] = useState<UserProfile[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,17 +25,22 @@ export default function ProgressoPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskProfile | null>(null);
 
-  const fetchTasks = useCallback(() => {
+  const fetchAllData = useCallback(() => {
     if (currentUser) {
       setIsLoading(true);
       setError(null);
-      listTasks({ actor: currentUser.uid })
-        .then(setTasks)
-        .catch((err) => {
-          console.error(err);
-          setError('Não foi possível carregar as tarefas.');
-        })
-        .finally(() => setIsLoading(false));
+      Promise.all([
+        listTasks({ actor: currentUser.uid }),
+        listUsers({ actor: currentUser.uid })
+      ]).then(([tasksData, usersData]) => {
+        setTasks(tasksData);
+        setUsers(usersData);
+      }).catch((err) => {
+        console.error(err);
+        setError('Não foi possível carregar as tarefas.');
+      }).finally(() => {
+        setIsLoading(false);
+      });
     }
   }, [currentUser]);
 
@@ -46,9 +53,9 @@ export default function ProgressoPage() {
 
   useEffect(() => {
     if (currentUser) {
-      fetchTasks();
+      fetchAllData();
     }
-  }, [currentUser, fetchTasks]);
+  }, [currentUser, fetchAllData]);
 
   const showTemporaryFeedback = (message: string, type: 'success' | 'error' = 'success') => {
     setFeedback({ type, message });
@@ -66,7 +73,7 @@ export default function ProgressoPage() {
 
   const handleTaskAction = () => {
     handleModalOpenChange(false);
-    fetchTasks();
+    fetchAllData();
   };
 
   const handleEditTask = (task: TaskProfile) => {
@@ -156,7 +163,7 @@ export default function ProgressoPage() {
       );
     }
 
-    return <TaskKanbanBoard columns={columns} onMoveTask={handleMoveTask} onDeleteTask={handleDeleteTask} onEditTask={handleEditTask} />;
+    return <TaskKanbanBoard columns={columns} users={users} onMoveTask={handleMoveTask} onDeleteTask={handleDeleteTask} onEditTask={handleEditTask} />;
   };
 
   return (
@@ -173,7 +180,7 @@ export default function ProgressoPage() {
                 {selectedTask ? 'Altere as informações da tarefa abaixo.' : 'Preencha as informações abaixo para adicionar uma nova tarefa.'}
               </DialogDescription>
             </DialogHeader>
-            <TaskForm onTaskAction={handleTaskAction} task={selectedTask} />
+            <TaskForm onTaskAction={handleTaskAction} task={selectedTask} users={users}/>
           </DialogContent>
         </Dialog>
 
