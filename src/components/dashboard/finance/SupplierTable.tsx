@@ -53,6 +53,26 @@ interface SupplierTableProps {
     onRefresh: () => void;
 }
 
+const formatCNPJ = (value: string | null | undefined) => {
+    if (!value) return "-";
+    const cleaned = value.replace(/\D/g, '');
+    if (cleaned.length !== 14) return value;
+    return cleaned.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+};
+
+const formatPhone = (value: string | null | undefined) => {
+    if (!value) return "-";
+    const cleaned = value.replace(/\D/g, '');
+    if (cleaned.length === 11) {
+        return cleaned.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    }
+    if (cleaned.length === 10) {
+        return cleaned.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+    }
+    return value;
+};
+
+
 export function SupplierTable({ onEdit, onRefresh }: SupplierTableProps) {
   const [data, setData] = React.useState<SupplierProfile[]>([]);
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -121,12 +141,12 @@ export function SupplierTable({ onEdit, onRefresh }: SupplierTableProps) {
     {
       accessorKey: 'phone',
       header: 'Telefone',
-      cell: ({ row }) => row.getValue('phone') || '-',
+      cell: ({ row }) => formatPhone(row.getValue('phone')),
     },
     {
       accessorKey: 'cnpj',
       header: 'CNPJ',
-      cell: ({ row }) => row.getValue('cnpj') || '-',
+      cell: ({ row }) => formatCNPJ(row.getValue('cnpj')),
     },
     {
       id: 'actions',
@@ -256,7 +276,10 @@ export function SupplierTable({ onEdit, onRefresh }: SupplierTableProps) {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
                   Nenhum resultado encontrado.
                 </TableCell>
               </TableRow>
