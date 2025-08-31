@@ -62,11 +62,19 @@ export default function FunilPage() {
         const originalCustomers = [...customers];
         
         // Optimistic UI update
-        setCustomers(prev => prev.map(c => c.id === customerId ? {...c, status: newStatus} : c));
+        if (newStatus === 'archived') {
+            setCustomers(prev => prev.filter(c => c.id !== customerId));
+        } else {
+            setCustomers(prev => prev.map(c => c.id === customerId ? {...c, status: newStatus} : c));
+        }
 
         try {
             await updateCustomerStatus({ customerId, status: newStatus, actor: currentUser.uid });
-            showTemporaryFeedback("Cliente movido com sucesso!");
+            if (newStatus === 'archived') {
+                showTemporaryFeedback("Cliente arquivado e removido do funil.");
+            } else {
+                showTemporaryFeedback("Cliente movido com sucesso!");
+            }
         } catch (err) {
             console.error("Failed to move customer", err);
             showTemporaryFeedback("Erro ao mover cliente.", "error");
@@ -82,8 +90,7 @@ export default function FunilPage() {
     'proposal',
     'negotiation',
     'won',
-    'lost',
-    'archived'
+    'lost'
   ];
   
   const stageNames: Record<string, string> = {
@@ -103,7 +110,7 @@ export default function FunilPage() {
       title: stageNames[stage],
       customers: customers.filter((customer) => customer.status === stage),
     }));
-  }, [customers]);
+  }, [customers, stageOrder]);
 
   const renderContent = () => {
     if (isLoading) {
