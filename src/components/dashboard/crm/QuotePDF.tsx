@@ -116,7 +116,7 @@ export const DocumentPDF = React.forwardRef<HTMLDivElement, DocumentPDFProps>(({
                     </section>
                 )}
                 <footer className="pdf-footer">
-                    Obrigado pela preferência!
+                    Agradecemos pela oportunidade e ficamos à disposição para qualquer esclarecimento.
                 </footer>
             </div>
         </div>
