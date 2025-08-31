@@ -70,15 +70,15 @@ export function CustomerKanbanCard({ customer, stageIds, onMove }: KanbanCardPro
             <ChevronLeft className="w-4 h-4" />
         </Button>
         
-        {isTerminalStage ? (
-             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleArchive} title="Arquivar Cliente">
+        {isTerminalStage && (
+             <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-red-400" onClick={handleArchive} title="Arquivar Cliente">
                 <Archive className="w-4 h-4" />
             </Button>
-        ) : (
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleMove('next')} disabled={currentStageIndex >= stageIds.length - 1}>
-                <ChevronRight className="w-4 h-4" />
-            </Button>
         )}
+        
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleMove('next')} disabled={currentStageIndex >= stageIds.length - 1}>
+            <ChevronRight className="w-4 h-4" />
+        </Button>
       </div>
     </div>
   );
