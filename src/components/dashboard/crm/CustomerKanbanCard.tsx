@@ -3,7 +3,7 @@
 
 import { CustomerProfile } from '@/ai/schemas';
 import { Button } from '@/components/ui/button';
-import { User, Building, ChevronLeft, ChevronRight, Archive, Phone, FileText, Undo, ThumbsDown } from 'lucide-react';
+import { User, Building, ChevronLeft, ChevronRight, Archive, Phone, FileText } from 'lucide-react';
 
 interface KanbanCardProps {
   customer: CustomerProfile;
@@ -38,50 +38,6 @@ export function CustomerKanbanCard({ customer, stageIds, onMove }: KanbanCardPro
     onMove(customer.id, 'archived');
   }
 
-  const handleMoveToLost = () => {
-    onMove(customer.id, 'lost');
-  };
-
-  const handleMoveToNegotiation = () => {
-    onMove(customer.id, 'negotiation');
-  };
-
-  const renderCardActions = () => {
-    switch (customer.status) {
-      case 'won':
-        return (
-          <div className="flex justify-between w-full">
-             <Button variant="ghost" size="sm" className="h-8 text-xs px-2" onClick={handleMoveToNegotiation}>
-                <Undo className="w-3 h-3 mr-1" />
-                Voltar Negociação
-            </Button>
-            <Button variant="destructive" size="sm" className="h-8 text-xs px-2" onClick={handleMoveToLost}>
-                <ThumbsDown className="w-3 h-3 mr-1" />
-                Mover para Perdido
-            </Button>
-          </div>
-        );
-      case 'lost':
-        return (
-          <Button variant="destructive" size="sm" className="w-full h-8" onClick={handleArchive}>
-            <Archive className="w-4 h-4 mr-2" />
-            Arquivar Cliente
-          </Button>
-        );
-      default:
-        return (
-          <>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleMove('prev')} disabled={currentStageIndex <= 0}>
-                <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleMove('next')} disabled={currentStageIndex >= stageIds.length - 1}>
-                <ChevronRight className="w-4 h-4" />
-            </Button>
-          </>
-        );
-    }
-  };
-
   return (
     <div className="bg-card rounded-xl p-4 transition-shadow duration-300 border border-border hover:border-primary/50">
       <h3 className="font-bold text-foreground text-base mb-3 break-words">{customer.name}</h3>
@@ -108,7 +64,19 @@ export function CustomerKanbanCard({ customer, stageIds, onMove }: KanbanCardPro
       </div>
       
       <div className="mt-4 pt-3 border-t border-border flex justify-between items-center">
-         {renderCardActions()}
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleMove('prev')} disabled={currentStageIndex <= 0}>
+            <ChevronLeft className="w-4 h-4" />
+        </Button>
+        
+        {customer.status === 'lost' ? (
+             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleArchive} title="Arquivar Cliente">
+                <Archive className="w-4 h-4" />
+            </Button>
+        ) : (
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleMove('next')} disabled={currentStageIndex >= stageIds.length - 1}>
+                <ChevronRight className="w-4 h-4" />
+            </Button>
+        )}
       </div>
     </div>
   );
