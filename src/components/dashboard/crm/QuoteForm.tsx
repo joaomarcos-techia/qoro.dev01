@@ -129,36 +129,16 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
 
   const watchItems = watch("items");
   const watchDiscount = watch("discount");
-  
-  const { totalCost, maxDiscountPercentage } = useMemo(() => {
-    const cost = watchItems.reduce((acc, item) => acc + (item.cost || 0) * item.quantity, 0);
-    const subtotal = watchItems.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0);
-    const maxDiscountValue = subtotal - cost;
-    const maxPercentage = subtotal > 0 ? (maxDiscountValue / subtotal) * 100 : 0;
-    return {
-        totalCost: cost,
-        maxDiscountPercentage: Math.max(0, maxPercentage),
-    };
-  }, [watchItems]);
 
   useEffect(() => {
     const subtotal = watchItems.reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0);
     const discountPercentage = watchDiscount || 0;
-    
-    // Validate discount
-    if (discountPercentage > maxDiscountPercentage) {
-        setValue('discount', maxDiscountPercentage);
-        setError(`O desconto máximo de ${maxDiscountPercentage.toFixed(2)}% foi aplicado para não gerar prejuízo.`);
-    } else {
-        setError(null);
-    }
-
     const discountAmount = subtotal * (discountPercentage / 100);
     const total = subtotal - discountAmount;
     
     setValue('subtotal', subtotal);
     setValue('total', total);
-  }, [watchItems, watchDiscount, setValue, maxDiscountPercentage]);
+  }, [watchItems, watchDiscount, setValue]);
   
   const generatePdf = async (quoteData: QuoteProfile, action: 'download' | 'view') => {
     setQuoteForPdf({ quoteData, action });
