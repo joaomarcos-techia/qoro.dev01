@@ -59,11 +59,11 @@ export function KanbanCard({ lead, stageIds, onMove }: KanbanCardProps) {
       </div>
       
       <div className="mt-4 pt-3 border-t border-border flex justify-between items-center">
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleMove('prev')} disabled={currentStageIndex <= 0 || isTerminalStage}>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleMove('prev')} disabled={currentStageIndex <= 0}>
             <ChevronLeft className="w-4 h-4" />
         </Button>
         
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleMove('next')} disabled={currentStageIndex >= stageIds.length - 3}>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleMove('next')} disabled={isTerminalStage || currentStageIndex >= stageIds.length -1}>
             <ChevronRight className="w-4 h-4" />
         </Button>
       </div>
