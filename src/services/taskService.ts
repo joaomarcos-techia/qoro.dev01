@@ -69,42 +69,49 @@ export const updateTask = async (taskId: string, input: z.infer<typeof UpdateTas
 
 export const listTasks = async (actorUid: string): Promise<z.infer<typeof TaskProfileSchema>[]> => {
     const { organizationId } = await getAdminAndOrg(actorUid);
-    
+
     try {
-        // SIMPLIFIED QUERY: Removed all .orderBy() clauses to prevent index-related errors.
-        // Sorting will be handled on the client-side.
         const tasksQuery = adminDb.collection('tasks')
             .where('companyId', '==', organizationId);
-                                 
+
         const tasksSnapshot = await tasksQuery.get();
-        
+
         if (tasksSnapshot.empty) {
             return [];
         }
-        
-        const tasks: z.infer<typeof TaskProfileSchema>[] = tasksSnapshot.docs
-        .map(doc => {
+
+        const tasks: z.infer<typeof TaskProfileSchema>[] = tasksSnapshot.docs.flatMap(doc => {
             const data = doc.data();
-            const dueDate = data.dueDate ? data.dueDate.toDate().toISOString() : null;
-            const completedAt = data.completedAt ? data.completedAt.toDate().toISOString() : null;
-            
-            return TaskProfileSchema.parse({
-                id: doc.id,
-                ...data,
-                dueDate,
-                completedAt,
-                creatorId: data.creatorId,
-                createdAt: data.createdAt.toDate().toISOString(),
-                updatedAt: data.updatedAt.toDate().toISOString(),
-                responsibleUserId: data.responsibleUserId || undefined,
-                subtasks: data.subtasks || [],
-                comments: (data.comments || []).map((c: any) => ({...c, createdAt: c.createdAt.toDate().toISOString()})),
-            });
+
+            try {
+                const dueDate = data.dueDate?.toDate().toISOString() ?? null;
+                const completedAt = data.completedAt?.toDate().toISOString() ?? null;
+
+                return [TaskProfileSchema.parse({
+                    id: doc.id,
+                    ...data,
+                    dueDate,
+                    completedAt,
+                    creatorId: data.creatorId,
+                    createdAt: data.createdAt?.toDate().toISOString() ?? null,
+                    updatedAt: data.updatedAt?.toDate().toISOString() ?? null,
+                    responsibleUserId: data.responsibleUserId || undefined,
+                    subtasks: data.subtasks || [],
+                    comments: (data.comments || []).map((c: any) => ({
+                        ...c,
+                        createdAt: c.createdAt?.toDate().toISOString() ?? null,
+                    })),
+                })];
+            } catch (err) {
+                console.error("❌ Erro ao parsear task:", doc.id, err);
+                return []; // Ignora esta task com erro
+            }
         });
-        
+
         return tasks;
+
     } catch (error: any) {
-        console.error("Critical error in listTasks:", error, error.stack);
+        console.error("🔥 Erro crítico em listTasks:", error, error.stack);
         throw new Error("Falha ao carregar tarefas. Ocorreu um erro no servidor.");
     }
 };
