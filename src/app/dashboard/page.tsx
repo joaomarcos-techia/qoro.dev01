@@ -13,7 +13,7 @@ import {
   AlertTriangle,
   Lock,
 } from 'lucide-react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
@@ -22,7 +22,7 @@ import { getDashboardMetrics as getCrmMetrics } from '@/ai/flows/crm-management'
 import { getDashboardMetrics as getTaskMetrics } from '@/ai/flows/task-management';
 import { getDashboardMetrics as getFinanceMetrics } from '@/ai/flows/finance-management';
 import { ErrorBoundary } from 'react-error-boundary';
-import { UserAccessInfo } from '@/ai/schemas';
+import { UserAccessInfo, CustomerProfile } from '@/ai/schemas';
 
 
 interface CrmMetrics {
@@ -150,6 +150,18 @@ function DashboardContent() {
     return () => unsubscribe();
   }, [fetchUserAccess]);
 
+  const allCustomers = useMemo(() => {
+    return crmMetrics;
+  }, [crmMetrics]);
+  
+  const totalLeads = useMemo(() => {
+      const leadStatuses: CustomerProfile['status'][] = ['new', 'initial_contact', 'qualification', 'proposal', 'negotiation'];
+      // This is a placeholder since the full customer list is not available here.
+      // This logic will need to be executed where the customer list is present.
+      return 0; 
+  }, [allCustomers]);
+
+
   useEffect(() => {
     async function fetchMetrics() {
         if (!currentUser) return;
@@ -190,10 +202,17 @@ function DashboardContent() {
         );
         
         const results = await Promise.all(promises);
+        
+        let crmCustomers: CustomerProfile[] = [];
 
         results.forEach(result => {
             if (result.data) {
-                if (result.type === 'crm') setCrmMetrics({ totalCustomers: result.data.customers.length, totalLeads: 0 }); // totalLeads is removed
+                if (result.type === 'crm') {
+                    crmCustomers = result.data.customers;
+                    const leadStatuses: CustomerProfile['status'][] = ['new', 'initial_contact', 'qualification', 'proposal', 'negotiation'];
+                    const leads = crmCustomers.filter(c => leadStatuses.includes(c.status)).length;
+                    setCrmMetrics({ totalCustomers: crmCustomers.length, totalLeads: leads });
+                }
                 if (result.type === 'task') setTaskMetrics({ pendingTasks: result.data.pendingTasks });
                 if (result.type === 'finance') setFinanceMetrics({ totalBalance: result.data.totalBalance });
             }

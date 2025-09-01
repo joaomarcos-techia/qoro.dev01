@@ -73,6 +73,8 @@ export const listTasks = async (actorUid: string): Promise<z.infer<typeof TaskPr
     const { organizationId } = await getAdminAndOrg(actorUid);
     
     try {
+        // SIMPLIFIED QUERY: Removed .orderBy() to prevent index-related crashes.
+        // Sorting will be handled on the client-side.
         const tasksQuery = adminDb.collection('tasks')
             .where('companyId', '==', organizationId);
                                  
@@ -161,47 +163,32 @@ export const getDashboardMetrics = async (actorUid: string): Promise<{ totalTask
     const tasksRef = adminDb.collection('tasks').where('companyId', '==', organizationId);
 
     try {
-        const totalTasksPromise = tasksRef.count().get();
-        const completedTasksPromise = tasksRef.where('status', '==', 'done').count().get();
-        const inProgressTasksPromise = tasksRef.where('status', '==', 'in_progress').count().get();
-        const pendingTasksPromise = tasksRef.where('status', '==', 'todo').count().get();
-        const overdueTasksPromise = tasksRef.where('status', '!=', 'done').where('dueDate', '<', new Date()).get();
-        const allTasksForPriorityPromise = tasksRef.get();
+        const allTasksSnapshot = await tasksRef.get();
+        const allTasks = allTasksSnapshot.docs.map(doc => doc.data());
 
-        const [
-            totalTasksSnapshot,
-            completedTasksSnapshot,
-            inProgressTasksSnapshot,
-            pendingTasksSnapshot,
-            overdueTasksSnapshot,
-            allTasksForPrioritySnapshot
-        ] = await Promise.all([
-            totalTasksPromise,
-            completedTasksPromise,
-            inProgressTasksPromise,
-            pendingTasksPromise,
-            overdueTasksPromise,
-            allTasksForPriorityPromise
-        ]);
-
-        const tasksByPriority = allTasksForPrioritySnapshot.docs.reduce((acc, doc) => {
-            const task = doc.data();
+        const totalTasks = allTasks.length;
+        const completedTasks = allTasks.filter(t => t.status === 'done').length;
+        const inProgressTasks = allTasks.filter(t => t.status === 'in_progress').length;
+        const pendingTasks = allTasks.filter(t => t.status === 'todo').length;
+        const overdueTasks = allTasks.filter(t => t.status !== 'done' && t.dueDate && t.dueDate.toDate() < new Date()).length;
+        
+        const tasksByPriority = allTasks.reduce((acc, task) => {
             const priority = task.priority || 'medium';
             acc[priority] = (acc[priority] || 0) + 1;
             return acc;
         }, {} as Record<string, number>);
 
         return {
-            totalTasks: totalTasksSnapshot.data().count,
-            completedTasks: completedTasksSnapshot.data().count,
-            inProgressTasks: inProgressTasksSnapshot.data().count,
-            pendingTasks: pendingTasksSnapshot.data().count,
-            overdueTasks: overdueTasksSnapshot.size,
+            totalTasks,
+            completedTasks,
+            inProgressTasks,
+            pendingTasks,
+            overdueTasks,
             tasksByPriority,
         };
+
     } catch (error) {
         console.error("Error fetching task dashboard metrics:", error);
         throw new Error("Falha ao carregar as métricas de tarefas.");
     }
 };
-
