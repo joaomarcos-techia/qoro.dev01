@@ -34,9 +34,13 @@ export default function ListaPage() {
     return () => unsubscribe();
   }, []);
 
+  // Centralized data fetching logic for this page
   const fetchAllData = useCallback(() => {
     if (currentUser) {
-        loadTasks(currentUser.uid);
+        // Only call loadTasks if it's not already loading
+        if(!loading) {
+            loadTasks(currentUser.uid);
+        }
         
         setIsLoadingUsers(true);
         listUsers({ actor: currentUser.uid })
@@ -44,9 +48,10 @@ export default function ListaPage() {
           .catch((err) => console.error("Failed to load users", err))
           .finally(() => setIsLoadingUsers(false));
     }
-  }, [currentUser, loadTasks]);
+  }, [currentUser, loadTasks, loading]);
 
   useEffect(() => {
+    // Fetch data when the component mounts and the user is available
     if (currentUser) {
       fetchAllData();
     }
@@ -59,10 +64,11 @@ export default function ListaPage() {
     }
   };
 
+  // This function is called after creating/editing a task to refresh the data
   const handleTaskAction = () => {
     handleModalOpenChange(false);
     if (currentUser) {
-        loadTasks(currentUser.uid);
+        loadTasks(currentUser.uid); // Force a refresh
     }
   };
 

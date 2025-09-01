@@ -9,7 +9,7 @@ import { auth } from '@/lib/firebase';
 import { getUserProfile } from '@/ai/flows/user-management';
 import Link from 'next/link';
 import { Logo } from '@/components/ui/logo';
-import { useTasks } from '@/contexts/TasksContext';
+// A dependência e o hook 'useTasks' foram removidos pois o Header não deve carregar dados de tarefas.
 
 interface UserProfile {
   name: string;
