@@ -34,15 +34,17 @@ export const TasksProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   useEffect(() => {
+    // Define the async function to fetch tasks
     const fetchTasks = async () => {
       if (!currentUser) {
         setLoading(false);
+        setTasks([]);
         return;
       }
       
-      console.log('🔄 Tentando carregar tarefas...');
       setLoading(true);
       setError(null);
+      console.log('🔄 Tentando carregar tarefas...');
       try {
         const result = await listTasks({ actor: currentUser.uid });
         const sortedTasks = result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -55,7 +57,8 @@ export const TasksProvider = ({ children }: { children: React.ReactNode }) => {
         setLoading(false);
       }
     };
-
+    
+    // Execute the fetch
     fetchTasks();
   }, [currentUser, refreshTrigger]);
 
