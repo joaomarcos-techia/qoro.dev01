@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Calendar, Flag, User, ChevronLeft, ChevronRight, Trash2, Edit, CheckSquare, MessageSquare } from 'lucide-react';
+import { Calendar, Flag, User, ChevronLeft, ChevronRight, Trash2, Eye, CheckSquare, MessageSquare } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
 interface TaskKanbanCardProps {
@@ -24,7 +24,7 @@ interface TaskKanbanCardProps {
   stageIds: string[];
   onMove: (taskId: string, newStatus: TaskProfile['status']) => void;
   onDelete: (taskId: string) => void;
-  onEdit: (task: TaskProfile) => void;
+  onSelect: (task: TaskProfile) => void;
 }
 
 const priorityMap: Record<TaskProfile['priority'], { text: string; color: string }> = {
@@ -34,7 +34,7 @@ const priorityMap: Record<TaskProfile['priority'], { text: string; color: string
     urgent: { text: 'Urgente', color: 'bg-red-500/20 text-red-300 border-red-500/30' },
 };
 
-export function TaskKanbanCard({ task, stageIds, onMove, onDelete, onEdit }: TaskKanbanCardProps) {
+export function TaskKanbanCard({ task, stageIds, onMove, onDelete, onSelect }: TaskKanbanCardProps) {
   
   const priorityInfo = priorityMap[task.priority] || priorityMap.medium;
   const currentStageIndex = stageIds.findIndex(id => id === task.status);
@@ -53,7 +53,7 @@ export function TaskKanbanCard({ task, stageIds, onMove, onDelete, onEdit }: Tas
 
   return (
     <div className="bg-card rounded-xl p-4 transition-shadow duration-300 border border-border hover:border-primary/50 flex flex-col">
-      <h3 className="font-bold text-foreground text-base mb-3 break-words cursor-pointer" onClick={() => onEdit(task)}>{task.title}</h3>
+      <h3 className="font-bold text-foreground text-base mb-3 break-words cursor-pointer hover:underline" onClick={() => onSelect(task)}>{task.title}</h3>
       
       <div className="space-y-2 text-sm text-muted-foreground flex-grow">
         {task.description && <p className="text-xs text-muted-foreground/80 mb-2">{task.description}</p>}
@@ -95,8 +95,8 @@ export function TaskKanbanCard({ task, stageIds, onMove, onDelete, onEdit }: Tas
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleMove('prev')} disabled={currentStageIndex <= 0}>
                 <ChevronLeft className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:bg-secondary/80 hover:text-foreground" title="Editar Tarefa" onClick={() => onEdit(task)}>
-                <Edit className="w-4 h-4" />
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:bg-secondary/80 hover:text-foreground" title="Ver Detalhes" onClick={() => onSelect(task)}>
+                <Eye className="w-4 h-4" />
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>

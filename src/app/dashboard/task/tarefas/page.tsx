@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, useTransition, useCallback } from 'react';
@@ -23,6 +24,7 @@ export default function ProgressoPage() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskProfile | null>(null);
+  const [isViewOnlyModal, setIsViewOnlyModal] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -60,13 +62,15 @@ export default function ProgressoPage() {
     refreshTasks();
   };
 
-  const handleEditTask = (task: TaskProfile) => {
+  const handleSelectTask = (task: TaskProfile) => {
     setSelectedTask(task);
+    setIsViewOnlyModal(true); // Always open in view-only from kanban
     setIsModalOpen(true);
   };
   
   const handleAddTask = () => {
     setSelectedTask(null);
+    setIsViewOnlyModal(false); // Open in edit mode for new task
     setIsModalOpen(true);
   }
 
@@ -138,7 +142,7 @@ export default function ProgressoPage() {
       );
     }
 
-    return <TaskKanbanBoard columns={columns} users={users} onMoveTask={handleMoveTask} onDeleteTask={handleDeleteTask} onEditTask={handleEditTask} />;
+    return <TaskKanbanBoard columns={columns} users={users} onMoveTask={handleMoveTask} onDeleteTask={handleDeleteTask} onSelectTask={handleSelectTask} />;
   };
 
   return (
@@ -146,12 +150,14 @@ export default function ProgressoPage() {
         <Dialog open={isModalOpen} onOpenChange={handleModalOpenChange}>
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-foreground">{selectedTask ? 'Editar Tarefa' : 'Criar Nova Tarefa'}</DialogTitle>
+               <DialogTitle className="text-2xl font-bold text-foreground">
+                {selectedTask ? (isViewOnlyModal ? 'Detalhes da Tarefa' : 'Editar Tarefa') : 'Criar Nova Tarefa'}
+              </DialogTitle>
               <DialogDescription>
-                {selectedTask ? 'Altere as informações da tarefa abaixo.' : 'Preencha as informações abaixo para adicionar uma nova tarefa.'}
+                {isViewOnlyModal ? "Visualize os detalhes e adicione comentários. Para editar, acesse a Minha Lista." : "Preencha as informações para criar ou editar a tarefa."}
               </DialogDescription>
             </DialogHeader>
-            <TaskForm onTaskAction={handleTaskAction} task={selectedTask} users={users}/>
+            <TaskForm onTaskAction={handleTaskAction} task={selectedTask} users={users} viewOnly={isViewOnlyModal}/>
           </DialogContent>
         </Dialog>
 

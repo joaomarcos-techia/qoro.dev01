@@ -44,8 +44,8 @@ const MetricCard = ({ title, value, icon: Icon, colorClass, isLoading }: { title
   </div>
 );
 
-const TaskRow = ({ task, onEdit }: { task: TaskProfile, onEdit: (task: TaskProfile) => void }) => (
-    <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg hover:bg-secondary/80 transition-colors cursor-pointer" onClick={() => onEdit(task)}>
+const TaskRow = ({ task, onSelect }: { task: TaskProfile, onSelect: (task: TaskProfile) => void }) => (
+    <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg hover:bg-secondary/80 transition-colors cursor-pointer" onClick={() => onSelect(task)}>
       <div className="flex-grow pr-4">
         <p className="font-medium text-foreground truncate">{task.title}</p>
         <div className="flex items-center text-xs text-muted-foreground gap-4 mt-1">
@@ -101,7 +101,7 @@ export default function VisaoGeralPage() {
     }
   }, [currentUser, refreshTrigger]);
 
-  const handleEditTask = (task: TaskProfile) => {
+  const handleSelectTask = (task: TaskProfile) => {
     setSelectedTask(task);
     setIsModalOpen(true);
   };
@@ -144,7 +144,7 @@ export default function VisaoGeralPage() {
                     <h3 className="text-lg font-bold text-red-400 mb-4">Atenção Imediata (Atrasadas)</h3>
                     <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
                         {metrics?.overdue && metrics.overdue.length > 0 ? (
-                            metrics.overdue.map(task => <TaskRow key={task.id} task={task} onEdit={handleEditTask} />)
+                            metrics.overdue.map(task => <TaskRow key={task.id} task={task} onSelect={handleSelectTask} />)
                         ) : (
                             <p className="text-muted-foreground text-sm text-center py-4">Nenhuma tarefa atrasada. Bom trabalho!</p>
                         )}
@@ -154,7 +154,7 @@ export default function VisaoGeralPage() {
                     <h3 className="text-lg font-bold text-yellow-400 mb-4">Próximos Prazos (7 dias)</h3>
                      <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
                         {metrics?.dueSoon && metrics.dueSoon.length > 0 ? (
-                            metrics.dueSoon.map(task => <TaskRow key={task.id} task={task} onEdit={handleEditTask} />)
+                            metrics.dueSoon.map(task => <TaskRow key={task.id} task={task} onSelect={handleSelectTask} />)
                         ) : (
                             <p className="text-muted-foreground text-sm text-center py-4">Nenhuma tarefa com vencimento próximo.</p>
                         )}
@@ -170,10 +170,10 @@ export default function VisaoGeralPage() {
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
             <DialogContent className="sm:max-w-[600px]">
                 <DialogHeader>
-                    <DialogTitle className="text-2xl font-bold text-foreground">Editar Tarefa</DialogTitle>
-                    <DialogDescription>Altere as informações da tarefa abaixo.</DialogDescription>
+                    <DialogTitle className="text-2xl font-bold text-foreground">Detalhes da Tarefa</DialogTitle>
+                    <DialogDescription>Visualize os detalhes e adicione comentários. Para editar, acesse a "Minha Lista".</DialogDescription>
                 </DialogHeader>
-                <TaskForm onTaskAction={handleTaskAction} task={selectedTask} users={users} />
+                <TaskForm onTaskAction={handleTaskAction} task={selectedTask} users={users} viewOnly />
             </DialogContent>
         </Dialog>
 
@@ -191,4 +191,3 @@ export default function VisaoGeralPage() {
     </>
   );
 }
-

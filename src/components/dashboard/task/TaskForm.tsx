@@ -32,9 +32,10 @@ type TaskFormProps = {
   onTaskAction: () => void;
   task?: TaskProfile | null;
   users: UserProfile[];
+  viewOnly?: boolean;
 };
 
-export function TaskForm({ onTaskAction, task, users }: TaskFormProps) {
+export function TaskForm({ onTaskAction, task, users, viewOnly = false }: TaskFormProps) {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -108,16 +109,36 @@ export function TaskForm({ onTaskAction, task, users }: TaskFormProps) {
     }
   };
 
-  const handleAddComment = () => {
-    if (newCommentText.trim() !== '' && currentUser) {
-        appendComment({
+  const handleAddComment = async () => {
+    if (newCommentText.trim() !== '' && currentUser && task) {
+        const optimisticComment = {
             id: `new-${Date.now()}`,
             authorId: currentUser.uid,
             authorName: currentUser.displayName || currentUser.email || 'Usuário',
             text: newCommentText,
             createdAt: new Date(),
-        });
+        };
+        appendComment(optimisticComment);
         setNewCommentText('');
+        
+        // Persist only the comment update immediately
+        try {
+            const currentTaskData = getValues();
+            const updatedComments = [...(currentTaskData.comments || []), optimisticComment].map(c => ({...c, createdAt: new Date(c.createdAt).toISOString()}));
+
+            await updateTask({ 
+                ...currentTaskData,
+                id: task.id,
+                dueDate: currentTaskData.dueDate ? currentTaskData.dueDate.toISOString() : null,
+                comments: updatedComments,
+                actor: currentUser.uid 
+            });
+        } catch (err) {
+            console.error("Failed to add comment:", err);
+            // Optionally revert the optimistic update
+            // removeComment(optimisticComment.id); 
+            setError("Não foi possível adicionar o comentário.");
+        }
     }
   };
 
@@ -126,6 +147,11 @@ export function TaskForm({ onTaskAction, task, users }: TaskFormProps) {
       setError('Você precisa estar autenticado para realizar esta ação.');
       return;
     }
+    if (viewOnly) { // If it's view only, the main button shouldn't submit the whole form
+        onTaskAction();
+        return;
+    }
+
     setIsLoading(true);
     setError(null);
     try {
@@ -156,12 +182,12 @@ export function TaskForm({ onTaskAction, task, users }: TaskFormProps) {
       <div className="space-y-4">
         <div className="space-y-2">
             <Label htmlFor="title">Título da Tarefa*</Label>
-            <Input id="title" {...register('title')} placeholder="Ex: Fazer follow-up com cliente X" />
+            <Input id="title" {...register('title')} placeholder="Ex: Fazer follow-up com cliente X" disabled={viewOnly}/>
             {errors.title && <p className="text-destructive text-sm">{errors.title.message}</p>}
         </div>
         <div className="space-y-2">
             <Label htmlFor="description">Descrição</Label>
-            <Textarea id="description" {...register('description')} placeholder="Adicione mais detalhes sobre a tarefa..." />
+            <Textarea id="description" {...register('description')} placeholder="Adicione mais detalhes sobre a tarefa..." disabled={viewOnly} />
         </div>
       </div>
       
@@ -170,7 +196,7 @@ export function TaskForm({ onTaskAction, task, users }: TaskFormProps) {
         <div className="space-y-2">
           <Label>Status</Label>
           <Controller name="status" control={control} render={({ field }) => (
-              <Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue/></SelectTrigger>
+              <Select onValueChange={field.onChange} value={field.value} disabled={viewOnly}><SelectTrigger><SelectValue/></SelectTrigger>
                 <SelectContent><SelectItem value="todo">A Fazer</SelectItem><SelectItem value="in_progress">Em Progresso</SelectItem><SelectItem value="review">Revisão</SelectItem><SelectItem value="done">Concluída</SelectItem></SelectContent>
               </Select>
           )}/>
@@ -178,7 +204,7 @@ export function TaskForm({ onTaskAction, task, users }: TaskFormProps) {
         <div className="space-y-2">
           <Label>Prioridade</Label>
           <Controller name="priority" control={control} render={({ field }) => (
-                <Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue/></SelectTrigger>
+                <Select onValueChange={field.onChange} value={field.value} disabled={viewOnly}><SelectTrigger><SelectValue/></SelectTrigger>
                     <SelectContent><SelectItem value="low">Baixa</SelectItem><SelectItem value="medium">Média</SelectItem><SelectItem value="high">Alta</SelectItem><SelectItem value="urgent">Urgente</SelectItem></SelectContent>
                 </Select>
             )}/>
@@ -186,7 +212,7 @@ export function TaskForm({ onTaskAction, task, users }: TaskFormProps) {
          <div className="space-y-2">
           <Label>Responsável</Label>
           <Controller name="responsibleUserId" control={control} render={({ field }) => (
-              <Select onValueChange={field.onChange} value={field.value || ''}><SelectTrigger><SelectValue placeholder="Selecione um responsável"/></SelectTrigger>
+              <Select onValueChange={field.onChange} value={field.value || ''} disabled={viewOnly}><SelectTrigger><SelectValue placeholder="Selecione um responsável"/></SelectTrigger>
                 <SelectContent><SelectItem value="unassigned">Ninguém</SelectItem>{users.map(user => (<SelectItem key={user.uid} value={user.uid}>{user.name || user.email}</SelectItem>))}</SelectContent>
               </Select>
             )}/>
@@ -195,7 +221,7 @@ export function TaskForm({ onTaskAction, task, users }: TaskFormProps) {
            <Label>Data de Vencimento</Label>
             <Controller name="dueDate" control={control} render={({ field }) => (
                 <Popover>
-                    <PopoverTrigger asChild><Button variant={"outline"} className={cn("w-full justify-start text-left font-normal",!field.value && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), "PPP", {locale: ptBR}) : <span>Escolha uma data</span>}</Button></PopoverTrigger>
+                    <PopoverTrigger asChild><Button variant={"outline"} disabled={viewOnly} className={cn("w-full justify-start text-left font-normal",!field.value && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), "PPP", {locale: ptBR}) : <span>Escolha uma data</span>}</Button></PopoverTrigger>
                     <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={field.value ? new Date(field.value) : undefined} onSelect={field.onChange} initialFocus/></PopoverContent>
                 </Popover>
             )}/>
@@ -208,15 +234,17 @@ export function TaskForm({ onTaskAction, task, users }: TaskFormProps) {
         <div className="p-4 rounded-xl border border-border bg-secondary/30 space-y-2">
             {subtaskFields.map((item, index) => (
                 <div key={item.id} className="flex items-center gap-2 group">
-                    <Checkbox id={`subtask-${index}`} checked={item.isCompleted} onCheckedChange={(checked) => {updateSubtask(index, {...item, isCompleted: !!checked})}} />
-                    <Input value={item.text} onChange={(e) => updateSubtask(index, {...item, text: e.target.value})} className={cn("flex-1 bg-card border-border", item.isCompleted && "line-through text-muted-foreground")}/>
-                    <Button type="button" variant="ghost" size="icon" className="w-8 h-8 opacity-50 group-hover:opacity-100" onClick={() => removeSubtask(index)}><Trash2 className="w-4 h-4 text-red-500"/></Button>
+                    <Checkbox id={`subtask-${index}`} checked={item.isCompleted} onCheckedChange={(checked) => {updateSubtask(index, {...item, isCompleted: !!checked})}} disabled={viewOnly} />
+                    <Input value={item.text} onChange={(e) => updateSubtask(index, {...item, text: e.target.value})} className={cn("flex-1 bg-card border-border", item.isCompleted && "line-through text-muted-foreground")} disabled={viewOnly}/>
+                    {!viewOnly && <Button type="button" variant="ghost" size="icon" className="w-8 h-8 opacity-50 group-hover:opacity-100" onClick={() => removeSubtask(index)}><Trash2 className="w-4 h-4 text-red-500"/></Button>}
                 </div>
             ))}
+            {!viewOnly && (
              <div className="flex items-center gap-2 pt-2">
                 <Input placeholder="Adicionar nova subtarefa..." value={newSubtaskText} onChange={(e) => setNewSubtaskText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSubtask())}/>
                 <Button type="button" onClick={handleAddSubtask}><PlusCircle className="w-4 h-4 mr-2"/>Adicionar</Button>
              </div>
+            )}
         </div>
       </div>
 
@@ -251,7 +279,7 @@ export function TaskForm({ onTaskAction, task, users }: TaskFormProps) {
       <div className="flex justify-end pt-4">
         <Button type="submit" disabled={isLoading} className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 border border-transparent hover:border-primary/50 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
           {isLoading ? <Loader2 className="mr-2 w-5 h-5 animate-spin" /> : null}
-          {isLoading ? 'Salvando...' : (isEditMode ? 'Salvar Alterações' : 'Salvar Tarefa')}
+          {viewOnly ? 'Fechar' : (isEditMode ? 'Salvar Alterações' : 'Salvar Tarefa')}
         </Button>
       </div>
     </form>
