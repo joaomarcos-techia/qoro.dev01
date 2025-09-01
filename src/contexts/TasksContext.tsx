@@ -25,6 +25,7 @@ export const TasksProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setLoading(true); 
       setCurrentUser(user);
     });
     return () => unsubscribe();
@@ -35,38 +36,34 @@ export const TasksProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    // Define an async function inside the effect
     const fetchTasks = async () => {
-      // If there is no user, we clear the tasks and stop loading.
       if (!currentUser) {
         setTasks([]);
         setLoading(false);
         return;
       }
       
-      console.log('🔄 Tentando carregar tarefas...');
       setLoading(true);
       setError(null);
-
+      console.log('🔄 Tentando carregar tarefas...');
       try {
         const result = await listTasks({ actor: currentUser.uid });
-        // Sort tasks by creation date, newest first
         const sortedTasks = result.sort((a, b) => {
             const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
             const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
             return dateB - dateA;
         });
         setTasks(sortedTasks);
-        console.log('✅ Tarefas carregadas com sucesso');
+        console.log('✅ Tarefas carregadas com sucesso:', sortedTasks.length);
       } catch (err: any) {
         console.error('❌ Erro ao carregar tarefas no contexto:', err);
         setError(err.message || 'Erro no servidor. Tente novamente em alguns minutos.');
+        setTasks([]);
       } finally {
         setLoading(false);
       }
     };
     
-    // Call the async function
     fetchTasks();
   }, [currentUser, refreshTrigger]);
   
