@@ -6,43 +6,24 @@ import { Loader2, ServerCrash, CheckCircle, AlertCircle, PlusCircle } from 'luci
 import { TaskKanbanBoard } from '@/components/dashboard/task/TaskKanbanBoard';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { listTasks, updateTaskStatus, deleteTask } from '@/ai/flows/task-management';
+import { updateTaskStatus, deleteTask } from '@/ai/flows/task-management';
 import { listUsers } from '@/ai/flows/user-management';
 import { TaskProfile, UserProfile } from '@/ai/schemas';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { TaskForm } from '@/components/dashboard/task/TaskForm';
 import { Button } from '@/components/ui/button';
+import { useTasks } from '@/contexts/TasksContext';
 
 export default function ProgressoPage() {
-  const [tasks, setTasks] = useState<TaskProfile[]>([]);
+  const { tasks, loading, error, loadTasks } = useTasks();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(true);
   const [feedback, setFeedback] = useState<{type: 'success' | 'error', message: string} | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskProfile | null>(null);
-
-  const fetchAllData = useCallback(() => {
-    if (currentUser) {
-      setIsLoading(true);
-      setError(null);
-      Promise.all([
-        listTasks({ actor: currentUser.uid }),
-        listUsers({ actor: currentUser.uid })
-      ]).then(([tasksData, usersData]) => {
-        setTasks(tasksData);
-        setUsers(usersData);
-      }).catch((err) => {
-        console.error(err);
-        setError('Não foi possível carregar as tarefas.');
-      }).finally(() => {
-        setIsLoading(false);
-      });
-    }
-  }, [currentUser]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -51,11 +32,21 @@ export default function ProgressoPage() {
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
+  const fetchAllData = useCallback(() => {
     if (currentUser) {
-      fetchAllData();
+        loadTasks(currentUser.uid);
+        
+        setIsLoadingUsers(true);
+        listUsers({ actor: currentUser.uid })
+          .then(setUsers)
+          .catch((err) => console.error("Failed to load users", err))
+          .finally(() => setIsLoadingUsers(false));
     }
-  }, [currentUser, fetchAllData]);
+  }, [currentUser, loadTasks]);
+
+  useEffect(() => {
+    fetchAllData();
+  }, [fetchAllData]);
 
   const showTemporaryFeedback = (message: string, type: 'success' | 'error' = 'success') => {
     setFeedback({ type, message });
@@ -73,7 +64,9 @@ export default function ProgressoPage() {
 
   const handleTaskAction = () => {
     handleModalOpenChange(false);
-    fetchAllData();
+    if(currentUser) {
+        loadTasks(currentUser.uid);
+    }
   };
 
   const handleEditTask = (task: TaskProfile) => {
@@ -90,19 +83,14 @@ export default function ProgressoPage() {
     startTransition(async () => {
         if (!currentUser) return;
         
-        const originalTasks = [...tasks];
-        
-        setTasks(prev => prev.map(t => t.id === taskId ? {...t, status: newStatus} : t));
-
-        if (newStatus === 'done') {
-            showTemporaryFeedback("Tarefa concluída!");
-        }
-
         try {
             await updateTaskStatus({ taskId, status: newStatus, actor: currentUser.uid });
+            loadTasks(currentUser.uid);
+            if (newStatus === 'done') {
+                showTemporaryFeedback("Tarefa concluída!");
+            }
         } catch (err) {
             console.error("Failed to move task", err);
-            setTasks(originalTasks);
             showTemporaryFeedback("Erro ao mover a tarefa.", "error");
         }
     });
@@ -112,16 +100,12 @@ export default function ProgressoPage() {
     startTransition(async () => {
         if (!currentUser) return;
         
-        const originalTasks = [...tasks];
-        
-        setTasks(prev => prev.filter(t => t.id !== taskId));
-        showTemporaryFeedback("Tarefa excluída com sucesso.");
-
         try {
             await deleteTask({ taskId, actor: currentUser.uid });
+            loadTasks(currentUser.uid);
+            showTemporaryFeedback("Tarefa excluída com sucesso.");
         } catch (err) {
             console.error("Failed to delete task", err);
-            setTasks(originalTasks);
             showTemporaryFeedback("Erro ao excluir a tarefa.", "error");
         }
     });
@@ -144,7 +128,7 @@ export default function ProgressoPage() {
   }, [tasks]);
 
   const renderContent = () => {
-    if (isLoading) {
+    if (loading || isLoadingUsers) {
       return (
         <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
           <Loader2 className="w-12 h-12 text-primary animate-spin" />

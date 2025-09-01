@@ -35,6 +35,7 @@ import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { getUserAccessInfo } from '@/ai/flows/user-management';
 import { UserAccessInfo } from '@/ai/schemas';
+import { TasksProvider } from '@/contexts/TasksContext';
 
 interface NavItem {
   href: string;
@@ -184,14 +185,16 @@ export default function DashboardLayout({
   };
 
   return (
-    <div className="min-h-screen bg-black text-foreground">
-      <Header />
-      <div className="flex h-[calc(100vh-65px)]">
-         {renderSidebarContent()}
-         <main className="flex-1 overflow-y-auto p-8">
-           {children}
-         </main>
-      </div>
-    </div>
+    <TasksProvider>
+        <div className="min-h-screen bg-black text-foreground">
+        <Header />
+        <div className="flex h-[calc(100vh-65px)]">
+            {renderSidebarContent()}
+            <main className="flex-1 overflow-y-auto p-8">
+            {children}
+            </main>
+        </div>
+        </div>
+    </TasksProvider>
   );
 }

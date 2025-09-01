@@ -10,43 +10,22 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { TaskForm } from '@/components/dashboard/task/TaskForm';
 import { TaskTable } from '@/components/dashboard/task/TaskTable';
 import { TaskProfile, UserProfile } from '@/ai/schemas';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { listTasks } from '@/ai/flows/task-management';
+import { useTasks } from '@/contexts/TasksContext';
 import { listUsers } from '@/ai/flows/user-management';
 
 export default function ListaPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskProfile | null>(null);
-  const [tasks, setTasks] = useState<TaskProfile[]>([]);
+  const { tasks, loading, error, loadTasks } = useTasks();
   const [users, setUsers] = useState<UserProfile[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-
-  const fetchAllData = useCallback(() => {
-    if (currentUser) {
-      setIsLoading(true);
-      setError(null);
-      Promise.all([
-        listTasks({ actor: currentUser.uid }),
-        listUsers({ actor: currentUser.uid })
-      ]).then(([tasksData, usersData]) => {
-        setTasks(tasksData);
-        setUsers(usersData);
-      }).catch((err) => {
-        console.error(err);
-        setError('Não foi possível carregar os dados. Tente recarregar a página.');
-      }).finally(() => {
-        setIsLoading(false);
-      });
-    }
-  }, [currentUser]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -55,11 +34,21 @@ export default function ListaPage() {
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    if(currentUser) {
-        fetchAllData();
+  const fetchAllData = useCallback(() => {
+    if (currentUser) {
+        loadTasks(currentUser.uid);
+        
+        setIsLoadingUsers(true);
+        listUsers({ actor: currentUser.uid })
+          .then(setUsers)
+          .catch((err) => console.error("Failed to load users", err))
+          .finally(() => setIsLoadingUsers(false));
     }
-  }, [currentUser, fetchAllData]);
+  }, [currentUser, loadTasks]);
+
+  useEffect(() => {
+    fetchAllData();
+  }, [fetchAllData]);
 
   const handleModalOpenChange = (open: boolean) => {
     setIsModalOpen(open);
@@ -70,7 +59,9 @@ export default function ListaPage() {
 
   const handleTaskAction = () => {
     handleModalOpenChange(false);
-    fetchAllData();
+    if (currentUser) {
+        loadTasks(currentUser.uid);
+    }
   };
 
   const handleEditTask = (task: TaskProfile) => {
@@ -117,7 +108,7 @@ export default function ListaPage() {
         <TaskTable 
             tasks={tasks}
             users={users} 
-            isLoading={isLoading} 
+            isLoading={loading || isLoadingUsers} 
             error={error} 
             onRefresh={fetchAllData}
             onEdit={handleEditTask}
