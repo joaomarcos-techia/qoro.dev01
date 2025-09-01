@@ -45,6 +45,7 @@ const pulseFlow = ai.defineFlow(
     if (conversationId) {
         existingConversation = await pulseService.getConversation({ conversationId, actor });
     }
+    // A conversa não tem título se o campo `title` for nulo, indefinido ou uma string vazia.
     const hasTitle = !!existingConversation?.title;
 
     const history: MessageData[] = messages.slice(0, -1).map(message => ({
@@ -54,7 +55,9 @@ const pulseFlow = ai.defineFlow(
 
     const lastMessage = messages[messages.length - 1];
     const prompt = lastMessage.content;
-    const isGreeting = /^(oi|olá|ola|hello|hi|hey|bom dia|boa tarde|boa noite)/i.test(prompt.trim());
+    
+    // A saudação só deve ser considerada na primeira mensagem para evitar que o título não seja gerado.
+    const isGreetingOnFirstMessage = messages.length <= 1 && /^(oi|olá|ola|hello|hi|hey|bom dia|boa tarde|boa noite)/i.test(prompt.trim());
 
     let systemPrompt = `Você é o QoroPulse— um agente de inteligência estratégica interna. Seu papel é agir como o cérebro analítico da empresa: interpretar dados comerciais, financeiros e operacionais para fornecer respostas inteligentes, acionáveis e estrategicamente valiosas ao empreendedor.
 
@@ -77,12 +80,12 @@ Transformar dados empresariais em decisões estratégicas com impacto real. Iden
 - Use perguntas estratégicas para provocar reflexão e visão de dono.
 - Quando solicitado insight livre, analise indicadores e comportamento recente para identificar oportunidades, riscos ou desvios relevantes.`;
     
-    const shouldGenerateTitle = !hasTitle && !isGreeting;
+    const shouldGenerateTitle = !hasTitle && !isGreetingOnFirstMessage;
 
     if (shouldGenerateTitle) {
         systemPrompt += `
         
-IMPORTANTE: A conversa ainda não tem um título e a mensagem atual NÃO é uma saudação. Baseado na pergunta do usuário, você DEVE gerar um título curto e conciso (máximo 5 palavras) para a conversa no campo "title" do JSON de saída.`;
+IMPORTANTE: A conversa ainda não tem um título. Baseado na pergunta do usuário, você DEVE gerar um título curto e conciso (máximo 5 palavras) para a conversa no campo "title" do JSON de saída.`;
     }
 
     const llmResponse = await ai.generate({
