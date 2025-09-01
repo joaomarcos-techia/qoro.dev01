@@ -1,3 +1,4 @@
+
 # Guia de Resolução de Problemas - Firebase Server Action
 
 ## 📋 Análise dos Erros
