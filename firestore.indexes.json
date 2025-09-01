@@ -1,20 +1,12 @@
+
 {
   "indexes": [
     {
-      "collectionGroup": "accounts",
+      "collectionGroup": "tasks",
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "companyId", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "bills",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "companyId", "order": "ASCENDING" },
-        { "fieldPath": "dueDate", "order": "DESCENDING" },
-        { "fieldPath": "__name__", "order": "DESCENDING" }
       ]
     },
     {
@@ -34,21 +26,11 @@
       ]
     },
     {
-      "collectionGroup": "pulse_conversations",
-      "queryScope": "COLLECTION_GROUP",
+      "collectionGroup": "suppliers",
+      "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "organizationId", "order": "ASCENDING" },
-        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "companyId", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "pulse_conversations",
-      "queryScope": "COLLECTION_GROUP",
-      "fields": [
-        { "fieldPath": "organizationId", "order": "ASCENDING" },
-        { "fieldPath": "userId", "order": "ASCENDING" },
-        { "fieldPath": "updatedAt", "order": "DESCENDING" }
       ]
     },
     {
@@ -60,7 +42,7 @@
       ]
     },
     {
-      "collectionGroup": "suppliers",
+      "collectionGroup": "accounts",
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "companyId", "order": "ASCENDING" },
@@ -68,11 +50,11 @@
       ]
     },
     {
-      "collectionGroup": "tasks",
+      "collectionGroup": "bills",
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "companyId", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
+        { "fieldPath": "dueDate", "order": "DESCENDING" }
       ]
     },
     {
@@ -83,24 +65,14 @@
         { "fieldPath": "date", "order": "DESCENDING" }
       ]
     },
-    {
-      "collectionGroup": "transactions",
+     {
+      "collectionGroup": "pulse_conversations",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "companyId", "order": "ASCENDING" },
-        { "fieldPath": "type", "order": "ASCENDING" },
-        { "fieldPath": "date", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "transactions",
-      "queryScope": "COLLECTION",
-      "fields": [
-          {"fieldPath": "companyId", "order": "ASCENDING"},
-          {"fieldPath": "tags", "arrayConfig": "CONTAINS"},
-          {"fieldPath": "__name__", "order": "ASCENDING"}
+        { "fieldPath": "organizationId", "order": "ASCENDING" },
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "updatedAt", "order": "DESCENDING" }
       ]
     }
-  ],
-  "fieldOverrides": []
+  ]
 }
