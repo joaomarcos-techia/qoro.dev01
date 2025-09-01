@@ -52,26 +52,32 @@ export const updateTask = async (
 
     const { id, comments, ...updateData } = input;
     const existingComments = Array.isArray(data.comments) ? data.comments : [];
-    const newComments = (comments || []).filter(c =>
-      !existingComments.some((ec: any) => ec.id === c.id)
-    );
+    
+    // Garantir que todos os comentários tenham data
+    const safeExistingComments = existingComments.map(c => ({...c, createdAt: c.createdAt || new Date()}));
 
-    newComments.forEach(c => {
-      c.authorId = actorUid;
-      c.authorName = userData.name || userData.email;
-      c.createdAt = new Date();
-    });
-
-    const commentsWithISODates = newComments.map(c => ({
+    const newComments = (comments || [])
+      .filter(c => !safeExistingComments.some((ec: any) => ec.id === c.id))
+      .map(c => ({
         ...c,
-        createdAt: (c.createdAt as Date).toISOString(),
+        authorId: actorUid,
+        authorName: userData.name || userData.email || 'Usuário',
+        createdAt: new Date(),
+      }));
+
+
+    const allComments = [...safeExistingComments, ...newComments];
+    const commentsForFirestore = allComments.map(c => ({
+        ...c,
+        createdAt: c.createdAt instanceof Date ? c.createdAt.toISOString() : c.createdAt,
     }));
+
 
     await taskRef.update({
       ...updateData,
       dueDate: updateData.dueDate ? new Date(updateData.dueDate) : null,
       updatedAt: FieldValue.serverTimestamp(),
-      ...(commentsWithISODates.length > 0 ? { comments: FieldValue.arrayUnion(...commentsWithISODates) } : {})
+      comments: commentsForFirestore,
     });
 
     if (input.subtasks) {
@@ -89,10 +95,12 @@ const toISOStringSafe = (date: any): string | null => {
   if (!date) return null;
   if (date instanceof Timestamp) return date.toDate().toISOString();
   if (date instanceof Date) return date.toISOString();
-  try {
-    const parsed = new Date(date);
-    if (!isNaN(parsed.getTime())) return parsed.toISOString();
-  } catch (e) {}
+  if (typeof date === 'string') {
+    try {
+      const parsed = new Date(date);
+      if (!isNaN(parsed.getTime())) return parsed.toISOString();
+    } catch (e) {}
+  }
   return null;
 };
 
@@ -120,13 +128,14 @@ export const listTasks = async (
     }
 
     const validTasks: z.infer<typeof TaskProfileSchema>[] = [];
-
+    
     tasksSnapshot.docs.forEach(doc => {
         try {
             const data = doc.data() as any;
             const responsibleUser = data.responsibleUserId ? users[data.responsibleUserId] : null;
 
-            const parsedData = {
+            // Prepare the object with all necessary fields before parsing
+            const preProcessedData = {
                 id: doc.id,
                 ...data,
                 createdAt: toISOStringSafe(data.createdAt),
@@ -144,19 +153,19 @@ export const listTasks = async (
                     : [],
             };
             
-            const validatedTask = TaskProfileSchema.parse(parsedData);
+            const validatedTask = TaskProfileSchema.parse(preProcessedData);
             validTasks.push(validatedTask);
 
         } catch (err) {
-            console.error('❌ Erro ao parsear tarefa:', doc.id, err);
-            // Ignora a tarefa com erro e continua com as outras
+            console.error(`❌ Erro ao processar a tarefa ${doc.id}:`, err);
+            // Ignore a tarefa com erro e continua com as outras
         }
     });
 
     return validTasks;
   } catch (error) {
     console.error('🔥 Erro crítico em listTasks:', error);
-    throw new Error('Falha ao carregar tarefas.');
+    throw new Error('Falha ao carregar tarefas do servidor.');
   }
 };
 
@@ -214,40 +223,31 @@ export const deleteTask = async (
 
 export const getDashboardMetrics = async (actorUid: string) => {
   try {
-    const { organizationId } = await getAdminAndOrg(actorUid);
-    const baseRef = adminDb.collection('tasks').where('companyId', '==', organizationId);
+    const allTasks = await listTasks(actorUid);
 
-    const [totalSnap, doneSnap, inProgSnap, pendingSnap, allSnap] = await Promise.all([
-      baseRef.count().get(),
-      baseRef.where('status', '==', 'done').count().get(),
-      baseRef.where('status', '==', 'in_progress').count().get(),
-      baseRef.where('status', 'in', ['todo', 'review']).count().get(),
-      baseRef.get(),
-    ]);
-
-    const allDocs = allSnap.docs.map(d => d.data() as any);
-    const overdueTasks = allDocs.filter(d =>
-      d.status !== 'done' && d.dueDate?.toDate?.() < new Date()
-    ).length;
-
-    const tasksByPriority = allDocs.reduce((acc: Record<string, number>, d) => {
-      const prio = d.priority || 'medium';
+    const totalTasks = allTasks.length;
+    const completedTasks = allTasks.filter(t => t.status === 'done').length;
+    const inProgressTasks = allTasks.filter(t => t.status === 'in_progress').length;
+    const pendingTasks = allTasks.filter(t => ['todo', 'review'].includes(t.status)).length;
+    const overdueTasks = allTasks.filter(t => t.status !== 'done' && t.dueDate && new Date(t.dueDate) < new Date()).length;
+    
+    const tasksByPriority = allTasks.reduce((acc: Record<string, number>, t) => {
+      const prio = t.priority || 'medium';
       acc[prio] = (acc[prio] || 0) + 1;
       return acc;
     }, {});
 
+
     return {
-      totalTasks: totalSnap.data().count,
-      completedTasks: doneSnap.data().count,
-      inProgressTasks: inProgSnap.data().count,
-      pendingTasks: pendingSnap.data().count,
+      totalTasks,
+      completedTasks,
+      inProgressTasks,
+      pendingTasks,
       overdueTasks,
       tasksByPriority,
     };
   } catch (error) {
-    console.error('🚨 Erro em getDashboardMetrics:', error);
-    throw new Error('Falha ao carregar métricas.');
+    console.error('🚨 Erro em getDashboardMetrics (Tasks):', error);
+    throw new Error('Falha ao carregar métricas de tarefas.');
   }
 };
-
-    

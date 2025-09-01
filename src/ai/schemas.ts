@@ -233,8 +233,8 @@ export const UpdateTaskSchema = TaskSchema.extend({
 
 export const TaskProfileSchema = TaskSchema.extend({
     id: z.string(),
-    createdAt: z.string(),
-    updatedAt: z.string(),
+    createdAt: z.string().nullable(),
+    updatedAt: z.string().nullable(),
     creatorId: z.string(),
     responsibleUserName: z.string().optional(),
     completedAt: z.string().datetime().optional().nullable(),

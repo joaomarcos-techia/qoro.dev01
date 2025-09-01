@@ -23,7 +23,7 @@ import { ptBR } from 'date-fns/locale';
 import { Checkbox } from '@/components/ui/checkbox';
 
 const FormSchema = TaskSchema.extend({
-    dueDate: z.union([z.string().datetime(), z.date(), z.null()]).optional(),
+    dueDate: z.union([z.date(), z.null()]).optional(),
 });
 type FormValues = z.infer<typeof FormSchema>;
 
@@ -85,7 +85,7 @@ export function TaskForm({ onTaskAction, task, users }: TaskFormProps) {
   useEffect(() => {
     if (task) {
         const dueDate = task.dueDate ? parseISO(task.dueDate.toString()) : null;
-        const comments = task.comments?.map(c => ({...c, createdAt: new Date(c.createdAt)})) || [];
+        const comments = task.comments?.map(c => ({...c, createdAt: c.createdAt ? new Date(c.createdAt) : new Date() })) || [];
         reset({ ...task, dueDate, comments, responsibleUserId: task.responsibleUserId || '' });
     } else {
         reset({
@@ -131,7 +131,7 @@ export function TaskForm({ onTaskAction, task, users }: TaskFormProps) {
     try {
       const submissionData = {
         ...data,
-        dueDate: data.dueDate ? new Date(data.dueDate).toISOString() : null,
+        dueDate: data.dueDate ? data.dueDate.toISOString() : null,
         responsibleUserId: data.responsibleUserId === 'unassigned' ? undefined : data.responsibleUserId,
         comments: data.comments?.map(c => ({...c, createdAt: new Date(c.createdAt).toISOString()})),
       };
@@ -186,7 +186,7 @@ export function TaskForm({ onTaskAction, task, users }: TaskFormProps) {
          <div className="space-y-2">
           <Label>Responsável</Label>
           <Controller name="responsibleUserId" control={control} render={({ field }) => (
-              <Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue placeholder="Selecione um responsável"/></SelectTrigger>
+              <Select onValueChange={field.onChange} value={field.value || ''}><SelectTrigger><SelectValue placeholder="Selecione um responsável"/></SelectTrigger>
                 <SelectContent><SelectItem value="unassigned">Ninguém</SelectItem>{users.map(user => (<SelectItem key={user.uid} value={user.uid}>{user.name || user.email}</SelectItem>))}</SelectContent>
               </Select>
             )}/>
@@ -229,7 +229,7 @@ export function TaskForm({ onTaskAction, task, users }: TaskFormProps) {
                         <div key={comment.id} className="text-sm">
                             <div className="flex items-center gap-2 mb-1">
                                 <span className="font-bold text-foreground">{comment.authorName}</span>
-                                <span className="text-xs text-muted-foreground">{format(new Date(comment.createdAt), "dd/MM HH:mm")}</span>
+                                <span className="text-xs text-muted-foreground">{comment.createdAt ? format(new Date(comment.createdAt), "dd/MM HH:mm") : ''}</span>
                             </div>
                             <p className="bg-card p-2 rounded-lg whitespace-pre-wrap">{comment.text}</p>
                         </div>

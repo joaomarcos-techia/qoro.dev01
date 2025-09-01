@@ -25,10 +25,10 @@ export const TasksProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setLoading(true); // Set loading to true when auth state changes
-      setCurrentUser(user);
-      if (!user) {
-        // Clear data and stop loading if user logs out
+      if (user) {
+        setCurrentUser(user);
+      } else {
+        setCurrentUser(null);
         setTasks([]);
         setLoading(false);
       }
@@ -43,7 +43,6 @@ export const TasksProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const fetchTasks = async () => {
       if (!currentUser) {
-        // Don't attempt to fetch if there is no user
         setLoading(false);
         return;
       }
@@ -58,13 +57,12 @@ export const TasksProvider = ({ children }: { children: React.ReactNode }) => {
       } catch (err: any) {
         console.error('❌ Erro ao carregar tarefas no contexto:', err);
         setError(err.message || 'Erro no servidor. Tente novamente em alguns minutos.');
-        setTasks([]); // Clear tasks on error
+        setTasks([]);
       } finally {
         setLoading(false);
       }
     };
     
-    // This effect runs whenever the user logs in/out or when refreshTasks is called.
     fetchTasks();
   }, [currentUser, refreshTrigger]);
   
