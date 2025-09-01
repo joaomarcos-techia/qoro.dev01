@@ -24,43 +24,40 @@ export const TasksProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setCurrentUser(user);
-      } else {
-        setCurrentUser(null);
+      setCurrentUser(user);
+      if (!user) {
         setTasks([]);
-        setLoading(false); // Stop loading if user logs out
+        setLoading(false);
       }
     });
     return () => unsubscribe();
   }, []);
-  
-  const fetchTasks = useCallback(async () => {
-    if (!currentUser) {
-      setLoading(false); // Ensure loading is false if there's no user
-      return;
-    }
-
-    console.log('🔄 Tentando carregar tarefas...');
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await listTasks({ actor: currentUser.uid });
-      // Sort tasks on the client-side to avoid complex backend queries
-      const sortedTasks = result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      setTasks(sortedTasks);
-      console.log('✅ Tarefas carregadas com sucesso');
-    } catch (err: any) {
-      console.error('❌ Erro ao carregar tarefas no contexto:', err);
-      setError(err.message || 'Erro no servidor. Tente novamente em alguns minutos.');
-    } finally {
-      setLoading(false);
-    }
-  }, [currentUser]); // fetchTasks is stable and only recreated when currentUser changes
 
   useEffect(() => {
+    const fetchTasks = async () => {
+      if (!currentUser) {
+        setLoading(false);
+        return;
+      }
+      
+      console.log('🔄 Tentando carregar tarefas...');
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await listTasks({ actor: currentUser.uid });
+        const sortedTasks = result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        setTasks(sortedTasks);
+        console.log('✅ Tarefas carregadas com sucesso');
+      } catch (err: any) {
+        console.error('❌ Erro ao carregar tarefas no contexto:', err);
+        setError(err.message || 'Erro no servidor. Tente novamente em alguns minutos.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchTasks();
-  }, [fetchTasks, refreshTrigger]); // This effect now correctly re-runs when refreshTrigger changes
+  }, [currentUser, refreshTrigger]);
 
   const refreshTasks = useCallback(() => {
     setRefreshTrigger(prev => prev + 1);
