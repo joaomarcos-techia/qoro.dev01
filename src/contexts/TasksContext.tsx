@@ -29,23 +29,24 @@ export const TasksProvider = ({ children }: { children: React.ReactNode }) => {
       } else {
         setCurrentUser(null);
         setTasks([]);
-        setLoading(false);
+        setLoading(false); // Stop loading if user logs out
       }
     });
     return () => unsubscribe();
   }, []);
-
+  
   const fetchTasks = useCallback(async () => {
     if (!currentUser) {
-      setLoading(false);
+      setLoading(false); // Ensure loading is false if there's no user
       return;
     }
 
+    console.log('🔄 Tentando carregar tarefas...');
     setLoading(true);
     setError(null);
     try {
-      console.log('🔄 Tentando carregar tarefas...');
       const result = await listTasks({ actor: currentUser.uid });
+      // Sort tasks on the client-side to avoid complex backend queries
       const sortedTasks = result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setTasks(sortedTasks);
       console.log('✅ Tarefas carregadas com sucesso');
@@ -55,11 +56,11 @@ export const TasksProvider = ({ children }: { children: React.ReactNode }) => {
     } finally {
       setLoading(false);
     }
-  }, [currentUser]);
+  }, [currentUser]); // fetchTasks is stable and only recreated when currentUser changes
 
   useEffect(() => {
     fetchTasks();
-  }, [fetchTasks, refreshTrigger]);
+  }, [fetchTasks, refreshTrigger]); // This effect now correctly re-runs when refreshTrigger changes
 
   const refreshTasks = useCallback(() => {
     setRefreshTrigger(prev => prev + 1);
