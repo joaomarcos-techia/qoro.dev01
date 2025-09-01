@@ -51,33 +51,29 @@ export const updateTask = async (
     }
 
     const { id, comments, ...updateData } = input;
-    const existingComments = Array.isArray(data.comments) ? data.comments : [];
     
-    // Garantir que todos os comentários tenham data
-    const safeExistingComments = existingComments.map(c => ({...c, createdAt: c.createdAt || new Date()}));
-
+    // Process comments to avoid duplicates and ensure correct authorship
+    const existingComments = (Array.isArray(data.comments) ? data.comments : []).map(c => ({
+        ...c,
+        createdAt: c.createdAt ? toISOStringSafe(c.createdAt) : new Date().toISOString()
+    }));
+    
     const newComments = (comments || [])
-      .filter(c => !safeExistingComments.some((ec: any) => ec.id === c.id))
+      .filter(c => !existingComments.some((ec: any) => ec.id === c.id))
       .map(c => ({
         ...c,
         authorId: actorUid,
         authorName: userData.name || userData.email || 'Usuário',
-        createdAt: new Date(),
+        createdAt: new Date().toISOString(),
       }));
 
-
-    const allComments = [...safeExistingComments, ...newComments];
-    const commentsForFirestore = allComments.map(c => ({
-        ...c,
-        createdAt: c.createdAt instanceof Date ? c.createdAt.toISOString() : c.createdAt,
-    }));
-
+    const allComments = [...existingComments, ...newComments];
 
     await taskRef.update({
       ...updateData,
       dueDate: updateData.dueDate ? new Date(updateData.dueDate) : null,
       updatedAt: FieldValue.serverTimestamp(),
-      comments: commentsForFirestore,
+      comments: allComments,
     });
 
     if (input.subtasks) {
@@ -131,26 +127,29 @@ export const listTasks = async (
     
     tasksSnapshot.docs.forEach(doc => {
         try {
-            const data = doc.data() as any;
+            const data = doc.data();
             const responsibleUser = data.responsibleUserId ? users[data.responsibleUserId] : null;
 
             // Prepare the object with all necessary fields before parsing
             const preProcessedData = {
                 id: doc.id,
-                ...data,
+                title: data.title,
+                description: data.description || '',
+                status: data.status || 'todo',
+                priority: data.priority || 'medium',
+                responsibleUserId: data.responsibleUserId || undefined,
+                subtasks: data.subtasks || [],
+                recurrence: data.recurrence || undefined,
                 createdAt: toISOStringSafe(data.createdAt),
                 updatedAt: toISOStringSafe(data.updatedAt),
+                creatorId: data.creatorId,
                 dueDate: toISOStringSafe(data.dueDate),
                 completedAt: toISOStringSafe(data.completedAt),
-                responsibleUserId: data.responsibleUserId || undefined,
                 responsibleUserName: responsibleUser?.name || responsibleUser?.email || undefined,
-                subtasks: Array.isArray(data.subtasks) ? data.subtasks : [],
-                comments: Array.isArray(data.comments)
-                    ? data.comments.map((c: any) => ({
-                        ...c,
-                        createdAt: toISOStringSafe(c.createdAt),
-                    }))
-                    : [],
+                comments: (data.comments || []).map((c: any) => ({
+                  ...c,
+                  createdAt: toISOStringSafe(c.createdAt),
+                }))
             };
             
             const validatedTask = TaskProfileSchema.parse(preProcessedData);
@@ -187,8 +186,13 @@ export const updateTaskStatus = async (
     const updatePayload: any = {
       status,
       updatedAt: FieldValue.serverTimestamp(),
-      completedAt: status === 'done' ? FieldValue.serverTimestamp() : null,
     };
+    
+    if (status === 'done' && data.status !== 'done') {
+        updatePayload.completedAt = FieldValue.serverTimestamp();
+    } else if (status !== 'done' && data.status === 'done') {
+        updatePayload.completedAt = null;
+    }
 
     await taskRef.update(updatePayload);
 
@@ -228,7 +232,7 @@ export const getDashboardMetrics = async (actorUid: string) => {
     const totalTasks = allTasks.length;
     const completedTasks = allTasks.filter(t => t.status === 'done').length;
     const inProgressTasks = allTasks.filter(t => t.status === 'in_progress').length;
-    const pendingTasks = allTasks.filter(t => ['todo', 'review'].includes(t.status)).length;
+    const pendingTasks = allTasks.filter(t => ['todo', 'review'].includes(t.status) && (t.dueDate ? new Date(t.dueDate) >= new Date() : true)).length;
     const overdueTasks = allTasks.filter(t => t.status !== 'done' && t.dueDate && new Date(t.dueDate) < new Date()).length;
     
     const tasksByPriority = allTasks.reduce((acc: Record<string, number>, t) => {
