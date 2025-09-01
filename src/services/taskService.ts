@@ -162,7 +162,7 @@ export const getDashboardMetrics = async (actorUid: string): Promise<{ totalTask
         const totalTasks = allTasks.length;
         const completedTasks = allTasks.filter(t => t.status === 'done').length;
         const inProgressTasks = allTasks.filter(t => t.status === 'in_progress').length;
-        const pendingTasks = allTasks.filter(t => t.status === 'todo').length;
+        const pendingTasks = allTasks.filter(t => t.status === 'todo' || t.status === 'review').length;
         const overdueTasks = allTasks.filter(t => {
             if (t.status === 'done' || !t.dueDate) return false;
             try {
@@ -192,3 +192,4 @@ export const getDashboardMetrics = async (actorUid: string): Promise<{ totalTask
         throw new Error("Falha ao carregar as métricas de tarefas.");
     }
 };
+
