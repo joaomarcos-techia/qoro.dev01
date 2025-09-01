@@ -24,18 +24,21 @@ export const TasksProvider = ({ children }: { children: React.ReactNode }) => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
+    // Apenas monitora o estado de autenticação
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setLoading(true); 
       setCurrentUser(user);
     });
     return () => unsubscribe();
   }, []);
 
   const refreshTasks = useCallback(() => {
+    // Função estável para disparar a atualização
     setRefreshTrigger(prev => prev + 1);
   }, []);
 
   useEffect(() => {
+    // Este useEffect é o único responsável por buscar os dados.
+    // Ele executa quando o usuário muda (login/logout) ou quando o refresh é acionado.
     const fetchTasks = async () => {
       if (!currentUser) {
         setTasks([]);
@@ -54,7 +57,7 @@ export const TasksProvider = ({ children }: { children: React.ReactNode }) => {
             return dateB - dateA;
         });
         setTasks(sortedTasks);
-        console.log('✅ Tarefas carregadas com sucesso:', sortedTasks.length);
+        console.log('✅ Tarefas carregadas com sucesso');
       } catch (err: any) {
         console.error('❌ Erro ao carregar tarefas no contexto:', err);
         setError(err.message || 'Erro no servidor. Tente novamente em alguns minutos.');

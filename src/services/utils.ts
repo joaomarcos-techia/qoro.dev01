@@ -1,4 +1,6 @@
 
+'use server';
+
 import { adminDb } from '@/lib/firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
 
@@ -30,6 +32,7 @@ export const getAdminAndOrg = async (actorUid: string) => {
     const orgData = orgDoc.data()!;
 
     // Simplificado para sempre retornar 'free' e evitar dependência de env vars
+    // Esta era a causa raiz do erro de 'Failed to fetch'.
     const planId: 'free' | 'growth' | 'performance' = 'free';
 
     return { 
