@@ -2,13 +2,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { useTasks } from '@/contexts/TasksContext';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
-import { listTasks } from '@/ai/flows/task-management';
 import { TaskProfile } from '@/ai/schemas';
 import { Loader2, ServerCrash } from 'lucide-react';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 interface CalendarEvent {
   id: string;
@@ -30,12 +30,9 @@ const priorityColors: Record<TaskProfile['priority'], { bg: string; border: stri
     urgent: { bg: 'hsl(var(--pulse-primary))', border: 'hsl(var(--pulse-primary) / 0.8)' },
 };
 
-
 export function TaskCalendar() {
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const { tasks, loading, error, loadTasks } = useTasks();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -45,36 +42,27 @@ export function TaskCalendar() {
   }, []);
 
   useEffect(() => {
-    if (currentUser) {
-      setIsLoading(true);
-      setError(null);
-      listTasks({ actor: currentUser.uid })
-        .then((tasks) => {
-          const calendarEvents = tasks
-            .filter(task => !!task.dueDate) // Only include tasks with a due date
-            .map((task): CalendarEvent => ({
-              id: task.id,
-              title: task.title,
-              start: task.dueDate!,
-              allDay: true, // Tasks are treated as all-day events on their due date
-              backgroundColor: priorityColors[task.priority]?.bg || priorityColors.medium.bg,
-              borderColor: priorityColors[task.priority]?.border || priorityColors.medium.border,
-              extendedProps: {
-                status: task.status,
-                priority: task.priority,
-              }
-            }));
-          setEvents(calendarEvents);
-        })
-        .catch(err => {
-          console.error("Failed to load tasks for calendar:", err);
-          setError("Não foi possível carregar as tarefas do calendário.");
-        })
-        .finally(() => setIsLoading(false));
+    if (currentUser && tasks.length === 0) {
+      loadTasks(currentUser.uid);
     }
-  }, [currentUser]);
+  }, [currentUser, tasks.length, loadTasks]);
 
-  if (isLoading) {
+  const calendarEvents = tasks
+    .filter(task => !!task.dueDate)
+    .map((task): CalendarEvent => ({
+      id: task.id,
+      title: task.title,
+      start: task.dueDate!,
+      allDay: true,
+      backgroundColor: priorityColors[task.priority]?.bg || priorityColors.medium.bg,
+      borderColor: priorityColors[task.priority]?.border || priorityColors.medium.border,
+      extendedProps: {
+        status: task.status,
+        priority: task.priority,
+      }
+    }));
+
+  if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[600px]">
         <Loader2 className="w-12 h-12 text-primary animate-spin" />
@@ -99,7 +87,7 @@ export function TaskCalendar() {
         plugins={[dayGridPlugin]}
         initialView="dayGridMonth"
         weekends={true}
-        events={events}
+        events={calendarEvents}
         locale="pt-br"
         headerToolbar={{
           left: 'prev,next today',

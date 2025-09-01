@@ -71,9 +71,10 @@ export const listTasks = async (actorUid: string): Promise<z.infer<typeof TaskPr
     const { organizationId } = await getAdminAndOrg(actorUid);
     
     try {
+        // SIMPLIFIED QUERY: Removed all .orderBy() clauses to prevent index-related errors.
+        // Sorting will be handled on the client-side.
         const tasksQuery = adminDb.collection('tasks')
-            .where('companyId', '==', organizationId)
-            .orderBy('__name__', 'desc'); // Order by document ID for stability, requires no composite index.
+            .where('companyId', '==', organizationId);
                                  
         const tasksSnapshot = await tasksQuery.get();
         
