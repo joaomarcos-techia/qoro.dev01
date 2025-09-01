@@ -109,11 +109,9 @@ export const listTasks = async (
 
     if (tasksSnapshot.empty) return [];
     
-    // Get all unique user IDs from the tasks
     const userIds = [...new Set(tasksSnapshot.docs.map(doc => doc.data().responsibleUserId).filter(Boolean))];
     const users: Record<string, UserProfile> = {};
 
-    // Fetch user data if there are any assigned users
     if (userIds.length > 0) {
         const usersSnapshot = await adminDb.collection('users').where('__name__', 'in', userIds).get();
         usersSnapshot.forEach(doc => {
@@ -121,37 +119,41 @@ export const listTasks = async (
         });
     }
 
-    const tasks = tasksSnapshot.docs
-      .map(doc => {
-        const data = doc.data() as any;
-        const responsibleUser = data.responsibleUserId ? users[data.responsibleUserId] : null;
-        try {
-          const parsedData = {
-            id: doc.id,
-            ...data,
-            createdAt: toISOStringSafe(data.createdAt),
-            updatedAt: toISOStringSafe(data.updatedAt),
-            dueDate: toISOStringSafe(data.dueDate),
-            completedAt: toISOStringSafe(data.completedAt),
-            responsibleUserId: data.responsibleUserId || undefined,
-            responsibleUserName: responsibleUser?.name || responsibleUser?.email || undefined,
-            subtasks: Array.isArray(data.subtasks) ? data.subtasks : [],
-            comments: Array.isArray(data.comments) 
-              ? data.comments.map((c: any) => ({
-                  ...c,
-                  createdAt: toISOStringSafe(c.createdAt),
-                })) 
-              : [],
-          };
-          return TaskProfileSchema.parse(parsedData);
-        } catch (err) {
-          console.error('❌ Erro ao parsear tarefa:', doc.id, err);
-          return null;
-        }
-      })
-      .filter((task): task is z.infer<typeof TaskProfileSchema> => task !== null);
+    const validTasks: z.infer<typeof TaskProfileSchema>[] = [];
 
-    return tasks;
+    tasksSnapshot.docs.forEach(doc => {
+        try {
+            const data = doc.data() as any;
+            const responsibleUser = data.responsibleUserId ? users[data.responsibleUserId] : null;
+
+            const parsedData = {
+                id: doc.id,
+                ...data,
+                createdAt: toISOStringSafe(data.createdAt),
+                updatedAt: toISOStringSafe(data.updatedAt),
+                dueDate: toISOStringSafe(data.dueDate),
+                completedAt: toISOStringSafe(data.completedAt),
+                responsibleUserId: data.responsibleUserId || undefined,
+                responsibleUserName: responsibleUser?.name || responsibleUser?.email || undefined,
+                subtasks: Array.isArray(data.subtasks) ? data.subtasks : [],
+                comments: Array.isArray(data.comments)
+                    ? data.comments.map((c: any) => ({
+                        ...c,
+                        createdAt: toISOStringSafe(c.createdAt),
+                    }))
+                    : [],
+            };
+            
+            const validatedTask = TaskProfileSchema.parse(parsedData);
+            validTasks.push(validatedTask);
+
+        } catch (err) {
+            console.error('❌ Erro ao parsear tarefa:', doc.id, err);
+            // Ignora a tarefa com erro e continua com as outras
+        }
+    });
+
+    return validTasks;
   } catch (error) {
     console.error('🔥 Erro crítico em listTasks:', error);
     throw new Error('Falha ao carregar tarefas.');
