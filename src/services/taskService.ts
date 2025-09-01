@@ -43,7 +43,6 @@ export const updateTask = async (taskId: string, input: z.infer<typeof UpdateTas
 
     const { id, comments, ...updateData } = input;
     
-    // Handle new comments
     const existingComments = taskDoc.data()?.comments || [];
     const newComments = comments?.filter(c => !existingComments.some((ec: any) => ec.id === c.id)) || [];
 
@@ -60,7 +59,6 @@ export const updateTask = async (taskId: string, input: z.infer<typeof UpdateTas
         comments: FieldValue.arrayUnion(...newComments)
     });
 
-    // Handle subtask updates separately if they are not part of the main update payload
     if (input.subtasks) {
         await taskRef.update({ subtasks: input.subtasks });
     }
@@ -73,6 +71,7 @@ export const listTasks = async (actorUid: string): Promise<z.infer<typeof TaskPr
     const { organizationId } = await getAdminAndOrg(actorUid);
     
     try {
+        // SIMPLIFIED QUERY: Removed .orderBy to prevent index-related errors.
         const tasksQuery = adminDb.collection('tasks')
             .where('companyId', '==', organizationId);
                                  
@@ -105,6 +104,7 @@ export const listTasks = async (actorUid: string): Promise<z.infer<typeof TaskPr
         return tasks;
     } catch (error: any) {
         console.error("Critical error in listTasks:", error, error.stack);
+        // Throw a generic error to the client but log the details on the server.
         throw new Error("Falha ao carregar tarefas. Ocorreu um erro no servidor.");
     }
 };
@@ -158,51 +158,27 @@ export const getDashboardMetrics = async (actorUid: string): Promise<{ totalTask
     const tasksRef = adminDb.collection('tasks').where('companyId', '==', organizationId);
 
     try {
-        const totalPromise = tasksRef.count().get();
-        const completedPromise = tasksRef.where('status', '==', 'done').count().get();
-        const inProgressPromise = tasksRef.where('status', '==', 'in_progress').count().get();
-        const pendingPromise = tasksRef.where('status', 'in', ['todo', 'review']).count().get();
-        
-        // Firestore doesn't support inequality filters on different fields,
-        // so we fetch overdue tasks and filter in memory. This is less efficient
-        // but avoids complex index requirements.
-        const overduePromise = tasksRef
-            .where('status', '!=', 'done')
-            .where('dueDate', '<', new Date())
-            .get();
+        const allTasksSnapshot = await tasksRef.get();
+        const allTasks = allTasksSnapshot.docs.map(doc => doc.data());
 
-        // For priority, we must fetch all tasks and aggregate.
-        const allTasksPromise = tasksRef.get();
+        const totalTasks = allTasks.length;
+        const completedTasks = allTasks.filter(t => t.status === 'done').length;
+        const inProgressTasks = allTasks.filter(t => t.status === 'in_progress').length;
+        const pendingTasks = allTasks.filter(t => ['todo', 'review'].includes(t.status)).length;
+        const overdueTasks = allTasks.filter(t => t.status !== 'done' && t.dueDate && t.dueDate.toDate() < new Date()).length;
 
-        const [
-            totalSnapshot,
-            completedSnapshot,
-            inProgressSnapshot,
-            pendingSnapshot,
-            overdueSnapshot,
-            allTasksSnapshot,
-        ] = await Promise.all([
-            totalPromise,
-            completedPromise,
-            inProgressPromise,
-            pendingPromise,
-            overduePromise,
-            allTasksPromise,
-        ]);
-
-        const tasksByPriority = allTasksSnapshot.docs.reduce((acc, doc) => {
-            const task = doc.data();
+        const tasksByPriority = allTasks.reduce((acc, task) => {
             const priority = task.priority || 'medium';
             acc[priority] = (acc[priority] || 0) + 1;
             return acc;
         }, {} as Record<string, number>);
 
         return {
-            totalTasks: totalSnapshot.data().count,
-            completedTasks: completedSnapshot.data().count,
-            inProgressTasks: inProgressSnapshot.data().count,
-            pendingTasks: pendingSnapshot.data().count,
-            overdueTasks: overdueSnapshot.size,
+            totalTasks,
+            completedTasks,
+            inProgressTasks,
+            pendingTasks,
+            overdueTasks,
             tasksByPriority,
         };
 

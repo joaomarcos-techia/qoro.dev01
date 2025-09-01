@@ -87,7 +87,7 @@ export const TasksProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (err: any) {
       console.error('❌ Erro ao carregar tarefas no contexto:', err);
       circuitBreaker.recordFailure();
-      setError('Erro no servidor. Tente novamente em alguns minutos.');
+      setError(err.message || 'Erro no servidor. Tente novamente em alguns minutos.');
     } finally {
       setLoading(false);
     }
