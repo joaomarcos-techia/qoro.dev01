@@ -150,17 +150,6 @@ function DashboardContent() {
     return () => unsubscribe();
   }, [fetchUserAccess]);
 
-  const allCustomers = useMemo(() => {
-    return crmMetrics;
-  }, [crmMetrics]);
-  
-  const totalLeads = useMemo(() => {
-      const leadStatuses: CustomerProfile['status'][] = ['new', 'initial_contact', 'qualification', 'proposal', 'negotiation'];
-      // This is a placeholder since the full customer list is not available here.
-      // This logic will need to be executed where the customer list is present.
-      return 0; 
-  }, [allCustomers]);
-
 
   useEffect(() => {
     async function fetchMetrics() {
@@ -169,55 +158,37 @@ function DashboardContent() {
         setIsLoading(prev => ({...prev, metrics: true}));
         setErrors({ crm: false, task: false, finance: false });
 
-        const promises = [];
-
-        promises.push(
-            getCrmMetrics({ actor: currentUser.uid })
-                .then(data => ({ type: 'crm', data }))
-                .catch(err => { 
-                    console.error("CRM Metrics Error:", err);
-                    setErrors(e => ({...e, crm: true})); 
-                    return { type: 'crm', data: null }; 
-                })
-        );
-
-        promises.push(
-            getTaskMetrics({ actor: currentUser.uid })
-                .then(data => ({ type: 'task', data }))
-                .catch(err => { 
-                    console.error("Task Metrics Error:", err);
-                    setErrors(e => ({...e, task: true})); 
-                    return { type: 'task', data: null }; 
-                })
-        );
-        
-        promises.push(
-            getFinanceMetrics({ actor: currentUser.uid })
-                .then(data => ({ type: 'finance', data }))
-                .catch(err => { 
-                    console.error("Finance Metrics Error:", err);
-                    setErrors(e => ({...e, finance: true})); 
-                    return { type: 'finance', data: null }; 
-                })
-        );
-        
-        const results = await Promise.all(promises);
-        
-        let crmCustomers: CustomerProfile[] = [];
-
-        results.forEach(result => {
-            if (result.data) {
-                if (result.type === 'crm') {
-                    crmCustomers = result.data.customers;
-                    const leadStatuses: CustomerProfile['status'][] = ['new', 'initial_contact', 'qualification', 'proposal', 'negotiation'];
-                    const leads = crmCustomers.filter(c => leadStatuses.includes(c.status)).length;
-                    setCrmMetrics({ totalCustomers: crmCustomers.length, totalLeads: leads });
-                }
-                if (result.type === 'task') setTaskMetrics({ pendingTasks: result.data.pendingTasks });
-                if (result.type === 'finance') setFinanceMetrics({ totalBalance: result.data.totalBalance });
-            }
+        const crmPromise = getCrmMetrics({ actor: currentUser.uid }).catch(err => {
+            console.error("CRM Metrics Error:", err);
+            setErrors(e => ({...e, crm: true}));
+            return null;
         });
 
+        const taskPromise = getTaskMetrics({ actor: currentUser.uid }).catch(err => {
+            console.error("Task Metrics Error:", err);
+            setErrors(e => ({...e, task: true}));
+            return null;
+        });
+
+        const financePromise = getFinanceMetrics({ actor: currentUser.uid }).catch(err => {
+            console.error("Finance Metrics Error:", err);
+            setErrors(e => ({...e, finance: true}));
+            return null;
+        });
+        
+        const [crmResult, taskResult, financeResult] = await Promise.all([
+            crmPromise,
+            taskPromise,
+            financePromise,
+        ]);
+
+        if (crmResult) {
+            const leadStatuses: CustomerProfile['status'][] = ['new', 'initial_contact', 'qualification', 'proposal', 'negotiation'];
+            const leads = crmResult.customers.filter(c => leadStatuses.includes(c.status)).length;
+            setCrmMetrics({ totalCustomers: crmResult.customers.length, totalLeads: leads });
+        }
+        if (taskResult) setTaskMetrics({ pendingTasks: taskResult.pendingTasks });
+        if (financeResult) setFinanceMetrics({ totalBalance: financeResult.totalBalance });
 
         setIsLoading(prev => ({...prev, metrics: false}));
     }

@@ -159,18 +159,21 @@ export const deleteTask = async (taskId: string, actorUid: string) => {
 
 
 export const getDashboardMetrics = async (actorUid: string): Promise<{ totalTasks: number; completedTasks: number; inProgressTasks: number; pendingTasks: number; overdueTasks: number; tasksByPriority: Record<string, number> }> => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
-    const tasksRef = adminDb.collection('tasks').where('companyId', '==', organizationId);
-
     try {
-        const allTasksSnapshot = await tasksRef.get();
-        const allTasks = allTasksSnapshot.docs.map(doc => doc.data());
+        const allTasks = await listTasks(actorUid);
 
         const totalTasks = allTasks.length;
         const completedTasks = allTasks.filter(t => t.status === 'done').length;
         const inProgressTasks = allTasks.filter(t => t.status === 'in_progress').length;
         const pendingTasks = allTasks.filter(t => t.status === 'todo').length;
-        const overdueTasks = allTasks.filter(t => t.status !== 'done' && t.dueDate && t.dueDate.toDate() < new Date()).length;
+        const overdueTasks = allTasks.filter(t => {
+            if (t.status === 'done' || !t.dueDate) return false;
+            try {
+                return new Date(t.dueDate) < new Date();
+            } catch {
+                return false;
+            }
+        }).length;
         
         const tasksByPriority = allTasks.reduce((acc, task) => {
             const priority = task.priority || 'medium';
