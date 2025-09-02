@@ -64,7 +64,7 @@ function HeaderContent() {
       "fixed w-full top-0 left-0 z-50 transition-all duration-300 ease-in-out",
       hasScrolled ? "py-2" : "py-4"
     )}>
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className={cn(
           "rounded-full py-3 px-6 flex items-center justify-between transition-all duration-300 ease-in-out overflow-hidden border",
           hasScrolled ? "bg-black/50 backdrop-blur-lg border-white/10 shadow-lg" : "bg-transparent border-transparent"
