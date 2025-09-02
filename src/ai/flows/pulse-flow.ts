@@ -48,7 +48,7 @@ const pulseFlow = ai.defineFlow(
     
     const hasTitle = !!existingConversation?.title && existingConversation.title !== 'Nova Conversa';
 
-    const history: MessageData[] = messages.slice(0, -1).map(message => ({
+    const history: MessageData[] = messages.slice(0, -1).slice(-10).map(message => ({
         role: message.role as 'user' | 'model',
         parts: [{ text: message.content }],
     }));
