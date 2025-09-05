@@ -1,4 +1,6 @@
 
+'use server';
+
 import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
 import { CustomerSchema, CustomerProfileSchema, ProductSchema, ProductProfileSchema, QuoteSchema, QuoteProfileSchema, UpdateCustomerSchema, UpdateProductSchema, UpdateQuoteSchema } from '@/ai/schemas';
