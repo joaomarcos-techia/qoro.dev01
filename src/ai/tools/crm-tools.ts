@@ -66,4 +66,3 @@ export const getCrmSummaryTool = ai.defineTool(
         };
     }
 );
-
