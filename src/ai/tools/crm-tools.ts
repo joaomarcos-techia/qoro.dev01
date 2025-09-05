@@ -16,10 +16,10 @@ const CrmDataSchema = z.object({
 });
 
 // Define the single, authoritative tool for getting all relevant CRM data for Pulse.
-export const getCrmDataTool = ai.defineTool(
+export const getCrmSummaryTool = ai.defineTool(
     {
-        name: 'getCrmDataTool',
-        description: 'Use esta ferramenta para obter um resumo completo e numérico do CRM, incluindo o número total de clientes e a distribuição deles no funil de vendas. É a única ferramenta a ser usada para perguntas sobre clientes.',
+        name: 'getCrmSummaryTool',
+        description: 'Use esta ferramenta para obter um resumo completo e numérico do CRM, incluindo o número total de clientes e a distribuição deles no funil de vendas. É a ferramenta principal para perguntas sobre clientes.',
         inputSchema: z.object({}),
         outputSchema: CrmDataSchema,
     },
@@ -46,3 +46,4 @@ export const getCrmDataTool = ai.defineTool(
         };
     }
 );
+
