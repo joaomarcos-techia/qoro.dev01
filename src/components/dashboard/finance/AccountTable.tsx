@@ -175,7 +175,7 @@ export function AccountTable() {
                 </AlertDialogTrigger>
               </DropdownMenuContent>
             </DropdownMenu>
-             <AlertDialogContent>
+             <AlertDialogContent className="rounded-2xl">
                 <AlertDialogHeader>
                   <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
                   <AlertDialogDescription>
@@ -183,8 +183,8 @@ export function AccountTable() {
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => handleDelete(account.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  <AlertDialogCancel className="rounded-xl">Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => handleDelete(account.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl">
                     Sim, excluir
                   </AlertDialogAction>
                 </AlertDialogFooter>
@@ -312,7 +312,10 @@ export function AccountTable() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
                   Nenhum resultado encontrado.
                 </TableCell>
               </TableRow>
