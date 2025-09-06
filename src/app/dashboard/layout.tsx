@@ -34,8 +34,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { PulseSidebar } from '@/components/dashboard/pulse/PulseSidebar';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { getUserAccessInfo } from '@/ai/flows/user-management';
-import { UserAccessInfo } from '@/ai/schemas';
 import { TasksProvider } from '@/contexts/TasksContext';
 
 interface NavItem {
@@ -88,34 +86,11 @@ export default function DashboardLayout({
     children: React.ReactNode
 }) {
   const pathname = usePathname();
-  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
-  const [accessInfo, setAccessInfo] = useState<UserAccessInfo | null>(null);
-  const [isLoadingAccess, setIsLoadingAccess] = useState(true);
+  const [isClient, setIsClient] = useState(false);
 
-  const fetchAccessInfo = useCallback(async (user: FirebaseUser) => {
-    setIsLoadingAccess(true);
-    try {
-        const info = await getUserAccessInfo({ actor: user.uid });
-        setAccessInfo(info);
-    } catch (error) {
-        console.error("Failed to get user access info:", error);
-    } finally {
-        setIsLoadingAccess(false);
-    }
-  }, []);
-  
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-        setCurrentUser(user);
-        if (user) {
-            fetchAccessInfo(user);
-        } else {
-            setIsLoadingAccess(false);
-            setAccessInfo(null);
-        }
-    });
-    return () => unsubscribe();
-  }, [fetchAccessInfo]);
+    setIsClient(true);
+  }, []);
 
   const segments = pathname.split('/');
   const currentModule = segments.length > 2 ? segments[2] : 'home';
@@ -123,16 +98,16 @@ export default function DashboardLayout({
   const hasModuleSidebar = navConfig.hasOwnProperty(currentModule) || currentModule === 'pulse';
 
   const renderSidebarContent = () => {
-    // Only show loader if we expect a sidebar to appear for this module.
-    if (isLoadingAccess && hasModuleSidebar) {
+    // Render a placeholder or loader on the server
+    if (!isClient) {
         return (
-            <aside className="w-64 flex-shrink-0 bg-card border-r border-border flex flex-col items-center justify-center">
+             <aside className="w-64 flex-shrink-0 bg-card border-r border-border flex flex-col items-center justify-center">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </aside>
-        )
+        );
     }
 
-    if (!hasModuleSidebar || !accessInfo) {
+    if (!hasModuleSidebar) {
         return null;
     }
     
