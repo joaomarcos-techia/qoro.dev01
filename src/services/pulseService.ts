@@ -77,6 +77,8 @@ export const getConversation = async ({ conversationId, actor }: { conversationI
     }
     
     const data = doc.data();
+    if (!data) return null;
+
     // Sanitize data for client components by converting Timestamps
     const sanitizedData = convertTimestampsToISO(data);
     

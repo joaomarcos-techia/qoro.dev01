@@ -122,7 +122,7 @@ IMPORTANTE: A conversa já possui um título. Não gere um novo título. O campo
     const llmResponse = await ai.generate({
         model: 'googleai/gemini-1.5-flash',
         prompt: prompt,
-        history: history, // Use the full, loaded history
+        history: history.slice(-10), // Use the full, loaded history (last 10 messages for performance)
         output: {
             schema: PulseResponseSchema,
         },
