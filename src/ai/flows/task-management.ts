@@ -4,7 +4,7 @@
  * @fileOverview Task management flows.
  * - createTask - Creates a new task.
  * - listTasks - Lists all tasks for the user's organization.
- * - getDashboardMetrics - Retrieves key metrics for the Task dashboard.
+ * - getTaskDashboardMetrics - Retrieves key metrics for the Task dashboard.
  * - getOverviewMetrics - Retrieves metrics and task lists for the Overview page.
  * - updateTaskStatus - Updates the status of a task.
  * - deleteTask - Deletes a task permanently.
@@ -60,13 +60,13 @@ const listTasksFlow = ai.defineFlow(
     async ({ actor }) => taskService.listTasks(actor)
 );
 
-const getDashboardMetricsFlow = ai.defineFlow(
+const getTaskDashboardMetricsFlow = ai.defineFlow(
     {
         name: 'getTaskDashboardMetricsFlow',
         inputSchema: ActorSchema,
         outputSchema: DashboardMetricsOutputSchema
     },
-    async ({ actor }) => taskService.getDashboardMetrics(actor)
+    async ({ actor }) => taskService.getTaskDashboardMetrics(actor)
 );
 
 const getOverviewMetricsFlow = ai.defineFlow(
@@ -115,8 +115,8 @@ export async function listTasks(input: z.infer<typeof ActorSchema>): Promise<z.i
     return listTasksFlow(input);
 }
 
-export async function getDashboardMetrics(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof DashboardMetricsOutputSchema>> {
-    return getDashboardMetricsFlow(input);
+export async function getTaskDashboardMetrics(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof DashboardMetricsOutputSchema>> {
+    return getTaskDashboardMetricsFlow(input);
 }
 
 export async function getOverviewMetrics(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof OverviewMetricsOutputSchema>> {

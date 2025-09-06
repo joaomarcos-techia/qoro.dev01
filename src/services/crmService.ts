@@ -5,7 +5,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
 import { CustomerSchema, CustomerProfileSchema, ProductSchema, ProductProfileSchema, QuoteSchema, QuoteProfileSchema, UpdateCustomerSchema, UpdateProductSchema, UpdateQuoteSchema } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
-import type { QuoteProfile } from '@/ai/schemas';
+import type { QuoteProfile, CustomerProfile } from '@/ai/schemas';
 import { adminDb } from '@/lib/firebase-admin';
 
 export const createCustomer = async (input: z.infer<typeof CustomerSchema>, actorUid: string) => {
@@ -119,11 +119,14 @@ export const deleteCustomer = async (customerId: string, actorUid: string) => {
     return { id: customerId, success: true };
 };
 
-export const getDashboardMetrics = async (actorUid: string): Promise<{ customers: z.infer<typeof CustomerProfileSchema>[] }> => {
+export const getCrmDashboardMetrics = async (actorUid: string) => {
     const customers = await listCustomers(actorUid);
+    const leadStatuses: CustomerProfile['status'][] = ['new', 'initial_contact', 'qualification', 'proposal', 'negotiation'];
+    const activeLeads = customers.filter(c => leadStatuses.includes(c.status)).length;
     
     return {
-        customers,
+        totalCustomers: customers.length,
+        activeLeads: activeLeads,
     };
 };
 

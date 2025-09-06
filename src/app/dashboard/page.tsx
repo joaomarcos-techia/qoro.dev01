@@ -18,23 +18,15 @@ import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { getUserAccessInfo } from '@/ai/flows/user-management';
-import { getDashboardMetrics as getCrmMetrics } from '@/ai/flows/crm-management';
-import { getDashboardMetrics as getTaskMetrics } from '@/ai/flows/task-management';
-import { getDashboardMetrics as getFinanceMetrics } from '@/ai/flows/finance-management';
+import { getAggregatedDashboardMetrics } from '@/ai/flows/crm-management';
 import { ErrorBoundary } from 'react-error-boundary';
 import { UserAccessInfo, CustomerProfile } from '@/ai/schemas';
 
 
-interface CrmMetrics {
+interface AggregatedMetrics {
     totalCustomers: number;
-    totalLeads: number;
-}
-
-interface TaskMetrics {
+    activeLeads: number;
     pendingTasks: number;
-}
-
-interface FinanceMetrics {
     totalBalance: number;
 }
 
@@ -118,10 +110,8 @@ function DashboardContent() {
   const [userAccess, setUserAccess] = useState<UserAccessInfo | null>(null);
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [isLoading, setIsLoading] = useState({ access: true, metrics: true });
-  const [errors, setErrors] = useState({ crm: false, task: false, finance: false });
-  const [crmMetrics, setCrmMetrics] = useState<CrmMetrics>({ totalCustomers: 0, totalLeads: 0 });
-  const [taskMetrics, setTaskMetrics] = useState<TaskMetrics>({ pendingTasks: 0 });
-  const [financeMetrics, setFinanceMetrics] = useState<FinanceMetrics>({ totalBalance: 0 });
+  const [error, setError] = useState<string | null>(null);
+  const [metrics, setMetrics] = useState<AggregatedMetrics>({ totalCustomers: 0, activeLeads: 0, pendingTasks: 0, totalBalance: 0 });
 
 
   const fetchUserAccess = useCallback(async (user: FirebaseUser) => {
@@ -152,49 +142,25 @@ function DashboardContent() {
 
 
   useEffect(() => {
-    async function fetchMetrics() {
+    async function fetchAllMetrics() {
         if (!currentUser) return;
 
         setIsLoading(prev => ({...prev, metrics: true}));
-        setErrors({ crm: false, task: false, finance: false });
+        setError(null);
 
-        const crmPromise = getCrmMetrics({ actor: currentUser.uid }).catch(err => {
-            console.error("CRM Metrics Error:", err);
-            setErrors(e => ({...e, crm: true}));
-            return null;
-        });
-
-        const taskPromise = getTaskMetrics({ actor: currentUser.uid }).catch(err => {
-            console.error("Task Metrics Error:", err);
-            setErrors(e => ({...e, task: true}));
-            return null;
-        });
-
-        const financePromise = getFinanceMetrics({ actor: currentUser.uid }).catch(err => {
-            console.error("Finance Metrics Error:", err);
-            setErrors(e => ({...e, finance: true}));
-            return null;
-        });
-        
-        const [crmResult, taskResult, financeResult] = await Promise.all([
-            crmPromise,
-            taskPromise,
-            financePromise,
-        ]);
-
-        if (crmResult) {
-            const leadStatuses: CustomerProfile['status'][] = ['new', 'initial_contact', 'qualification', 'proposal', 'negotiation'];
-            const leads = crmResult.customers.filter(c => leadStatuses.includes(c.status)).length;
-            setCrmMetrics({ totalCustomers: crmResult.customers.length, totalLeads: leads });
+        try {
+            const result = await getAggregatedDashboardMetrics({ actor: currentUser.uid });
+            setMetrics(result);
+        } catch (err: any) {
+            console.error("Dashboard Metrics Error:", err);
+            setError("Não foi possível carregar as métricas do dashboard.");
+        } finally {
+             setIsLoading(prev => ({...prev, metrics: false}));
         }
-        if (taskResult) setTaskMetrics({ pendingTasks: taskResult.pendingTasks });
-        if (financeResult) setFinanceMetrics({ totalBalance: financeResult.totalBalance });
-
-        setIsLoading(prev => ({...prev, metrics: false}));
     }
     
     if (currentUser) {
-        fetchMetrics();
+        fetchAllMetrics();
     }
   }, [currentUser]);
 
@@ -237,14 +203,14 @@ function DashboardContent() {
        <div className="mb-12">
             <h3 className="text-xl font-bold text-foreground mb-6">Métricas e Insights Rápidos</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <MetricCard title="Total de Clientes" value={String(crmMetrics.totalCustomers)} icon={Users} isLoading={isLoading.metrics} error={errors.crm} colorClass='bg-crm-primary' />
-                <MetricCard title="Clientes no Funil" value={String(crmMetrics.totalLeads)} icon={TrendingUp} isLoading={isLoading.metrics} error={errors.crm} colorClass='bg-crm-primary' />
-                <MetricCard title="Tarefas Pendentes" value={String(taskMetrics.pendingTasks)} icon={ListTodo} isLoading={isLoading.metrics} error={errors.task} colorClass='bg-task-primary' />
-                <MetricCard title="Saldo em Contas" value={formatCurrency(financeMetrics.totalBalance)} icon={DollarSign} isLoading={isLoading.metrics} error={errors.finance} colorClass='bg-finance-primary' />
+                <MetricCard title="Total de Clientes" value={String(metrics.totalCustomers)} icon={Users} isLoading={isLoading.metrics} error={!!error} colorClass='bg-crm-primary' />
+                <MetricCard title="Clientes no Funil" value={String(metrics.activeLeads)} icon={TrendingUp} isLoading={isLoading.metrics} error={!!error} colorClass='bg-crm-primary' />
+                <MetricCard title="Tarefas Pendentes" value={String(metrics.pendingTasks)} icon={ListTodo} isLoading={isLoading.metrics} error={!!error} colorClass='bg-task-primary' />
+                <MetricCard title="Saldo em Contas" value={formatCurrency(metrics.totalBalance)} icon={DollarSign} isLoading={isLoading.metrics} error={!!error} colorClass='bg-finance-primary' />
             </div>
-             {(errors.crm || errors.task || errors.finance) && (
+             {error && (
                 <div className="mt-4 p-4 bg-yellow-800/20 border-l-4 border-yellow-500 text-yellow-300 rounded-lg text-sm">
-                   <p><span className="font-bold">Aviso:</span> Alguns dados não puderam ser carregados. Os desenvolvedores foram notificados. A funcionalidade principal continua operacional.</p>
+                   <p><span className="font-bold">Aviso:</span> {error} A funcionalidade principal continua operacional.</p>
                 </div>
             )}
         </div>

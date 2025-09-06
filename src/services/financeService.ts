@@ -1,4 +1,6 @@
 
+'use server';
+
 import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
 import { AccountSchema, AccountProfileSchema, UpdateAccountSchema } from '@/ai/schemas';
@@ -102,13 +104,24 @@ export const deleteAccount = async (accountId: string, actorUid: string) => {
 };
 
 
-export const getDashboardMetrics = async (actorUid: string, dateRange?: { from?: string; to?: string }) => {
+export const getFinanceDashboardMetrics = async (actorUid: string, dateRange?: { from?: string; to?: string }) => {
+    const accounts = await listAccounts(actorUid);
+    const totalBalance = accounts.reduce((sum, account) => sum + (account.balance || 0), 0);
+    
+    // For dashboard summary, we only need the total balance.
+    // The more detailed metrics are used in the finance reports page.
+    if (!dateRange) {
+        return {
+            totalBalance,
+            totalIncome: 0, // default value
+            totalExpense: 0, // default value
+            netProfit: 0, // default value
+        }
+    }
+    
+    // Logic for detailed report with date range
     const { organizationId } = await getAdminAndOrg(actorUid);
-
-    const accountsRef = adminDb.collection('accounts').where('companyId', '==', organizationId);
     let transactionsQuery = adminDb.collection('transactions').where('companyId', '==', organizationId);
-
-    // Apply date range filter if provided
     if (dateRange?.from) {
         transactionsQuery = transactionsQuery.where('date', '>=', new Date(dateRange.from));
     }
@@ -116,17 +129,8 @@ export const getDashboardMetrics = async (actorUid: string, dateRange?: { from?:
         transactionsQuery = transactionsQuery.where('date', '<=', new Date(dateRange.to));
     }
 
-    const accountsSnapshot = await accountsRef.get();
-    const totalBalance = accountsSnapshot.docs.reduce((sum, doc) => sum + (doc.data().balance || 0), 0);
-    
-    const incomePromise = transactionsQuery
-        .where('type', '==', 'income')
-        .get();
-
-    const expensePromise = transactionsQuery
-        .where('type', '==', 'expense')
-        .get();
-
+    const incomePromise = transactionsQuery.where('type', '==', 'income').get();
+    const expensePromise = transactionsQuery.where('type', '==', 'expense').get();
     const [incomeSnapshot, expenseSnapshot] = await Promise.all([incomePromise, expensePromise]);
 
     const totalIncome = incomeSnapshot.docs.reduce((sum, doc) => sum + (doc.data().amount || 0), 0);

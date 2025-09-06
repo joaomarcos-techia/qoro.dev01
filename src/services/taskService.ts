@@ -234,44 +234,47 @@ export const deleteTask = async (
   }
 };
 
-const getBasicMetrics = (allTasks: z.infer<typeof TaskProfileSchema>[]) => {
-    const totalTasks = allTasks.length;
-    const completedTasks = allTasks.filter(t => t.status === 'done').length;
-    const inProgressTasks = allTasks.filter(t => t.status === 'in_progress').length;
-    const now = new Date();
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+export const getTaskDashboardMetrics = async (actorUid: string) => {
+    try {
+        const allTasks = await listTasks(actorUid);
+        const pendingTasks = allTasks.filter(t => 
+            (t.status === 'todo' || t.status === 'in_progress' || t.status === 'review')
+        ).length;
 
-    const pendingTasks = allTasks.filter(t => 
-        (t.status === 'todo' || t.status === 'in_progress' || t.status === 'review')
-    ).length;
+        const totalTasks = allTasks.length;
+        const completedTasks = allTasks.filter(t => t.status === 'done').length;
+        const inProgressTasks = allTasks.filter(t => t.status === 'in_progress').length;
+        const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        
+        const overdueTasks = allTasks.filter(t => 
+            t.status !== 'done' && t.dueDate && new Date(t.dueDate) < startOfToday
+        ).length;
+        
+        const tasksByPriority = allTasks.reduce((acc: Record<string, number>, t) => {
+            const prio = t.priority || 'medium';
+            acc[prio] = (acc[prio] || 0) + 1;
+            return acc;
+        }, {});
 
-    const overdueTasks = allTasks.filter(t => 
-        t.status !== 'done' && t.dueDate && new Date(t.dueDate) < startOfToday
-    ).length;
-    
-    const tasksByPriority = allTasks.reduce((acc: Record<string, number>, t) => {
-      const prio = t.priority || 'medium';
-      acc[prio] = (acc[prio] || 0) + 1;
-      return acc;
-    }, {});
-
-    return { totalTasks, completedTasks, inProgressTasks, pendingTasks, overdueTasks, tasksByPriority };
-}
-
-export const getDashboardMetrics = async (actorUid: string) => {
-  try {
-    const allTasks = await listTasks(actorUid);
-    return getBasicMetrics(allTasks);
-  } catch (error) {
-    console.error('🚨 Erro em getDashboardMetrics (Tasks):', error);
-    throw new Error('Falha ao carregar métricas de tarefas.');
-  }
+        return { 
+            pendingTasks,
+            totalTasks,
+            completedTasks,
+            inProgressTasks,
+            overdueTasks,
+            tasksByPriority
+        };
+    } catch (error) {
+        console.error('🚨 Erro em getTaskDashboardMetrics (Tasks):', error);
+        throw new Error('Falha ao carregar métricas de tarefas.');
+    }
 };
 
 export const getOverviewMetrics = async (actorUid: string) => {
     try {
         const allTasks = await listTasks(actorUid);
-        const basicMetrics = getBasicMetrics(allTasks);
+        const metrics = await getTaskDashboardMetrics(actorUid);
         
         const now = new Date();
         const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -287,7 +290,7 @@ export const getOverviewMetrics = async (actorUid: string) => {
             .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime());
 
         return {
-            ...basicMetrics,
+            ...metrics,
             overdue,
             dueSoon
         };

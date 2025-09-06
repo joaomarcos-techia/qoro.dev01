@@ -10,7 +10,7 @@
  * - listTransactions - Lists all financial transactions for the user's organization.
  * - updateTransaction - Updates an existing financial transaction.
  * - deleteTransaction - Deletes a financial transaction.
- * - getDashboardMetrics - Retrieves key metrics for the Finance dashboard.
+ * - getFinanceDashboardMetrics - Retrieves key metrics for the Finance dashboard.
  * - createBill - Creates a new bill (payable/receivable).
  * - listBills - Lists all bills.
  * - updateBill - Updates a bill.
@@ -179,13 +179,13 @@ const deleteBillFlow = ai.defineFlow(
     async (input) => billService.deleteBill(input.billId, input.actor)
 );
 
-const getDashboardMetricsFlow = ai.defineFlow(
+const getFinanceDashboardMetricsFlow = ai.defineFlow(
     {
         name: 'getFinanceDashboardMetricsFlow',
         inputSchema: GetDashboardMetricsInputSchema,
         outputSchema: DashboardMetricsOutputSchema
     },
-    async ({ actor, dateRange }) => financeService.getDashboardMetrics(actor, dateRange)
+    async ({ actor, dateRange }) => financeService.getFinanceDashboardMetrics(actor, dateRange)
 );
 
 // Exported functions (client-callable wrappers)
@@ -221,8 +221,8 @@ export async function deleteTransaction(input: z.infer<typeof DeleteTransactionI
     return deleteTransactionFlow(input);
 }
 
-export async function getDashboardMetrics(input: z.infer<typeof GetDashboardMetricsInputSchema>): Promise<z.infer<typeof DashboardMetricsOutputSchema>> {
-    return getDashboardMetricsFlow(input);
+export async function getFinanceDashboardMetrics(input: z.infer<typeof GetDashboardMetricsInputSchema>): Promise<z.infer<typeof DashboardMetricsOutputSchema>> {
+    return getFinanceDashboardMetricsFlow(input);
 }
 
 export async function createBill(input: z.infer<typeof BillSchema> & z.infer<typeof ActorSchema>): Promise<{ id: string; }> {

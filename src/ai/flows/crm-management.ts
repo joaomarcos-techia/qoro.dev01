@@ -4,7 +4,7 @@
  * @fileOverview CRM management flows.
  * - createCustomer - Creates a new customer.
  * - listCustomers - Lists all customers for the user's organization.
- * - getDashboardMetrics - Retrieves key metrics for the CRM dashboard.
+ * - getCrmDashboardMetrics - Retrieves key metrics for the CRM dashboard.
  * - createProduct - Creates a new product.
  * - listProducts - Lists all products.
  * - updateProduct - Updates a product.
@@ -17,17 +17,30 @@
  * - deleteCustomer - Deletes a customer.
  * - updateCustomer - Updates a customer's profile.
  * - getOrganizationDetails - Fetches details for the user's organization.
+ * - getAggregatedDashboardMetrics - Fetches metrics from all modules for the main dashboard.
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { CustomerSchema, CustomerProfileSchema, ProductSchema, ProductProfileSchema, QuoteSchema, QuoteProfileSchema, UpdateCustomerSchema, UpdateProductSchema, UpdateQuoteSchema, OrganizationProfileSchema } from '@/ai/schemas';
 import * as crmService from '@/services/crmService';
+import * as taskService from '@/services/taskService';
+import * as financeService from '@/services/financeService';
+
 
 const ActorSchema = z.object({ actor: z.string() });
 
-const DashboardMetricsOutputSchema = z.object({
-    customers: z.array(CustomerProfileSchema),
+const CrmDashboardMetricsOutputSchema = z.object({
+    totalCustomers: z.number(),
+    activeLeads: z.number(),
 });
+
+const AggregatedDashboardMetricsOutputSchema = z.object({
+    totalCustomers: z.number(),
+    activeLeads: z.number(),
+    pendingTasks: z.number(),
+    totalBalance: z.number(),
+});
+
 
 const UpdateCustomerStatusInputSchema = z.object({
     customerId: z.string(),
@@ -67,13 +80,13 @@ const listCustomersFlow = ai.defineFlow(
     async ({ actor }) => crmService.listCustomers(actor)
 );
 
-const getDashboardMetricsFlow = ai.defineFlow(
+const getCrmDashboardMetricsFlow = ai.defineFlow(
     {
         name: 'getCrmDashboardMetricsFlow',
         inputSchema: ActorSchema,
-        outputSchema: DashboardMetricsOutputSchema
+        outputSchema: CrmDashboardMetricsOutputSchema
     },
-    async ({ actor }) => crmService.getDashboardMetrics(actor)
+    async ({ actor }) => crmService.getCrmDashboardMetrics(actor)
 );
 
 const getOrganizationDetailsFlow = ai.defineFlow(
@@ -189,6 +202,29 @@ const updateCustomerFlow = ai.defineFlow(
     async (input) => crmService.updateCustomer(input.id, input, input.actor)
 );
 
+// New flow for aggregated dashboard metrics
+const getAggregatedDashboardMetricsFlow = ai.defineFlow(
+    {
+        name: 'getAggregatedDashboardMetricsFlow',
+        inputSchema: ActorSchema,
+        outputSchema: AggregatedDashboardMetricsOutputSchema
+    },
+    async ({ actor }) => {
+        const [crmMetrics, taskMetrics, financeMetrics] = await Promise.all([
+            crmService.getCrmDashboardMetrics(actor),
+            taskService.getTaskDashboardMetrics(actor),
+            financeService.getFinanceDashboardMetrics(actor)
+        ]);
+
+        return {
+            totalCustomers: crmMetrics.totalCustomers,
+            activeLeads: crmMetrics.activeLeads,
+            pendingTasks: taskMetrics.pendingTasks,
+            totalBalance: financeMetrics.totalBalance,
+        };
+    }
+);
+
 
 // Exported functions (client-callable wrappers)
 export async function createCustomer(input: z.infer<typeof CustomerSchema> & z.infer<typeof ActorSchema>): Promise<{ id: string; }> {
@@ -199,8 +235,8 @@ export async function listCustomers(input: z.infer<typeof ActorSchema>): Promise
     return listCustomersFlow(input);
 }
 
-export async function getDashboardMetrics(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof DashboardMetricsOutputSchema>> {
-    return getDashboardMetricsFlow(input);
+export async function getCrmDashboardMetrics(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof CrmDashboardMetricsOutputSchema>> {
+    return getCrmDashboardMetricsFlow(input);
 }
 
 export async function getOrganizationDetails(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof OrganizationProfileSchema>> {
@@ -249,4 +285,8 @@ export async function deleteCustomer(input: z.infer<typeof DeleteCustomerInputSc
 
 export async function updateCustomer(input: z.infer<typeof UpdateCustomerSchema> & z.infer<typeof ActorSchema>): Promise<{ id: string; }> {
     return updateCustomerFlow(input);
+}
+
+export async function getAggregatedDashboardMetrics(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof AggregatedDashboardMetricsOutputSchema>> {
+    return getAggregatedDashboardMetricsFlow(input);
 }
