@@ -10,11 +10,18 @@ import { z } from 'zod';
 import * as financeService from '@/services/financeService';
 import { AccountProfileSchema } from '@/ai/schemas';
 
+const FinanceSummarySchema = z.object({
+    totalBalance: z.number(),
+    totalIncome: z.number(),
+    totalExpense: z.number(),
+    netProfit: z.number(),
+});
+
 // Define the tool for listing financial accounts
 export const listAccountsTool = ai.defineTool(
     {
         name: 'listAccountsTool',
-        description: 'Lists all financial accounts for the organization, such as checking accounts, savings, credit cards, and cash. Use this to answer questions about bank accounts or current balances.',
+        description: 'Lista todas as contas financeiras da organização, como contas correntes, poupanças, cartões de crédito e caixas. Use para responder perguntas sobre contas bancárias ou saldos individuais.',
         inputSchema: z.object({}), // No specific input needed from the AI
         outputSchema: z.array(AccountProfileSchema),
     },
@@ -31,20 +38,15 @@ export const listAccountsTool = ai.defineTool(
 export const getFinanceSummaryTool = ai.defineTool(
     {
         name: 'getFinanceSummaryTool',
-        description: 'Retrieves a summary of the current financial health for the organization, including total balance, total income for the current month, total expenses for the current month, and the resulting net profit. Use this for high-level questions about financial performance.',
+        description: 'Recupera um resumo da saúde financeira atual da organização, incluindo saldo total, receita total do mês atual, despesas totais do mês atual e o lucro líquido resultante. Use para perguntas de alto nível sobre desempenho financeiro.',
         inputSchema: z.object({}), // No specific input needed from the AI
-        outputSchema: z.object({
-            totalBalance: z.number(),
-            totalIncome: z.number(),
-            totalExpense: z.number(),
-            netProfit: z.number(),
-        }),
+        outputSchema: FinanceSummarySchema,
     },
     async (_, context) => {
         // The actor's UID is passed in the context by the flow
         if (!context?.actor) {
             throw new Error('User authentication is required to get a financial summary.');
         }
-        return financeService.getDashboardMetrics(context.actor);
+        return financeService.getFinanceDashboardMetrics(context.actor);
     }
 );
