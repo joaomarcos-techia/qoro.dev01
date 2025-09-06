@@ -48,7 +48,8 @@ const pulseFlow = ai.defineFlow(
     if (conversationId) {
         existingConversation = await pulseService.getConversation({ conversationId, actor });
         if (existingConversation?.messages) {
-            history = existingConversation.messages.slice(0, -1).map(message => ({
+            // Use the full, persisted history for context
+            history = existingConversation.messages.map(message => ({
                 role: message.role as 'user' | 'model',
                 parts: [{ text: message.content }],
             }));
@@ -57,10 +58,10 @@ const pulseFlow = ai.defineFlow(
     
     const hasTitle = !!existingConversation?.title && existingConversation.title !== 'Nova Conversa';
 
-    const lastMessage = messages[messages.length - 1];
-    const prompt = lastMessage.content;
+    const lastUserMessage = messages[messages.length - 1];
+    const prompt = lastUserMessage.content;
     
-    const isGreeting = (existingConversation?.messages.length || messages.length) <= 1 && /^(oi|olá|ola|hello|hi|hey|bom dia|boa tarde|boa noite)/i.test(prompt.trim());
+    const isGreeting = (history.length < 2) && /^(oi|olá|ola|hello|hi|hey|bom dia|boa tarde|boa noite)/i.test(prompt.trim());
 
     const shouldGenerateTitle = !hasTitle && !isGreeting;
 
@@ -121,7 +122,7 @@ IMPORTANTE: A conversa já possui um título. Não gere um novo título. O campo
     const llmResponse = await ai.generate({
         model: 'googleai/gemini-1.5-flash',
         prompt: prompt,
-        history: history.slice(-10), // Use the loaded history
+        history: history, // Use the full, loaded history
         output: {
             schema: PulseResponseSchema,
         },
@@ -148,7 +149,7 @@ IMPORTANTE: A conversa já possui um título. Não gere um novo título. O campo
     
     // 2. Construct the full new history for saving.
     const fullMessageHistory = existingConversation ? existingConversation.messages : [];
-    const updatedMessages = [...fullMessageHistory, lastMessage, assistantMessage];
+    const updatedMessages = [...fullMessageHistory, lastUserMessage, assistantMessage];
     
     let currentConversationId = conversationId;
     let finalTitle = existingConversation?.title;
