@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { AccountSchema, AccountProfileSchema, UpdateAccountSchema } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
 import { adminDb } from '@/lib/firebase-admin';
+import { startOfMonth, endOfMonth } from 'date-fns';
 
 export const createAccount = async (input: z.infer<typeof AccountSchema>, actorUid: string) => {
     const { organizationId } = await getAdminAndOrg(actorUid);
@@ -108,26 +109,15 @@ export const getFinanceDashboardMetrics = async (actorUid: string, dateRange?: {
     const accounts = await listAccounts(actorUid);
     const totalBalance = accounts.reduce((sum, account) => sum + (account.balance || 0), 0);
     
-    // For dashboard summary, we only need the total balance.
-    // The more detailed metrics are used in the finance reports page.
-    if (!dateRange) {
-        return {
-            totalBalance,
-            totalIncome: 0, // default value
-            totalExpense: 0, // default value
-            netProfit: 0, // default value
-        }
-    }
-    
-    // Logic for detailed report with date range
     const { organizationId } = await getAdminAndOrg(actorUid);
-    let transactionsQuery = adminDb.collection('transactions').where('companyId', '==', organizationId);
-    if (dateRange?.from) {
-        transactionsQuery = transactionsQuery.where('date', '>=', new Date(dateRange.from));
-    }
-    if (dateRange?.to) {
-        transactionsQuery = transactionsQuery.where('date', '<=', new Date(dateRange.to));
-    }
+    
+    const startDate = dateRange?.from ? new Date(dateRange.from) : startOfMonth(new Date());
+    const endDate = dateRange?.to ? new Date(dateRange.to) : endOfMonth(new Date());
+
+    let transactionsQuery = adminDb.collection('transactions')
+        .where('companyId', '==', organizationId)
+        .where('date', '>=', startDate)
+        .where('date', '<=', endDate);
 
     const incomePromise = transactionsQuery.where('type', '==', 'income').get();
     const expensePromise = transactionsQuery.where('type', '==', 'expense').get();
