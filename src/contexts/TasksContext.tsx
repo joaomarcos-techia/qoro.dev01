@@ -49,11 +49,9 @@ export const TasksProvider = ({ children }: { children: React.ReactNode }) => {
       
       setLoading(true);
       setError(null);
-      console.log(`🔄 Tentando carregar tarefas... (Usuário: ${currentUser.uid}, Gatilho: ${refreshTrigger})`);
       try {
         const result = await listTasks({ actor: currentUser.uid });
         setTasks(result);
-        console.log(`✅ Tarefas carregadas com sucesso: ${result.length}`);
       } catch (err: any) {
         console.error('❌ Erro ao carregar tarefas no contexto:', err);
         setError(err.message || 'Erro no servidor. Tente novamente em alguns minutos.');
