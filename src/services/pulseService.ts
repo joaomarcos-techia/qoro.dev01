@@ -5,7 +5,7 @@
  */
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { z } from 'zod';
-import { ConversationSchema, ConversationProfileSchema, PulseMessage } from '@/ai/schemas';
+import { ConversationSchema, ConversationProfileSchema, PulseMessage, Conversation } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
 import { adminDb } from '@/lib/firebase-admin';
 
@@ -29,10 +29,10 @@ const convertTimestampsToISO = (obj: any): any => {
 };
 
 
-export const createConversation = async (actorUid: string, title: string, messages: PulseMessage[]) => {
+export const createConversation = async (actorUid: string, title: string, messages: PulseMessage[]): Promise<{ id: string }> => {
     const { organizationId } = await getAdminAndOrg(actorUid);
 
-    const newConversationData: z.infer<typeof ConversationSchema> = {
+    const newConversationData: Omit<Conversation, 'id'> = {
         userId: actorUid,
         organizationId,
         title: title || 'Nova Conversa',
@@ -45,7 +45,7 @@ export const createConversation = async (actorUid: string, title: string, messag
     return { id: docRef.id };
 };
 
-export const updateConversation = async (actorUid: string, conversationId: string, messages: PulseMessage[], newTitle?: string | null) => {
+export const updateConversation = async (actorUid: string, conversationId: string, updatedConversation: Partial<Conversation>): Promise<void> => {
     const { organizationId } = await getAdminAndOrg(actorUid);
     const conversationRef = adminDb.collection('pulse_conversations').doc(conversationId);
 
@@ -53,27 +53,22 @@ export const updateConversation = async (actorUid: string, conversationId: strin
     if (!doc.exists || doc.data()?.organizationId !== organizationId || doc.data()?.userId !== actorUid) {
         throw new Error("Conversa não encontrada ou acesso negado.");
     }
-
-    const updateData: { messages: PulseMessage[], updatedAt: FieldValue, title?: string } = {
-        messages,
+    
+    const updateData = {
+        ...updatedConversation,
         updatedAt: FieldValue.serverTimestamp(),
-    };
-
-    // Only update the title if a new valid title string is provided
-    if (newTitle) {
-        updateData.title = newTitle;
     }
 
     await conversationRef.update(updateData);
 };
 
-export const getConversation = async ({ conversationId, actor }: { conversationId: string, actor: string }) => {
+export const getConversation = async ({ conversationId, actor }: { conversationId: string, actor: string }): Promise<Conversation | null> => {
     const { organizationId } = await getAdminAndOrg(actor);
     const conversationRef = adminDb.collection('pulse_conversations').doc(conversationId);
 
     const doc = await conversationRef.get();
     if (!doc.exists || doc.data()?.organizationId !== organizationId || doc.data()?.userId !== actor) {
-        throw new Error("Conversa não encontrada ou acesso negado.");
+        return null; // Return null instead of throwing an error for not found cases
     }
     
     const data = doc.data();
@@ -82,7 +77,12 @@ export const getConversation = async ({ conversationId, actor }: { conversationI
     // Sanitize data for client components by converting Timestamps
     const sanitizedData = convertTimestampsToISO(data);
     
-    return sanitizedData as z.infer<typeof ConversationSchema>;
+    const parsedData = ConversationSchema.parse({
+        id: doc.id,
+        ...sanitizedData,
+    })
+    
+    return parsedData;
 };
 
 
@@ -119,7 +119,7 @@ export const listConversations = async ({ actor }: { actor: string }): Promise<z
     }
 };
 
-export const deleteConversation = async ({ conversationId, actor }: { conversationId: string, actor: string }) => {
+export const deleteConversation = async ({ conversationId, actor }: { conversationId: string, actor: string }): Promise<{ success: boolean }> => {
     const { organizationId } = await getAdminAndOrg(actor);
     const conversationRef = adminDb.collection('pulse_conversations').doc(conversationId);
 

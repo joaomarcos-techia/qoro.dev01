@@ -244,12 +244,13 @@ export type TaskProfile = z.infer<typeof TaskProfileSchema>;
 
 // Schemas for QoroPulse
 export const PulseMessageSchema = z.object({
-    role: z.string(), // Allow any role: 'user', 'assistant', 'tool', etc.
+    role: z.enum(['user', 'assistant', 'system']),
     content: z.string(),
 });
 export type PulseMessage = z.infer<typeof PulseMessageSchema>;
 
 export const ConversationSchema = z.object({
+    id: z.string().optional(),
     title: z.string().optional(),
     userId: z.string(),
     organizationId: z.string(),
