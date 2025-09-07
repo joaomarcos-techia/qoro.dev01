@@ -47,6 +47,7 @@ export const createTaskTool = ai.defineTool(
             priority: input.priority || 'medium',
             status: input.status || 'todo',
         };
-        return taskService.createTask(fullTaskData, context.actor);
+        const result = await taskService.createTask(fullTaskData, context.actor);
+        return { id: result.id };
     }
 );
