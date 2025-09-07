@@ -187,14 +187,3 @@ body {
 .recharts-cartesian-axis-tick-value {
     fill: hsl(var(--muted-foreground));
 }
-
-/* Fix Browser Autofill Styling */
-input:-webkit-autofill,
-input:-webkit-autofill:hover, 
-input:-webkit-autofill:focus, 
-input:-webkit-autofill:active {
-    border-radius: inherit !important;
-    -webkit-box-shadow: 0 0 0 30px hsl(var(--input)) inset !important;
-    -webkit-text-fill-color: hsl(var(--foreground)) !important;
-    caret-color: hsl(var(--foreground)) !important;
-}
