@@ -18,7 +18,7 @@ const CrmSummaryDataSchema = z.object({
 export const getCrmSummaryTool = ai.defineTool(
     {
         name: 'getCrmSummaryTool',
-        description: 'Use esta ferramenta para obter um resumo completo e numérico do CRM, incluindo o número total de clientes e a quantidade de clientes ativos no funil de vendas. É a ferramenta principal para perguntas sobre clientes.',
+        description: 'Use esta ferramenta para obter um resumo completo e numérico do CRM, incluindo o número total de clientes e a quantidade de clientes ativos no funil de vendas. É a ferramenta principal para perguntas sobre o estado geral dos clientes e do funil de vendas.',
         inputSchema: z.object({}),
         outputSchema: CrmSummaryDataSchema,
     },

@@ -251,13 +251,9 @@ export const PulseMessageSchema = z.object({
 export type PulseMessage = z.infer<typeof PulseMessageSchema>;
 
 export const ConversationSchema = z.object({
-    id: z.string().optional(),
-    title: z.string().optional(),
-    userId: z.string(),
-    organizationId: z.string(),
+    id: z.string(),
+    title: z.string(),
     messages: z.array(z.any()), // Allow any for MessageData from Genkit
-    createdAt: z.any(),
-    updatedAt: z.any(),
 });
 export type Conversation = z.infer<typeof ConversationSchema>;
 

@@ -8,7 +8,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { AskPulseInputSchema, AskPulseOutputSchema, PulseMessageSchema, Conversation } from '@/ai/schemas';
+import { AskPulseInputSchema, AskPulseOutputSchema, PulseMessageSchema, Conversation, ConversationSchema } from '@/ai/schemas';
 import { getCrmSummaryTool } from '@/ai/tools/crm-tools';
 import { createTaskTool, listTasksTool } from '@/ai/tools/task-tools';
 import { listAccountsTool, getFinanceSummaryTool } from '@/ai/tools/finance-tools';

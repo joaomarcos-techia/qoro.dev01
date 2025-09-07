@@ -47,7 +47,7 @@ export const createConversation = async (actorUid: string, title: string, messag
     return { id: docRef.id };
 };
 
-export const updateConversation = async (actorUid: string, conversationId: string, updatedConversation: Partial<Conversation>): Promise<void> => {
+export const updateConversation = async (actorUid: string, conversationId: string, updatedConversation: Partial<Omit<Conversation, 'id'>>): Promise<void> => {
     const { organizationId } = await getAdminAndOrg(actorUid);
     const conversationRef = adminDb.collection('pulse_conversations').doc(conversationId);
 

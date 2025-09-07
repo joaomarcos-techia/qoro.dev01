@@ -14,7 +14,7 @@ import { TaskProfileSchema, TaskSchema } from '@/ai/schemas';
 export const listTasksTool = ai.defineTool(
     {
         name: 'listTasksTool',
-        description: 'Lists all tasks for the organization. Use this to answer questions about tasks, projects, productivity, deadlines, or to-do items.',
+        description: 'Lista todas as tarefas para a organização. Use esta ferramenta para responder a perguntas gerais sobre o que precisa ser feito, produtividade, prazos ou itens pendentes.',
         inputSchema: z.object({}), // No specific input needed from the AI
         outputSchema: z.array(TaskProfileSchema),
     },
@@ -31,7 +31,7 @@ export const listTasksTool = ai.defineTool(
 export const createTaskTool = ai.defineTool(
     {
         name: 'createTaskTool',
-        description: 'Creates a new task for the user. Use this when the user asks to be reminded of something, to create a to-do item, or to schedule an activity.',
+        description: 'Cria uma nova tarefa para o usuário. Use esta ferramenta quando o usuário pedir para ser lembrado de algo, para criar um item de "a fazer", ou para agendar uma atividade específica.',
         inputSchema: TaskSchema.pick({ title: true, description: true, dueDate: true, priority: true, status: true }),
         outputSchema: z.object({ id: z.string() }),
     },
