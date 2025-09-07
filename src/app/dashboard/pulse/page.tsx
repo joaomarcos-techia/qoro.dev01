@@ -100,17 +100,16 @@ export default function PulsePage() {
                             }
                             }}
                             placeholder="Comece uma nova conversa com o QoroPulse..."
-                            className="w-full pr-16 pl-4 py-4 bg-transparent rounded-2xl border-none focus:ring-0 text-base resize-none shadow-none"
+                            className="w-full pr-20 pl-4 py-4 bg-transparent rounded-2xl border-none focus:ring-0 text-base resize-none shadow-none"
                             rows={1}
                             disabled={isLoading}
                         />
                         <Button
                             type="submit"
-                            size="icon"
                             disabled={isLoading || !input.trim()}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-pulse-primary text-primary-foreground rounded-lg hover:bg-pulse-primary/90 disabled:bg-gray-600"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 w-12 h-12 bg-pulse-primary text-primary-foreground rounded-2xl transition-all duration-300 hover:bg-pulse-primary/90 disabled:bg-secondary disabled:text-muted-foreground disabled:shadow-none enabled:shadow-lg enabled:hover:shadow-xl enabled:shadow-pulse-primary/30"
                         >
-                            <Send size={20} />
+                            <Send size={22} />
                         </Button>
                     </form>
                     {error && (
