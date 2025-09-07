@@ -37,11 +37,15 @@ export const listCustomers = async (actorUid: string): Promise<z.infer<typeof Cu
     
     const customers: z.infer<typeof CustomerProfileSchema>[] = customersSnapshot.docs.map(doc => {
         const data = doc.data();
+        // Garantir que a data seja sempre uma string ISO para consistência
+        const createdAt = data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString();
+        const birthDate = data.birthDate ? (data.birthDate.toDate ? data.birthDate.toDate().toISOString() : data.birthDate) : null;
+
         const parsedData = {
             id: doc.id,
             ...data,
-            createdAt: data.createdAt.toDate().toISOString(), 
-            birthDate: data.birthDate || null,
+            createdAt: createdAt,
+            birthDate: birthDate,
         };
         return CustomerProfileSchema.parse(parsedData);
     });

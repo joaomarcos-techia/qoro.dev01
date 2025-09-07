@@ -106,7 +106,7 @@ export const UpdateCustomerSchema = CustomerSchema.extend({
 
 export const CustomerProfileSchema = CustomerSchema.extend({
     id: z.string(),
-    createdAt: z.string(),
+    createdAt: z.union([z.string().datetime(), z.date()]),
 });
 export type CustomerProfile = z.infer<typeof CustomerProfileSchema>;
 
