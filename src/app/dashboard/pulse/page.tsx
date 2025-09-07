@@ -11,8 +11,10 @@ import { askPulse } from '@/ai/flows/pulse-flow';
 import type { PulseMessage } from '@/ai/schemas';
 
 const ArrowUpIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" {...props}>
-        <path d="M12 21V3M5 12l7-7 7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" {...props}>
+      <path d="M12 23V1M5 12l7-7 7 7" 
+            stroke="currentColor" strokeWidth="2" 
+            strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
 );
 
