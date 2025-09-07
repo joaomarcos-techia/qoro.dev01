@@ -131,7 +131,7 @@ body {
       -webkit-box-shadow: 0 0 0 30px hsl(var(--input)) inset !important;
       -webkit-text-fill-color: hsl(var(--foreground)) !important;
       caret-color: hsl(var(--foreground)) !important;
-      border-radius: theme('borderRadius.xl'); /* Keep our border radius */
+      border-radius: inherit !important;
   }
 }
 
