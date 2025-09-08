@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect, FormEvent, useCallback, useTransition } from 'react';
@@ -9,7 +10,7 @@ import { User as FirebaseUser, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { askPulse } from '@/ai/flows/pulse-flow';
 import { getConversation } from '@/services/pulseService';
-import type { PulseMessage } from '@/ai/schemas';
+import type { PulseMessage, Conversation } from '@/ai/schemas';
 
 const ArrowUpIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" {...props}>
@@ -30,9 +31,8 @@ export default function PulseConversationPage() {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const params = useParams();
-  const conversationId = params.id as string | undefined;
+  const conversationId = params.id as string;
 
-  const [isNavigating, startNavigation] = useTransition();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -45,21 +45,17 @@ export default function PulseConversationPage() {
     return () => unsubscribe();
   }, [router]);
   
-  const fetchConversationHistory = useCallback(async (shouldStartAiFlow = false) => {
+  const fetchConversationHistory = useCallback(async () => {
     if (!conversationId || !currentUser) return;
 
     setIsLoadingHistory(true);
     setError(null);
     try {
         const conversation = await getConversation({ conversationId, actor: currentUser.uid });
-        if (conversation && conversation.messages) {
+        if (conversation && Array.isArray(conversation.messages)) {
             setMessages(conversation.messages);
-            // If the last message is from the user, it means we need the AI's response.
-            if (shouldStartAiFlow && conversation.messages.length > 0 && conversation.messages[conversation.messages.length - 1].role === 'user') {
-                triggerAiResponse(conversation.messages);
-            }
         } else if (conversation) {
-            setMessages([]); // Conversation exists but has no messages.
+            setMessages([]);
         } else {
             setError("Não foi possível encontrar a conversa ou você não tem permissão para vê-la.");
         }
@@ -74,8 +70,7 @@ export default function PulseConversationPage() {
 
   useEffect(() => {
     if(currentUser) {
-        // The first time the page loads, check if we need to trigger the AI response.
-        fetchConversationHistory(true);
+        fetchConversationHistory();
     }
   }, [currentUser, fetchConversationHistory]);
 
@@ -84,42 +79,38 @@ export default function PulseConversationPage() {
       scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
     }
   }, [messages, isSending]);
-  
-  const triggerAiResponse = async (currentMessages: PulseMessage[]) => {
-      setIsSending(true);
-      setError(null);
-      if (!currentUser) return;
-
-      try {
-        await askPulse({
-            messages: currentMessages,
-            actor: currentUser.uid,
-            conversationId: conversationId,
-        });
-        await fetchConversationHistory(); // Refetch to get the AI's response
-      } catch (error: any) {
-          console.error("Error calling Pulse Flow:", error);
-          setError(error.message || 'Ocorreu um erro ao comunicar com a IA. Tente novamente.');
-      } finally {
-          setIsSending(false);
-      }
-  }
 
   const handleSendMessage = async (e?: FormEvent) => {
     e?.preventDefault();
-    if (!input.trim() || isSending || !currentUser || isNavigating || !conversationId) return;
+    if (!input.trim() || isSending || !currentUser || !conversationId) return;
   
     const userMessage: PulseMessage = { role: 'user', content: input };
     const optimisticMessages = [...messages, userMessage];
     setMessages(optimisticMessages);
-    const originalInput = input;
     setInput('');
-  
-    await triggerAiResponse(optimisticMessages);
+    setIsSending(true);
+    setError(null);
+
+    try {
+      const result = await askPulse({
+          messages: optimisticMessages,
+          actor: currentUser.uid,
+          conversationId: conversationId,
+      });
+      // Append only the AI's response to the state
+      setMessages(prev => [...prev, result.response]);
+    } catch (error: any) {
+        console.error("Error calling Pulse Flow:", error);
+        setError(error.message || 'Ocorreu um erro ao comunicar com a IA. Tente novamente.');
+        // Revert optimistic update on failure
+        setMessages(messages);
+    } finally {
+        setIsSending(false);
+    }
   };
 
   const renderMessages = () => {
-    if (isLoadingHistory && messages.length === 0) {
+    if (isLoadingHistory) {
       return (
         <div className="flex-grow flex flex-col items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -192,11 +183,11 @@ export default function PulseConversationPage() {
                             placeholder="Pergunte qualquer coisa sobre seu negócio..."
                             className="w-full pr-20 pl-4 py-4 bg-transparent rounded-2xl border-none focus:ring-0 text-base resize-none"
                             rows={1}
-                            disabled={isSending || isNavigating}
+                            disabled={isSending}
                         />
                         <Button
                             type="submit"
-                            disabled={isSending || isNavigating || !input.trim()}
+                            disabled={isSending || !input.trim()}
                             className="absolute right-3 top-1/2 -translate-y-1/2 w-12 h-12 bg-pulse-primary text-primary-foreground rounded-2xl transition-all duration-300 hover:bg-pulse-primary/90 disabled:bg-secondary disabled:text-muted-foreground"
                         >
                             <ArrowUpIcon className="w-6 h-6" />

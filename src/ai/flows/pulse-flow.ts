@@ -27,9 +27,6 @@ const DeleteConversationInputSchema = z.object({
   actor: z.string(),
 });
 
-export async function askPulse(input: z.infer<typeof AskPulseInputSchema>): Promise<z.infer<typeof AskPulseOutputSchema>> {
-  return pulseFlow(input);
-}
 
 const pulseFlow = ai.defineFlow(
   {
@@ -40,13 +37,11 @@ const pulseFlow = ai.defineFlow(
   async (input) => {
     const { actor, messages: clientMessages, conversationId } = input;
     
-    // Standardize incoming messages to Genkit's MessageData format (using 'parts')
+    // 1. Standardize incoming messages to Genkit's MessageData format
     const standardizedClientMessages: MessageData[] = clientMessages.map(msg => {
-      // If the message is in {role, content} format, convert it.
       if ('content' in msg && !('parts' in msg)) {
-        return { role: msg.role === 'assistant' ? 'model' : 'user', parts: [{ text: msg.content }] };
+        return { role: msg.role === 'assistant' ? 'model' : msg.role, parts: [{ text: msg.content }] };
       }
-      // Otherwise, assume it's already in a compatible format (like MessageData)
       return msg as MessageData; 
     });
 
@@ -55,22 +50,28 @@ const pulseFlow = ai.defineFlow(
         conversation = await pulseService.getConversation({ conversationId, actor });
     }
     
-    // Convert DB messages to Genkit's format as well for consistency
     const dbHistory: MessageData[] = conversation?.messages.map(msg => ({
-        role: msg.role === 'assistant' ? 'model' : 'user',
+        role: msg.role === 'assistant' ? 'model' : msg.role,
         parts: [{ text: msg.content }]
-    })) || standardizedClientMessages.slice(0, -1); // Use client messages if no DB history
+    })) || [];
     
+    // Ensure we only use the latest consistent history for the prompt
+    const historyForPrompt = standardizedClientMessages.slice(0, -1);
     const lastUserMessage = standardizedClientMessages[standardizedClientMessages.length - 1];
     const prompt = (lastUserMessage.parts[0] as any)?.text || '';
 
     const hasTitle = !!conversation?.title && conversation.title !== 'Nova Conversa';
-    const isGreeting = (dbHistory.length < 2) && /^(oi|olá|ola|hello|hi|hey|bom dia|boa tarde|boa noite)/i.test(prompt.trim());
+    const isGreeting = (historyForPrompt.length < 2) && /^(oi|olá|ola|hello|hi|hey|bom dia|boa tarde|boa noite)/i.test(prompt.trim());
     const shouldGenerateTitle = !hasTitle && !isGreeting && !!conversationId;
 
     let systemPrompt = `<OBJETIVO>
 Você é o QoroPulse, um agente de IA especialista em gestão empresarial e o parceiro estratégico do usuário. Sua missão é fornecer insights acionáveis e respostas precisas baseadas nos dados das ferramentas da Qoro. Você deve agir como um consultor de negócios proativo e confiável.
 </OBJETIVO>
+<INSTRUÇÕES_DE_FERRAMENTAS>
+- Você tem acesso a um conjunto de ferramentas para buscar dados em tempo real sobre CRM, Tarefas e Finanças.
+- Ao receber uma pergunta que pode ser respondida com dados da empresa (ex: "quantos clientes temos?", "qual nosso saldo?", "liste minhas tarefas"), você DEVE usar a ferramenta apropriada.
+- Responda de forma direta, usando os dados retornados pela ferramenta.
+</INSTRUÇÕES_DE_FERRAMENTAS>
 <TOM_E_VOZ>
 - **Seja Direto e Executivo:** Vá direto ao ponto. Não anuncie o que você vai fazer ou quais ferramentas vai usar. Aja como se os dados já estivessem na sua frente.
 - **Incorreto:** "Para saber seu saldo, vou consultar a ferramenta financeira..."
@@ -90,7 +91,7 @@ Você é o QoroPulse, um agente de IA especialista em gestão empresarial e o pa
     const llmRequest = {
         model: 'googleai/gemini-1.5-flash',
         prompt: prompt,
-        history: dbHistory.slice(-10),
+        history: historyForPrompt,
         tools: [getCrmSummaryTool, listTasksTool, createTaskTool, listAccountsTool, getFinanceSummaryTool, listSuppliersTool],
         toolConfig: { 
             context: { actor },
@@ -102,16 +103,16 @@ Você é o QoroPulse, um agente de IA especialista em gestão empresarial e o pa
     let llmResponse = await ai.generate(llmRequest);
     let finalOutput: PulseResponse | undefined;
 
-    let newHistory: MessageData[] = [
-      ...dbHistory,
-      { role: "user", parts: [{ text: prompt }] },
+    let updatedHistory: MessageData[] = [
+      ...historyForPrompt,
+      lastUserMessage,
     ];
     let title = conversation?.title;
     
     const toolRequests = llmResponse.toolRequests;
 
     if (Array.isArray(toolRequests) && toolRequests.length > 0) {
-      newHistory.push({
+      updatedHistory.push({
         role: "model",
         parts: toolRequests.map(toolRequest => ({ toolRequest })),
       });
@@ -122,9 +123,9 @@ Você é o QoroPulse, um agente de IA especialista em gestão empresarial e o pa
             return { toolResponse: { name: toolRequest.name, output } };
         })
       );
-      newHistory.push({ role: "tool", parts: toolResponses });
+      updatedHistory.push({ role: "tool", parts: toolResponses });
 
-      llmResponse = await ai.generate({ ...llmRequest, history: newHistory });
+      llmResponse = await ai.generate({ ...llmRequest, history: updatedHistory });
     }
 
     finalOutput = llmResponse.output;
@@ -142,10 +143,11 @@ Você é o QoroPulse, um agente de IA especialista em gestão empresarial e o pa
         role: 'assistant',
         content: assistantResponseText,
     };
-    newHistory.push({ role: 'model', parts: [{ text: assistantResponseText }] });
+    
+    updatedHistory.push({ role: 'model', parts: [{ text: assistantResponseText }] });
 
     if (conversationId) {
-        await pulseService.updateConversation(actor, conversationId, { messages: newHistory, title });
+        await pulseService.updateConversation(actor, conversationId, { messages: updatedHistory, title });
     }
     
     return {
@@ -157,17 +159,21 @@ Você é o QoroPulse, um agente de IA especialista em gestão empresarial e o pa
 );
 
 
-const deleteConversationFlow = ai.defineFlow(
-  {
-    name: 'deleteConversationFlow',
-    inputSchema: DeleteConversationInputSchema,
-    outputSchema: z.object({ success: z.boolean() }),
-  },
-  async ({ conversationId, actor }) => {
-    return pulseService.deleteConversation({ conversationId, actor });
-  }
-);
+export async function askPulse(input: z.infer<typeof AskPulseInputSchema>): Promise<z.infer<typeof AskPulseOutputSchema>> {
+  return pulseFlow(input);
+}
+
 
 export async function deleteConversation(input: z.infer<typeof DeleteConversationInputSchema>): Promise<{ success: boolean }> {
+  const deleteConversationFlow = ai.defineFlow(
+    {
+      name: 'deleteConversationFlow',
+      inputSchema: DeleteConversationInputSchema,
+      outputSchema: z.object({ success: z.boolean() }),
+    },
+    async ({ conversationId, actor }) => {
+      return pulseService.deleteConversation({ conversationId, actor });
+    }
+  );
   return deleteConversationFlow(input);
 }

@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Service for managing QoroPulse conversations in Firestore.
@@ -29,15 +30,43 @@ const convertTimestampsToISO = (obj: any): any => {
     return obj;
 };
 
+// Converts various message formats to a consistent PulseMessage format.
+const normalizeDbMessagesToPulseMessages = (messages: any[]): PulseMessage[] => {
+    if (!messages || !Array.isArray(messages)) return [];
+    
+    return messages
+        .map((msg: any): PulseMessage | null => {
+            if (!msg || !msg.role) return null;
 
-export const createConversation = async (actorUid: string, title: string, messages: MessageData[]): Promise<{ id: string }> => {
+            let content = '';
+            // Handle {role, content} format
+            if (typeof msg.content === 'string') {
+                content = msg.content;
+            // Handle Genkit's {role, parts: [{text}]} format
+            } else if (Array.isArray(msg.parts) && msg.parts[0]?.text) {
+                content = msg.parts[0].text;
+            } else {
+                // Ignore messages we can't parse (e.g., tool requests/responses for now)
+                return null;
+            }
+            
+            const role = msg.role === 'model' ? 'assistant' : 'user';
+
+            return { role, content };
+        })
+        .filter((msg): msg is PulseMessage => msg !== null && typeof msg.content === 'string'); // Filter out nulls and ensure content is a string
+};
+
+
+
+export const createConversation = async (actorUid: string, title: string, messages: PulseMessage[]): Promise<{ id: string }> => {
     const { organizationId } = await getAdminAndOrg(actorUid);
 
     const newConversationData = {
         userId: actorUid,
         organizationId,
         title: title || 'Nova Conversa',
-        messages,
+        messages, // Storing in the simple, client-facing format
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
     };
@@ -63,38 +92,18 @@ export const updateConversation = async (actorUid: string, conversationId: strin
     await conversationRef.update(updateData);
 };
 
-const normalizeDbMessagesToPulseMessages = (messages: MessageData[]): PulseMessage[] => {
-    if (!messages || !Array.isArray(messages)) return [];
-    
-    return messages.map((msg: any) => {
-        let content = '';
-        if (msg.content) {
-            content = msg.content;
-        } else if (msg.parts && msg.parts[0]?.text) {
-            content = msg.parts[0].text;
-        }
-        
-        // Map Genkit roles to frontend roles (model -> assistant)
-        const role = msg.role === 'model' ? 'assistant' : 'user';
-
-        return { role, content };
-    }).filter((msg): msg is PulseMessage => !!msg.content);
-};
-
-
 export const getConversation = async ({ conversationId, actor }: { conversationId: string, actor: string }): Promise<Conversation | null> => {
     const { organizationId } = await getAdminAndOrg(actor);
     const conversationRef = adminDb.collection('pulse_conversations').doc(conversationId);
 
     const doc = await conversationRef.get();
     if (!doc.exists || doc.data()?.organizationId !== organizationId || doc.data()?.userId !== actor) {
-        return null; // Return null instead of throwing an error for not found cases
+        return null;
     }
     
     const data = doc.data();
     if (!data) return null;
 
-    // Sanitize data for client components by converting Timestamps
     const sanitizedData = convertTimestampsToISO(data);
     
     const clientMessages = normalizeDbMessagesToPulseMessages(sanitizedData.messages || []);
@@ -102,7 +111,7 @@ export const getConversation = async ({ conversationId, actor }: { conversationI
     const parsedData = ConversationSchema.parse({
         id: doc.id,
         title: sanitizedData.title,
-        messages: clientMessages, // Use the converted messages
+        messages: clientMessages,
     })
     
     return parsedData;

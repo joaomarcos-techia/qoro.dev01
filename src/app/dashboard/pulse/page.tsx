@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, FormEvent, useTransition } from 'react';
@@ -52,11 +53,8 @@ export default function PulsePage() {
     setError(null);
   
     try {
-        // Step 1: Create the conversation immediately to get an ID.
         const { id: newConversationId } = await createConversation(currentUser.uid, 'Nova Conversa', [userMessage]);
 
-        // Step 2: Navigate to the new conversation page.
-        // The AI response will be triggered on that page.
         if (newConversationId) {
              startTransition(() => {
                 router.push(`/dashboard/pulse/${newConversationId}`);
@@ -68,7 +66,7 @@ export default function PulsePage() {
     } catch (error: any) {
         console.error("Error creating conversation:", error);
         setError(error.message || 'Ocorreu um erro ao iniciar a conversa. Tente novamente.');
-        setIsSending(false); // Reset sending state on error
+        setIsSending(false);
     }
   };
 
