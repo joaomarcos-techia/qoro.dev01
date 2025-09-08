@@ -80,7 +80,6 @@ Você é o QoroPulse, um agente de IA especialista em gestão empresarial e o pa
     };
 
     const llmResponse = await ai.generate(llmRequest);
-    // Corrected: toolRequests is a method, not a property.
     const toolRequests = llmResponse.toolRequests();
     
     let assistantResponseText: string;
