@@ -40,6 +40,14 @@ const pulseFlow = ai.defineFlow(
   async (input) => {
     const { actor, messages: clientMessages, conversationId: currentConversationId } = input;
     
+    // Standardize incoming messages to Genkit's MessageData format (using 'parts')
+    const standardizedClientMessages: MessageData[] = clientMessages.map(msg => {
+      if ('content' in msg && !('parts' in msg)) {
+        return { role: msg.role === 'assistant' ? 'model' : 'user', parts: [{ text: msg.content }] };
+      }
+      return msg as MessageData; // Assumes it's already in a compatible format
+    });
+
     let conversation: Conversation | null = null;
     if (currentConversationId) {
         conversation = await pulseService.getConversation({ conversationId: currentConversationId, actor });
@@ -47,8 +55,8 @@ const pulseFlow = ai.defineFlow(
     
     const dbHistory: MessageData[] = conversation?.messages || [];
     
-    const lastUserMessage = clientMessages[clientMessages.length - 1];
-    const prompt = lastUserMessage.content as string;
+    const lastUserMessage = standardizedClientMessages[standardizedClientMessages.length - 1];
+    const prompt = (lastUserMessage.parts[0] as any)?.text || '';
 
     const hasTitle = !!conversation?.title && conversation.title !== 'Nova Conversa';
     const isGreeting = (dbHistory.length < 2) && /^(oi|olá|ola|hello|hi|hey|bom dia|boa tarde|boa noite)/i.test(prompt.trim());
