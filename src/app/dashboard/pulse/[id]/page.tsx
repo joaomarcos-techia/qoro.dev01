@@ -56,6 +56,10 @@ export default function PulseConversationPage() {
         const conversation = await getConversation({ conversationId, actor: currentUser.uid });
         if (conversation && conversation.messages) {
            setMessages(conversation.messages);
+        } else if (conversation) {
+            setMessages([]); // Conversation exists but has no messages
+        } else {
+            setError("Não foi possível encontrar a conversa ou você não tem permissão para vê-la.");
         }
       } catch (err: any) {
         console.error("Error loading conversation", err);
@@ -104,9 +108,9 @@ export default function PulseConversationPage() {
                 router.push(`/dashboard/pulse/${response.conversationId}`);
              });
         } else {
-            setMessages(prev => [...prev.slice(0, -1), userMessage, response.response]);
+            // After successful response, fetch the whole history again to ensure consistency
+            await fetchConversationHistory();
             if (response.title) {
-                // Refresh server components in the layout, like the sidebar
                 router.refresh();
             }
         }
