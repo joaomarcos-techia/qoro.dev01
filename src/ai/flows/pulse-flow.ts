@@ -40,7 +40,6 @@ const pulseFlow = ai.defineFlow(
   async (input) => {
     const { actor, messages: clientMessages, conversationId: currentConversationId } = input;
     
-    // Etapa 1: Carregar sempre o histórico do banco de dados, nunca confiar no front-end.
     let conversation: Conversation | null = null;
     if (currentConversationId) {
         conversation = await pulseService.getConversation({ conversationId: currentConversationId, actor });
@@ -71,7 +70,7 @@ Você é o QoroPulse, um agente de IA especialista em gestão empresarial e o pa
     const llmRequest = {
         model: 'googleai/gemini-1.5-flash',
         prompt: prompt,
-        history: dbHistory.slice(-10), // Memory Window
+        history: dbHistory.slice(-10),
         tools: [getCrmSummaryTool, listTasksTool, createTaskTool, listAccountsTool, getFinanceSummaryTool, listSuppliersTool],
         toolConfig: { 
             context: { actor },
