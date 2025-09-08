@@ -56,7 +56,7 @@ const pulseFlow = ai.defineFlow(
 
     let systemPrompt = `<OBJETIVO>
 Você é o QoroPulse, um agente de IA especialista em gestão empresarial e o parceiro estratégico do usuário. Sua missão é fornecer insights acionáveis e respostas precisas baseadas nos dados das ferramentas da Qoro. Você deve agir como um consultor de negócios proativo e confiável.
-</OBJETIVO>
+</OBJETivo>
 <REGRAS_IMPORTANTES>
 - **NUNCA** invente dados. Se a ferramenta não fornecer a informação, diga isso. Use a ferramenta.
 - **NUNCA** revele o nome das ferramentas (como 'getFinanceSummaryTool') na sua resposta. Apenas use-as internamente.
@@ -76,41 +76,48 @@ Você é o QoroPulse, um agente de IA especialista em gestão empresarial e o pa
             context: { actor },
         },
         system: systemPrompt,
+        output: { schema: PulseResponseSchema },
     };
-
-    const llmResponse = await ai.generate(llmRequest);
-    const toolRequests = llmResponse.toolRequests();
     
-    let assistantResponseText: string;
-    let newHistory: MessageData[] = [...dbHistory, { role: 'user', parts: [{ text: prompt }] }];
+    let llmResponse = await ai.generate(llmRequest);
+    let finalOutput: PulseResponse | undefined;
+
+    let newHistory: MessageData[] = [
+      ...dbHistory,
+      { role: "user", parts: [{ text: prompt }] },
+    ];
     let title = conversation?.title;
     
-    if (toolRequests && toolRequests.length > 0) {
-        newHistory.push({ role: 'model', parts: [{ toolRequest: toolRequests[0] }] });
+    const toolRequests = llmResponse.toolRequests;
 
-        const toolResponsePart: ToolResponsePart = { toolResponse: await ai.runTool(toolRequests[0]) };
-        
-        newHistory.push({ role: 'tool', parts: [toolResponsePart] });
+    if (Array.isArray(toolRequests) && toolRequests.length > 0) {
+      console.log("⚡ Tool request detectado:", toolRequests);
 
-        const finalLlmResponse = await ai.generate({
-            ...llmRequest,
-            history: newHistory,
-            tools: [], 
-            output: { schema: PulseResponseSchema },
-        });
+      newHistory.push({
+        role: "model",
+        parts: toolRequests.map(toolRequest => ({ toolRequest })),
+      });
+    
+      const toolResponses = await Promise.all(
+        toolRequests.map(async (toolRequest) => {
+            const output = await ai.runTool(toolRequest);
+            return { toolResponse: { name: toolRequest.name, output } };
+        })
+      );
+      newHistory.push({ role: "tool", parts: toolResponses });
 
-        const output = finalLlmResponse.output;
-        if (!output) throw new Error("A IA não conseguiu gerar uma resposta final.");
-        
-        assistantResponseText = output.response;
-        if (output.title) title = output.title;
+      llmResponse = await ai.generate({ ...llmRequest, history: newHistory });
+    }
 
-    } else {
-        const output = (await llmResponse.output({ schema: PulseResponseSchema }))
-        if (!output) throw new Error("A IA não conseguiu gerar uma resposta válida.");
+    finalOutput = llmResponse.output;
 
-        assistantResponseText = output.response;
-        if (output.title) title = output.title;
+    if (!finalOutput) {
+        throw new Error("A IA não conseguiu gerar uma resposta final.");
+    }
+    
+    const assistantResponseText = finalOutput.response;
+    if (finalOutput.title) {
+        title = finalOutput.title;
     }
 
     const assistantMessage: PulseMessage = {
