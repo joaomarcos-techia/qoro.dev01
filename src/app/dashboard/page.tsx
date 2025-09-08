@@ -18,12 +18,14 @@ import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { getUserAccessInfo } from '@/ai/flows/user-management';
-import { getAggregatedDashboardMetrics } from '@/ai/flows/crm-management';
+import { getCrmDashboardMetrics } from '@/ai/flows/crm-management';
+import { getTaskDashboardMetrics } from '@/ai/flows/task-management';
+import { getFinanceDashboardMetrics } from '@/ai/flows/finance-management';
 import { ErrorBoundary } from 'react-error-boundary';
 import { UserAccessInfo, CustomerProfile } from '@/ai/schemas';
 
 
-interface AggregatedMetrics {
+interface DashboardMetrics {
     totalCustomers: number;
     activeLeads: number;
     pendingTasks: number;
@@ -111,7 +113,7 @@ function DashboardContent() {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [isLoading, setIsLoading] = useState({ access: true, metrics: true });
   const [error, setError] = useState<string | null>(null);
-  const [metrics, setMetrics] = useState<AggregatedMetrics>({ totalCustomers: 0, activeLeads: 0, pendingTasks: 0, totalBalance: 0 });
+  const [metrics, setMetrics] = useState<DashboardMetrics>({ totalCustomers: 0, activeLeads: 0, pendingTasks: 0, totalBalance: 0 });
 
 
   const fetchUserAccess = useCallback(async (user: FirebaseUser) => {
@@ -149,8 +151,17 @@ function DashboardContent() {
         setError(null);
 
         try {
-            const result = await getAggregatedDashboardMetrics({ actor: currentUser.uid });
-            setMetrics(result);
+            const [crm, tasks, finance] = await Promise.all([
+                getCrmDashboardMetrics({ actor: currentUser.uid }),
+                getTaskDashboardMetrics({ actor: currentUser.uid }),
+                getFinanceDashboardMetrics({ actor: currentUser.uid }),
+            ]);
+            setMetrics({
+                totalCustomers: crm.totalCustomers,
+                activeLeads: crm.activeLeads,
+                pendingTasks: tasks.pendingTasks,
+                totalBalance: finance.totalBalance,
+            });
         } catch (err: any) {
             console.error("Dashboard Metrics Error:", err);
             setError("Não foi possível carregar as métricas do dashboard.");
