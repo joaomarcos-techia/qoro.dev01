@@ -38,32 +38,33 @@ const normalizeDbMessagesToPulseMessages = (messages: any[]): PulseMessage[] => 
         .map((msg: any): PulseMessage | null => {
             if (!msg || !msg.role) return null;
 
-            let content = '';
-            // Handle {role, content} format
+            // This service now ONLY deals with the `{role, content}` schema.
+            // The flow is responsible for converting from `parts` if necessary.
             if (typeof msg.content === 'string') {
-                content = msg.content;
-            // Handle Genkit's {role, parts: [{text}]} format
-            } else if (Array.isArray(msg.parts) && msg.parts[0]?.text) {
-                content = msg.parts[0].text;
-            } else {
-                // Ignore messages we can't parse (e.g., tool requests/responses for now)
-                return null;
+                 const role = msg.role === 'model' ? 'assistant' : msg.role === 'assistant' ? 'assistant' : 'user';
+                 return { role, content: msg.content };
             }
             
-            const role = msg.role === 'model' ? 'assistant' : 'user';
+            // If we receive the `parts` format here, it's an inconsistency.
+            // We'll try to salvage it but log a warning.
+            if (Array.isArray(msg.parts) && msg.parts[0]?.text) {
+                console.warn(`[pulseService] Received 'parts' format unexpectedly. Normalizing to 'content'.`);
+                const role = msg.role === 'model' ? 'assistant' : 'user';
+                return { role, content: msg.parts[0].text };
+            }
 
-            return { role, content };
+            // Ignore messages that don't fit the expected schemas
+            return null;
         })
-        .filter((msg): msg is PulseMessage => msg !== null && typeof msg.content === 'string'); // Filter out nulls and ensure content is a string
+        .filter((msg): msg is PulseMessage => msg !== null);
 };
 
 
-
-export const createConversation = async (actorUid: string, title: string, messages: PulseMessage[]): Promise<{ id: string }> => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
+export const createConversation = async ({ actor, messages, title }: { actor: string; messages: PulseMessage[]; title?: string; }): Promise<{ id: string }> => {
+    const { organizationId } = await getAdminAndOrg(actor);
 
     const newConversationData = {
-        userId: actorUid,
+        userId: actor,
         organizationId,
         title: title || 'Nova Conversa',
         messages, // Storing in the simple, client-facing format
@@ -84,10 +85,21 @@ export const updateConversation = async (actorUid: string, conversationId: strin
         throw new Error("Conversa não encontrada ou acesso negado.");
     }
     
-    const updateData = {
-        ...updatedConversation,
+    const updateData: any = {
         updatedAt: FieldValue.serverTimestamp(),
+    };
+
+    if(updatedConversation.messages) {
+        // Ensure messages are in the correct {role, content} format
+        updateData.messages = updatedConversation.messages.map(m => ({
+            role: m.role,
+            content: m.content
+        }))
     }
+    if(updatedConversation.title) {
+        updateData.title = updatedConversation.title;
+    }
+
 
     await conversationRef.update(updateData);
 };
@@ -103,14 +115,12 @@ export const getConversation = async ({ conversationId, actor }: { conversationI
     
     const data = doc.data();
     if (!data) return null;
-
-    const sanitizedData = convertTimestampsToISO(data);
     
-    const clientMessages = normalizeDbMessagesToPulseMessages(sanitizedData.messages || []);
+    const clientMessages = normalizeDbMessagesToPulseMessages(data.messages || []);
 
     const parsedData = ConversationSchema.parse({
         id: doc.id,
-        title: sanitizedData.title,
+        title: data.title,
         messages: clientMessages,
     })
     
