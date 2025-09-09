@@ -54,7 +54,8 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "companyId", "order": "ASCENDING" },
-        { "fieldPath": "dueDate", "order": "DESCENDING" }
+        { "fieldPath": "dueDate", "order": "DESCENDING" },
+        { "fieldPath": "__name__", "order": "DESCENDING" }
       ]
     },
     {
@@ -74,5 +75,7 @@
         { "fieldPath": "updatedAt", "order": "DESCENDING" }
       ]
     }
-  ]
+  ],
+  "fieldOverrides": []
 }
+

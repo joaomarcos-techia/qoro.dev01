@@ -1,7 +1,21 @@
+
 # Settings to manage and configure a Firebase App Hosting backend.
 # https://firebase.google.com/docs/app-hosting/configure
 
 runConfig:
-  # Increase this value if you'd like to automatically spin up
-  # more instances in response to increased traffic.
-  maxInstances: 1
+  # Aumente este valor para escalar automaticamente
+  # mais instâncias em resposta ao aumento de tráfego.
+  maxInstances: 2
+  # Aumente a memória para evitar problemas de desempenho, especialmente com Genkit.
+  memory: 1GiB
+
+# Opcional: Especifique o tempo limite para solicitações (em segundos).
+# O padrão é 60s. Aumente se você tiver fluxos de IA de longa duração.
+# timeoutSeconds: 120
+
+# Opcional: Defina variáveis de ambiente para produção.
+# É mais seguro gerenciá-las através da interface do Firebase ou usando secrets.
+# https://firebase.google.com/docs/app-hosting/configure-backend#set-env
+# env:
+#   - variable: EXAMPLE_ENV_VARIABLE
+#     value: "example-value"
