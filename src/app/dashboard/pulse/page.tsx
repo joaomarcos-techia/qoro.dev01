@@ -53,7 +53,7 @@ export default function PulsePage() {
     setError(null);
   
     try {
-        const { id: newConversationId } = await createConversation(currentUser.uid, 'Nova Conversa', [userMessage]);
+        const { id: newConversationId } = await createConversation({ actor: currentUser.uid, messages: [userMessage], title: input.substring(0, 30) });
 
         if (newConversationId) {
              startTransition(() => {
