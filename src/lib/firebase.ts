@@ -2,8 +2,6 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -16,6 +14,13 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
+// Security check: ensure environment variables are loaded
+if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+    throw new Error(
+      'As variáveis de ambiente do Firebase não estão definidas. ' +
+      'Verifique se NEXT_PUBLIC_FIREBASE_API_KEY e NEXT_PUBLIC_FIREBASE_PROJECT_ID estão no seu arquivo .env'
+    );
+}
 
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
