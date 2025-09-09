@@ -44,7 +44,7 @@ function messageDataToDbMessage(m: MessageData): { role: 'user' | 'assistant'; c
 
 function isTitleDerivedFromFirstMessage(suggested: string | undefined, firstUser: string | undefined): boolean {
   if (!suggested || !suggested.trim()) return false;
-  if (!firstUser || !firstUser.trim()) return true; // Avoind setting title if there's no user message to compare
+  if (!firstUser || !firstUser.trim()) return true; // Avoid setting title if there's no user message to compare
   const a = suggested.trim().toLowerCase();
   const b = firstUser.trim().toLowerCase();
   if (!a || !b) return true;
@@ -65,32 +65,23 @@ const pulseFlow = ai.defineFlow(
   async (input) => {
     const { actor, messages: clientMessages } = input;
     let { conversationId } = input;
-
-    // 1) Normalize all incoming messages from the client to Genkit's MessageData format.
-    const standardizedClientMessages: MessageData[] = (clientMessages || []).map(msg => {
-      if ('content' in msg && !('parts' in msg)) {
-        return { role: msg.role === 'assistant' ? 'model' : msg.role, parts: [{ text: msg.content }] } as MessageData;
-      }
-      return msg as MessageData;
-    });
     
-    const lastUserMessage = standardizedClientMessages[standardizedClientMessages.length - 1];
-    const prompt = lastUserMessage?.parts?.map(p => (p as any).text).join('\n') || '';
-
-    // 2) Load conversation or create it immediately if it doesn't exist.
-    let conversation: Conversation | null = null;
+    // 1) Get the last user message from the client to use as the prompt.
+    const lastUserMessageContent = clientMessages[clientMessages.length - 1];
+    const incomingMsg: MessageData = { role: 'user', parts: [{ text: lastUserMessageContent.content }] };
+    
+    // 2) Load or create conversation.
+    let conversation: Conversation;
     if (conversationId) {
-      conversation = await pulseService.getConversation({ conversationId, actor });
+        const loadedConv = await pulseService.getConversation({ conversationId, actor });
+        if (!loadedConv) throw new Error("Conversation not found or access denied.");
+        conversation = loadedConv;
     } else {
-      // Create conversation now so we have an ID from the start.
-      const dbInitialMessage = messageDataToDbMessage(lastUserMessage);
-      const created = await pulseService.createConversation({ actor, messages: [dbInitialMessage], title: prompt.substring(0, 30) });
-      conversationId = created.id;
-      conversation = { id: created.id, messages: [dbInitialMessage], title: created.title };
-    }
-    
-    if (!conversation) {
-        throw new Error("Falha ao carregar ou criar a conversa.");
+        // Create conversation immediately with the first message.
+        const dbInitialMessage = messageDataToDbMessage(incomingMsg);
+        const created = await pulseService.createConversation({ actor, messages: [dbInitialMessage], title: incomingMsg.parts[0].text.substring(0, 30) });
+        conversation = { ...created, messages: [dbInitialMessage] }; // Use the created data
+        conversationId = created.id;
     }
     
     // 3) Build history from the database (which is the source of truth).
@@ -118,8 +109,8 @@ Você é o QoroPulse, um agente de IA especialista em gestão empresarial e o pa
 
     const llmRequest = {
       model: 'googleai/gemini-1.5-flash',
-      prompt,
-      history: dbHistory.slice(0, -1), // History from DB, excluding the last message which is the new prompt
+      prompt: incomingMsg.parts[0].text,
+      history: dbHistory,
       tools: [getCrmSummaryTool, listTasksTool, createTaskTool, listAccountsTool, getFinanceSummaryTool, listSuppliersTool],
       toolConfig: { context: { actor } },
       system: systemPrompt,
@@ -130,8 +121,8 @@ Você é o QoroPulse, um agente de IA especialista em gestão empresarial e o pa
     let llmResponse = await ai.generate(llmRequest as any);
 
     // 6) Handle tool requests if any
+    let historyForNextTurn: MessageData[] = [...dbHistory, incomingMsg];
     const toolRequests = llmResponse.toolRequests();
-    let historyForNextTurn: MessageData[] = [...dbHistory];
 
     if (toolRequests.length > 0) {
         historyForNextTurn.push({ role: 'model', parts: toolRequests.map(tr => ({ toolRequest: tr })) as any });
@@ -166,12 +157,13 @@ Você é o QoroPulse, um agente de IA especialista em gestão empresarial e o pa
 
     // 9) Save the assistant's response to the database
     const assistantMessage: PulseMessage = { role: 'assistant', content: assistantResponseText };
-    const updatedMessages = [...(conversation.messages || []), assistantMessage];
-    await pulseService.updateConversation(actor, conversationId, { messages: updatedMessages, title: titleToSave });
+    const allMessages = [...dbHistory.map(messageDataToDbMessage), messageDataToDbMessage(incomingMsg), assistantMessage];
+    
+    await pulseService.updateConversation(actor, conversationId!, { messages: allMessages, title: titleToSave });
 
     // 10) Return the response to the client
     return {
-      conversationId: conversationId,
+      conversationId: conversationId!,
       title: titleToSave,
       response: assistantMessage,
     };

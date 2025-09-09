@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { User as FirebaseUser, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { askPulse } from '@/ai/flows/pulse-flow';
+import { createConversation } from '@/services/pulseService';
 import type { PulseMessage } from '@/ai/schemas';
 
 const ArrowUpIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -49,15 +50,16 @@ export default function PulsePage() {
     try {
         const userMessage: PulseMessage = { role: 'user', content: input };
         
-        // The flow will now create the conversation on the first go
-        const result = await askPulse({
-          messages: [userMessage],
+        // Step 1: Create the conversation immediately to get an ID
+        const newConversation = await createConversation({
           actor: currentUser.uid,
+          messages: [userMessage],
+          title: input.substring(0, 50), // Use prompt as initial title
         });
 
-        if (result.conversationId) {
+        if (newConversation.id) {
              startTransition(() => {
-                router.push(`/dashboard/pulse/${result.conversationId}`);
+                router.push(`/dashboard/pulse/${newConversation.id}`);
             });
         } else {
             throw new Error("Não foi possível criar a conversa e obter um ID.");

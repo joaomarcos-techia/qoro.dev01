@@ -33,12 +33,15 @@ const normalizeDbMessagesToPulseMessages = (messages: any[]): PulseMessage[] => 
     
     return messages
         .map((msg: any): PulseMessage | null => {
-            if (!msg || !msg.role || typeof msg.content !== 'string') return null;
+            if (!msg || !msg.role) return null;
 
-            const role = msg.role === 'model' ? 'assistant' : msg.role === 'tool' ? 'assistant' : msg.role;
+            const role = msg.role === 'model' ? 'assistant' : msg.role;
             if (role !== 'user' && role !== 'assistant') return null;
+            
+            // Handle both `content` and `parts` format from DB
+            const content = msg.content || (msg.parts && msg.parts.length > 0 && msg.parts[0].text) || '';
 
-            return { role, content: msg.content };
+            return { role, content };
         })
         .filter((msg): msg is PulseMessage => msg !== null);
 };
@@ -46,6 +49,7 @@ const normalizeDbMessagesToPulseMessages = (messages: any[]): PulseMessage[] => 
 
 export const createConversation = async ({ actor, messages, title }: { actor: string; messages: PulseMessage[]; title?: string; }): Promise<{ id: string, title: string }> => {
     const { organizationId } = await getAdminAndOrg(actor);
+    const newDocRef = adminDb.collection('pulse_conversations').doc();
 
     const newConversationData = {
         userId: actor,
@@ -56,8 +60,8 @@ export const createConversation = async ({ actor, messages, title }: { actor: st
         updatedAt: FieldValue.serverTimestamp(),
     };
 
-    const docRef = await adminDb.collection('pulse_conversations').add(newConversationData);
-    return { id: docRef.id, title: newConversationData.title };
+    await newDocRef.set(newConversationData);
+    return { id: newDocRef.id, title: newConversationData.title };
 };
 
 export const updateConversation = async (actorUid: string, conversationId: string, updatedConversation: Partial<Omit<Conversation, 'id'>>): Promise<void> => {

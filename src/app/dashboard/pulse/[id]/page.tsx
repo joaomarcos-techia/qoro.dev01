@@ -53,8 +53,13 @@ export default function PulseConversationPage() {
         const conversation = await getConversation({ conversationId, actor: currentUser.uid });
         if (conversation && Array.isArray(conversation.messages)) {
             setMessages(conversation.messages);
+
+            // If the conversation is new and only has one message (from the user),
+            // trigger the AI response immediately.
+            if (conversation.messages.length === 1 && conversation.messages[0].role === 'user') {
+                handleSendMessage(undefined, true);
+            }
         } else {
-            // If conversation is not found, maybe redirect to a 404 or the base pulse page
             setError("Não foi possível encontrar a conversa ou você não tem permissão para vê-la.");
             setTimeout(() => router.push('/dashboard/pulse'), 3000);
         }
@@ -79,29 +84,43 @@ export default function PulseConversationPage() {
     }
   }, [messages, isSending]);
 
-  const handleSendMessage = async (e?: FormEvent) => {
+  const handleSendMessage = async (e?: FormEvent, isInitialTrigger = false) => {
     e?.preventDefault();
-    if (!input.trim() || isSending || !currentUser || !conversationId) return;
+    
+    // For automatic trigger, there's no input from the text area.
+    // For manual trigger, ensure there's text.
+    if (!isInitialTrigger && !input.trim()) return;
+    if (isSending || !currentUser || !conversationId) return;
   
-    const userMessage: PulseMessage = { role: 'user', content: input };
-    setMessages(prev => [...prev, userMessage]); // Optimistic UI update
-    setInput('');
+    const userMessage: PulseMessage = isInitialTrigger 
+        ? messages[0] // Use the message that's already in history
+        : { role: 'user', content: input };
+
+    // Only add to messages array if it's a new manual message
+    if (!isInitialTrigger) {
+        setMessages(prev => [...prev, userMessage]);
+        setInput('');
+    }
+    
     setIsSending(true);
     setError(null);
 
     try {
       const result = await askPulse({
-          messages: [...messages, userMessage],
+          // Send the current message history along with the new prompt
+          messages: isInitialTrigger ? messages : [...messages, userMessage],
           actor: currentUser.uid,
           conversationId: conversationId,
       });
-      // Replace optimistic update with final state from server to ensure consistency
+      // The flow now returns the AI's response, just append it.
       setMessages(prev => [...prev, result.response]);
     } catch (error: any) {
         console.error("Error calling Pulse Flow:", error);
         setError(error.message || 'Ocorreu um erro ao comunicar com a IA. Tente novamente.');
-        // Revert optimistic update on failure by removing the last user message
-        setMessages(prev => prev.slice(0, -1));
+        // Revert optimistic update only for manual messages on failure
+        if (!isInitialTrigger) {
+            setMessages(prev => prev.slice(0, -1));
+        }
     } finally {
         setIsSending(false);
     }
