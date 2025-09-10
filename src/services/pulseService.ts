@@ -40,11 +40,16 @@ const normalizeDbMessagesToPulseMessages = (messages: any[]): PulseMessage[] => 
             if (role !== 'user' && role !== 'assistant') return null;
             
             // Handle both `content` and `parts` format from DB
-            const content = msg.content || (msg.parts && msg.parts.length > 0 && msg.parts[0].text) || '';
+            let content = '';
+            if(typeof msg.content === 'string') {
+                content = msg.content;
+            } else if (Array.isArray(msg.parts) && msg.parts[0] && typeof msg.parts[0].text === 'string') {
+                content = msg.parts[0].text;
+            }
 
             return { role, content };
         })
-        .filter((msg): msg is PulseMessage => msg !== null);
+        .filter((msg): msg is PulseMessage => msg !== null && typeof msg.content === 'string');
 };
 
 

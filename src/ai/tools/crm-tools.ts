@@ -17,7 +17,7 @@ const CrmSummaryDataSchema = z.object({
 // Define the single, authoritative tool for getting all relevant CRM data for Pulse.
 export const getCrmSummaryTool = ai.defineTool(
     {
-        name: 'getCrmSummaryTool',
+        name: 'getCrmSummary',
         description: 'Use esta ferramenta para obter um resumo dos dados de clientes (CRM). Retorna o número total de clientes e a quantidade de leads ativos no funil de vendas. É a ferramenta principal para perguntas sobre o estado geral dos clientes e do funil.',
         inputSchema: z.object({}),
         outputSchema: CrmSummaryDataSchema,

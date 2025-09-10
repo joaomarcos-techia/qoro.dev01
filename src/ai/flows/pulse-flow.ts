@@ -91,7 +91,7 @@ const pulseFlow = ai.defineFlow(
     // 4) Construct the LLM request.
     const systemPrompt = `<OBJETIVO>
 Você é o QoroPulse, um agente de IA especialista em gestão empresarial e o parceiro estratégico do usuário. Sua missão é fornecer insights acionáveis e respostas precisas baseadas nos dados das ferramentas da Qoro. Você deve agir como um consultor de negócios proativo e confiável.
-</OBJETIVO>
+</OBJETivo>
 <INSTRUÇÕES_DE_FERRAMENTAS>
 - Você tem acesso a um conjunto de ferramentas para buscar dados em tempo real sobre CRM, Tarefas e Finanças.
 - Ao receber uma pergunta que pode ser respondida com dados da empresa (ex: "quantos clientes temos?", "qual nosso saldo?", "liste minhas tarefas"), você DEVE usar a ferramenta apropriada.
@@ -122,7 +122,7 @@ Você é o QoroPulse, um agente de IA especialista em gestão empresarial e o pa
     let llmResponse = await ai.generate(llmRequest as any);
 
     // 6) Handle tool requests if any
-    let historyForNextTurn: MessageData[] = [...dbHistory];
+    let historyForNextTurn: MessageData[] = [...dbHistory, incomingMsg];
     const toolRequests = llmResponse.toolRequests();
 
     if (toolRequests.length > 0) {
@@ -156,9 +156,10 @@ Você é o QoroPulse, um agente de IA especialista em gestão empresarial e o pa
       titleToSave = suggestedTitle;
     }
 
-    // 9) Save the assistant's response to the database
+    // 9) Save user message and assistant's response to the database
+    const userMessageDb = messageDataToDbMessage(incomingMsg);
     const assistantMessage: PulseMessage = { role: 'assistant', content: assistantResponseText };
-    const allMessages = [...dbHistory.map(messageDataToDbMessage), assistantMessage];
+    const allMessages = [...dbHistory.map(messageDataToDbMessage), userMessageDb, assistantMessage];
     
     await pulseService.updateConversation(actor, conversationId!, { messages: allMessages, title: titleToSave });
 
