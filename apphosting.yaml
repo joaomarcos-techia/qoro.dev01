@@ -4,13 +4,13 @@
 runConfig:
   # Aumente este valor para escalar automaticamente
   # mais instâncias em resposta ao aumento de tráfego.
-  maxInstances: 2
+  maxInstances: 5
   # Aumente a memória para evitar problemas de desempenho, especialmente com Genkit.
-  memory: 1GiB
+  memory: 5GiB
 
 # Opcional: Especifique o tempo limite para solicitações (em segundos).
 # O padrão é 60s. Aumente se você tiver fluxos de IA de longa duração.
-# timeoutSeconds: 120
+# timeoutSeconds: 160
 
 # Opcional: Defina variáveis de ambiente para produção.
 # É mais seguro gerenciá-las através da interface do Firebase ou usando secrets.
