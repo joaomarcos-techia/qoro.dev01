@@ -13,7 +13,7 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { GitCompareArrows, Upload, FileText, Loader2, ServerCrash, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
+import { GitCompareArrows, Upload, FileText, Loader2, ServerCrash, MoreHorizontal, Edit, Trash2, Eye } from 'lucide-react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { listReconciliations, createReconciliation, deleteReconciliation, updateReconciliation } from '@/ai/flows/reconciliation-flow';
@@ -170,7 +170,7 @@ export default function ConciliacaoPage() {
             </TableHeader>
             <TableBody>
               {reconciliations.map((rec) => (
-                <TableRow key={rec.id} onClick={() => router.push(`/dashboard/finance/conciliacao/${rec.id}`)} className="cursor-pointer">
+                <TableRow key={rec.id}>
                   <TableCell className="font-medium flex items-center">
                     <FileText className="w-4 h-4 mr-3 text-muted-foreground" />
                     {rec.fileName}
@@ -187,9 +187,13 @@ export default function ConciliacaoPage() {
                         </DropdownMenuTrigger>
                          <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                             <DropdownMenuItem onClick={() => router.push(`/dashboard/finance/conciliacao/${rec.id}`)}>
+                                <Eye className="mr-2 h-4 w-4" />
+                                <span>Visualizar</span>
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={(e) => handleEditClick(e, rec)}>
                                <Edit className="mr-2 h-4 w-4" />
-                               <span>Editar</span>
+                               <span>Renomear</span>
                             </DropdownMenuItem>
                              <AlertDialogTrigger asChild>
                                 <DropdownMenuItem className="text-red-500 focus:bg-destructive/20 focus:text-red-400" onClick={(e) => e.stopPropagation()}>
@@ -225,7 +229,7 @@ export default function ConciliacaoPage() {
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Editar Nome do Arquivo</DialogTitle>
+                <DialogTitle>Renomear Arquivo</DialogTitle>
                 <DialogDescription>
                     Altere o nome de identificação para esta conciliação.
                 </DialogDescription>
