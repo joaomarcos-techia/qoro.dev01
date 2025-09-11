@@ -162,7 +162,7 @@ export default function ConciliacaoPage() {
     return (
         <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="hover:bg-transparent">
                 <TableHead>Arquivo</TableHead>
                 <TableHead>Data de Envio</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
@@ -170,7 +170,7 @@ export default function ConciliacaoPage() {
             </TableHeader>
             <TableBody>
               {reconciliations.map((rec) => (
-                <TableRow key={rec.id}>
+                <TableRow key={rec.id} className="cursor-pointer" onClick={() => router.push(`/dashboard/finance/conciliacao/${rec.id}`)}>
                   <TableCell className="font-medium flex items-center">
                     <FileText className="w-4 h-4 mr-3 text-muted-foreground" />
                     {rec.fileName}
@@ -203,7 +203,7 @@ export default function ConciliacaoPage() {
                             </AlertDialogTrigger>
                         </DropdownMenuContent>
                        </DropdownMenu>
-                       <AlertDialogContent>
+                       <AlertDialogContent className="rounded-xl">
                             <AlertDialogHeader>
                                 <AlertDialogTitle>Excluir conciliação?</AlertDialogTitle>
                                 <AlertDialogDescription>
@@ -227,7 +227,7 @@ export default function ConciliacaoPage() {
   return (
     <div>
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent>
+        <DialogContent className="rounded-xl">
             <DialogHeader>
                 <DialogTitle>Renomear Arquivo</DialogTitle>
                 <DialogDescription>
