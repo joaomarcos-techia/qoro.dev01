@@ -48,6 +48,7 @@ export const listReconciliations = async (actor: string): Promise<z.infer<typeof
     const snapshot = await adminDb.collection('reconciliations')
         .where('companyId', '==', organizationId)
         .orderBy('createdAt', 'desc')
+        .orderBy('__name__', 'desc') // Added for query stability
         .get();
 
     if (snapshot.empty) {
