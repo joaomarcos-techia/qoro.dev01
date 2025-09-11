@@ -1,24 +1,28 @@
-
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { GitCompareArrows, Upload, FileText, Loader2, ServerCrash, Clock, Eye } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import {
+    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+    Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter
+} from '@/components/ui/dialog';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator
+} from '@/components/ui/dropdown-menu';
+import { GitCompareArrows, Upload, FileText, Loader2, ServerCrash, Clock, Eye, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { listReconciliations, createReconciliation } from '@/ai/flows/reconciliation-flow';
+import { listReconciliations, createReconciliation, deleteReconciliation, updateReconciliation } from '@/ai/flows/reconciliation-flow';
 import { ReconciliationProfile } from '@/ai/schemas';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-  } from '@/components/ui/table';
+    Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table';
 
 export default function ConciliacaoPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -28,6 +32,10 @@ export default function ConciliacaoPage() {
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const router = useRouter();
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedReconciliation, setSelectedReconciliation] = useState<ReconciliationProfile | null>(null);
+  const [newFileName, setNewFileName] = useState('');
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -43,9 +51,9 @@ export default function ConciliacaoPage() {
     try {
       const result = await listReconciliations({ actor: currentUser.uid });
       setReconciliations(result);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to fetch reconciliations:', err);
-      setError('Não foi possível carregar o histórico de conciliações.');
+      setError(err.message || 'Não foi possível carregar o histórico de conciliações.');
     } finally {
       setIsLoading(false);
     }
@@ -88,6 +96,34 @@ export default function ConciliacaoPage() {
       reader.readAsText(file);
     }
   };
+
+  const handleEditClick = (rec: ReconciliationProfile) => {
+    setSelectedReconciliation(rec);
+    setNewFileName(rec.fileName);
+    setIsEditModalOpen(true);
+  };
+  
+  const handleSaveName = async () => {
+    if (!selectedReconciliation || !currentUser) return;
+    try {
+        await updateReconciliation({id: selectedReconciliation.id, fileName: newFileName, actor: currentUser.uid});
+        setIsEditModalOpen(false);
+        fetchReconciliations();
+    } catch (err) {
+        console.error("Failed to update name", err);
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if(!currentUser) return;
+    try {
+        await deleteReconciliation({id, actor: currentUser.uid});
+        fetchReconciliations();
+    } catch (err) {
+        console.error("Failed to delete", err);
+    }
+  };
+
 
   const renderContent = () => {
     if (isLoading) {
@@ -139,10 +175,45 @@ export default function ConciliacaoPage() {
                   </TableCell>
                   <TableCell>{format(new Date(rec.createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</TableCell>
                   <TableCell className="text-right">
-                    <Button variant="outline" size="sm" onClick={() => router.push(`/dashboard/finance/conciliacao/${rec.id}`)} className="rounded-xl">
+                    <Button variant="outline" size="sm" onClick={() => router.push(`/dashboard/finance/conciliacao/${rec.id}`)} className="rounded-xl mr-2">
                       <Eye className="w-4 h-4 mr-2" />
                       Visualizar
                     </Button>
+                    <AlertDialog>
+                       <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">Abrir menu</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                         <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => handleEditClick(rec)}>
+                               <Edit className="mr-2 h-4 w-4" />
+                               <span>Editar</span>
+                            </DropdownMenuItem>
+                             <AlertDialogTrigger asChild>
+                                <DropdownMenuItem className="text-red-500 focus:bg-destructive/20 focus:text-red-400">
+                                   <Trash2 className="mr-2 h-4 w-4" />
+                                   <span>Excluir</span>
+                                </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                        </DropdownMenuContent>
+                       </DropdownMenu>
+                       <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Excluir conciliação?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Esta ação não pode ser desfeita. Isso excluirá permanentemente o registro de conciliação para o arquivo <span className='font-bold'>{rec.fileName}</span>.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDelete(rec.id)} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">Excluir</AlertDialogAction>
+                            </AlertDialogFooter>
+                       </AlertDialogContent>
+                    </AlertDialog>
                   </TableCell>
                 </TableRow>
               ))}
@@ -153,6 +224,21 @@ export default function ConciliacaoPage() {
 
   return (
     <div>
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Editar Nome do Arquivo</DialogTitle>
+                <DialogDescription>
+                    Altere o nome de identificação para esta conciliação.
+                </DialogDescription>
+            </DialogHeader>
+            <Input value={newFileName} onChange={(e) => setNewFileName(e.target.value)} />
+            <DialogFooter>
+                <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>Cancelar</Button>
+                <Button onClick={handleSaveName}>Salvar</Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-4xl font-bold text-foreground">Conciliação Bancária</h1>

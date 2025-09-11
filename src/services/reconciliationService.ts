@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Service for managing bank reconciliations in Firestore.
@@ -14,7 +13,7 @@ export const createReconciliation = async (input: z.infer<typeof ReconciliationS
     const { organizationId, adminUid } = await getAdminAndOrg(input.actor);
 
     const newReconciliationData = {
-        companyId: organizationId, // Use companyId to match other services
+        companyId: organizationId,
         userId: adminUid,
         fileName: input.fileName,
         ofxContent: input.ofxContent,
@@ -48,7 +47,7 @@ export const listReconciliations = async (actor: string): Promise<z.infer<typeof
     const snapshot = await adminDb.collection('reconciliations')
         .where('companyId', '==', organizationId)
         .orderBy('createdAt', 'desc')
-        .orderBy('__name__', 'desc') // Added for query stability
+        .orderBy('__name__', 'desc')
         .get();
 
     if (snapshot.empty) {
@@ -63,4 +62,30 @@ export const listReconciliations = async (actor: string): Promise<z.infer<typeof
             createdAt: data.createdAt.toDate().toISOString(),
         });
     });
+};
+
+export const updateReconciliation = async (id: string, fileName: string, actor: string) => {
+    const { organizationId } = await getAdminAndOrg(actor);
+    const docRef = adminDb.collection('reconciliations').doc(id);
+    const docSnap = await docRef.get();
+
+    if (!docSnap.exists || docSnap.data()?.companyId !== organizationId) {
+        throw new Error('Conciliação não encontrada ou acesso negado.');
+    }
+    
+    await docRef.update({ fileName });
+    return { id };
+};
+
+export const deleteReconciliation = async (id: string, actor: string) => {
+    const { organizationId } = await getAdminAndOrg(actor);
+    const docRef = adminDb.collection('reconciliations').doc(id);
+    const docSnap = await docRef.get();
+    
+    if (!docSnap.exists || docSnap.data()?.companyId !== organizationId) {
+        throw new Error('Conciliação não encontrada ou acesso negado.');
+    }
+
+    await docRef.delete();
+    return { id, success: true };
 };
