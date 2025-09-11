@@ -139,7 +139,7 @@ export default function ConciliacaoPage() {
                   </TableCell>
                   <TableCell>{format(new Date(rec.createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</TableCell>
                   <TableCell className="text-right">
-                    <Button variant="outline" size="sm" onClick={() => router.push(`/dashboard/finance/conciliacao/${rec.id}`)}>
+                    <Button variant="outline" size="sm" onClick={() => router.push(`/dashboard/finance/conciliacao/${rec.id}`)} className="rounded-xl">
                       <Eye className="w-4 h-4 mr-2" />
                       Visualizar
                     </Button>

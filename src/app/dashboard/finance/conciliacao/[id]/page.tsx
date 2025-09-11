@@ -124,7 +124,7 @@ export default function ConciliacaoDetailPage() {
     <div>
       <div className="flex justify-between items-center mb-8">
         <div>
-          <Button variant="outline" onClick={() => router.push('/dashboard/finance/conciliacao')} className="mb-4">
+          <Button variant="outline" onClick={() => router.push('/dashboard/finance/conciliacao')} className="mb-4 rounded-xl">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Voltar para o Histórico
           </Button>
