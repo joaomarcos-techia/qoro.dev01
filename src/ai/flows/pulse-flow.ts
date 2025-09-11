@@ -67,32 +67,26 @@ const pulseFlow = ai.defineFlow(
     const { actor, messages: clientMessages } = input;
     let { conversationId } = input;
     
-    // 1) Get the last user message from the client to use as the prompt.
-    // **FIX**: Safely access the last message.
     const lastUserMessage = clientMessages.length > 0 ? clientMessages[clientMessages.length - 1] : null;
     if (!lastUserMessage || lastUserMessage.role !== 'user') {
       throw new Error("A última mensagem deve ser do usuário para que a IA possa responder.");
     }
     const incomingMsg: MessageData = { role: 'user', parts: [{ text: lastUserMessage.content }] };
     
-    // 2) Load or create conversation.
     let conversation: Conversation;
     if (conversationId) {
         const loadedConv = await pulseService.getConversation({ conversationId, actor });
         if (!loadedConv) throw new Error("Conversa não encontrada ou acesso negado.");
         conversation = loadedConv;
     } else {
-        // Create conversation immediately with the first message.
         const dbInitialMessage = messageDataToDbMessage(incomingMsg);
         const created = await pulseService.createConversation({ actor, messages: [dbInitialMessage], title: incomingMsg.parts[0].text.substring(0, 30) });
-        conversation = { ...created, messages: [dbInitialMessage] }; // Use the created data
+        conversation = { ...created, messages: [dbInitialMessage] };
         conversationId = created.id;
     }
     
-    // 3) Build history from the database (which is the source of truth).
     const dbHistory: MessageData[] = (conversation.messages || []).map(dbMessageToMessageData);
 
-    // 4) Construct the LLM request.
     const systemPrompt = `<OBJETIVO>
 Você é o QoroPulse, um agente de IA especialista em gestão empresarial e o parceiro estratégico do usuário. Sua missão é fornecer insights acionáveis e respostas precisas baseadas nos dados das ferramentas da Qoro. Você deve agir como um consultor de negócios proativo e confiável.
 </OBJETivo>
@@ -122,12 +116,10 @@ Você é o QoroPulse, um agente de IA especialista em gestão empresarial e o pa
       output: { schema: PulseResponseSchema },
     } as const;
 
-    // 5) First LLM call
     let llmResponse = await ai.generate(llmRequest as any);
 
-    // 6) Handle tool requests if any
     let historyForNextTurn: MessageData[] = [...dbHistory, incomingMsg];
-    const toolRequests = llmResponse.toolRequests();
+    const toolRequests = llmResponse.toolRequests ?? [];
 
     if (toolRequests.length > 0) {
         historyForNextTurn.push({ role: 'model', parts: toolRequests.map(tr => ({ toolRequest: tr })) as any });
@@ -146,30 +138,24 @@ Você é o QoroPulse, um agente de IA especialista em gestão empresarial e o pa
         llmResponse = await ai.generate({ ...(llmRequest as any), history: historyForNextTurn });
     }
 
-    // 7) Extract final response and title
     const finalOutput = llmResponse?.output;
     if (!finalOutput) throw new Error('A IA não conseguiu gerar uma resposta final.');
     
     const assistantResponseText = finalOutput.response;
     const suggestedTitle = finalOutput.title;
 
-    // 8) Validate and set the title
     const firstUserContent = dbHistory.find(m => m.role === 'user')?.parts.map(p => (p as any).text).join('\n') || '';
     let titleToSave = conversation.title;
     if (suggestedTitle && !isTitleDerivedFromFirstMessage(suggestedTitle, firstUserContent)) {
       titleToSave = suggestedTitle;
     }
 
-    // 9) Save user message and assistant's response to the database
     const userMessageDb = messageDataToDbMessage(incomingMsg);
     const assistantMessage: PulseMessage = { role: 'assistant', content: assistantResponseText };
-    // The history from the DB (`dbHistory`) already contains the initial user message if it's a new chat,
-    // so we only need to add the assistant's final response to it.
     const allMessages = [...dbHistory, userMessageDb, assistantMessage];
     
     await pulseService.updateConversation(actor, conversationId!, { messages: allMessages, title: titleToSave });
 
-    // 10) Return the response to the client
     return {
       conversationId: conversationId!,
       title: titleToSave,
@@ -203,5 +189,3 @@ const deleteConversationFlow = ai.defineFlow(
 export async function deleteConversation(input: DeleteConversationInput): Promise<{ success: boolean }> {
   return deleteConversationFlow(input);
 }
-
-    
