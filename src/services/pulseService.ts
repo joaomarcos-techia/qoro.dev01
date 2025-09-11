@@ -1,12 +1,10 @@
-
 'use server';
 /**
- * @fileOverview Service layer for QoroPulse conversations.
- * Handles Firestore persistence with strict sanitization.
+ * @fileOverview Service layer for QoroPulse conversations, using Firebase Admin SDK.
  */
 
-import { db } from '@/lib/firebase';
-import { collection, doc, setDoc, getDoc, updateDoc, deleteDoc, query, where, getDocs, Timestamp, orderBy } from 'firebase/firestore';
+import { adminDb } from '@/lib/firebase-admin';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { z } from 'zod';
 import {
   PulseMessage,
@@ -15,8 +13,8 @@ import {
 } from '@/ai/schemas';
 
 const FirestoreMessageSchema = z.object({
-    role: z.enum(['user', 'assistant']),
-    content: z.string().default(''),
+  role: z.enum(['user', 'assistant']),
+  content: z.string().default(''),
 });
 
 const FirestoreConversationSchema = z.object({
@@ -53,22 +51,23 @@ export async function createConversation(input: {
 }): Promise<ConversationProfile> {
   const safeMessages = sanitizeMessages(input.messages);
 
-  const docRef = doc(collection(db, COLLECTION));
+  const docRef = adminDb.collection(COLLECTION).doc();
 
   const convData = {
     userId: input.actor,
     title: input.title?.trim() || safeMessages[0]?.content?.slice(0, 30) || 'Nova conversa',
     messages: safeMessages,
-    createdAt: Timestamp.now(),
-    updatedAt: Timestamp.now(),
+    createdAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
   };
 
-  await setDoc(docRef, convData);
+  await docRef.set(convData);
   
   return {
       id: docRef.id,
-      ...convData,
-      updatedAt: convData.updatedAt.toDate().toISOString(),
+      title: convData.title,
+      messages: convData.messages,
+      updatedAt: new Date().toISOString(), // Approximate for immediate return
   };
 }
 
@@ -79,12 +78,12 @@ export async function getConversation(input: {
   conversationId: string;
   actor: string;
 }): Promise<ConversationProfile | null> {
-  const conversationRef = doc(db, COLLECTION, input.conversationId);
-  const snap = await getDoc(conversationRef);
-  if (!snap.exists()) return null;
+  const conversationRef = adminDb.collection(COLLECTION).doc(input.conversationId);
+  const snap = await conversationRef.get();
+  if (!snap.exists) return null;
 
   const data = snap.data();
-  if (data.userId !== input.actor) return null; // Security check
+  if (data?.userId !== input.actor) return null; // Security check
 
   return {
     id: snap.id,
@@ -102,16 +101,15 @@ export async function updateConversation(
   conversationId: string,
   update: { messages?: PulseMessage[]; title?: string }
 ): Promise<void> {
-    const docRef = doc(db, COLLECTION, conversationId);
+    const docRef = adminDb.collection(COLLECTION).doc(conversationId);
     
-    // Security check: ensure user is allowed to update
-    const currentDoc = await getDoc(docRef);
-    if (!currentDoc.exists() || currentDoc.data().userId !== actor) {
+    const currentDoc = await docRef.get();
+    if (!currentDoc.exists || currentDoc.data()?.userId !== actor) {
         throw new Error("Conversation not found or access denied.");
     }
     
     const payload: any = {
-        updatedAt: Timestamp.now(),
+        updatedAt: FieldValue.serverTimestamp(),
     };
     if (update.title) {
         payload.title = update.title;
@@ -120,7 +118,7 @@ export async function updateConversation(
         payload.messages = sanitizeMessages(update.messages);
     }
     
-    await updateDoc(docRef, payload);
+    await docRef.update(payload);
 }
 
 /**
@@ -130,14 +128,14 @@ export async function deleteConversation(input: {
   conversationId: string;
   actor: string;
 }): Promise<{ success: boolean }> {
-  const conversationRef = doc(db, COLLECTION, input.conversationId);
+  const conversationRef = adminDb.collection(COLLECTION).doc(input.conversationId);
   
-  const currentDoc = await getDoc(conversationRef);
-   if (!currentDoc.exists() || currentDoc.data().userId !== input.actor) {
+  const currentDoc = await conversationRef.get();
+   if (!currentDoc.exists || currentDoc.data()?.userId !== input.actor) {
         return { success: false };
     }
 
-  await deleteDoc(conversationRef);
+  await conversationRef.delete();
   return { success: true };
 }
 
@@ -145,12 +143,15 @@ export async function deleteConversation(input: {
  * 🔹 List all conversations for an actor
  */
 export async function listConversations(input: { actor: string }): Promise<z.infer<typeof ConversationProfileSchema>[]> {
-    const q = query(
-        collection(db, COLLECTION), 
-        where("userId", "==", input.actor),
-        orderBy("updatedAt", "desc")
-    );
-    const snap = await getDocs(q);
+    const q = adminDb.collection(COLLECTION)
+        .where("userId", "==", input.actor)
+        .orderBy("updatedAt", "desc");
+
+    const snap = await q.get();
+
+    if (snap.empty) {
+        return [];
+    }
 
     const list: z.infer<typeof ConversationProfileSchema>[] = [];
     snap.forEach((doc) => {
