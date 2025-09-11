@@ -162,7 +162,7 @@ export default function ConciliacaoPage() {
     return (
         <Table>
             <TableHeader>
-              <TableRow className="hover:bg-transparent">
+              <TableRow className="hover:bg-transparent rounded-lg">
                 <TableHead>Arquivo</TableHead>
                 <TableHead>Data de Envio</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
@@ -185,18 +185,18 @@ export default function ConciliacaoPage() {
                                 <MoreHorizontal className="h-4 w-4" />
                             </Button>
                         </DropdownMenuTrigger>
-                         <DropdownMenuContent align="end">
+                         <DropdownMenuContent align="end" className="rounded-2xl">
                             <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                             <DropdownMenuItem onClick={() => router.push(`/dashboard/finance/conciliacao/${rec.id}`)}>
+                             <DropdownMenuItem onClick={() => router.push(`/dashboard/finance/conciliacao/${rec.id}`)} className="rounded-xl">
                                 <Eye className="mr-2 h-4 w-4" />
                                 <span>Visualizar</span>
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={(e) => handleEditClick(e, rec)}>
+                            <DropdownMenuItem onClick={(e) => handleEditClick(e, rec)} className="rounded-xl">
                                <Edit className="mr-2 h-4 w-4" />
                                <span>Renomear</span>
                             </DropdownMenuItem>
                              <AlertDialogTrigger asChild>
-                                <DropdownMenuItem className="text-red-500 focus:bg-destructive/20 focus:text-red-400" onClick={(e) => e.stopPropagation()}>
+                                <DropdownMenuItem className="text-red-500 focus:bg-destructive/20 focus:text-red-400 rounded-xl" onClick={(e) => e.stopPropagation()}>
                                    <Trash2 className="mr-2 h-4 w-4" />
                                    <span>Excluir</span>
                                 </DropdownMenuItem>
