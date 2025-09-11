@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, GitCompareArrows, Loader2, ServerCrash } from 'lucide-react';
+import { ArrowLeft, GitCompareArrows, Loader2, ServerCrash, CheckCircle, GitMerge } from 'lucide-react';
 import { TransactionComparisonTable, OfxTransaction } from '@/components/dashboard/finance/TransactionComparisonTable';
 import { TransactionProfile, ReconciliationProfile } from '@/ai/schemas';
 import { listTransactions } from '@/ai/flows/finance-management';
@@ -96,7 +96,7 @@ export default function ConciliacaoDetailPage() {
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px]">
             <Loader2 className="w-12 h-12 text-primary animate-spin" />
-            <p className="mt-4 text-muted-foreground">Carregando dados da conciliação...</p>
+            <p className="mt-4 text-muted-foreground">Analisando e comparando transações...</p>
           </div>
         );
     }

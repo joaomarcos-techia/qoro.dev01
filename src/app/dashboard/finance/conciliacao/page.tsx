@@ -112,10 +112,10 @@ export default function ConciliacaoPage() {
     if (reconciliations.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center text-center min-h-[400px]">
-                <Clock className="w-16 h-16 text-muted-foreground/30 mb-4" />
+                <GitCompareArrows className="w-16 h-16 text-muted-foreground/30 mb-4" />
                 <h3 className="text-xl font-bold text-foreground">Nenhuma conciliação anterior</h3>
                 <p className="text-muted-foreground mt-2 max-w-md">
-                    Importe seu primeiro extrato bancário no formato OFX para começar o processo e criar um histórico.
+                    Importe seu primeiro extrato bancário no formato OFX para começar a comparar e manter um histórico.
                 </p>
             </div>
         );
