@@ -17,14 +17,14 @@ export const getAdminAndOrg = async (actorUid: string) => {
     }
     
     const userData = userDoc.data()!;
-    const organizationId = userData.organizationId;
+    const companyId = userData.organizationId;
     const userRole = userData.role || 'member'; 
     
-    if (!organizationId) {
+    if (!companyId) {
         throw new Error('User does not belong to an organization.');
     }
     
-    const orgDocRef = adminDb.collection('organizations').doc(organizationId);
+    const orgDocRef = adminDb.collection('organizations').doc(companyId);
     const orgDoc = await orgDocRef.get();
     if (!orgDoc.exists) {
         throw new Error('Organization not found.');
@@ -38,7 +38,8 @@ export const getAdminAndOrg = async (actorUid: string) => {
     return { 
         userDocRef, 
         userData, 
-        organizationId, 
+        companyId: companyId, 
+        organizationId: companyId, // Keep for backward compatibility where needed
         organizationName: orgData.name, 
         userRole, 
         adminUid: actorUid,
