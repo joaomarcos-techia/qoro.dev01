@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Robust QoroPulse conversation flow with tool integration and safe history handling.
@@ -96,8 +97,10 @@ const pulseFlow = ai.defineFlow(
       conversationHistory = [lastUserMessage];
       currentTitle = created.title;
     }
-
-    let aiHistory = toAIFriendlyHistory(conversationHistory);
+    
+    // Safety check for history
+    const safeHistory = conversationHistory || [];
+    let aiHistory = toAIFriendlyHistory(safeHistory);
 
     const systemPrompt = `<OBJETIVO>
 Você é o QoroPulse, um agente de IA especialista em gestão empresarial e parceiro estratégico do usuário. 
@@ -171,7 +174,7 @@ Sua missão é fornecer insights acionáveis e respostas precisas baseadas nos d
     const suggestedTitle = finalOutput.title;
 
     const firstUserContent =
-      conversationHistory.find((m) => m.role === 'user')?.content || '';
+      safeHistory.find((m) => m.role === 'user')?.content || '';
     let titleToSave = currentTitle;
     if (
       suggestedTitle &&
@@ -185,7 +188,7 @@ Sua missão é fornecer insights acionáveis e respostas precisas baseadas nos d
       content: assistantResponseText || '',
     };
 
-    const allMessages = [...conversationHistory, assistantMessage]
+    const allMessages = [...safeHistory, assistantMessage]
 
     await pulseService.updateConversation(actor, conversationId!, {
       messages: allMessages,
