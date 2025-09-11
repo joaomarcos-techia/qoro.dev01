@@ -54,7 +54,7 @@ export const listReconciliations = async (actor: string): Promise<z.infer<typeof
         return [];
     }
 
-    return snapshot.docs.map(doc => {
+    const reconciliations = snapshot.docs.map(doc => {
         const data = doc.data();
         return ReconciliationProfileSchema.parse({
             id: doc.id,
@@ -62,6 +62,8 @@ export const listReconciliations = async (actor: string): Promise<z.infer<typeof
             createdAt: data.createdAt.toDate().toISOString(),
         });
     });
+    
+    return reconciliations;
 };
 
 export const updateReconciliation = async (id: string, fileName: string, actor: string) => {
