@@ -68,14 +68,18 @@ const pulseFlow = ai.defineFlow(
     let { conversationId } = input;
     
     // 1) Get the last user message from the client to use as the prompt.
-    const lastUserMessageContent = clientMessages[clientMessages.length - 1];
-    const incomingMsg: MessageData = { role: 'user', parts: [{ text: lastUserMessageContent.content }] };
+    // **FIX**: Safely access the last message.
+    const lastUserMessage = clientMessages.length > 0 ? clientMessages[clientMessages.length - 1] : null;
+    if (!lastUserMessage || lastUserMessage.role !== 'user') {
+      throw new Error("A última mensagem deve ser do usuário para que a IA possa responder.");
+    }
+    const incomingMsg: MessageData = { role: 'user', parts: [{ text: lastUserMessage.content }] };
     
     // 2) Load or create conversation.
     let conversation: Conversation;
     if (conversationId) {
         const loadedConv = await pulseService.getConversation({ conversationId, actor });
-        if (!loadedConv) throw new Error("Conversation not found or access denied.");
+        if (!loadedConv) throw new Error("Conversa não encontrada ou acesso negado.");
         conversation = loadedConv;
     } else {
         // Create conversation immediately with the first message.
@@ -159,7 +163,9 @@ Você é o QoroPulse, um agente de IA especialista em gestão empresarial e o pa
     // 9) Save user message and assistant's response to the database
     const userMessageDb = messageDataToDbMessage(incomingMsg);
     const assistantMessage: PulseMessage = { role: 'assistant', content: assistantResponseText };
-    const allMessages = [...dbHistory.map(messageDataToDbMessage), userMessageDb, assistantMessage];
+    // The history from the DB (`dbHistory`) already contains the initial user message if it's a new chat,
+    // so we only need to add the assistant's final response to it.
+    const allMessages = [...dbHistory, userMessageDb, assistantMessage];
     
     await pulseService.updateConversation(actor, conversationId!, { messages: allMessages, title: titleToSave });
 
@@ -197,3 +203,5 @@ const deleteConversationFlow = ai.defineFlow(
 export async function deleteConversation(input: DeleteConversationInput): Promise<{ success: boolean }> {
   return deleteConversationFlow(input);
 }
+
+    

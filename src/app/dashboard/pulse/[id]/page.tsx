@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect, FormEvent, useCallback, useTransition } from 'react';
@@ -9,7 +10,7 @@ import { User as FirebaseUser, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { askPulse } from '@/ai/flows/pulse-flow';
 import { getConversation } from '@/services/pulseService';
-import type { PulseMessage } from '@/ai/schemas';
+import type { PulseMessage, Conversation } from '@/ai/schemas';
 
 const ArrowUpIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" {...props}>
@@ -32,6 +33,30 @@ export default function PulseConversationPage() {
   const params = useParams();
   const conversationId = params.id as string;
 
+  // Helper to normalize messages for display
+  const normalizeMessagesForDisplay = (dbMessages: any[]): PulseMessage[] => {
+    if (!dbMessages || !Array.isArray(dbMessages)) return [];
+    
+    return dbMessages
+        .map((msg: any): PulseMessage | null => {
+            if (!msg || !msg.role) return null;
+            const role = msg.role === 'model' ? 'assistant' : msg.role;
+            if (role !== 'user' && role !== 'assistant') return null;
+
+            let content = '';
+            if (typeof msg.content === 'string') {
+                content = msg.content;
+            } else if (Array.isArray(msg.parts)) {
+                content = msg.parts.map((p: any) => p.text).filter(Boolean).join('\n');
+            }
+            
+            if (content) {
+                return { role, content };
+            }
+            return null;
+        })
+        .filter((msg): msg is PulseMessage => msg !== null);
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -51,13 +76,15 @@ export default function PulseConversationPage() {
     setError(null);
     try {
         const conversation = await getConversation({ conversationId, actor: currentUser.uid });
-        if (conversation && Array.isArray(conversation.messages)) {
-            setMessages(conversation.messages);
 
-            // If the conversation is new and only has one message (from the user),
-            // trigger the AI response immediately.
-            if (conversation.messages.length === 1 && conversation.messages[0].role === 'user') {
-                handleSendMessage(undefined, true);
+        if (conversation && Array.isArray(conversation.messages)) {
+            const displayMessages = normalizeMessagesForDisplay(conversation.messages);
+            setMessages(displayMessages);
+
+            // If the conversation is new and only has one user message, trigger AI response.
+            if (displayMessages.length === 1 && displayMessages[0].role === 'user') {
+                // Pass the single message to the flow
+                handleSendMessage(undefined, [displayMessages[0]]);
             }
         } else {
             setError("Não foi possível encontrar a conversa ou você não tem permissão para vê-la.");
@@ -84,21 +111,21 @@ export default function PulseConversationPage() {
     }
   }, [messages, isSending]);
 
-  const handleSendMessage = async (e?: FormEvent, isInitialTrigger = false) => {
+  const handleSendMessage = async (e?: FormEvent, initialMessages?: PulseMessage[]) => {
     e?.preventDefault();
     
-    // For automatic trigger, there's no input from the text area.
-    // For manual trigger, ensure there's text.
+    const isInitialTrigger = !!initialMessages;
+    
     if (!isInitialTrigger && !input.trim()) return;
     if (isSending || !currentUser || !conversationId) return;
-  
-    const userMessage: PulseMessage = isInitialTrigger 
-        ? messages[0] // Use the message that's already in history
-        : { role: 'user', content: input };
 
-    // Only add to messages array if it's a new manual message
+    const messagesToSend: PulseMessage[] = isInitialTrigger 
+        ? initialMessages
+        : [...messages, { role: 'user', content: input }];
+
+    // Optimistic UI update for manual messages
     if (!isInitialTrigger) {
-        setMessages(prev => [...prev, userMessage]);
+        setMessages(messagesToSend);
         setInput('');
     }
     
@@ -107,12 +134,10 @@ export default function PulseConversationPage() {
 
     try {
       const result = await askPulse({
-          // Send the current message history along with the new prompt
-          messages: isInitialTrigger ? messages : [...messages, userMessage],
+          messages: messagesToSend,
           actor: currentUser.uid,
           conversationId: conversationId,
       });
-      // The flow now returns the AI's response, just append it.
       setMessages(prev => [...prev, result.response]);
     } catch (error: any) {
         console.error("Error calling Pulse Flow:", error);
@@ -222,3 +247,5 @@ export default function PulseConversationPage() {
     </div>
   );
 }
+
+    
