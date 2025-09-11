@@ -6,36 +6,41 @@
  */
 
 import { db } from '@/lib/firebase';
-import { collection, doc, setDoc, getDoc, updateDoc, deleteDoc, query, where, getDocs } from 'firebase/firestore';
+import { collection, doc, setDoc, getDoc, updateDoc, deleteDoc, query, where, getDocs, Timestamp, orderBy } from 'firebase/firestore';
 import { z } from 'zod';
 import {
   PulseMessage,
-  Conversation as ConversationSchemaType
+  Conversation as ConversationProfile,
+  ConversationProfileSchema,
 } from '@/ai/schemas';
 
-const ConversationSchema = z.object({
-  id: z.string(),
-  actor: z.string(),
-  title: z.string().default('Nova conversa'),
-  updatedAt: z.any().optional(),
-  messages: z.array(
-    z.object({
-      role: z.enum(['user', 'assistant']),
-      content: z.string().default(''),
-    })
-  ),
+const FirestoreMessageSchema = z.object({
+    role: z.enum(['user', 'assistant']),
+    content: z.string().default(''),
 });
-export type Conversation = z.infer<typeof ConversationSchema>;
+
+const FirestoreConversationSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  userId: z.string(),
+  organizationId: z.string(),
+  messages: z.array(FirestoreMessageSchema),
+  createdAt: z.any(),
+  updatedAt: z.any(),
+});
+export type FirestoreConversation = z.infer<typeof FirestoreConversationSchema>;
+
 
 const COLLECTION = 'pulse_conversations';
 
 /**
  * 🔹 Sanitize messages to ensure Firestore compatibility
  */
-function sanitizeMessages(messages: PulseMessage[]): PulseMessage[] {
-  return (messages || []).map((m) => ({
-    role: m.role,
-    content: m.content ?? '',
+function sanitizeMessages(messages?: PulseMessage[]): z.infer<typeof FirestoreMessageSchema>[] {
+  if (!Array.isArray(messages)) return [];
+  return messages.map((m) => ({
+    role: m.role || 'user',
+    content: m.content || '',
   }));
 }
 
@@ -46,21 +51,27 @@ export async function createConversation(input: {
   actor: string;
   messages: PulseMessage[];
   title?: string;
-}): Promise<Conversation> {
+}): Promise<ConversationProfile> {
   const safeMessages = sanitizeMessages(input.messages);
 
-  const newId = crypto.randomUUID();
-  const conv: Conversation = {
-    id: newId,
-    actor: input.actor,
+  const docRef = doc(collection(db, COLLECTION));
+
+  const convData = {
+    userId: input.actor,
+    organizationId: 'temp_org_id', // This should be retrieved from user claims or another service
     title: input.title?.trim() || safeMessages[0]?.content?.slice(0, 30) || 'Nova conversa',
     messages: safeMessages,
-    updatedAt: new Date(),
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
   };
 
-  const conversationRef = doc(db, COLLECTION, newId);
-  await setDoc(conversationRef, conv, { merge: true });
-  return conv;
+  await setDoc(docRef, convData);
+  
+  return {
+      id: docRef.id,
+      ...convData,
+      updatedAt: convData.updatedAt.toDate().toISOString(),
+  };
 }
 
 /**
@@ -69,17 +80,20 @@ export async function createConversation(input: {
 export async function getConversation(input: {
   conversationId: string;
   actor: string;
-}): Promise<Conversation | null> {
+}): Promise<ConversationProfile | null> {
   const conversationRef = doc(db, COLLECTION, input.conversationId);
   const snap = await getDoc(conversationRef);
   if (!snap.exists()) return null;
 
   const data = snap.data();
-  if (!data) return null;
-  if (data.actor !== input.actor) return null; // segurança: cada ator só vê suas conversas
+  if (data.userId !== input.actor) return null; // Security check
 
-  const parsed = ConversationSchema.safeParse({ id: snap.id, ...data });
-  return parsed.success ? parsed.data : null;
+  return {
+    id: snap.id,
+    title: data.title,
+    messages: data.messages,
+    updatedAt: data.updatedAt.toDate().toISOString()
+  };
 }
 
 /**
@@ -90,19 +104,25 @@ export async function updateConversation(
   conversationId: string,
   update: { messages?: PulseMessage[]; title?: string }
 ): Promise<void> {
-  const safeMessages = sanitizeMessages(update.messages || []);
-
-  const payload: any = {
-    updatedAt: new Date(),
-  };
-  if(update.title) payload.title = update.title;
-  if(safeMessages.length > 0) payload.messages = safeMessages;
-
-
-  if (Object.keys(payload).length <= 1) return; // nada para salvar além da data
-
-  const conversationRef = doc(db, COLLECTION, conversationId);
-  await updateDoc(conversationRef, payload);
+    const docRef = doc(db, COLLECTION, conversationId);
+    
+    // Security check: ensure user is allowed to update
+    const currentDoc = await getDoc(docRef);
+    if (!currentDoc.exists() || currentDoc.data().userId !== actor) {
+        throw new Error("Conversation not found or access denied.");
+    }
+    
+    const payload: any = {
+        updatedAt: Timestamp.now(),
+    };
+    if (update.title) {
+        payload.title = update.title;
+    }
+    if (update.messages) {
+        payload.messages = sanitizeMessages(update.messages);
+    }
+    
+    await updateDoc(docRef, payload);
 }
 
 /**
@@ -112,10 +132,13 @@ export async function deleteConversation(input: {
   conversationId: string;
   actor: string;
 }): Promise<{ success: boolean }> {
-  const conv = await getConversation(input);
-  if (!conv) return { success: false };
-
   const conversationRef = doc(db, COLLECTION, input.conversationId);
+  
+  const currentDoc = await getDoc(conversationRef);
+   if (!currentDoc.exists() || currentDoc.data().userId !== input.actor) {
+        return { success: false };
+    }
+
   await deleteDoc(conversationRef);
   return { success: true };
 }
@@ -123,14 +146,22 @@ export async function deleteConversation(input: {
 /**
  * 🔹 List all conversations for an actor
  */
-export async function listConversations(input: { actor: string }): Promise<ConversationSchemaType[]> {
-    const q = query(collection(db, COLLECTION), where("actor", "==", input.actor));
+export async function listConversations(input: { actor: string }): Promise<z.infer<typeof ConversationProfileSchema>[]> {
+    const q = query(
+        collection(db, COLLECTION), 
+        where("userId", "==", input.actor),
+        orderBy("updatedAt", "desc")
+    );
     const snap = await getDocs(q);
 
-    const list: ConversationSchemaType[] = [];
+    const list: z.infer<typeof ConversationProfileSchema>[] = [];
     snap.forEach((doc) => {
         const data = doc.data();
-        const parsed = ConversationSchema.safeParse({ id: doc.id, ...data });
+        const parsed = ConversationProfileSchema.safeParse({ 
+            id: doc.id, 
+            title: data.title,
+            updatedAt: data.updatedAt?.toDate().toISOString()
+        });
         if (parsed.success) {
             list.push(parsed.data);
         } else {
@@ -138,9 +169,5 @@ export async function listConversations(input: { actor: string }): Promise<Conve
         }
     });
 
-    return list.sort((a, b) => {
-        const dateA = a.updatedAt ? new Date(a.updatedAt.seconds * 1000) : new Date(0);
-        const dateB = b.updatedAt ? new Date(b.updatedAt.seconds * 1000) : new Date(0);
-        return dateB.getTime() - dateA.getTime();
-    });
+    return list;
 }
