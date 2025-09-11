@@ -211,8 +211,8 @@ export default function ConciliacaoPage() {
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDelete(rec.id)} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">Excluir</AlertDialogAction>
+                                <AlertDialogCancel className="rounded-xl">Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDelete(rec.id)} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-xl">Excluir</AlertDialogAction>
                             </AlertDialogFooter>
                        </AlertDialogContent>
                     </AlertDialog>
@@ -234,10 +234,10 @@ export default function ConciliacaoPage() {
                     Altere o nome de identificação para esta conciliação.
                 </DialogDescription>
             </DialogHeader>
-            <Input value={newFileName} onChange={(e) => setNewFileName(e.target.value)} />
+            <Input value={newFileName} onChange={(e) => setNewFileName(e.target.value)} className="rounded-xl" />
             <DialogFooter>
-                <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>Cancelar</Button>
-                <Button onClick={handleSaveName}>Salvar</Button>
+                <Button variant="outline" onClick={() => setIsEditModalOpen(false)} className="rounded-xl">Cancelar</Button>
+                <Button onClick={handleSaveName} className="rounded-xl">Salvar</Button>
             </DialogFooter>
         </DialogContent>
       </Dialog>
