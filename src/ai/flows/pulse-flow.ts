@@ -20,24 +20,17 @@ const PulseResponseSchema = z.object({
 /**
  * Determines if a suggested title is just a derivative of the user's first message,
  * which is often not a useful title.
- * @param suggested The title suggested by the AI.
- * @param firstUser The content of the first user message.
- * @returns True if the title is considered a weak derivative, false otherwise.
  */
-function isTitleDerivedFromFirstMessage(
-  suggested: string | undefined,
-  firstUser: string | undefined
-): boolean {
+function isTitleDerivedFromFirstMessage(suggested: string | undefined, firstUser: string | undefined): boolean {
   if (!suggested || !suggested.trim()) return false;
-  if (!firstUser || !firstUser.trim()) return true; // If no user message, any title is fine.
+  if (!firstUser || !firstUser.trim()) return true; 
   const a = suggested.trim().toLowerCase();
   const b = firstUser.trim().toLowerCase();
-  if (!a || !b) return true; // Should not happen, but for safety.
+  if (!a || !b) return true;
   if (a === b) return true;
   if (a.includes(b) || b.includes(a)) return true;
   return false;
 }
-
 
 // --- Main flow ---
 const pulseFlow = ai.defineFlow(
@@ -51,7 +44,7 @@ const pulseFlow = ai.defineFlow(
     let { conversationId } = input;
 
     // 1. Validate and prepare the user's message
-    const lastUserMessage = clientMessages.length > 0 ? clientMessages[clientMessages.length - 1] : null;
+    const lastUserMessage = clientMessages[clientMessages.length - 1];
     if (!lastUserMessage || lastUserMessage.role !== 'user' || !lastUserMessage.content.trim()) {
       throw new Error('A última mensagem deve ser do usuário e não pode estar vazia.');
     }
@@ -116,7 +109,7 @@ Sua missão é fornecer insights acionáveis e respostas precisas baseadas nos d
       system: systemPrompt,
       output: { schema: PulseResponseSchema },
     };
-
+    
     let llmResponse = await ai.generate(llmRequest as any);
 
     const toolRequests = llmResponse.toolRequests();
@@ -150,7 +143,6 @@ Sua missão é fornecer insights acionáveis e respostas precisas baseadas nos d
       });
     }
 
-
     // 7. Process and save the final results
     const finalOutput = llmResponse.output();
     if (!finalOutput || !finalOutput.response) throw new Error('A IA não conseguiu gerar uma resposta final.');
@@ -161,10 +153,7 @@ Sua missão é fornecer insights acionáveis e respostas precisas baseadas nos d
     // Decide whether to update the conversation title
     const firstUserContent = conversationHistory.find((m) => m.role === 'user')?.content || '';
     let titleToSave = currentTitle;
-    if (
-      suggestedTitle &&
-      !isTitleDerivedFromFirstMessage(suggestedTitle, firstUserContent)
-    ) {
+    if (suggestedTitle && !isTitleDerivedFromFirstMessage(suggestedTitle, firstUserContent)) {
       titleToSave = suggestedTitle;
     }
 
@@ -193,9 +182,7 @@ Sua missão é fornecer insights acionáveis e respostas precisas baseadas nos d
 /**
  * Client-callable wrapper for the main pulse flow.
  */
-export async function askPulse(
-  input: z.infer<typeof AskPulseInputSchema>
-): Promise<z.infer<typeof AskPulseOutputSchema>> {
+export async function askPulse(input: z.infer<typeof AskPulseInputSchema>): Promise<z.infer<typeof AskPulseOutputSchema>> {
   return pulseFlow(input);
 }
 
@@ -220,8 +207,6 @@ const deleteConversationFlow = ai.defineFlow(
 /**
  * Client-callable wrapper to delete a conversation.
  */
-export async function deleteConversation(
-  input: DeleteConversationInput
-): Promise<{ success: boolean }> {
+export async function deleteConversation(input: DeleteConversationInput): Promise<{ success: boolean }> {
   return deleteConversationFlow(input);
 }
