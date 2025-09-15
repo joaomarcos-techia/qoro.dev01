@@ -130,6 +130,7 @@ Sua missão é fornecer insights acionáveis e respostas precisas baseadas nos d
           toolRequests.map(async (toolRequest) => {
             try {
               const output = await ai.runTool(toolRequest as any, { context: { actor } });
+              // Return the Part object directly
               return { toolResponse: { name: toolRequest.name, output } };
             } catch (err: any) {
               return {
@@ -142,7 +143,8 @@ Sua missão é fornecer insights acionáveis e respostas precisas baseadas nos d
           })
         );
         
-        aiHistory.push({ role: 'tool', parts: toolOutputs.map(output => output) });
+        // Pass the array of Part objects directly
+        aiHistory.push({ role: 'tool', parts: toolOutputs });
         
         // Generate the final response using the tool outputs
         llmResponse = await ai.generate({
