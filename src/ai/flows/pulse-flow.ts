@@ -11,51 +11,29 @@ import { createTaskTool, listTasksTool } from '@/ai/tools/task-tools';
 import { listAccountsTool, getFinanceSummaryTool } from '@/ai/tools/finance-tools';
 import { listSuppliersTool } from '@/ai/tools/supplier-tools';
 import * as pulseService from '@/services/pulseService';
-import { MessageData } from 'genkit/experimental/ai';
+import { MessageData, Part } from 'genkit/ai';
 
 const PulseResponseSchema = z.object({
-  response: z.string(),
-  title: z.string().optional(),
+  response: z.string().describe('The final, user-facing response from the AI.'),
+  title: z.string().optional().describe('A short, descriptive title for the conversation if a new one is needed.'),
 });
 
-function extractToolRequests(llmResponse: any): any[] {
-    return llmResponse?.toolRequests || llmResponse?.toolCalls || llmResponse?.requests || [];
-}
-
 /**
- * Garantia: nunca mandar mensagens inválidas para a IA ou para o banco de dados.
- * - Filtra mensagens nulas ou com conteúdo vazio.
- * - Garante que o `content` seja sempre uma string.
+ * Determines if a suggested title is just a derivative of the user's first message,
+ * which is often not a useful title.
+ * @param suggested The title suggested by the AI.
+ * @param firstUser The content of the first user message.
+ * @returns True if the title is considered a weak derivative, false otherwise.
  */
-function sanitizeMessages(messages?: PulseMessage[]): PulseMessage[] {
-  if (!Array.isArray(messages)) {
-    return [];
-  }
-  return messages
-    .filter(m => m && typeof m.content === 'string' && m.content.trim() !== '')
-    .map(m => ({
-      role: m.role,
-      content: m.content.trim(),
-    }));
-}
-
-
-function toAIFriendlyHistory(messages: PulseMessage[]): MessageData[] {
-  return sanitizeMessages(messages).map((msg) => ({
-    role: msg.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: msg.content }],
-  }));
-}
-
 function isTitleDerivedFromFirstMessage(
   suggested: string | undefined,
   firstUser: string | undefined
 ): boolean {
   if (!suggested || !suggested.trim()) return false;
-  if (!firstUser || !firstUser.trim()) return true;
+  if (!firstUser || !firstUser.trim()) return true; // If no user message, any title is fine.
   const a = suggested.trim().toLowerCase();
   const b = firstUser.trim().toLowerCase();
-  if (!a || !b) return true;
+  if (!a || !b) return true; // Should not happen, but for safety.
   if (a === b) return true;
   if (a.includes(b) || b.includes(a)) return true;
   return false;
@@ -73,12 +51,13 @@ const pulseFlow = ai.defineFlow(
     const { actor, messages: clientMessages } = input;
     let { conversationId } = input;
 
-    const lastUserMessage =
-      clientMessages.length > 0 ? clientMessages[clientMessages.length - 1] : null;
-    if (!lastUserMessage || lastUserMessage.role !== 'user') {
-      throw new Error('A última mensagem deve ser do usuário para que a IA possa responder.');
+    // 1. Validate and prepare the user's message
+    const lastUserMessage = clientMessages.length > 0 ? clientMessages[clientMessages.length - 1] : null;
+    if (!lastUserMessage || lastUserMessage.role !== 'user' || !lastUserMessage.content.trim()) {
+      throw new Error('A última mensagem deve ser do usuário e não pode estar vazia.');
     }
 
+    // 2. Load or create the conversation
     let conversationHistory: PulseMessage[];
     let currentTitle: string;
 
@@ -91,17 +70,20 @@ const pulseFlow = ai.defineFlow(
       const created = await pulseService.createConversation({
         actor,
         messages: [lastUserMessage],
-        title: lastUserMessage.content.substring(0, 30),
+        title: lastUserMessage.content.substring(0, 30), // Initial temporary title
       });
       conversationId = created.id;
       conversationHistory = [lastUserMessage];
       currentTitle = created.title;
     }
     
-    // Safety check for history
-    const safeHistory = conversationHistory || [];
-    let aiHistory = toAIFriendlyHistory(safeHistory);
+    // 3. Build a safe and compliant history for the AI model
+    const aiHistory: MessageData[] = conversationHistory.map(msg => ({
+        role: msg.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: msg.content }],
+    }));
 
+    // 4. Define the AI's "personality" and instructions
     const systemPrompt = `<OBJETIVO>
 Você é o QoroPulse, um agente de IA especialista em gestão empresarial e parceiro estratégico do usuário. 
 Sua missão é fornecer insights acionáveis e respostas precisas baseadas nos dados da Qoro.
@@ -119,6 +101,7 @@ Sua missão é fornecer insights acionáveis e respostas precisas baseadas nos d
 - Combine dados de diferentes ferramentas em uma resposta coesa e natural.
 </TOM_E_VOZ>`;
 
+    // 5. Generate the initial response, potentially requesting tools
     const llmRequest = {
       model: 'googleai/gemini-1.5-flash',
       history: aiHistory,
@@ -137,10 +120,17 @@ Sua missão é fornecer insights acionáveis e respostas precisas baseadas nos d
 
     let llmResponse = await ai.generate(llmRequest as any);
 
-    const toolRequests = extractToolRequests(llmResponse);
+    const toolRequests = llmResponse.toolRequests;
     
-    if (toolRequests.length > 0) {
-        aiHistory.push({ role: 'model', parts: toolRequests.map((tr) => ({ toolRequest: tr }))});
+    // 6. If tools are requested, execute them and get a final response
+    if (toolRequests && toolRequests.length > 0) {
+        const toolRequestPart: Part = { toolRequest: toolRequests[0] };
+        for (let i = 1; i < toolRequests.length; i++) {
+           toolRequestPart.toolRequest!.id += ',' + toolRequests[i].id;
+           toolRequestPart.toolRequest!.input[i] = toolRequests[i].input;
+        }
+
+        aiHistory.push({ role: 'model', parts: [toolRequestPart] });
         
         const toolOutputs = await Promise.all(
           toolRequests.map(async (toolRequest) => {
@@ -160,21 +150,22 @@ Sua missão é fornecer insights acionáveis e respostas precisas baseadas nos d
         
         aiHistory.push({ role: 'tool', parts: toolOutputs });
         
+        // Generate the final response using the tool outputs
         llmResponse = await ai.generate({
           ...(llmRequest as any),
           history: aiHistory,
         });
     }
 
-
-    const finalOutput = (llmResponse as any)?.output;
+    // 7. Process and save the final results
+    const finalOutput = llmResponse.output;
     if (!finalOutput || !finalOutput.response) throw new Error('A IA não conseguiu gerar uma resposta final.');
 
     const assistantResponseText = finalOutput.response;
     const suggestedTitle = finalOutput.title;
 
-    const firstUserContent =
-      safeHistory.find((m) => m.role === 'user')?.content || '';
+    // Decide whether to update the conversation title
+    const firstUserContent = conversationHistory.find((m) => m.role === 'user')?.content || '';
     let titleToSave = currentTitle;
     if (
       suggestedTitle &&
@@ -183,18 +174,20 @@ Sua missão é fornecer insights acionáveis e respostas precisas baseadas nos d
       titleToSave = suggestedTitle;
     }
 
+    // Prepare the assistant's message for saving
     const assistantMessage: PulseMessage = {
       role: 'assistant',
       content: assistantResponseText || '',
     };
 
-    const allMessages = [...safeHistory, assistantMessage]
-
+    // Update the conversation in Firestore
+    const allMessages = [...conversationHistory, assistantMessage]
     await pulseService.updateConversation(actor, conversationId!, {
       messages: allMessages,
       title: titleToSave,
     });
 
+    // 8. Return the final result to the client
     return {
       conversationId: conversationId!,
       title: titleToSave,
@@ -203,6 +196,9 @@ Sua missão é fornecer insights acionáveis e respostas precisas baseadas nos d
   }
 );
 
+/**
+ * Client-callable wrapper for the main pulse flow.
+ */
 export async function askPulse(
   input: z.infer<typeof AskPulseInputSchema>
 ): Promise<z.infer<typeof AskPulseOutputSchema>> {
@@ -227,6 +223,9 @@ const deleteConversationFlow = ai.defineFlow(
   }
 );
 
+/**
+ * Client-callable wrapper to delete a conversation.
+ */
 export async function deleteConversation(
   input: DeleteConversationInput
 ): Promise<{ success: boolean }> {
