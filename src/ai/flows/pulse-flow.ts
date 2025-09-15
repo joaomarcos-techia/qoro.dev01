@@ -119,43 +119,40 @@ Sua missão é fornecer insights acionáveis e respostas precisas baseadas nos d
 
     let llmResponse = await ai.generate(llmRequest as any);
 
-    const toolRequests = llmResponse.toolRequests;
+    const toolRequests = llmResponse.toolRequests();
     
     // 6. If tools are requested, execute them and get a final response
     if (toolRequests && toolRequests.length > 0) {
-        // Add the model's tool request to the history
-        const toolRequestPart: Part = { toolRequest: toolRequests[0] };
-        aiHistory.push({ role: 'model', parts: [toolRequestPart] });
+      
+      const modelMessage: MessageData = { role: 'model', parts: toolRequests.map(toolRequest => ({ toolRequest })) };
+      aiHistory.push(modelMessage);
 
-        const toolOutputs = await Promise.all(
-            toolRequests.map(async (toolRequest) => {
-              try {
-                const output = await ai.runTool(toolRequest as any, { context: { actor } });
-                // Return the Part object directly
-                return { toolResponse: { name: toolRequest.name, output } };
-              } catch (err: any) {
-                return {
-                  toolResponse: {
-                    name: toolRequest.name,
-                    output: { __error: true, message: String(err?.message || err) },
-                  },
-                };
-              }
-            })
-        );
-        
-        // Add the tool's response to the history
-        aiHistory.push({ role: 'tool', parts: toolOutputs });
-        
-        // Generate the final response using the tool outputs
-        llmResponse = await ai.generate({
-          ...(llmRequest as any),
-          history: aiHistory,
-        });
+      const toolOutputs: Part[] = [];
+      for (const toolRequest of toolRequests) {
+        try {
+          const output = await ai.runTool(toolRequest as any, { context: { actor } });
+          toolOutputs.push({ toolResponse: { name: toolRequest.name, output } });
+        } catch (err: any) {
+          toolOutputs.push({
+            toolResponse: {
+              name: toolRequest.name,
+              output: { __error: true, message: String(err?.message || err) },
+            },
+          });
+        }
+      }
+      
+      aiHistory.push({ role: 'tool', parts: toolOutputs });
+      
+      llmResponse = await ai.generate({
+        ...(llmRequest as any),
+        history: aiHistory,
+      });
     }
 
+
     // 7. Process and save the final results
-    const finalOutput = llmResponse.output;
+    const finalOutput = llmResponse.output();
     if (!finalOutput || !finalOutput.response) throw new Error('A IA não conseguiu gerar uma resposta final.');
 
     const assistantResponseText = finalOutput.response;
