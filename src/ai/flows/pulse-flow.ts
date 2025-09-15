@@ -124,14 +124,8 @@ Sua missão é fornecer insights acionáveis e respostas precisas baseadas nos d
     
     // 6. If tools are requested, execute them and get a final response
     if (toolRequests && toolRequests.length > 0) {
-        const toolRequestPart: Part = { toolRequest: toolRequests[0] };
-        for (let i = 1; i < toolRequests.length; i++) {
-           toolRequestPart.toolRequest!.id += ',' + toolRequests[i].id;
-           toolRequestPart.toolRequest!.input[i] = toolRequests[i].input;
-        }
+        aiHistory.push({ role: 'model', parts: toolRequests.map(toolRequest => ({ toolRequest })) });
 
-        aiHistory.push({ role: 'model', parts: [toolRequestPart] });
-        
         const toolOutputs = await Promise.all(
           toolRequests.map(async (toolRequest) => {
             try {
@@ -148,7 +142,7 @@ Sua missão é fornecer insights acionáveis e respostas precisas baseadas nos d
           })
         );
         
-        aiHistory.push({ role: 'tool', parts: toolOutputs });
+        aiHistory.push({ role: 'tool', parts: toolOutputs.map(output => output) });
         
         // Generate the final response using the tool outputs
         llmResponse = await ai.generate({
