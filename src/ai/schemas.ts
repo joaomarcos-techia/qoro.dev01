@@ -243,14 +243,12 @@ export type TaskProfile = z.infer<typeof TaskProfileSchema>;
 
 
 // Schemas for QoroPulse
-// Este é o schema que o frontend envia e que usamos no DB. Simples e robusto.
 export const PulseMessageSchema = z.object({
-    role: z.enum(['user', 'assistant']), 
+    role: z.enum(['user', 'assistant', 'tool', 'model']), 
     content: z.string(),
 });
 export type PulseMessage = z.infer<typeof PulseMessageSchema>;
 
-// Este é o schema para a conversa completa no banco de dados.
 export const ConversationSchema = z.object({
     id: z.string(),
     title: z.string(),
