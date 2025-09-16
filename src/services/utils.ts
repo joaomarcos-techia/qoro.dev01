@@ -31,9 +31,16 @@ export const getAdminAndOrg = async (actorUid: string) => {
     }
     const orgData = orgDoc.data()!;
 
-    // This logic was causing the "Failed to fetch" error because the env vars were not set.
-    // Replacing it with a default value to ensure stability.
-    const planId: 'free' | 'growth' | 'performance' = 'free';
+    let planId: 'free' | 'growth' | 'performance' = 'free';
+
+    const performancePriceId = process.env.NEXT_PUBLIC_STRIPE_PERFORMANCE_PLAN_PRICE_ID;
+    const growthPriceId = process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID;
+
+    if (orgData.stripePriceId && performancePriceId && orgData.stripePriceId === performancePriceId) {
+        planId = 'performance';
+    } else if (orgData.stripePriceId && growthPriceId && orgData.stripePriceId === growthPriceId) {
+        planId = 'growth';
+    }
 
     return { 
         userDocRef, 
