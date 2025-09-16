@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Service for managing bills (accounts payable/receivable) in Firestore.
@@ -141,6 +140,7 @@ export const deleteBill = async (billId: string, actorUid: string) => {
 
         if (!transactionSnapshot.empty) {
             const transactionId = transactionSnapshot.docs[0].id;
+            // Corrected this call to pass the actorUid
             await transactionService.deleteTransaction(transactionId, actorUid);
         }
     }
