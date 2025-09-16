@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview The central orchestrator for the QoroPulse AI agent.
@@ -170,4 +169,3 @@ export async function askPulse(input: z.infer<typeof AskPulseInputSchema>): Prom
 export async function deleteConversation(input: { conversationId: string; actor: string; }): Promise<{ success: boolean; }> {
     return deleteConversationFlow(input);
 }
-
