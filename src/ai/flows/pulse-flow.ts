@@ -41,19 +41,21 @@ Sua personalidade é profissional, prestativa, perspicaz e um pouco futurista.
 Responda de forma clara, concisa e acionável. Formate em Markdown quando apropriado.
 `.trim();
 
-    const genkitPromptParts = [
-      { role: "system" as const, content: [{ text: systemPrompt }] },
+    // Correctly constructs the message array for Genkit v1.x
+    const genkitPrompt = [
+      { role: 'system' as const, content: [{ text: systemPrompt }] },
       ...(input.messages ?? []).map((m) => ({
-        role: (m.role as "user" | "assistant" | "tool" | "model") ?? "user",
-        content: [{ text: m.content ?? "" }],
+        role: (m.role as 'user' | 'assistant' | 'tool' | 'model') ?? 'user',
+        content: [{ text: m.content ?? '' }],
       })),
     ];
 
     let result;
     try {
+      // Correctly structures the call to ai.generate
       result = await ai.generate({
         model: 'gemini-1.5-flash',
-        prompt: genkitPromptParts,
+        prompt: genkitPrompt,
         temperature: 0.5,
         maxOutputTokens: 1024,
       });
