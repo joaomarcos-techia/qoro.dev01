@@ -1,123 +1,99 @@
+
 'use server';
 /**
- * @fileOverview The central orchestrator for the QoroPulse AI agent.
- * This flow manages the conversation and persistence.
- *
- * - askPulse: The main function that handles user queries.
- * - deleteConversation: Deletes a conversation history.
+ * @fileOverview A conversational AI flow for QoroPulse.
+ * This flow provides business advice and answers general questions without
+ * accessing specific user data, ensuring privacy.
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import {
-  AskPulseInputSchema,
-  AskPulseOutputSchema,
-  PulseMessage,
-  PulseMessageSchema
-} from '@/ai/schemas';
+import { getAdminAndOrg } from '@/services/utils';
+import { adminDb } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
+import { AskPulseInputSchema, AskPulseOutputSchema, PulseMessage } from '@/ai/schemas';
 
-import * as pulseService from '@/services/pulseService';
+// Re-export types for use in other server components if needed.
+export type { AskPulseInput, AskPulseOutput, PulseMessage } from '@/ai/schemas';
 
-/**
- * Sanitizes conversation history to conform to the expected format for the AI model.
- * It ensures roles are either 'user' or 'model' and wraps content in the { text: ... } format.
- */
-function sanitizeHistory(messages: PulseMessage[]): { role: 'user' | 'model'; content: any[] }[] {
-  const history: { role: 'user' | 'model'; content: any[] }[] = [];
-  for (const msg of messages) {
-    if ((msg.role === 'assistant' || msg.role === 'model') && msg.content) {
-      history.push({ role: 'model', content: [{ text: msg.content }] });
-    } else if (msg.role === 'user' && msg.content) {
-      history.push({ role: 'user', content: [{ text: msg.content }] });
-    }
-  }
-  return history;
-}
-
-/**
- * Defines the main prompt for the QoroPulse agent.
- */
-const pulsePrompt = ai.definePrompt(
+// Define the main Pulse flow
+const pulseFlow = ai.defineFlow(
   {
-    name: 'pulsePrompt',
-    system: `Você é o QoroPulse, um assistente de negócios inteligente e proativo. 
-      Sua personalidade é prestativa, direta e focada em resultados.
-      Você NÃO tem acesso a ferramentas ou dados do usuário. Responda de forma concisa e clara com base no seu conhecimento geral.`,
-  },
-  async (history) => {
-    return {
-      history,
-    };
-  }
-);
-
-
-const askPulseFlow = ai.defineFlow(
-  {
-    name: 'askPulseFlow',
+    name: 'pulseFlow',
     inputSchema: AskPulseInputSchema,
     outputSchema: AskPulseOutputSchema,
   },
   async (input) => {
-    const { messages, actor, conversationId: existingConvId } = input;
-    let conversationId = existingConvId;
-    let title = 'Nova Conversa';
+    const { organizationName, userData, planId } = await getAdminAndOrg(input.actor);
+    const userId = input.actor; // The actor is the userId
 
-    const lastUserMessage = messages[messages.length - 1];
-    if (lastUserMessage?.role !== 'user') {
-      throw new Error('A última mensagem deve ser do usuário.');
-    }
+    // This prompt defines the AI's personality and instructions.
+    const pulsePrompt = `
+      Você é o QoroPulse, um assistente de negócios com IA da plataforma Qoro.
+      Sua personalidade é profissional, prestativa, perspicaz e um pouco futurista.
 
-    if (!conversationId) {
-        const newConversation = await pulseService.createConversation({
-            actor,
-            messages: [lastUserMessage],
-            title: lastUserMessage.content.substring(0, 40),
-        });
-        conversationId = newConversation.id;
-        title = newConversation.title;
-    }
+      **Sua Missão:**
+      - Ajudar o usuário a ter sucesso em seus negócios.
+      - Fornecer conselhos estratégicos, insights, resumos e responder a perguntas gerais sobre negócios, marketing, finanças e produtividade.
+      - Agir como um consultor de negócios experiente.
 
-    try {
-      // 1. Sanitize history for the AI model
-      const history = sanitizeHistory(messages);
-      
-      // 2. Call the AI with the user's query
-      const llmResponse = await pulsePrompt(history);
+      **Regras Críticas de Privacidade:**
+      - Você **NÃO TEM ACESSO** aos dados específicos da empresa do usuário (clientes, finanças, tarefas).
+      - Se o usuário perguntar algo que exija acesso a dados (ex: "Quantos clientes eu tenho?", "Qual foi meu faturamento?"), você deve responder de forma educada que não tem acesso a essas informações por motivos de privacidade e segurança, mas que pode oferecer conselhos gerais sobre o tema.
+      - Exemplo de resposta para dados específicos: "Por razões de segurança e privacidade, eu não tenho acesso direto aos dados da sua empresa, como a lista de clientes. No entanto, posso te dar dicas de como analisar sua base de clientes para extrair mais valor."
 
-      const assistantMessage: PulseMessage = {
-        role: 'assistant',
-        content: llmResponse.text,
-      };
-      
-      await pulseService.updateConversation(actor, conversationId, {
-          messages: [...messages, assistantMessage]
+      **Contexto do Usuário (NÃO são dados da empresa, apenas para personalizar a conversa):**
+      - Nome do Usuário: ${userData.name || 'Não informado'}
+      - Nome da Organização: ${organizationName || 'Não informada'}
+      - Plano de Assinatura: ${planId}
+
+      Responda à pergunta do usuário com base no histórico da conversa e em seu conhecimento geral de negócios. Seja claro, conciso e acionável. Use markdown para formatar suas respostas quando apropriado (listas, negrito, etc.).
+
+      Pergunta do Usuário:
+      ${input.messages[input.messages.length - 1].content}
+    `;
+
+    const { output } = await ai.generate({
+      model: 'gemini-1.5-flash',
+      prompt: pulsePrompt,
+      history: input.messages.map(h => ({ role: h.role, parts: [{ text: h.content }] })),
+    });
+    
+    const responseText = output?.text ?? "Desculpe, não consegui processar sua pergunta. Tente novamente.";
+    const responseMessage: PulseMessage = { role: 'assistant', content: responseText };
+
+    // Determine if we're creating a new conversation or updating an existing one
+    let conversationId = input.conversationId;
+    let conversationRef;
+
+    if (conversationId) {
+      conversationRef = adminDb.collection('pulse_conversations').doc(conversationId);
+      // Append only the latest user message and the new model response
+      const latestUserMessage = input.messages[input.messages.length - 1];
+      await conversationRef.update({
+        messages: FieldValue.arrayUnion(latestUserMessage, responseMessage),
+        updatedAt: FieldValue.serverTimestamp(),
       });
-
-      return { conversationId, response: assistantMessage, title };
-
-    } catch (err: any) {
-        console.error("QoroPulse Flow Error:", err);
-        const userFacingError = new Error("Erro ao comunicar com a IA. Tente novamente.");
-        (userFacingError as any).originalError = err.message;
-        throw userFacingError;
+    } else {
+       const initialMessages = input.messages;
+       const firstUserMessage = initialMessages[0];
+       
+       conversationRef = await adminDb.collection('pulse_conversations').add({
+        userId,
+        messages: [...initialMessages, responseMessage],
+        title: firstUserMessage.content.substring(0, 40) + (firstUserMessage.content.length > 40 ? '...' : ''),
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+      conversationId = conversationRef.id;
     }
+
+    return { response: responseMessage, conversationId };
   }
 );
 
-
-const deleteConversationFlow = ai.defineFlow({
-    name: 'deleteConversationFlow',
-    inputSchema: z.object({ conversationId: z.string(), actor: z.string() }),
-    outputSchema: z.object({ success: z.boolean() }),
-}, async (input) => {
-    return await pulseService.deleteConversation(input);
-});
-
-
+// Exported wrapper function for client-side use
 export async function askPulse(input: z.infer<typeof AskPulseInputSchema>): Promise<z.infer<typeof AskPulseOutputSchema>> {
-    return askPulseFlow(input);
+  return pulseFlow(input);
 }
 
-export async function deleteConversation(input: { conversationId: string; actor: string; }): Promise<{ success: boolean; }> {
-    return deleteConversationFlow(input);
-}
+    
