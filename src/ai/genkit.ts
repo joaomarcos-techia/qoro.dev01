@@ -16,8 +16,6 @@ export const ai = genkit({
       apiKey: apiKey,
     }),
   ],
-  // Log all traces to the console in development.
-  enableTracingAndMetrics: process.env.NODE_ENV === 'development',
   // Log to a file during development.
   logLevel: process.env.NODE_ENV === 'development' ? 'debug' : 'info',
 });
