@@ -1,4 +1,4 @@
-// src/ai/flows/pulse-flow.ts
+
 'use server';
 
 import { ai } from '@/ai/genkit';
@@ -53,7 +53,7 @@ Responda de forma clara, concisa e acionável. Formate em Markdown quando apropr
     try {
       result = await ai.generate({
         model: "gemini-1.5-flash",
-        prompt: genkitMessages,
+        messages: genkitMessages,
         temperature: 0.5,
         maxOutputTokens: 1024,
       });
