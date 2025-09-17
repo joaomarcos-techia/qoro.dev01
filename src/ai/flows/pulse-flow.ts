@@ -1,4 +1,3 @@
-
 // src/ai/flows/pulse-flow.ts
 'use server';
 
@@ -64,6 +63,7 @@ Responda de forma clara, concisa e acionável. Formate em Markdown quando apropr
 
     let responseText = 'Desculpe, não consegui processar sua pergunta. Tente novamente.';
     if (rawResponse) {
+      // Handle both v1.x (rawResponse.text) and potential older structures
       if (typeof rawResponse.text === 'string') {
         responseText = rawResponse.text;
       } else if (
