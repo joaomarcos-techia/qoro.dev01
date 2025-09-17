@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview The central orchestrator for the QoroPulse AI agent.
- * This flow manages the conversation, tool usage, and persistence.
+ * This flow manages the conversation and persistence.
  *
  * - askPulse: The main function that handles user queries.
  * - deleteConversation: Deletes a conversation history.
@@ -14,11 +14,6 @@ import {
   PulseMessage,
   PulseMessageSchema
 } from '@/ai/schemas';
-
-import * as crmTools from '@/ai/tools/crm-tools';
-import * as taskTools from '@/ai/tools/task-tools';
-import * as financeTools from '@/ai/tools/finance-tools';
-import * as supplierTools from '@/ai/tools/supplier-tools';
 
 import * as pulseService from '@/services/pulseService';
 
@@ -39,24 +34,14 @@ function sanitizeHistory(messages: PulseMessage[]): { role: 'user' | 'model'; co
 }
 
 /**
- * Defines the main prompt for the QoroPulse agent, making all available tools accessible.
+ * Defines the main prompt for the QoroPulse agent.
  */
 const pulsePrompt = ai.definePrompt(
   {
     name: 'pulsePrompt',
     system: `Você é o QoroPulse, um assistente de negócios inteligente e proativo. 
       Sua personalidade é prestativa, direta e focada em resultados.
-      Você tem acesso a ferramentas para buscar informações sobre CRM, finanças e tarefas.
-      Responda de forma concisa e clara. Se precisar de mais informações para usar uma ferramenta, peça ao usuário.
-      Ao criar uma tarefa, sempre confirme com o usuário após a criação.`,
-    tools: [
-      crmTools.getCrmSummaryTool,
-      taskTools.listTasksTool,
-      taskTools.createTaskTool,
-      financeTools.getFinanceSummaryTool,
-      financeTools.listAccountsTool,
-      supplierTools.listSuppliersTool
-    ],
+      Você NÃO tem acesso a ferramentas ou dados do usuário. Responda de forma concisa e clara com base no seu conhecimento geral.`,
   },
   async (history) => {
     return {
@@ -96,56 +81,22 @@ const askPulseFlow = ai.defineFlow(
       // 1. Sanitize history for the AI model
       const history = sanitizeHistory(messages);
       
-      // 2. First call to the AI with the user's query
+      // 2. Call the AI with the user's query
       const llmResponse = await pulsePrompt(history);
 
-      // 3. TOOL CYCLE: Check if the AI wants to use a tool
-      if (llmResponse.toolRequests.length > 0) {
-        
-        // Add the AI's request to use a tool to the history
-        history.push(llmResponse.content);
-        
-        const toolResponses = [];
-        // Execute each tool request
-        for (const toolRequest of llmResponse.toolRequests) {
-          console.log(`Executing tool: ${toolRequest.name}`);
-          const toolResponse = await ai.runTool(toolRequest);
-          toolResponses.push(toolResponse);
-        }
+      const assistantMessage: PulseMessage = {
+        role: 'assistant',
+        content: llmResponse.text,
+      };
+      
+      await pulseService.updateConversation(actor, conversationId, {
+          messages: [...messages, assistantMessage]
+      });
 
-        // Add the results of the tool calls to the history
-        history.push({ role: 'tool', content: toolResponses });
+      return { conversationId, response: assistantMessage, title };
 
-        // 4. GENERATE AGAIN: Call the AI again with the tool results
-        const finalResponse = await pulsePrompt(history);
-        
-        const assistantMessage: PulseMessage = {
-          role: 'assistant',
-          content: finalResponse.text,
-        };
-
-        await pulseService.updateConversation(actor, conversationId, {
-            messages: [...messages, assistantMessage],
-        });
-
-        return { conversationId, response: assistantMessage, title };
-
-      } else {
-        // 5. FINAL RESPONSE: If no tools are needed, return the AI's direct response
-        const assistantMessage: PulseMessage = {
-          role: 'assistant',
-          content: llmResponse.text,
-        };
-        
-        await pulseService.updateConversation(actor, conversationId, {
-            messages: [...messages, assistantMessage]
-        });
-
-        return { conversationId, response: assistantMessage, title };
-      }
     } catch (err: any) {
         console.error("QoroPulse Flow Error:", err);
-        // Provide a more user-friendly error message
         const userFacingError = new Error("Erro ao comunicar com a IA. Tente novamente.");
         (userFacingError as any).originalError = err.message;
         throw userFacingError;
