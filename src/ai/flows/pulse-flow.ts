@@ -26,8 +26,7 @@ const pulseFlow = ai.defineFlow(
     const { organizationName, userData, planId } = await getAdminAndOrg(input.actor);
     const userId = input.actor; // The actor is the userId
 
-    // This prompt defines the AI's personality and instructions.
-    const pulsePrompt = `
+    const systemPrompt = `
       Você é o QoroPulse, um assistente de negócios com IA da plataforma Qoro.
       Sua personalidade é profissional, prestativa, perspicaz e um pouco futurista.
 
@@ -47,15 +46,14 @@ const pulseFlow = ai.defineFlow(
       - Plano de Assinatura: ${planId}
 
       Responda à pergunta do usuário com base no histórico da conversa e em seu conhecimento geral de negócios. Seja claro, conciso e acionável. Use markdown para formatar suas respostas quando apropriado (listas, negrito, etc.).
-
-      Pergunta do Usuário:
-      ${input.messages[input.messages.length - 1].content}
     `;
 
     const { output } = await ai.generate({
       model: 'gemini-1.5-flash',
-      prompt: pulsePrompt,
-      history: input.messages.map(h => ({ role: h.role, parts: [{ text: h.content }] })),
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...input.messages.map(h => ({ role: h.role, content: h.content })),
+      ],
     });
     
     const responseText = output?.text ?? "Desculpe, não consegui processar sua pergunta. Tente novamente.";
@@ -95,5 +93,3 @@ const pulseFlow = ai.defineFlow(
 export async function askPulse(input: z.infer<typeof AskPulseInputSchema>): Promise<z.infer<typeof AskPulseOutputSchema>> {
   return pulseFlow(input);
 }
-
-    
