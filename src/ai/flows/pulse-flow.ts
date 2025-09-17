@@ -17,7 +17,7 @@ const pulseFlow = ai.defineFlow(
     outputSchema: AskPulseOutputSchema,
   },
   async (input) => {
-    const { organizationName, userData, planId } = await getAdminAndOrg(input.actor);
+    const { organizationName, userData, planId, organizationId } = await getAdminAndOrg(input.actor);
     const userId = input.actor;
 
     const systemPrompt = `
@@ -41,7 +41,6 @@ Sua personalidade é profissional, prestativa, perspicaz e um pouco futurista.
 Responda de forma clara, concisa e acionável. Formate em Markdown quando apropriado.
 `.trim();
 
-    // Correctly constructs the message array for Genkit v1.x
     const genkitPrompt = [
       { role: 'system' as const, content: [{ text: systemPrompt }] },
       ...(input.messages ?? []).map((m) => ({
@@ -52,7 +51,6 @@ Responda de forma clara, concisa e acionável. Formate em Markdown quando apropr
 
     let result;
     try {
-      // Correctly structures the call to ai.generate
       result = await ai.generate({
         model: 'gemini-1.5-flash',
         prompt: genkitPrompt,
@@ -82,6 +80,7 @@ Responda de forma clara, concisa e acionável. Formate em Markdown quando apropr
       const firstUserMessage = initialMessages[0] ?? { content: "Sem conteúdo", role: "user" };
       const addedRef = await adminDb.collection("pulse_conversations").add({
         userId,
+        organizationId: organizationId, // Make sure to include organizationId
         messages: [...initialMessages, responseMessage],
         title:
           (typeof firstUserMessage.content === "string"
