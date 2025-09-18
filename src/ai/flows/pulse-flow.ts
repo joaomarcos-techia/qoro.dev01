@@ -1,4 +1,4 @@
-// src/ai/flows/pulse-flow.ts
+
 'use server';
 
 import { ai } from '@/ai/genkit';
@@ -8,6 +8,7 @@ import { getAdminAndOrg } from '@/services/utils';
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { AskPulseInputSchema, AskPulseOutputSchema, PulseMessage } from '@/ai/schemas';
+import { generateConversationTitle } from '../utils/generateConversationTitle';
 
 export type { AskPulseInput, AskPulseOutput, PulseMessage } from '@/ai/schemas';
 
@@ -29,6 +30,7 @@ Sua personalidade é profissional, prestativa, perspicaz e um pouco futurista.
 - Ajudar o usuário a ter sucesso em seus negócios.
 - Fornecer conselhos estratégicos, insights, resumos e responder a perguntas gerais sobre negócios, marketing, finanças e produtividade.
 - Agir como um consultor de negócios experiente.
+- Ocasionalmente, use o nome do usuário ou da empresa para personalizar a conversa.
 
 **Regras Críticas de Privacidade:**
 - Você **NÃO TEM ACESSO** aos dados específicos da empresa do usuário (clientes, finanças, tarefas).
@@ -41,20 +43,24 @@ Sua personalidade é profissional, prestativa, perspicaz e um pouco futurista.
 
 Responda de forma clara, concisa e acionável. Formate em Markdown quando apropriado.
 `.trim();
+    
+    // Implementação da janela de contexto de 15 mensagens + prompt de sistema
+    const history = input.messages ?? [];
+    const conversationHistory = history.slice(-15);
 
-    const conversationMessages = [
-      { role: 'system' as const, content: [{ text: systemPrompt }] },
-      ...(input.messages ?? []).map((m: PulseMessage) => ({
-        role: (m.role as 'user' | 'model') ?? 'user',
-        content: [{ text: m.content ?? '' }],
-      })),
+    const genkitPrompt = [
+        { role: 'system' as const, content: [{ text: systemPrompt }] },
+        ...conversationHistory.map((m: PulseMessage) => ({
+            role: (m.role as 'user' | 'model') ?? 'user',
+            content: [{ text: m.content ?? '' }],
+        })),
     ];
 
     let result;
     try {
       result = await ai.generate({
         model: googleAI.model('gemini-1.5-flash'),
-        messages: conversationMessages,
+        messages: genkitPrompt,
         config: {
           temperature: 0.5,
           maxOutputTokens: 1024,
@@ -80,19 +86,17 @@ Responda de forma clara, concisa e acionável. Formate em Markdown quando apropr
       });
     } else {
       const initialMessages = input.messages ?? [];
-      const firstUserMessage = initialMessages[0] ?? { content: 'Sem conteúdo', role: 'user' };
+      const firstUserMessage = initialMessages.length > 0 && initialMessages[0].content ? initialMessages[0].content : "Nova Conversa";
+
+      const title = await generateConversationTitle(
+        typeof firstUserMessage === "string" ? firstUserMessage : String(firstUserMessage)
+      );
+
       const addedRef = await adminDb.collection('pulse_conversations').add({
         userId,
         organizationId: organizationId,
         messages: [...initialMessages, responseMessage],
-        title:
-          (typeof firstUserMessage.content === 'string'
-            ? firstUserMessage.content.substring(0, 40)
-            : String(firstUserMessage.content)) +
-          (typeof firstUserMessage.content === 'string' &&
-          firstUserMessage.content.length > 40
-            ? '...'
-            : ''),
+        title, 
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
       });
