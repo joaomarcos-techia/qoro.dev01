@@ -41,7 +41,7 @@ export default function PulseConversationPage() {
     });
     return () => unsubscribe();
   }, [router]);
-
+  
   const handleSendMessage = useCallback(async (e?: FormEvent, messagesOverride?: PulseMessage[]) => {
     e?.preventDefault();
     if (isSending || !currentUser?.uid) return;
@@ -53,6 +53,7 @@ export default function PulseConversationPage() {
 
     setIsSending(true);
     setError(null);
+    
     if (!messagesOverride) {
       setMessages(prev => [...prev, { role: 'user', content: currentInput.trim() }]);
       setInput('');
@@ -74,11 +75,11 @@ export default function PulseConversationPage() {
       let errorMessage = 'Erro ao comunicar com a IA. Tente novamente.';
       if (err.message?.includes('500')) errorMessage = 'Erro interno do servidor. Tente em alguns momentos.';
       setError(errorMessage);
-      setMessages(messages.slice(0, -1));
+      setMessages(prev => prev.slice(0, prev.length -1)); // Revert optimistic update
     } finally {
       setIsSending(false);
     }
-  }, [currentUser, conversationId, input, isSending, messages]);
+  }, [currentUser, conversationId, isSending, messages, input]);
 
 
   const fetchConversation = useCallback(async () => {
@@ -90,9 +91,7 @@ export default function PulseConversationPage() {
         const conversation = await getConversation({ conversationId, actor: currentUser.uid });
         if (conversation?.messages) {
             setMessages(conversation.messages);
-            if (conversation.messages.length === 1 && conversation.messages[0].role === 'user') {
-               await handleSendMessage(undefined, conversation.messages);
-            }
+            // This is handled by a separate useEffect now
         } else {
             throw new Error('Conversa não encontrada ou acesso negado.');
         }
@@ -102,11 +101,19 @@ export default function PulseConversationPage() {
     } finally {
         setIsLoadingHistory(false);
     }
-  }, [currentUser, conversationId, router, handleSendMessage]);
+  }, [currentUser, conversationId, router]);
 
+  // Effect for initial loading
   useEffect(() => {
     fetchConversation();
   }, [fetchConversation]);
+  
+  // Effect for auto-triggering the first response
+  useEffect(() => {
+    if (messages.length === 1 && messages[0].role === 'user' && !isSending) {
+        handleSendMessage(undefined, messages);
+    }
+  }, [messages, isSending, handleSendMessage]);
 
 
   useEffect(() => {
@@ -156,7 +163,7 @@ export default function PulseConversationPage() {
       <div className="flex-grow flex flex-col items-center w-full px-4 relative">
         <div ref={scrollAreaRef} className="flex-grow w-full max-w-4xl overflow-y-auto space-y-8 flex flex-col pt-8 pb-32">
           {renderMessages()}
-          {isSending && (
+          {isSending && messages.length > 0 && messages[messages.length - 1].role === 'user' && (
             <div className="flex items-start gap-4 mx-auto w-full">
               <div className="flex-shrink-0 w-8 h-8 rounded-full bg-pulse-primary text-black flex items-center justify-center"><BrainCircuit size={18} /></div>
               <div className="max-w-lg px-5 py-3 rounded-2xl bg-card text-foreground border flex items-center">
