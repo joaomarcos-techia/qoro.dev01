@@ -136,14 +136,13 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
             updatedAt: FieldValue.serverTimestamp(),
         });
     } else {
-        const initialMessages = messages ?? [];
-        const firstUserMessageContent = initialMessages.length > 0 && initialMessages[0].content ? initialMessages[0].content : "Nova Conversa";
+        const firstUserMessageContent = messages.length > 0 ? messages[0].content : "Nova Conversa";
 
         const title = await generateConversationTitle(firstUserMessageContent);
 
         const addedRef = await adminDb.collection('pulse_conversations').add({
             userId,
-            messages: [...initialMessages, responseMessage],
+            messages: [...messages, responseMessage],
             title, 
             createdAt: FieldValue.serverTimestamp(),
             updatedAt: FieldValue.serverTimestamp(),
