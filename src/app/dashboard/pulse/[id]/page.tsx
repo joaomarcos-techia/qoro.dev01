@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, FormEvent, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { BrainCircuit, Loader2, AlertCircle, User, RefreshCw } from 'lucide-react';
+import { BrainCircuit, Loader2, AlertCircle, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { User as FirebaseUser, onAuthStateChanged } from 'firebase/auth';
@@ -33,35 +33,30 @@ export default function PulseConversationPage() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        router.push('/login');
-      } else {
+      if (user) {
         setCurrentUser(user);
+      } else {
+        router.push('/login');
       }
     });
     return () => unsubscribe();
   }, [router]);
   
-  const handleSendMessage = useCallback(async (e?: FormEvent, messagesOverride?: PulseMessage[]) => {
+  const handleSendMessage = useCallback(async (e?: FormEvent) => {
     e?.preventDefault();
-    if (isSending || !currentUser?.uid) return;
+    if (isSending || !currentUser?.uid || !input.trim()) return;
 
-    const currentInput = input;
-    const messagesToSend = messagesOverride || [...messages, { role: 'user', content: currentInput.trim() }];
-
-    if (!messagesToSend.length || (!messagesOverride && !currentInput.trim())) return;
+    const currentInput = input.trim();
+    const optimisticMessage: PulseMessage = { role: 'user', content: currentInput };
 
     setIsSending(true);
     setError(null);
-    
-    if (!messagesOverride) {
-      setMessages(prev => [...prev, { role: 'user', content: currentInput.trim() }]);
-      setInput('');
-    }
+    setInput('');
+    setMessages(prev => [...prev, optimisticMessage]);
 
     try {
       const result = await askPulse({
-        messages: messagesToSend,
+        messages: [...messages, optimisticMessage],
         actor: currentUser.uid,
         conversationId,
       });
@@ -72,15 +67,12 @@ export default function PulseConversationPage() {
         throw new Error('Resposta inválida da IA.');
       }
     } catch (err: any) {
-      let errorMessage = 'Erro ao comunicar com a IA. Tente novamente.';
-      if (err.message?.includes('500')) errorMessage = 'Erro interno do servidor. Tente em alguns momentos.';
-      setError(errorMessage);
-      setMessages(prev => prev.slice(0, prev.length -1)); // Revert optimistic update
+      setError(err.message || 'Erro ao comunicar com a IA.');
+      setMessages(prev => prev.slice(0, -1)); // Revert optimistic update
     } finally {
       setIsSending(false);
     }
   }, [currentUser, conversationId, isSending, messages, input]);
-
 
   const fetchConversation = useCallback(async () => {
     if (!currentUser || !conversationId) return;
@@ -91,31 +83,21 @@ export default function PulseConversationPage() {
         const conversation = await getConversation({ conversationId, actor: currentUser.uid });
         if (conversation?.messages) {
             setMessages(conversation.messages);
-            // This is handled by a separate useEffect now
         } else {
             throw new Error('Conversa não encontrada ou acesso negado.');
         }
     } catch (err: any) {
-        setError('Não foi possível carregar a conversa.');
+        setError(err.message || 'Não foi possível carregar a conversa.');
         setTimeout(() => router.push('/dashboard/pulse'), 3000);
     } finally {
         setIsLoadingHistory(false);
     }
   }, [currentUser, conversationId, router]);
 
-  // Effect for initial loading
   useEffect(() => {
     fetchConversation();
   }, [fetchConversation]);
   
-  // Effect for auto-triggering the first response
-  useEffect(() => {
-    if (messages.length === 1 && messages[0].role === 'user' && !isSending) {
-        handleSendMessage(undefined, messages);
-    }
-  }, [messages, isSending, handleSendMessage]);
-
-
   useEffect(() => {
     if (scrollAreaRef.current) {
       scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
@@ -163,7 +145,7 @@ export default function PulseConversationPage() {
       <div className="flex-grow flex flex-col items-center w-full px-4 relative">
         <div ref={scrollAreaRef} className="flex-grow w-full max-w-4xl overflow-y-auto space-y-8 flex flex-col pt-8 pb-32">
           {renderMessages()}
-          {isSending && messages.length > 0 && messages[messages.length - 1].role === 'user' && (
+          {isSending && (
             <div className="flex items-start gap-4 mx-auto w-full">
               <div className="flex-shrink-0 w-8 h-8 rounded-full bg-pulse-primary text-black flex items-center justify-center"><BrainCircuit size={18} /></div>
               <div className="max-w-lg px-5 py-3 rounded-2xl bg-card text-foreground border flex items-center">
