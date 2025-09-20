@@ -107,12 +107,18 @@ export default function PulseConversationPage() {
         setError(null);
 
         try {
-            const response = await askPulse({
+            const { response: responseMessage } = await askPulse({
                 messages: newMessages,
                 actor: currentUser.uid,
                 conversationId: conversationId,
             });
-            setMessages([...newMessages, response.response]);
+
+            if (responseMessage) {
+                setMessages([...newMessages, responseMessage]);
+            } else {
+                 throw new Error('A IA não retornou uma resposta válida.');
+            }
+
         } catch (err: any) {
             console.error(err);
             setError(err.message || 'Ocorreu um erro ao comunicar com a IA. Tente novamente.');
