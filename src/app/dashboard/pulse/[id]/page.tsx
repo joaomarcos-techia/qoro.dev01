@@ -9,9 +9,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { User as FirebaseUser, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { getConversation } from '@/services/pulseService';
-import { askPulse, type PulseMessage } from '@/ai/flows/pulse-flow';
+import { askPulse } from '@/ai/flows/pulse-flow';
+import type { PulseMessage } from '@/ai/schemas';
 import { cn } from '@/lib/utils';
-import { Logo } from '@/components/ui/logo';
 
 const PulseMessageBubble = ({ message }: { message: PulseMessage }) => {
   const isUser = message.role === 'user';
