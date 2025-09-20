@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
@@ -26,58 +27,41 @@ export default function PulsePage() {
     
     const router = useRouter();
 
-    // Gerenciamento de autenticação melhorado
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             setAuthLoading(true);
-            
             if (!user) {
-                console.log('[PulsePage] Usuário não autenticado, redirecionando...');
                 router.push('/login');
             } else {
-                console.log('[PulsePage] Usuário autenticado:', user.uid);
                 setCurrentUser(user);
             }
-            
             setAuthLoading(false);
         });
-
         return () => unsubscribe();
     }, [router]);
 
-    // Validação de entrada melhorada
     const validateInput = (text: string): { isValid: boolean; error?: string } => {
         const trimmed = text.trim();
-        
         if (!trimmed) {
             return { isValid: false, error: 'Por favor, digite uma mensagem' };
         }
-        
         if (trimmed.length > 4000) {
             return { isValid: false, error: 'Mensagem muito longa. Máximo 4000 caracteres' };
         }
-        
         return { isValid: true };
     };
 
-    // Função principal refatorada com melhor tratamento de erros
     const handleSendMessage = async (e?: FormEvent) => {
         e?.preventDefault();
         
-        // Validações iniciais
         const validation = validateInput(input);
         if (!validation.isValid) {
             setError(validation.error || 'Entrada inválida');
             return;
         }
 
-        if (isLoading) {
-            console.log('[PulsePage] Operação em andamento, ignorando nova solicitação');
-            return;
-        }
-
-        if (!currentUser) {
-            setError('Usuário não autenticado. Faça login novamente.');
+        if (isLoading || !currentUser) {
+            setError('Usuário não autenticado ou operação em andamento.');
             return;
         }
 
@@ -85,85 +69,36 @@ export default function PulsePage() {
         setIsLoading(true);
         setError(null);
 
-        console.log('[PulsePage] Iniciando criação de conversa:', {
-            userId: currentUser.uid,
-            messageLength: messageText.length,
-            messagePreview: messageText.substring(0, 50) + '...'
-        });
-
         try {
-            // Preparar dados da mensagem
-            const userMessage: PulseMessage = { 
-                role: 'user', 
-                content: messageText 
-            };
-
+            const userMessage: PulseMessage = { role: 'user', content: messageText };
             const conversationData = {
                 actor: currentUser.uid,
                 messages: [userMessage],
                 title: messageText.substring(0, 40).trim() || 'Nova Conversa',
             };
 
-            console.log('[PulsePage] Dados da conversa preparados:', {
-                actor: conversationData.actor,
-                messagesCount: conversationData.messages.length,
-                title: conversationData.title
-            });
-
-            // Criar conversa
             const newConversation = await createConversation(conversationData);
 
-            console.log('[PulsePage] Resposta do createConversation:', newConversation);
-
-            // Validar resposta
-            if (!newConversation) {
-                throw new Error('Resposta inválida do servidor - conversa não criada');
-            }
-
-            if (!newConversation.id) {
-                console.error('[PulsePage] Conversa criada sem ID:', newConversation);
+            if (!newConversation?.id) {
                 throw new Error('Erro interno: conversa criada mas sem identificador válido');
             }
 
-            console.log('[PulsePage] Conversa criada com sucesso, redirecionando para:', `/dashboard/pulse/${newConversation.id}`);
-
-            // Limpar formulário antes de redirecionar
             setInput('');
-            
-            // Redirecionar para a conversa
             router.push(`/dashboard/pulse/${newConversation.id}`);
 
         } catch (error: any) {
-            console.error('[PulsePage] Erro ao criar conversa:', {
-                error: error,
-                message: error?.message,
-                stack: error?.stack,
-                name: error?.name
-            });
-
             let errorMessage = 'Ocorreu um erro inesperado. Tente novamente em alguns momentos.';
-
-            // Tratar diferentes tipos de erro
             if (error?.message) {
-                if (error.message.includes('Network')) {
-                    errorMessage = 'Erro de conexão. Verifique sua internet e tente novamente.';
-                } else if (error.message.includes('500')) {
-                    errorMessage = 'Erro interno do servidor. Nossa equipe foi notificada.';
-                } else if (error.message.includes('401') || error.message.includes('403')) {
-                    errorMessage = 'Sessão expirada. Faça login novamente.';
-                } else if (error.message.includes('timeout')) {
-                    errorMessage = 'Operação demorou muito. Tente novamente.';
-                } else {
-                    errorMessage = error.message;
-                }
+                if (error.message.includes('Network')) errorMessage = 'Erro de conexão. Verifique sua internet e tente novamente.';
+                else if (error.message.includes('500')) errorMessage = 'Erro interno do servidor. Nossa equipe foi notificada.';
+                else if (error.message.includes('401') || error.message.includes('403')) errorMessage = 'Sessão expirada. Faça login novamente.';
+                else errorMessage = error.message;
             }
-
             setError(errorMessage);
             setIsLoading(false);
         }
     };
 
-    // Função para tratamento de teclas
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -171,7 +106,6 @@ export default function PulsePage() {
         }
     };
 
-    // Loading de autenticação
     if (authLoading) {
         return (
             <div className="flex flex-col h-full bg-black items-center justify-center">
@@ -242,7 +176,6 @@ export default function PulsePage() {
                             </div>
                         )}
 
-                        {/* Contador de caracteres */}
                         {input.length > 3500 && (
                             <div className="text-xs text-muted-foreground mt-2 text-center">
                                 {input.length}/4000 caracteres

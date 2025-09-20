@@ -46,7 +46,6 @@ export default function PulseConversationPage() {
   const fetchConversation = useCallback(async () => {
     if (!currentUser || !conversationId) return;
 
-    console.log('[PulseConversation] Carregando histórico...');
     setIsLoadingHistory(true);
     setError(null);
 
@@ -54,19 +53,15 @@ export default function PulseConversationPage() {
       const conversation = await getConversation({ conversationId, actor: currentUser.uid });
 
       if (conversation?.messages) {
-        console.log(`[PulseConversation] Histórico carregado: ${conversation.messages.length} mensagens.`);
         setMessages(conversation.messages);
-
-        // Dispara a primeira resposta se a conversa só tiver 1 mensagem do usuário.
+        // Auto-trigger first response if conversation has only one message from user
         if (conversation.messages.length === 1 && conversation.messages[0].role === 'user') {
-          console.log('[PulseConversation] Disparando primeira resposta automática.');
           await handleSendMessage(undefined, conversation.messages);
         }
       } else {
         throw new Error('Conversa não encontrada ou acesso negado.');
       }
     } catch (err: any) {
-      console.error('[PulseConversation] Erro ao carregar:', err.message);
       setError('Não foi possível carregar a conversa.');
       setTimeout(() => router.push('/dashboard/pulse'), 3000);
     } finally {
@@ -76,8 +71,10 @@ export default function PulseConversationPage() {
 
 
   useEffect(() => {
-    fetchConversation();
-  }, [fetchConversation]);
+    if(currentUser){
+      fetchConversation();
+    }
+  }, [currentUser, fetchConversation]);
 
 
   const handleSendMessage = async (e?: FormEvent, currentMessages?: PulseMessage[]) => {
@@ -87,11 +84,9 @@ export default function PulseConversationPage() {
     const messagesToSend = currentMessages ?? [...messages, { role: 'user', content: messageText }];
     
     if (messagesToSend.length === 0 || isSending || !currentUser?.uid) return;
-    if (!currentMessages && !messageText) return; // Não envia msg manual vazia
+    if (!currentMessages && !messageText) return; 
 
-    console.log(`[PulseConversation] Enviando mensagem. Total no histórico: ${messagesToSend.length}`);
-    
-    if (!currentMessages) { // Se for uma mensagem manual do usuário
+    if (!currentMessages) {
       setMessages(messagesToSend);
       setInput('');
     }
@@ -109,16 +104,14 @@ export default function PulseConversationPage() {
       if (result?.response?.content) {
         const aiMessage: PulseMessage = { role: 'assistant', content: result.response.content };
         setMessages(prev => [...prev, aiMessage]);
-        console.log('[PulseConversation] Resposta da IA recebida e adicionada.');
       } else {
         throw new Error('Resposta inválida da IA.');
       }
     } catch (err: any) {
-      console.error('[PulseConversation] Erro ao enviar:', err.message);
       let errorMessage = 'Erro ao comunicar com a IA. Tente novamente.';
       if (err.message?.includes('500')) errorMessage = 'Erro interno do servidor. Tente em alguns momentos.';
       setError(errorMessage);
-      if(!currentMessages) setMessages(messages); // Reverte a UI se for msg manual
+      if(!currentMessages) setMessages(messages); 
     } finally {
       setIsSending(false);
     }

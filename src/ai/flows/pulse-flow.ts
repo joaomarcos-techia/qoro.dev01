@@ -15,8 +15,8 @@ export type { AskPulseInput, AskPulseOutput, PulseMessage } from '@/ai/schemas';
 const roleMap: Record<PulseMessage['role'], 'user' | 'model'> = {
     user: 'user',
     assistant: 'model',
-    model: 'model', // Trata 'model' como 'model'
-    tool: 'user',   // Trata a saída de ferramenta como se fosse do usuário
+    model: 'model', 
+    tool: 'user',   
 };
 
 
@@ -29,8 +29,6 @@ const pulseFlow = ai.defineFlow(
   async (input: z.infer<typeof AskPulseInputSchema>) => {
     const { actor, messages } = input;
     const userId = actor;
-
-    console.log('[pulseFlow] Recebido:', { messagesCount: messages.length, conversationId: input.conversationId });
 
     const systemPrompt = `
 <OBJETIVO>
@@ -101,7 +99,6 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
 </EXEMPLOS>
 `.trim();
     
-    // CORREÇÃO: Mapeia corretamente os papéis para o formato esperado pelo Genkit/Gemini.
     const conversationHistory = (messages ?? []).slice(-15).map(m => ({
         role: roleMap[m.role] || 'user',
         content: [{ text: m.content ?? '' }],
@@ -123,18 +120,15 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
         },
       });
     } catch (err) {
-      console.error('askPulse: ai.generate error', err);
       throw new Error('Falha ao gerar resposta da IA.');
     }
 
     const responseText = result.text ?? 'Desculpe, não consegui processar sua pergunta. Tente novamente.';
-    // CORREÇÃO: Garante que salvamos a resposta com o 'role' correto ('assistant') no nosso banco de dados.
     const responseMessage: PulseMessage = { role: 'assistant', content: responseText };
 
     let conversationId = input.conversationId;
 
     if (conversationId) {
-        // CORREÇÃO: Simplifica a lógica de atualização.
         const conversationRef = adminDb.collection('pulse_conversations').doc(conversationId);
         const updatedMessages = [...messages, responseMessage];
 
