@@ -9,6 +9,7 @@ import { User as FirebaseUser, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { askPulse } from '@/ai/flows/pulse-flow';
 import { getConversation } from '@/services/pulseService';
+import { getUserProfile, getUserAccessInfo } from '@/ai/flows/user-management';
 import type { PulseMessage } from '@/ai/schemas';
 
 const ArrowUpIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -32,6 +33,7 @@ export default function PulseConversationPage() {
   const [isSending, setIsSending] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
+  const [userProfile, setUserProfile] = useState<{name?: string, organizationName?: string, planId?: string} | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [needsAutoTrigger, setNeedsAutoTrigger] = useState(false);
 
@@ -41,17 +43,28 @@ export default function PulseConversationPage() {
   const params = useParams();
   const conversationId = params.id as string;
 
-  // Autenticação
+  // Autenticação e busca de perfil
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
         router.push('/login');
       } else {
         setCurrentUser(user);
+        if (!userProfile) {
+            try {
+                const [profile, access] = await Promise.all([
+                    getUserProfile({actor: user.uid}),
+                    getUserAccessInfo({actor: user.uid})
+                ]);
+                setUserProfile({ name: profile.name, organizationName: profile.organizationName, planId: access.planId });
+            } catch (err) {
+                setError("Não foi possível carregar os dados do seu perfil.");
+            }
+        }
       }
     });
     return () => unsubscribe();
-  }, [router]);
+  }, [router, userProfile]);
 
   // Handler principal para envio de mensagens
   const handleSendMessage = useCallback(async (e?: FormEvent) => {
@@ -60,7 +73,7 @@ export default function PulseConversationPage() {
 
     // Validações
     if (!messageText && !needsAutoTrigger) return;
-    if (isSending || !currentUser || !conversationId) return;
+    if (isSending || !currentUser || !conversationId || !userProfile) return;
 
     const currentMessages = [...messages];
     
@@ -81,6 +94,9 @@ export default function PulseConversationPage() {
         messages: normalizeMessages(currentMessages),
         actor: currentUser.uid,
         conversationId,
+        userName: userProfile.name,
+        organizationName: userProfile.organizationName,
+        planId: userProfile.planId,
       });
 
       const safeResponse: PulseMessage = {
@@ -104,7 +120,7 @@ export default function PulseConversationPage() {
     } finally {
       setIsSending(false);
     }
-  }, [input, messages, isSending, currentUser, conversationId, needsAutoTrigger]);
+  }, [input, messages, isSending, currentUser, conversationId, needsAutoTrigger, userProfile]);
 
   // Carregamento do histórico
   const fetchConversationHistory = useCallback(async () => {
@@ -183,7 +199,7 @@ export default function PulseConversationPage() {
 
   // Renderização das mensagens
   const renderMessages = () => {
-    if (isLoadingHistory) {
+    if (isLoadingHistory || !userProfile) {
       return (
         <div className="flex-grow flex flex-col items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />

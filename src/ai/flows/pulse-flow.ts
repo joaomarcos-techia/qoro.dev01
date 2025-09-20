@@ -1,4 +1,3 @@
-
 'use server';
 
 import { ai } from '@/ai/genkit';
@@ -19,8 +18,8 @@ const pulseFlow = ai.defineFlow(
     outputSchema: AskPulseOutputSchema,
   },
   async (input: z.infer<typeof AskPulseInputSchema>) => {
-    const { userData, organizationName, planId, organizationId } = await getAdminAndOrg(input.actor);
-    const userId = input.actor;
+    const { actor, userName, organizationName, planId, messages } = input;
+    const userId = actor;
 
     const systemPrompt = `
 Você é o QoroPulse, um assistente de negócios com IA da plataforma Qoro.
@@ -37,7 +36,7 @@ Sua personalidade é profissional, prestativa, perspicaz e um pouco futurista.
 - Se o usuário perguntar algo que exija acesso a dados, responda educadamente que não tem acesso por motivos de privacidade, mas ofereça orientação geral.
 
 **Contexto do Usuário (apenas para personalizar):**
-- Nome do Usuário: ${userData?.name ?? 'Não informado'}
+- Nome do Usuário: ${userName ?? 'Não informado'}
 - Nome da Organização: ${organizationName ?? 'Não informada'}
 - Plano de Assinatura: ${planId ?? 'Não informado'}
 
@@ -45,7 +44,7 @@ Responda de forma clara, concisa e acionável. Formate em Markdown quando apropr
 `.trim();
     
     // Pega as últimas 15 mensagens para manter o contexto
-    const conversationHistory = (input.messages ?? []).slice(-15);
+    const conversationHistory = (messages ?? []).slice(-15);
 
     const genkitPrompt = [
         { role: 'system' as const, content: [{ text: systemPrompt }] },
@@ -83,9 +82,11 @@ Responda de forma clara, concisa e acionável. Formate em Markdown quando apropr
             updatedAt: FieldValue.serverTimestamp(),
         });
     } else {
-        const initialMessages = input.messages ?? [];
+        const initialMessages = messages ?? [];
         // Pega o conteúdo da primeira mensagem do usuário para gerar o título
         const firstUserMessage = initialMessages.length > 0 && initialMessages[0].content ? initialMessages[0].content : "Nova Conversa";
+
+        const { organizationId } = await getAdminAndOrg(actor);
 
         const title = await generateConversationTitle(
             typeof firstUserMessage === "string" ? firstUserMessage : String(firstUserMessage)
