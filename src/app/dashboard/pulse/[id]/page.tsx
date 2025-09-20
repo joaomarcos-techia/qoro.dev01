@@ -9,7 +9,6 @@ import { User as FirebaseUser, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { askPulse } from '@/ai/flows/pulse-flow';
 import { getConversation } from '@/services/pulseService';
-import { getUserProfile, getUserAccessInfo } from '@/ai/flows/user-management';
 import type { PulseMessage } from '@/ai/schemas';
 
 const ArrowUpIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -33,7 +32,6 @@ export default function PulseConversationPage() {
   const [isSending, setIsSending] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
-  const [userProfile, setUserProfile] = useState<{name?: string, organizationName?: string, planId?: string} | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [needsAutoTrigger, setNeedsAutoTrigger] = useState(false);
 
@@ -43,41 +41,28 @@ export default function PulseConversationPage() {
   const params = useParams();
   const conversationId = params.id as string;
 
-  // Autenticação e busca de perfil
+  // Autenticação
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
         router.push('/login');
       } else {
         setCurrentUser(user);
-        if (!userProfile) {
-            try {
-                const [profile, access] = await Promise.all([
-                    getUserProfile({actor: user.uid}),
-                    getUserAccessInfo({actor: user.uid})
-                ]);
-                setUserProfile({ name: profile.name, organizationName: profile.organizationName, planId: access.planId });
-            } catch (err) {
-                setError("Não foi possível carregar os dados do seu perfil.");
-            }
-        }
       }
     });
     return () => unsubscribe();
-  }, [router, userProfile]);
+  }, [router]);
 
   // Handler principal para envio de mensagens
   const handleSendMessage = useCallback(async (e?: FormEvent) => {
     e?.preventDefault();
     const messageText = input.trim();
 
-    // Validações
     if (!messageText && !needsAutoTrigger) return;
-    if (isSending || !currentUser || !conversationId || !userProfile) return;
+    if (isSending || !currentUser || !conversationId) return;
 
     const currentMessages = [...messages];
     
-    // Adicionar nova mensagem do usuário (se não for auto-trigger)
     if (!needsAutoTrigger && messageText) {
       const userMessage: PulseMessage = { role: 'user', content: messageText };
       currentMessages.push(userMessage);
@@ -94,9 +79,6 @@ export default function PulseConversationPage() {
         messages: normalizeMessages(currentMessages),
         actor: currentUser.uid,
         conversationId,
-        userName: userProfile.name,
-        organizationName: userProfile.organizationName,
-        planId: userProfile.planId,
       });
 
       const safeResponse: PulseMessage = {
@@ -107,20 +89,16 @@ export default function PulseConversationPage() {
       setMessages(prev => [...prev, safeResponse]);
 
     } catch (error: any) {
-      const errorMessage = error.message?.includes('temporariamente indisponível')
-        ? error.message
-        : 'Erro ao comunicar com a IA. Tente novamente.';
-      
+      const errorMessage = 'Erro ao comunicar com a IA. Tente novamente.';
       setError(errorMessage);
 
-      // Desfazer UI otimista apenas para mensagens normais
       if (!needsAutoTrigger && messageText) {
         setMessages(prev => prev.slice(0, -1));
       }
     } finally {
       setIsSending(false);
     }
-  }, [input, messages, isSending, currentUser, conversationId, needsAutoTrigger, userProfile]);
+  }, [input, messages, isSending, currentUser, conversationId, needsAutoTrigger]);
 
   // Carregamento do histórico
   const fetchConversationHistory = useCallback(async () => {
@@ -139,7 +117,6 @@ export default function PulseConversationPage() {
         const normalized = normalizeMessages(conversation.messages);
         setMessages(normalized);
 
-        // Marcar para auto-trigger se necessário
         if (normalized.length === 1 && normalized[0].role === 'user') {
           setNeedsAutoTrigger(true);
         }
@@ -154,14 +131,11 @@ export default function PulseConversationPage() {
     }
   }, [conversationId, currentUser, router]);
 
-  // Efeito para auto-trigger após carregamento
   useEffect(() => {
     if (needsAutoTrigger && !isSending && !isLoadingHistory && messages.length > 0) {
-      // Delay para garantir que o componente está pronto
       const timer = setTimeout(() => {
         handleSendMessage();
       }, 300);
-      
       return () => clearTimeout(timer);
     }
   }, [needsAutoTrigger, isSending, isLoadingHistory, messages.length, handleSendMessage]);
@@ -172,14 +146,12 @@ export default function PulseConversationPage() {
     }
   }, [currentUser, fetchConversationHistory]);
 
-  // Auto-scroll
   useEffect(() => {
     if (scrollAreaRef.current) {
       scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
     }
   }, [messages, isSending]);
 
-  // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -187,7 +159,6 @@ export default function PulseConversationPage() {
     }
   }, [input]);
 
-  // Tratamento de teclas
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -197,9 +168,8 @@ export default function PulseConversationPage() {
     }
   };
 
-  // Renderização das mensagens
   const renderMessages = () => {
-    if (isLoadingHistory || !userProfile) {
+    if (isLoadingHistory) {
       return (
         <div className="flex-grow flex flex-col items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -260,7 +230,6 @@ export default function PulseConversationPage() {
         >
           {renderMessages()}
 
-          {/* Indicador de digitação */}
           {isSending && (
             <div className="flex items-start gap-4 mx-auto w-full">
               <div className="flex-shrink-0 w-8 h-8 rounded-full bg-pulse-primary text-black flex items-center justify-center">
@@ -276,7 +245,6 @@ export default function PulseConversationPage() {
           )}
         </div>
 
-        {/* Área de input */}
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black to-transparent">
           <div className="w-full max-w-4xl mx-auto px-4 pt-4 pb-8">
             <form onSubmit={handleSendMessage} className="relative">
@@ -304,7 +272,6 @@ export default function PulseConversationPage() {
               </div>
             </form>
             
-            {/* Exibição de erro */}
             {error && (
               <div className="text-destructive text-sm mt-3 flex items-center justify-center bg-destructive/10 rounded-lg p-2">
                 <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />

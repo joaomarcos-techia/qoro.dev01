@@ -269,9 +269,6 @@ export const AskPulseInputSchema = z.object({
     messages: z.array(PulseMessageSchema), 
     actor: z.string(),
     conversationId: z.string().optional(),
-    userName: z.string().optional(),
-    organizationName: z.string().optional(),
-    planId: z.string().optional(),
 });
 export type AskPulseInput = z.infer<typeof AskPulseInputSchema>;
 
