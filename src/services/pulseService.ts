@@ -11,20 +11,41 @@ import {
   PulseMessage,
   Conversation,
   ConversationProfile,
-  ConversationProfileSchema
+  ConversationProfileSchema,
+  PulseMessageSchema,
 } from '@/ai/schemas';
 
 const COLLECTION = 'pulse_conversations';
 
 /**
- * Sanitizes messages to ensure compatibility with Firestore.
- * Removes invalid/empty messages and ensures content is a string.
+ * Converts a Firestore Timestamp or other date representation to a safe ISO string.
  */
-function sanitizeMessages(messages?: PulseMessage[]): PulseMessage[] {
+function toISOStringSafe(date: any): string {
+    if (!date) return new Date().toISOString();
+    if (date instanceof Timestamp) return date.toDate().toISOString();
+    if (date instanceof Date) return date.toISOString();
+    if (typeof date === 'string') {
+        try {
+            const parsed = new Date(date);
+            if (!isNaN(parsed.getTime())) return parsed.toISOString();
+        } catch (e) {
+            console.error('Invalid date string for conversion:', date, e);
+        }
+    }
+    return new Date().toISOString();
+}
+
+/**
+ * Sanitizes messages to ensure they are valid and dates are strings.
+ */
+function sanitizeMessages(messages?: any[]): PulseMessage[] {
   if (!Array.isArray(messages)) return [];
   return messages
     .filter(m => m && typeof m.content === 'string' && m.content.trim().length > 0)
-    .map(m => ({ role: m.role, content: m.content.trim() }));
+    .map(m => PulseMessageSchema.parse({ 
+        role: m.role || 'user', 
+        content: m.content.trim() 
+    }));
 }
 
 /**
@@ -33,7 +54,7 @@ function sanitizeMessages(messages?: PulseMessage[]): PulseMessage[] {
 export async function createConversation(input: {
   actor: string;
   messages: PulseMessage[];
-  title?: string;
+  title: string;
 }): Promise<Conversation> {
   const { actor, messages, title } = input;
   if (!actor || !Array.isArray(messages) || messages.length === 0) {
@@ -48,8 +69,8 @@ export async function createConversation(input: {
   const docRef = adminDb.collection(COLLECTION).doc();
   const convData = {
     userId: actor,
-    title: title || safeMessages[0].content.substring(0, 40) || 'Nova Conversa',
-    messages: safeMessages,
+    title: title,
+    messages: safeMessages, // Already sanitized
     createdAt: FieldValue.serverTimestamp(),
     updatedAt: FieldValue.serverTimestamp(),
   };
@@ -90,38 +111,8 @@ export async function getConversation(input: {
     id: docSnap.id,
     title: data.title,
     messages: sanitizeMessages(data.messages),
-    updatedAt: (data.updatedAt as Timestamp).toDate().toISOString(),
+    updatedAt: toISOStringSafe(data.updatedAt),
   };
-}
-
-/**
- * Updates an existing conversation with new messages or a new title.
- */
-export async function updateConversation(
-  actor: string,
-  conversationId: string,
-  update: { messages?: PulseMessage[]; title?: string }
-): Promise<void> {
-  const docRef = adminDb.collection(COLLECTION).doc(conversationId);
-
-  // Security check: ensure user owns the conversation before updating
-  const currentDoc = await docRef.get();
-  if (!currentDoc.exists || currentDoc.data()?.userId !== actor) {
-    throw new Error('Conversation not found or access denied.');
-  }
-
-  const payload: { [key: string]: any } = {
-    updatedAt: FieldValue.serverTimestamp(),
-  };
-
-  if (update.title) {
-    payload.title = update.title;
-  }
-  if (update.messages) {
-    payload.messages = sanitizeMessages(update.messages);
-  }
-
-  await docRef.update(payload);
 }
 
 /**
@@ -134,7 +125,6 @@ export async function deleteConversation(input: {
   const { conversationId, actor } = input;
   const docRef = adminDb.collection(COLLECTION).doc(conversationId);
 
-  // Security check before deleting
   const currentDoc = await docRef.get();
   if (currentDoc.exists && currentDoc.data()?.userId === actor) {
     await docRef.delete();
@@ -174,7 +164,7 @@ export async function listConversations(input: {
       const profile = ConversationProfileSchema.safeParse({
           id: doc.id,
           title: data.title,
-          updatedAt: (data.updatedAt as Timestamp).toDate().toISOString()
+          updatedAt: toISOStringSafe(data.updatedAt)
       });
       if (profile.success) {
           profiles.push(profile.data);
