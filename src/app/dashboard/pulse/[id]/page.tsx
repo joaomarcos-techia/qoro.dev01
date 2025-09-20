@@ -42,21 +42,26 @@ export default function PulseConversationPage() {
     return () => unsubscribe();
   }, [router]);
   
-  const handleSendMessage = useCallback(async (e?: FormEvent) => {
+  const handleSendMessage = useCallback(async (e?: FormEvent, initialMessages?: PulseMessage[]) => {
     e?.preventDefault();
-    if (isSending || !currentUser?.uid || !input.trim()) return;
+    if (isSending || !currentUser?.uid) return;
 
     const currentInput = input.trim();
-    const optimisticMessage: PulseMessage = { role: 'user', content: currentInput };
+    const messagesToSend = initialMessages || [...messages, { role: 'user', content: currentInput }];
+    
+    if (!initialMessages && !currentInput) return;
 
+    if (!initialMessages) {
+        setMessages(prev => [...prev, { role: 'user', content: currentInput }]);
+        setInput('');
+    }
+    
     setIsSending(true);
     setError(null);
-    setInput('');
-    setMessages(prev => [...prev, optimisticMessage]);
-
+    
     try {
       const result = await askPulse({
-        messages: [...messages, optimisticMessage],
+        messages: messagesToSend,
         actor: currentUser.uid,
         conversationId,
       });
@@ -68,12 +73,14 @@ export default function PulseConversationPage() {
       }
     } catch (err: any) {
       setError(err.message || 'Erro ao comunicar com a IA.');
-      setMessages(prev => prev.slice(0, -1)); // Revert optimistic update
+      if (!initialMessages) {
+        setMessages(prev => prev.slice(0, -1)); // Revert optimistic update only for user-sent
+      }
     } finally {
       setIsSending(false);
     }
   }, [currentUser, conversationId, isSending, messages, input]);
-
+  
   const fetchConversation = useCallback(async () => {
     if (!currentUser || !conversationId) return;
 
@@ -95,9 +102,11 @@ export default function PulseConversationPage() {
   }, [currentUser, conversationId, router]);
 
   useEffect(() => {
-    fetchConversation();
-  }, [fetchConversation]);
-  
+    if (currentUser) {
+        fetchConversation();
+    }
+  }, [currentUser, fetchConversation]);
+
   useEffect(() => {
     if (scrollAreaRef.current) {
       scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
