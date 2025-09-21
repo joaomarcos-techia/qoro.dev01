@@ -157,13 +157,10 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
         await conversationRef.update(updatePayload);
 
     } else {
-        const firstUserMessageContent = messages.length > 0 ? messages[0].content : "Nova Conversa";
-        const title = await generateConversationTitle(firstUserMessageContent);
-        
         const addedRef = await adminDb.collection('pulse_conversations').add({
             userId,
             messages: finalMessages.map(m => ({...m})),
-            title, 
+            title: "Nova Conversa",
             createdAt: FieldValue.serverTimestamp(),
             updatedAt: FieldValue.serverTimestamp(),
         });
