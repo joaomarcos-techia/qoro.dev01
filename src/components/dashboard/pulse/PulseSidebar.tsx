@@ -125,7 +125,7 @@ export function PulseSidebar() {
                 </Link>
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
-                        <button className="flex-shrink-0 p-1 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-red-400 transition-opacity">
+                        <button className="flex-shrink-0 p-1 rounded-full text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-red-400 hover:bg-destructive/10 transition-all">
                             <Trash2 className="w-4 h-4"/>
                         </button>
                     </AlertDialogTrigger>
