@@ -1,6 +1,3 @@
-
-'use client';
-
 import { User, Users, Briefcase, Check } from 'lucide-react';
 
 const targetAudiences = [

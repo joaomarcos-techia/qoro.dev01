@@ -31,6 +31,16 @@ const nextConfig = {
       }
     ],
   },
+  // Redirecionamentos para SEO
+  redirects: async () => {
+    return [
+      {
+        source: '/:path*/', // Captura qualquer rota com uma barra no final
+        destination: '/:path*', // Redireciona para a mesma rota sem a barra
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

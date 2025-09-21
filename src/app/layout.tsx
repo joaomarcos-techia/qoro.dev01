@@ -5,6 +5,10 @@ export const metadata: Metadata = {
   title: 'Qoro - Transforme seu negócio com nossa plataforma integrada',
   description: 'A Qoro é a plataforma de gestão que unifica CRM, finanças, tarefas e IA para transformar o caos em clareza e impulsionar o crescimento do seu negócio.',
   viewport: 'width=device-width, initial-scale=1',
+  metadataBase: new URL('https://qoro.com.br'), // URL canônica do seu site
+  alternates: {
+    canonical: '/',
+  },
 };
 
 export default function RootLayout({
