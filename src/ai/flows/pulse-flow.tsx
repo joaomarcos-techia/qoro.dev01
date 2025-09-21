@@ -1,4 +1,3 @@
-
 'use server';
 
 import { ai } from '@/ai/genkit';
@@ -11,13 +10,14 @@ import { generateConversationTitle } from '../utils/generateConversationTitle';
 
 export type { AskPulseInput, AskPulseOutput, PulseMessage } from '@/ai/schemas';
 
-// Maps our schema roles to Gemini API roles.
+// Mapeia os papéis do nosso schema para os papéis da API do Gemini
 const roleMap: Record<PulseMessage['role'], 'user' | 'model'> = {
     user: 'user',
     assistant: 'model',
-    model: 'model', // Handle 'model' role from our side as well.
-    tool: 'user',   // Tool responses are treated as 'user' input by the model.
+    model: 'model', 
+    tool: 'user',   
 };
+
 
 const pulseFlow = ai.defineFlow(
   {
@@ -26,7 +26,7 @@ const pulseFlow = ai.defineFlow(
     outputSchema: AskPulseOutputSchema,
   },
   async (input: z.infer<typeof AskPulseInputSchema>) => {
-    const { actor, messages, conversationId: existingConvId } = input;
+    const { actor, messages } = input;
     const userId = actor;
 
     const systemPrompt = `
@@ -98,13 +98,12 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
 </EXEMPLOS>
 `.trim();
     
-    // Sanitize and map the incoming message history.
-    const conversationHistory = (messages ?? []).slice(-15).map(m => ({
+    const conversationHistory = messages.map(m => ({
         role: roleMap[m.role] || 'user',
         content: [{ text: m.content ?? '' }],
     }));
 
-    const genkitPrompt = [
+    const genkitMessages = [
         { role: 'system' as const, content: [{ text: systemPrompt }] },
         ...conversationHistory
     ];
@@ -113,35 +112,36 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
     try {
       result = await ai.generate({
         model: googleAI.model('gemini-1.5-flash'),
-        messages: genkitPrompt,
+        messages: genkitMessages,
         config: {
           temperature: 0.5,
           maxOutputTokens: 1024,
         },
       });
     } catch (err) {
+      console.error("AI Generation Error in pulse-flow:", err);
       throw new Error('Falha ao gerar resposta da IA.');
     }
 
     const responseText = result.text ?? 'Desculpe, não consegui processar sua pergunta. Tente novamente.';
     const responseMessage: PulseMessage = { role: 'assistant', content: responseText };
 
-    let conversationId = existingConvId;
+    let conversationId = input.conversationId;
     const finalMessages = [...messages, responseMessage];
 
     if (conversationId) {
         const conversationRef = adminDb.collection('pulse_conversations').doc(conversationId);
         await conversationRef.update({
-            messages: finalMessages,
+            messages: finalMessages.map(m => ({...m})),
             updatedAt: FieldValue.serverTimestamp(),
         });
     } else {
-        const firstUserMessage = messages.length > 0 && messages[0].content ? messages[0].content : "Nova Conversa";
-        const title = await generateConversationTitle(typeof firstUserMessage === "string" ? firstUserMessage : String(firstUserMessage));
+        const title = await generateConversationTitle(finalMessages[0].content);
+
         const addedRef = await adminDb.collection('pulse_conversations').add({
             userId,
-            messages: finalMessages,
-            title, 
+            messages: finalMessages.map(m => ({...m})),
+            title: title,
             createdAt: FieldValue.serverTimestamp(),
             updatedAt: FieldValue.serverTimestamp(),
         });
