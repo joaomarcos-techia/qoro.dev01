@@ -1,30 +1,16 @@
-
 "use client";
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { Logo } from '@/components/ui/logo';
 import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+// O componente principal agora é apenas o HeaderContent,
+// que precisa ser um client component para o menu mobile e o scroll.
+// A lógica de renderização condicional foi removida pois o Header
+// só é usado na página inicial (Server Component).
 export function Header() {
-  const pathname = usePathname();
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-  
-  if (!isMounted || pathname !== '/') {
-    return null;
-  }
-
-  return <HeaderContent />;
-}
-
-
-function HeaderContent() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
 
