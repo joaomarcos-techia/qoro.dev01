@@ -10,6 +10,7 @@ import { auth } from '@/lib/firebase';
 import { askPulse } from '@/ai/flows/pulse-flow';
 import { getConversation } from '@/services/pulseService';
 import type { PulseMessage } from '@/ai/schemas';
+import { MarkdownRenderer } from '@/components/utils/MarkdownRenderer';
 
 const ArrowUpIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg width="40" height="40" viewBox="0 0 24 24" fill="none" {...props}>
@@ -138,7 +139,11 @@ export default function PulseConversationPage() {
           </div>
         )}
         <div className={`max-w-2xl px-5 py-3 rounded-2xl ${message.role === 'user' ? 'bg-secondary text-primary-foreground' : 'bg-card text-foreground border'}`}>
-          <p className="whitespace-pre-wrap text-base leading-relaxed">{message.content}</p>
+           {message.role === 'user' ? (
+                <p className="whitespace-pre-wrap text-base leading-relaxed">{message.content}</p>
+            ) : (
+                <MarkdownRenderer content={message.content} />
+            )}
         </div>
         {message.role === 'user' && (
           <div className="flex-shrink-0 w-8 h-8 rounded-full bg-secondary text-muted-foreground flex items-center justify-center">
