@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -236,7 +235,7 @@ export function TaskForm({ onTaskAction, task, users, viewOnly = false }: TaskFo
                 <div key={item.id} className="flex items-center gap-2 group">
                     <Checkbox id={`subtask-${index}`} checked={item.isCompleted} onCheckedChange={(checked) => {updateSubtask(index, {...item, isCompleted: !!checked})}} disabled={viewOnly} />
                     <Input value={item.text} onChange={(e) => updateSubtask(index, {...item, text: e.target.value})} className={cn("flex-1 bg-card border-border", item.isCompleted && "line-through text-muted-foreground")} disabled={viewOnly}/>
-                    {!viewOnly && <Button type="button" variant="ghost" size="icon" className="w-8 h-8 opacity-50 group-hover:opacity-100" onClick={() => removeSubtask(index)}><Trash2 className="w-4 h-4 text-red-500"/></Button>}
+                    {!viewOnly && <Button type="button" variant="ghost" size="icon" className="w-8 h-8 opacity-50 group-hover:opacity-100 rounded-lg" onClick={() => removeSubtask(index)}><Trash2 className="w-4 h-4 text-red-500"/></Button>}
                 </div>
             ))}
             {!viewOnly && (
@@ -265,7 +264,7 @@ export function TaskForm({ onTaskAction, task, users, viewOnly = false }: TaskFo
                 </div>
                 <div className="flex items-center gap-2 pt-2 border-t border-border">
                     <Textarea placeholder="Adicionar um comentário..." value={newCommentText} onChange={(e) => setNewCommentText(e.target.value)} rows={1} />
-                    <Button type="button" onClick={handleAddComment} size="icon" className="bg-task-primary text-black hover:bg-task-primary/90"><Send className="w-4 h-4"/></Button>
+                    <Button type="button" onClick={handleAddComment} size="icon" className="bg-task-primary text-black hover:bg-task-primary/90 rounded-lg"><Send className="w-4 h-4"/></Button>
                 </div>
             </div>
        </div>

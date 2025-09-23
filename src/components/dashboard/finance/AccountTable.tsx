@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -155,20 +154,20 @@ export function AccountTable() {
           <AlertDialog>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
+                <Button variant="ghost" className="h-8 w-8 p-0 rounded-xl">
                   <span className="sr-only">Abrir menu</span>
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="rounded-2xl">
                 <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => handleEdit(account)}>
+                <DropdownMenuItem onClick={() => handleEdit(account)} className="rounded-xl">
                     <Edit className="mr-2 h-4 w-4" />
                     Editar Conta
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <AlertDialogTrigger asChild>
-                    <DropdownMenuItem className="text-red-500 focus:text-red-400 focus:bg-destructive/20">
+                    <DropdownMenuItem className="text-red-500 focus:text-red-400 focus:bg-destructive/20 rounded-xl">
                         <Trash2 className="mr-2 h-4 w-4" />
                         Excluir Conta
                     </DropdownMenuItem>
@@ -286,7 +285,7 @@ export function AccountTable() {
                 />
             </div>
       </div>
-      <div className="rounded-md border border-border">
+      <div className="rounded-2xl border border-border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

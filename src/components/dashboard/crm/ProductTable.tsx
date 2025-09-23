@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -128,24 +127,24 @@ export function ProductTable({ onEdit, onRefresh, itemType }: ProductTableProps)
           <AlertDialog>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
+                <Button variant="ghost" className="h-8 w-8 p-0 rounded-xl">
                   <span className="sr-only">Abrir menu</span>
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="rounded-2xl">
                 <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => onEdit(product)}>
+                <DropdownMenuItem onClick={() => onEdit(product)} className="rounded-xl">
                     <Edit className="mr-2 h-4 w-4" />
                     Editar Item
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigator.clipboard.writeText(product.sku || '')}>
+                <DropdownMenuItem onClick={() => navigator.clipboard.writeText(product.sku || '')} className="rounded-xl">
                     <Copy className="mr-2 h-4 w-4" />
                     Copiar Código
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <AlertDialogTrigger asChild>
-                    <DropdownMenuItem className="text-red-500 focus:bg-destructive/20 focus:text-red-400">
+                    <DropdownMenuItem className="text-red-500 focus:bg-destructive/20 focus:text-red-400 rounded-xl">
                         <Trash2 className="mr-2 h-4 w-4" />
                         Excluir Item
                     </DropdownMenuItem>
@@ -250,11 +249,11 @@ export function ProductTable({ onEdit, onRefresh, itemType }: ProductTableProps)
                 />
             </div>
       </div>
-      <div className="rounded-md border border-border">
+      <div className="rounded-2xl border border-border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="border-border">
+              <TableRow key={headerGroup.id} className="border-border hover:bg-transparent">
                 {headerGroup.headers.map((header) => (
                   <TableHead key={header.id}>
                     {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}

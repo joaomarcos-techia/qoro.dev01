@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -116,7 +115,7 @@ export function TaskTable({ tasks, users, isLoading, error, onRefresh, onEdit }:
                 <div className="font-medium text-foreground cursor-pointer hover:underline" onClick={() => onEdit(task)}>{row.getValue('title')}</div>
                 {totalSubtasks > 0 && (
                     <div className='mt-2 w-32'>
-                        <Progress value={progress} className='h-1'/>
+                        <Progress value={progress} className='h-1.5'/>
                         <span className='text-xs text-muted-foreground'>{completedSubtasks} de {totalSubtasks} concluídas</span>
                     </div>
                 )}
@@ -168,20 +167,20 @@ export function TaskTable({ tasks, users, isLoading, error, onRefresh, onEdit }:
             <AlertDialog>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
+                    <Button variant="ghost" className="h-8 w-8 p-0 rounded-xl">
                         <span className="sr-only">Abrir menu</span>
                         <MoreHorizontal className="h-4 w-4" />
                     </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
+                    <DropdownMenuContent align="end" className="rounded-2xl">
                     <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                    <DropdownMenuItem onClick={() => onEdit(task)}>
+                    <DropdownMenuItem onClick={() => onEdit(task)} className="rounded-xl">
                         <Edit className="mr-2 h-4 w-4" />
                         Editar Tarefa
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <AlertDialogTrigger asChild>
-                        <DropdownMenuItem className="text-red-500 focus:bg-destructive/20 focus:text-red-400">
+                        <DropdownMenuItem className="text-red-500 focus:bg-destructive/20 focus:text-red-400 rounded-xl">
                             <Trash2 className="mr-2 h-4 w-4" />
                             Excluir Tarefa
                         </DropdownMenuItem>
@@ -263,7 +262,7 @@ export function TaskTable({ tasks, users, isLoading, error, onRefresh, onEdit }:
                 />
             </div>
       </div>
-      <div className="rounded-md border border-border">
+      <div className="rounded-2xl border border-border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

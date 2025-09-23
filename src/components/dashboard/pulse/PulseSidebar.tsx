@@ -124,7 +124,7 @@ export function PulseSidebar() {
                 </Link>
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
-                        <button className="flex-shrink-0 p-1 rounded-md text-muted-foreground opacity-0 group-hover:opacity-100 transition-all active:bg-destructive/10 active:text-red-400">
+                        <button className="flex-shrink-0 p-1 rounded-xl text-muted-foreground opacity-0 group-hover:opacity-100 transition-all active:bg-destructive/10 active:text-red-400">
                             <Trash2 className="w-4 h-4"/>
                         </button>
                     </AlertDialogTrigger>
@@ -167,7 +167,7 @@ export function PulseSidebar() {
         <button
           onClick={handleNewConversation}
           disabled={isPending}
-          className="w-full flex items-center justify-center bg-primary text-primary-foreground px-4 py-2.5 rounded-xl hover:bg-primary/90 transition-all duration-300 font-semibold"
+          className="w-full flex items-center justify-center bg-pulse-primary text-black px-4 py-2.5 rounded-xl hover:bg-pulse-primary/90 transition-all duration-300 font-semibold"
         >
           <PlusCircle className="w-5 h-5 mr-2" />
           Nova Conversa

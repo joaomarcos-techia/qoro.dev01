@@ -1,4 +1,3 @@
-
 'use client';
 
 import { CustomerProfile } from '@/ai/schemas';
@@ -53,7 +52,7 @@ export function CustomerKanbanCard({ customer, stageIds, onMove }: KanbanCardPro
 
   return (
     <AlertDialog>
-        <div className="bg-card rounded-xl p-4 transition-shadow duration-300 border border-border hover:border-primary/50">
+        <div className="bg-card rounded-xl p-4 transition-shadow duration-300 border border-border hover:border-crm-primary/50">
         <h3 className="font-bold text-foreground text-base mb-3 break-words">{customer.name}</h3>
         
         <div className="space-y-2 text-sm text-muted-foreground min-h-[4rem]">
@@ -78,13 +77,13 @@ export function CustomerKanbanCard({ customer, stageIds, onMove }: KanbanCardPro
         </div>
         
         <div className="mt-4 pt-3 border-t border-border flex justify-between items-center">
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleMove('prev')} disabled={currentStageIndex <= 0}>
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => handleMove('prev')} disabled={currentStageIndex <= 0}>
                 <ChevronLeft className="w-4 h-4" />
             </Button>
             
             {isWonStage && (
                  <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-red-400" title="Arquivar Cliente">
+                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-muted-foreground hover:text-red-400" title="Arquivar Cliente">
                         <Archive className="w-4 h-4" />
                     </Button>
                 </AlertDialogTrigger>
@@ -92,12 +91,12 @@ export function CustomerKanbanCard({ customer, stageIds, onMove }: KanbanCardPro
             
             {isLostStage ? (
                 <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-red-400" title="Arquivar Cliente">
+                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-muted-foreground hover:text-red-400" title="Arquivar Cliente">
                         <Archive className="w-4 h-4" />
                     </Button>
                 </AlertDialogTrigger>
             ) : (
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleMove('next')} disabled={currentStageIndex >= stageIds.length - 1}>
+                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => handleMove('next')} disabled={currentStageIndex >= stageIds.length - 1}>
                     <ChevronRight className="w-4 h-4" />
                 </Button>
             )}

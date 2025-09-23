@@ -66,6 +66,7 @@ body {
     --border: 240 10% 17%;
     --input: 240 10% 17%;
     --ring: 271 78% 65%;
+    --radius: 0.75rem;
 
     /* QoroFinance Colors */
     --finance-primary: 188 100% 50%; /* Azul Neon #00F0FF */
@@ -100,6 +101,7 @@ body {
     --border: 240 10% 17%;
     --input: 240 10% 17%;
     --ring: 271 78% 65%;
+    --radius: 0.75rem;
   }
 }
 

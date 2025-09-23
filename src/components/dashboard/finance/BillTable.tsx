@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -120,12 +119,12 @@ export function BillTable({ onEdit, onRefresh, refreshKey }: BillTableProps) {
         return (
             <AlertDialog>
                 <DropdownMenu>
-                    <DropdownMenuTrigger asChild><Button variant="ghost" className="h-8 w-8 p-0"><span className="sr-only">Abrir menu</span><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
+                    <DropdownMenuTrigger asChild><Button variant="ghost" className="h-8 w-8 p-0 rounded-xl"><span className="sr-only">Abrir menu</span><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="rounded-2xl">
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => onEdit(bill)}><Edit className="mr-2 h-4 w-4" />Editar</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onEdit(bill)} className="rounded-xl"><Edit className="mr-2 h-4 w-4" />Editar</DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <AlertDialogTrigger asChild><DropdownMenuItem className="text-red-500 focus:text-red-400 focus:bg-destructive/20"><Trash2 className="mr-2 h-4 w-4" />Excluir</DropdownMenuItem></AlertDialogTrigger>
+                        <AlertDialogTrigger asChild><DropdownMenuItem className="text-red-500 focus:text-red-400 focus:bg-destructive/20 rounded-xl"><Trash2 className="mr-2 h-4 w-4" />Excluir</DropdownMenuItem></AlertDialogTrigger>
                     </DropdownMenuContent>
                 </DropdownMenu>
                 <AlertDialogContent>
@@ -193,9 +192,9 @@ export function BillTable({ onEdit, onRefresh, refreshKey }: BillTableProps) {
                 <Input placeholder="Buscar por descrição..." value={(table.getColumn('description')?.getFilterValue() as string) ?? ''} onChange={(event) => table.getColumn('description')?.setFilterValue(event.target.value)} className="w-full pl-10 pr-4 py-2 bg-secondary rounded-xl border-border focus:ring-2 focus:ring-primary transition-all duration-300" />
             </div>
       </div>
-      <div className="rounded-md border border-border">
+      <div className="rounded-2xl border border-border">
         <Table>
-          <TableHeader><TableRow key={table.getHeaderGroups()[0].id} className="border-border">{table.getHeaderGroups()[0].headers.map((header) => <TableHead key={header.id}>{header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}</TableHead>)}</TableRow></TableHeader>
+          <TableHeader><TableRow key={table.getHeaderGroups()[0].id} className="border-border hover:bg-transparent">{table.getHeaderGroups()[0].headers.map((header) => <TableHead key={header.id}>{header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}</TableHead>)}</TableRow></TableHeader>
           <TableBody>{table.getRowModel().rows?.length ? table.getRowModel().rows.map((row) => (<TableRow key={row.id} data-state={row.getIsSelected() && 'selected'} className="border-border">{row.getVisibleCells().map((cell) => (<TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>))}</TableRow>)) : (<TableRow><TableCell colSpan={columns.length} className="h-24 text-center">Nenhum resultado encontrado.</TableCell></TableRow>)}</TableBody>
         </Table>
       </div>

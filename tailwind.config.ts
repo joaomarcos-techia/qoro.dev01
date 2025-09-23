@@ -1,4 +1,3 @@
-
 import type { Config } from 'tailwindcss';
 
 export default {
@@ -57,9 +56,11 @@ export default {
         'crm-primary': 'hsl(var(--crm-primary))',
       },
       borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        '2xl': `calc(var(--radius) + 4px)`,
+        xl: 'var(--radius)',
+        lg: `calc(var(--radius) - 2px)`,
+        md: `calc(var(--radius) - 4px)`,
+        sm: `calc(var(--radius) - 8px)`,
       },
       keyframes: {
         'accordion-down': {
