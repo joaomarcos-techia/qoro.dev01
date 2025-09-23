@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
@@ -12,6 +11,7 @@ interface TasksContextType {
   loading: boolean;
   error: string | null;
   refreshTasks: () => void;
+  updateTaskInState: (updatedTask: TaskProfile) => void;
 }
 
 const TasksContext = createContext<TasksContextType | null>(null);
@@ -40,6 +40,14 @@ export const TasksProvider = ({ children }: { children: React.ReactNode }) => {
     setRefreshTrigger(prev => prev + 1);
   }, []);
 
+  const updateTaskInState = useCallback((updatedTask: TaskProfile) => {
+    setTasks(prevTasks => 
+      prevTasks.map(task => 
+        task.id === updatedTask.id ? updatedTask : task
+      )
+    );
+  }, []);
+
   useEffect(() => {
     const fetchTasks = async () => {
       if (!currentUser) {
@@ -65,7 +73,7 @@ export const TasksProvider = ({ children }: { children: React.ReactNode }) => {
   }, [currentUser, refreshTrigger]);
   
   return (
-    <TasksContext.Provider value={{ tasks, loading, error, refreshTasks }}>
+    <TasksContext.Provider value={{ tasks, loading, error, refreshTasks, updateTaskInState }}>
       {children}
     </TasksContext.Provider>
   );

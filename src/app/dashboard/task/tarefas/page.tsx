@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo, useTransition, useCallback } from 'react';
@@ -15,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { useTasks } from '@/contexts/TasksContext';
 
 export default function ProgressoPage() {
-  const { tasks, loading, error, refreshTasks } = useTasks();
+  const { tasks, loading, error, refreshTasks, updateTaskInState } = useTasks();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
@@ -78,14 +77,26 @@ export default function ProgressoPage() {
     startTransition(async () => {
         if (!currentUser) return;
         
+        const originalTasks = [...tasks];
+        
+        // Optimistic UI update
+        const taskToUpdate = tasks.find(t => t.id === taskId);
+        if (taskToUpdate) {
+            const updatedTask = { ...taskToUpdate, status: newStatus };
+            updateTaskInState(updatedTask);
+        }
+
         try {
             await updateTaskStatus({ taskId, status: newStatus, actor: currentUser.uid });
-            refreshTasks();
+            // The state is already updated optimistically, so we don't need a full refresh.
+            // We could optionally re-fetch just the updated task to get server timestamp, etc.
             if (newStatus === 'done') {
                 showTemporaryFeedback("Tarefa concluída!");
             }
         } catch (err) {
             console.error("Failed to move task", err);
+            // Revert on failure
+            updateTaskInState(originalTasks.find(t => t.id === taskId)!); 
             showTemporaryFeedback("Erro ao mover a tarefa.", "error");
         }
     });
