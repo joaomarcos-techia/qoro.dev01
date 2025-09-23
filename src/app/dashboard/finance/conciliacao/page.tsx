@@ -204,7 +204,7 @@ export default function ConciliacaoPage() {
                         </span>
                     ) : (
                         <span className="flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-yellow-500/20 text-yellow-300 w-fit">
-                            <BadgeAlert className="w-4 h-4 mr-2"/> Pendente
+                            <BadgeAlert className="w-4 h-4 mr-2"/> Não conciliado
                         </span>
                     )}
                   </TableCell>
