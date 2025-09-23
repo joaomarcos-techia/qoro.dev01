@@ -9,7 +9,12 @@ import { adminDb } from '@/lib/firebase-admin';
 export const createTransaction = async (input: z.infer<typeof TransactionSchema>, actorUid: string) => {
     const { organizationId } = await getAdminAndOrg(actorUid);
 
-    const accountRef = adminDb.collection('accounts').doc(input.accountId);
+    const accountId = input.accountId;
+    if (!accountId) {
+        throw new Error("A conta financeira é obrigatória para criar uma transação.");
+    }
+
+    const accountRef = adminDb.collection('accounts').doc(accountId);
     const transactionRef = adminDb.collection('transactions').doc();
 
     try {
@@ -38,6 +43,7 @@ export const createTransaction = async (input: z.infer<typeof TransactionSchema>
 
             const newTransactionData = {
                 ...input,
+                date: input.date ? new Date(input.date) : new Date(),
                 companyId: organizationId,
                 createdBy: actorUid,
                 createdAt: FieldValue.serverTimestamp(),
@@ -215,4 +221,54 @@ export const listTransactions = async (
     });
     
     return transactions;
+};
+
+export const bulkCreateTransactions = async (
+    transactions: z.infer<typeof TransactionSchema>[],
+    accountId: string,
+    actorUid: string
+) => {
+    const { organizationId } = await getAdminAndOrg(actorUid);
+    const accountRef = adminDb.collection('accounts').doc(accountId);
+
+    try {
+        await adminDb.runTransaction(async (t) => {
+            const accountDoc = await t.get(accountRef);
+            if (!accountDoc.exists) {
+                throw new Error("A conta financeira especificada não foi encontrada.");
+            }
+            if (accountDoc.data()?.companyId !== organizationId) {
+                throw new Error("A conta especificada não pertence a esta organização.");
+            }
+
+            let newBalance = accountDoc.data()?.balance || 0;
+
+            for (const transaction of transactions) {
+                const transactionAmount = transaction.amount;
+                if (transaction.type === 'income') {
+                    newBalance += transactionAmount;
+                } else {
+                    newBalance -= transactionAmount;
+                }
+
+                const newTransactionData = {
+                    ...transaction,
+                    accountId,
+                    companyId: organizationId,
+                    createdBy: actorUid,
+                    createdAt: FieldValue.serverTimestamp(),
+                    updatedAt: FieldValue.serverTimestamp(),
+                };
+                const transactionRef = adminDb.collection('transactions').doc();
+                t.set(transactionRef, newTransactionData);
+            }
+
+            t.update(accountRef, { balance: newBalance });
+        });
+
+        return { count: transactions.length };
+    } catch (error: any) {
+        console.error("Erro na criação em massa de transações:", error);
+        throw new Error(`Falha ao salvar as transações: ${error.message}`);
+    }
 };

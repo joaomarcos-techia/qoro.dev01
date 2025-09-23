@@ -9,6 +9,9 @@ import { format, parseISO } from 'date-fns';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { TransactionForm } from './TransactionForm';
 import { z } from 'zod';
+import { bulkCreateTransactions } from '@/ai/flows/finance-management';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 
 export interface OfxTransaction {
@@ -34,8 +37,16 @@ const formatDate = (dateStr: string) => format(parseISO(dateStr), 'dd/MM/yyyy');
 
 export function TransactionComparisonTable({ reconciliation, ofxTransactions, systemTransactions, isLoading, onRefresh }: TransactionComparisonTableProps) {
 
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [prefilledTransaction, setPrefilledTransaction] = useState<Partial<z.infer<typeof TransactionSchema>> | null>(null);
+  const [isBulkCreating, setIsBulkCreating] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+  React.useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
+
 
   const { matched, unmatchedOfx, unmatchedSystem } = useMemo(() => {
     const localOfx = ofxTransactions || [];
@@ -78,25 +89,32 @@ export function TransactionComparisonTable({ reconciliation, ofxTransactions, sy
 
   }, [ofxTransactions, systemTransactions]);
   
-  const handleCreateFromOfx = (ofxTransaction: OfxTransaction) => {
-    if (!reconciliation) return;
+  const handleBulkCreate = async () => {
+    if (!reconciliation || !currentUser || unmatchedOfx.length === 0) return;
 
-    setPrefilledTransaction({
-        description: ofxTransaction.description,
-        amount: Math.abs(ofxTransaction.amount),
-        date: parseISO(ofxTransaction.date),
-        type: ofxTransaction.amount >= 0 ? 'income' : 'expense',
-        accountId: reconciliation.accountId,
-        status: 'paid',
-        paymentMethod: 'bank_transfer', // Default, user can change
-    });
-    setIsCreateModalOpen(true);
-  };
-  
-  const handleActionComplete = () => {
-    setIsCreateModalOpen(false);
-    setPrefilledTransaction(null);
-    onRefresh();
+    setIsBulkCreating(true);
+    try {
+        const transactionsToCreate = unmatchedOfx.map(ofx => ({
+            description: ofx.description,
+            amount: Math.abs(ofx.amount),
+            date: parseISO(ofx.date),
+            type: ofx.amount > 0 ? 'income' : 'expense',
+            status: 'paid' as const,
+        }));
+        
+        await bulkCreateTransactions({
+            transactions: transactionsToCreate,
+            accountId: reconciliation.accountId,
+            actor: currentUser.uid,
+        });
+
+        onRefresh();
+    } catch(err) {
+        console.error("Error during bulk creation:", err);
+        // Here you might want to set an error state to show in the UI
+    } finally {
+        setIsBulkCreating(false);
+    }
   }
 
   if (isLoading) {
@@ -110,17 +128,6 @@ export function TransactionComparisonTable({ reconciliation, ofxTransactions, sy
 
   return (
     <>
-      <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-        <DialogContent className="sm:max-w-[700px]">
-            <DialogHeader>
-                <DialogTitle className="text-2xl font-bold text-foreground">Criar Transação a Partir do Extrato</DialogTitle>
-                <DialogDescription>
-                    Complete as informações abaixo para criar a transação no QoroFinance.
-                </DialogDescription>
-            </DialogHeader>
-            <TransactionForm onAction={handleActionComplete} transaction={prefilledTransaction as TransactionProfile} />
-        </DialogContent>
-      </Dialog>
       <div className="space-y-8">
         {/* Matched Transactions */}
         <div>
@@ -164,20 +171,25 @@ export function TransactionComparisonTable({ reconciliation, ofxTransactions, sy
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Unmatched OFX */}
               <div className="bg-card p-4 rounded-2xl border border-border">
-                   <h4 className='font-semibold mb-2 text-center text-muted-foreground'>Do Extrato ({unmatchedOfx.length})</h4>
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className='font-semibold text-center text-muted-foreground'>Do Extrato ({unmatchedOfx.length})</h4>
+                    <Button 
+                        size="sm" 
+                        className="bg-finance-primary text-black rounded-lg hover:bg-finance-primary/90" 
+                        onClick={handleBulkCreate}
+                        disabled={isBulkCreating || unmatchedOfx.length === 0}
+                    >
+                        {isBulkCreating ? <Loader2 className="w-4 h-4 mr-2 animate-spin"/> : <PlusCircle className="w-4 h-4 mr-2" />}
+                        {isBulkCreating ? 'Criando...' : 'Criar Transações Pendentes'}
+                    </Button>
+                  </div>
                    <Table>
-                      <TableHeader><TableRow><TableHead>Descrição</TableHead><TableHead className="text-right">Valor</TableHead><TableHead className="w-24"></TableHead></TableRow></TableHeader>
+                      <TableHeader><TableRow><TableHead>Descrição</TableHead><TableHead className="text-right">Valor</TableHead></TableRow></TableHeader>
                        <TableBody>
                           {unmatchedOfx.map((t, i) => (
                               <TableRow key={`ofx-${i}`}>
                                 <TableCell>{t.description}<br/><span className='text-xs text-muted-foreground'>{formatDate(t.date)}</span></TableCell>
                                 <TableCell className="text-right font-medium">{formatCurrency(t.amount)}</TableCell>
-                                <TableCell>
-                                    <Button size="sm" className="bg-finance-primary text-black rounded-lg hover:bg-finance-primary/90" onClick={() => handleCreateFromOfx(t)}>
-                                        <PlusCircle className="w-4 h-4 mr-2" />
-                                        Criar
-                                    </Button>
-                                </TableCell>
                               </TableRow>
                           ))}
                            {unmatchedOfx.length === 0 && <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground h-24">Todas as transações do extrato foram conciliadas.</TableCell></TableRow>}

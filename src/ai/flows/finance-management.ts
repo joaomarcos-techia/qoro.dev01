@@ -15,6 +15,7 @@
  * - listBills - Lists all bills.
  * - updateBill - Updates a bill.
  * - deleteBill - Deletes a bill.
+ * - bulkCreateTransactions - Creates multiple transactions at once.
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
@@ -67,6 +68,12 @@ const DashboardMetricsOutputSchema = z.object({
     totalIncome: z.number(),
     totalExpense: z.number(),
     netProfit: z.number(),
+});
+
+const BulkCreateTransactionsInputSchema = z.object({
+    transactions: z.array(TransactionSchema),
+    accountId: z.string(),
+    actor: z.string(),
 });
 
 // Define Account flows
@@ -190,6 +197,17 @@ const getFinanceDashboardMetricsFlow = ai.defineFlow(
     async ({ actor, dateRange }) => financeService.getFinanceDashboardMetrics(actor, dateRange)
 );
 
+const bulkCreateTransactionsFlow = ai.defineFlow(
+    {
+        name: 'bulkCreateTransactionsFlow',
+        inputSchema: BulkCreateTransactionsInputSchema,
+        outputSchema: z.object({ count: z.number() }),
+    },
+    async ({ transactions, accountId, actor }) => {
+        return transactionService.bulkCreateTransactions(transactions, accountId, actor);
+    }
+);
+
 // Exported functions (client-callable wrappers)
 export async function createAccount(input: z.infer<typeof AccountSchema> & z.infer<typeof ActorSchema>): Promise<{ id: string; }> {
     return createAccountFlow(input);
@@ -241,4 +259,8 @@ export async function updateBill(input: z.infer<typeof UpdateBillSchema> & z.inf
 
 export async function deleteBill(input: z.infer<typeof DeleteBillInputSchema>): Promise<{ id: string; success: boolean }> {
     return deleteBillFlow(input);
+}
+
+export async function bulkCreateTransactions(input: z.infer<typeof BulkCreateTransactionsInputSchema>): Promise<{ count: number; }> {
+    return bulkCreateTransactionsFlow(input);
 }
