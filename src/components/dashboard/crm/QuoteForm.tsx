@@ -344,10 +344,10 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
                     <PopoverContent className="w-[400px] p-0">
                          <div className="p-2 border-b border-border">
                             <div className="flex border-b border-border mb-2">
-                                <button type="button" onClick={() => setActiveItemTab('product')} className={`px-4 py-2 text-sm font-medium flex items-center ${activeItemTab === 'product' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground'}`}>
+                                <button type="button" onClick={() => setActiveItemTab('product')} className={`px-4 py-2 text-sm font-medium flex items-center ${activeItemTab === 'product' ? 'border-b-2 border-crm-primary text-crm-primary' : 'text-muted-foreground'}`}>
                                     <Package className="w-4 h-4 mr-2"/> Produtos
                                 </button>
-                                <button type="button" onClick={() => setActiveItemTab('service')} className={`px-4 py-2 text-sm font-medium flex items-center ${activeItemTab === 'service' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground'}`}>
+                                <button type="button" onClick={() => setActiveItemTab('service')} className={`px-4 py-2 text-sm font-medium flex items-center ${activeItemTab === 'service' ? 'border-b-2 border-crm-primary text-crm-primary' : 'text-muted-foreground'}`}>
                                     <Wrench className="w-4 h-4 mr-2"/> Serviços
                                 </button>
                             </div>
@@ -409,7 +409,7 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
                 </div>
             )}
         </div>
-        <Button type="submit" disabled={isLoading} className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
+        <Button type="submit" disabled={isLoading} className="bg-crm-primary text-black px-6 py-3 rounded-xl hover:bg-crm-primary/90 transition-all duration-300 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
           {isLoading ? <Loader2 className="mr-2 w-5 h-5 animate-spin" /> : null}
           {isEditMode ? 'Salvar Alterações' : 'Salvar e Gerar PDF'}
         </Button>

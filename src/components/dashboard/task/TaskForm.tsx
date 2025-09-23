@@ -242,7 +242,7 @@ export function TaskForm({ onTaskAction, task, users, viewOnly = false }: TaskFo
             {!viewOnly && (
              <div className="flex items-center gap-2 pt-2">
                 <Input placeholder="Adicionar nova subtarefa..." value={newSubtaskText} onChange={(e) => setNewSubtaskText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSubtask())}/>
-                <Button type="button" onClick={handleAddSubtask}><PlusCircle className="w-4 h-4 mr-2"/>Adicionar</Button>
+                <Button type="button" onClick={handleAddSubtask} className="bg-task-primary text-black hover:bg-task-primary/90"><PlusCircle className="w-4 h-4 mr-2"/>Adicionar</Button>
              </div>
             )}
         </div>
@@ -265,7 +265,7 @@ export function TaskForm({ onTaskAction, task, users, viewOnly = false }: TaskFo
                 </div>
                 <div className="flex items-center gap-2 pt-2 border-t border-border">
                     <Textarea placeholder="Adicionar um comentário..." value={newCommentText} onChange={(e) => setNewCommentText(e.target.value)} rows={1} />
-                    <Button type="button" onClick={handleAddComment} size="icon"><Send className="w-4 h-4"/></Button>
+                    <Button type="button" onClick={handleAddComment} size="icon" className="bg-task-primary text-black hover:bg-task-primary/90"><Send className="w-4 h-4"/></Button>
                 </div>
             </div>
        </div>
@@ -277,7 +277,7 @@ export function TaskForm({ onTaskAction, task, users, viewOnly = false }: TaskFo
             </div>
         )}
       <div className="flex justify-end pt-4">
-        <Button type="submit" disabled={isLoading} className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 border border-transparent hover:border-primary/50 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
+        <Button type="submit" disabled={isLoading} className="bg-task-primary text-black px-6 py-3 rounded-xl hover:bg-task-primary/90 transition-all duration-300 border border-transparent hover:border-task-primary/50 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
           {isLoading ? <Loader2 className="mr-2 w-5 h-5 animate-spin" /> : null}
           {viewOnly ? 'Fechar' : (isEditMode ? 'Salvar Alterações' : 'Salvar Tarefa')}
         </Button>

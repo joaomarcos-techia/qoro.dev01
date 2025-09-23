@@ -80,7 +80,7 @@ export default function RelatoriosPage() {
     if (isLoading) {
         return (
           <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
-            <Loader2 className="w-12 h-12 text-primary animate-spin" />
+            <Loader2 className="w-12 h-12 text-task-primary animate-spin" />
             <p className="mt-4 text-muted-foreground">Gerando relatórios de produtividade...</p>
           </div>
         );

@@ -51,7 +51,7 @@ export default function ContasAPagarPage() {
                 <DialogTrigger asChild>
                     <Button 
                         onClick={handleAdd}
-                        className="bg-primary text-primary-foreground px-4 py-2 rounded-xl hover:bg-primary/90 transition-all duration-300 border border-transparent hover:border-primary/50 flex items-center justify-center font-semibold"
+                        className="bg-finance-primary text-black px-4 py-2 rounded-xl hover:bg-finance-primary/90 transition-all duration-300 border border-transparent hover:border-finance-primary/50 flex items-center justify-center font-semibold"
                     >
                     <PlusCircle className="mr-2 w-5 h-5" />
                     Adicionar Conta

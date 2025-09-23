@@ -115,7 +115,7 @@ export default function VisaoGeralPage() {
     if (isLoading) {
         return (
           <div className="flex flex-col items-center justify-center h-full">
-            <Loader2 className="w-12 h-12 text-primary animate-spin" />
+            <Loader2 className="w-12 h-12 text-task-primary animate-spin" />
             <p className="mt-4 text-muted-foreground">Carregando sua visão geral...</p>
           </div>
         );

@@ -206,7 +206,7 @@ export default function RelatoriosPage() {
     if (isLoading) {
         return (
           <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
-            <Loader2 className="w-12 h-12 text-primary animate-spin" />
+            <Loader2 className="w-12 h-12 text-crm-primary animate-spin" />
             <p className="mt-4 text-muted-foreground">Analisando dados...</p>
           </div>
         );
@@ -234,7 +234,7 @@ export default function RelatoriosPage() {
                  <p className="text-muted-foreground mt-2 mb-6 max-w-2xl mx-auto">
                     Seu relatório detalhado com gráficos e as métricas acima está pronto. Clique no botão abaixo para fazer o download e compartilhar com sua equipe.
                  </p>
-                <Button onClick={generatePdf} disabled={isGeneratingPdf || !metrics} className="bg-primary text-primary-foreground px-6 py-3">
+                <Button onClick={generatePdf} disabled={isGeneratingPdf || !metrics} className="bg-crm-primary text-black px-6 py-3">
                     {isGeneratingPdf ? <Loader2 className="mr-2 w-5 h-5 animate-spin" /> : <Download className="mr-2 w-5 h-5" />}
                     {isGeneratingPdf ? 'Gerando PDF...' : 'Baixar Relatório em PDF'}
                 </Button>

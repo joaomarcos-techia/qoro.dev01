@@ -89,7 +89,7 @@ export default function ListaPage() {
         </div>
         <Button 
           onClick={handleAddTask}
-          className="bg-primary text-primary-foreground px-4 py-2 rounded-xl hover:bg-primary/90 transition-all duration-300 border border-transparent hover:border-primary/50 flex items-center justify-center font-semibold"
+          className="bg-task-primary text-black px-4 py-2 rounded-xl hover:bg-task-primary/90 transition-all duration-300 border border-transparent hover:border-task-primary/50 flex items-center justify-center font-semibold"
         >
           <PlusCircle className="mr-2 w-5 h-5" />
           Criar Tarefa

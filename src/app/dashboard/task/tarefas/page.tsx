@@ -126,7 +126,7 @@ export default function ProgressoPage() {
     if (loading || isLoadingUsers) {
       return (
         <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
-          <Loader2 className="w-12 h-12 text-primary animate-spin" />
+          <Loader2 className="w-12 h-12 text-task-primary animate-spin" />
           <p className="mt-4 text-muted-foreground">Carregando quadro de progresso...</p>
         </div>
       );
@@ -170,8 +170,8 @@ export default function ProgressoPage() {
             </p>
             </div>
             <div className="flex items-center gap-4">
-                {isPending && <Loader2 className="w-6 h-6 text-primary animate-spin" />}
-                 <Button onClick={handleAddTask} className="bg-primary text-primary-foreground px-4 py-2 rounded-xl hover:bg-primary/90 transition-all duration-300 border border-transparent hover:border-primary/50 flex items-center justify-center font-semibold">
+                {isPending && <Loader2 className="w-6 h-6 text-task-primary animate-spin" />}
+                 <Button onClick={handleAddTask} className="bg-task-primary text-black px-4 py-2 rounded-xl hover:bg-task-primary/90 transition-all duration-300 border border-transparent hover:border-task-primary/50 flex items-center justify-center font-semibold">
                     <PlusCircle className="mr-2 w-5 h-5" />
                     Criar Tarefa
                 </Button>

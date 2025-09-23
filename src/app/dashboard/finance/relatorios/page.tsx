@@ -35,7 +35,7 @@ const chartConfig = {
 
 const MetricCard = ({ title, value, icon: Icon, isLoading, format, colorClass = 'bg-finance-primary' }: { title: string, value: number, icon: React.ElementType, isLoading: boolean, format?: (value: number) => string, colorClass?: string }) => (
   <div className="bg-card p-6 rounded-2xl border border-border flex items-center">
-    <div className={`p-3 rounded-xl text-black mr-4 shadow-lg ${colorClass}`}>
+    <div className={`p-3 rounded-xl text-black mr-4 shadow-lg ${colorClass} shadow-finance-primary/30`}>
       <Icon className="w-6 h-6" />
     </div>
     <div>
@@ -175,7 +175,7 @@ export default function RelatoriosPage() {
         if (isLoading || isPending) {
             return (
                 <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
-                  <Loader2 className="w-12 h-12 text-primary animate-spin" />
+                  <Loader2 className="w-12 h-12 text-finance-primary animate-spin" />
                   <p className="mt-4 text-muted-foreground">Gerando relatórios...</p>
                 </div>
             );
@@ -243,7 +243,7 @@ export default function RelatoriosPage() {
                     <p className="text-muted-foreground mt-2 mb-6 max-w-2xl mx-auto">
                         Seu relatório detalhado com gráficos e as métricas acima está pronto. Clique no botão abaixo para fazer o download e compartilhar com sua equipe.
                     </p>
-                    <Button onClick={generatePdf} disabled={isGeneratingPdf || !metrics} className="bg-primary text-primary-foreground px-6 py-3">
+                    <Button onClick={generatePdf} disabled={isGeneratingPdf || !metrics} className="bg-finance-primary text-black px-6 py-3">
                         {isGeneratingPdf ? <Loader2 className="mr-2 w-5 h-5 animate-spin" /> : <Download className="mr-2 w-5 h-5" />}
                         {isGeneratingPdf ? 'Gerando PDF...' : 'Baixar Relatório em PDF'}
                     </Button>

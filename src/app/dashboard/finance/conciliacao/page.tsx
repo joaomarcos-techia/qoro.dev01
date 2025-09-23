@@ -131,7 +131,7 @@ export default function ConciliacaoPage() {
     if (isLoading) {
       return (
         <div className="flex flex-col items-center justify-center min-h-[400px]">
-          <Loader2 className="w-12 h-12 text-primary animate-spin" />
+          <Loader2 className="w-12 h-12 text-finance-primary animate-spin" />
           <p className="mt-4 text-muted-foreground">Carregando histórico...</p>
         </div>
       );
@@ -237,7 +237,7 @@ export default function ConciliacaoPage() {
             <Input value={newFileName} onChange={(e) => setNewFileName(e.target.value)} className="rounded-xl" />
             <DialogFooter>
                 <Button variant="outline" onClick={() => setIsEditModalOpen(false)} className="rounded-xl">Cancelar</Button>
-                <Button onClick={handleSaveName} className="rounded-xl">Salvar</Button>
+                <Button onClick={handleSaveName} className="rounded-xl bg-finance-primary text-black hover:bg-finance-primary/90">Salvar</Button>
             </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -259,7 +259,7 @@ export default function ConciliacaoPage() {
         <Button
           onClick={handleFileImportClick}
           disabled={isUploading}
-          className="bg-primary text-primary-foreground px-4 py-2 rounded-xl hover:bg-primary/90 transition-all duration-300 border border-transparent hover:border-primary/50 flex items-center justify-center font-semibold"
+          className="bg-finance-primary text-black px-4 py-2 rounded-xl hover:bg-finance-primary/90 transition-all duration-300 border border-transparent hover:border-finance-primary/50 flex items-center justify-center font-semibold"
         >
           {isUploading ? (
             <Loader2 className="mr-2 w-5 h-5 animate-spin" />

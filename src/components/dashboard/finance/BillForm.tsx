@@ -188,7 +188,7 @@ export function BillForm({ onAction, bill }: BillFormProps) {
       </div>
        {error && <div className="bg-destructive/20 text-destructive-foreground p-4 rounded-lg flex items-center mt-4"><AlertCircle className="w-5 h-5 mr-3" /><span className="text-sm">{error}</span></div>}
       <div className="flex justify-end pt-4">
-        <Button type="submit" disabled={isLoading} className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
+        <Button type="submit" disabled={isLoading} className="bg-finance-primary text-black px-6 py-3 rounded-xl hover:bg-finance-primary/90 transition-all duration-300 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
           {isLoading ? <Loader2 className="mr-2 w-5 h-5 animate-spin" /> : null}
           {isLoading ? 'Salvando...' : (isEditMode ? 'Salvar Alterações' : 'Salvar Conta')}
         </Button>

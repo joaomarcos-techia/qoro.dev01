@@ -45,12 +45,14 @@ interface NavItem {
 interface NavGroup {
     group: string;
     icon: LucideIcon;
+    colorClass: string;
 }
 
 const navConfig: Record<string, NavGroup> = {
-    crm: { group: 'QoroCRM', icon: Users },
-    task: { group: 'QoroTask', icon: CheckSquare },
-    finance: { group: 'QoroFinance', icon: DollarSign },
+    crm: { group: 'QoroCRM', icon: Users, colorClass: 'bg-crm-primary text-crm-primary' },
+    task: { group: 'QoroTask', icon: CheckSquare, colorClass: 'bg-task-primary text-task-primary' },
+    finance: { group: 'QoroFinance', icon: DollarSign, colorClass: 'bg-finance-primary text-finance-primary' },
+    pulse: { group: 'QoroPulse', icon: Activity, colorClass: 'bg-pulse-primary text-pulse-primary' },
 };
 
 const navItems: Record<string, NavItem[]> = {
@@ -95,7 +97,7 @@ export default function DashboardLayout({
   const segments = pathname.split('/');
   const currentModule = segments.length > 2 ? segments[2] : 'home';
   
-  const hasModuleSidebar = navConfig.hasOwnProperty(currentModule) || currentModule === 'pulse';
+  const hasModuleSidebar = navConfig.hasOwnProperty(currentModule);
 
   const renderSidebarContent = () => {
     // Render a placeholder or loader on the server
@@ -122,16 +124,17 @@ export default function DashboardLayout({
         return null;
     }
     
-    const { group, icon: GroupIcon } = moduleConfig;
+    const { group, icon: GroupIcon, colorClass } = moduleConfig;
+    const [bgColor, textColor] = colorClass.split(' ');
 
     return (
         <aside className="w-64 flex-shrink-0 bg-card border-r border-border flex flex-col">
             <div className="p-4 border-b border-border space-y-4">
                 <div className="flex items-center">
-                    <div className={'p-3 rounded-xl text-black mr-4 shadow-lg bg-primary shadow-primary/30'}>
+                    <div className={cn('p-3 rounded-xl text-black mr-4 shadow-lg', bgColor, `shadow-${currentModule}-primary/30`)}>
                         <GroupIcon className="w-6 h-6" />
                     </div>
-                    <h2 className={'text-xl font-bold text-primary'}>{group}</h2>
+                    <h2 className={cn('text-xl font-bold', textColor)}>{group}</h2>
                 </div>
                 <Link href="/dashboard" className="flex items-center text-muted-foreground hover:text-foreground transition-colors text-sm font-medium">
                     <ChevronLeft className="w-4 h-4 mr-2" />
@@ -144,13 +147,13 @@ export default function DashboardLayout({
                     <li key={item.href}>
                         <Link
                         href={item.href}
-                        className={`flex items-center px-4 py-3 my-1 rounded-xl text-sm font-medium transition-all duration-200 group ${
+                        className={cn(`flex items-center px-4 py-3 my-1 rounded-xl text-sm font-medium transition-all duration-200 group`,
                             pathname === item.href
-                            ? 'bg-primary text-black shadow-lg shadow-primary/30'
+                            ? `${bgColor} text-black shadow-lg shadow-${currentModule}-primary/30`
                             : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
-                        }`}
+                        )}
                         >
-                        <item.icon className={`w-5 h-5 mr-3 transition-colors ${pathname === item.href ? 'text-white' : 'text-muted-foreground group-hover:text-foreground'}`} />
+                        <item.icon className={cn(`w-5 h-5 mr-3 transition-colors`, pathname === item.href ? 'text-black' : 'text-muted-foreground group-hover:text-foreground')} />
                         {item.label}
                         </Link>
                     </li>
