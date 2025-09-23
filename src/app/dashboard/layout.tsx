@@ -62,7 +62,6 @@ const navItems: Record<string, NavItem[]> = {
         { href: '/dashboard/crm/produtos', label: 'Produtos', icon: Package },
         { href: '/dashboard/crm/servicos', label: 'Serviços', icon: Wrench },
         { href: '/dashboard/crm/orcamentos', label: 'Orçamentos', icon: FileText },
-        { href: '/dashboard/crm/relatorios', label: 'Relatórios', icon: BarChart3 },
     ],
     task: [
         { href: '/dashboard/task/visao-geral', label: 'Visão Geral', icon: Home },
@@ -77,7 +76,6 @@ const navItems: Record<string, NavItem[]> = {
         { href: '/dashboard/finance/contas-a-pagar', label: 'Contas a Pagar/Receber', icon: Receipt },
         { href: '/dashboard/finance/fornecedores', label: 'Fornecedores', icon: Truck },
         { href: '/dashboard/finance/conciliacao', label: 'Conciliação', icon: GitCompareArrows },
-        { href: '/dashboard/finance/relatorios', label: 'Relatórios', icon: BarChart3 },
     ],
 }
 
