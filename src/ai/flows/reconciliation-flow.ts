@@ -11,6 +11,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { ReconciliationSchema, ReconciliationProfileSchema } from '@/ai/schemas';
 import * as reconciliationService from '@/services/reconciliationService';
+import { listAccounts } from './finance-management';
 
 const ActorSchema = z.object({ actor: z.string() });
 const GetReconciliationInputSchema = z.object({ id: z.string(), actor: z.string() });
@@ -43,7 +44,19 @@ const listReconciliationsFlow = ai.defineFlow(
         inputSchema: ActorSchema,
         outputSchema: z.array(ReconciliationProfileSchema),
     },
-    async ({ actor }) => reconciliationService.listReconciliations(actor)
+    async ({ actor }) => {
+        const [recs, accounts] = await Promise.all([
+            reconciliationService.listReconciliations(actor),
+            listAccounts({actor})
+        ]);
+
+        const accountMap = new Map(accounts.map(acc => [acc.id, acc.name]));
+
+        return recs.map(rec => ({
+            ...rec,
+            accountName: accountMap.get(rec.accountId) || 'Conta Desconhecida'
+        }));
+    }
 );
 
 const updateReconciliationFlow = ai.defineFlow(

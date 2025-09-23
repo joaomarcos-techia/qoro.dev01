@@ -18,6 +18,7 @@ export const createReconciliation = async (input: z.infer<typeof ReconciliationS
         userId: adminUid,
         fileName: input.fileName,
         ofxContent: input.ofxContent,
+        accountId: input.accountId,
         createdAt: FieldValue.serverTimestamp(),
     };
 

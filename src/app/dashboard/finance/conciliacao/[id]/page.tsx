@@ -67,14 +67,16 @@ export default function ConciliacaoDetailPage() {
     setIsLoading(true);
     setError(null);
     try {
-        const [recData, transData] = await Promise.all([
-            getReconciliation({ id: reconciliationId, actor: currentUser.uid }),
-            listTransactions({ actor: currentUser.uid })
-        ]);
+        const recData = await getReconciliation({ id: reconciliationId, actor: currentUser.uid });
 
         if (!recData) {
             throw new Error('Conciliação não encontrada ou acesso negado.');
         }
+
+        const transData = await listTransactions({
+            actor: currentUser.uid,
+            accountId: recData.accountId,
+        });
 
         setReconciliation(recData);
         setSystemTransactions(transData);

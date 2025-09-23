@@ -35,17 +35,19 @@ import * as billService from '@/services/billService';
 
 const ActorSchema = z.object({ actor: z.string() });
 
-const DateRangeSchema = z.object({
-    from: z.string().optional(),
-    to: z.string().optional(),
-}).optional();
-
 const ListTransactionsInputSchema = ActorSchema.extend({
-    dateRange: DateRangeSchema
+    dateRange: z.object({
+        from: z.string().optional(),
+        to: z.string().optional(),
+    }).optional(),
+    accountId: z.string().optional(),
 });
 
 const GetDashboardMetricsInputSchema = ActorSchema.extend({
-    dateRange: DateRangeSchema
+    dateRange: z.object({
+        from: z.string().optional(),
+        to: z.string().optional(),
+    }).optional()
 });
 
 const DeleteAccountInputSchema = z.object({
@@ -121,7 +123,7 @@ const listTransactionsFlow = ai.defineFlow(
         inputSchema: ListTransactionsInputSchema,
         outputSchema: z.array(TransactionProfileSchema) 
     },
-    async ({ actor, dateRange }) => transactionService.listTransactions(actor, dateRange)
+    async ({ actor, dateRange, accountId }) => transactionService.listTransactions(actor, dateRange, accountId)
 );
 
 const updateTransactionFlow = ai.defineFlow(

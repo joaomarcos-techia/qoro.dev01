@@ -350,6 +350,7 @@ export type BillProfile = z.infer<typeof BillProfileSchema>;
 export const ReconciliationSchema = z.object({
     fileName: z.string(),
     ofxContent: z.string(),
+    accountId: z.string(),
 });
 export type Reconciliation = z.infer<typeof ReconciliationSchema>;
 
@@ -357,5 +358,6 @@ export const ReconciliationProfileSchema = ReconciliationSchema.extend({
     id: z.string(),
     createdAt: z.string(),
     userId: z.string(),
+    accountName: z.string().optional(),
 });
 export type ReconciliationProfile = z.infer<typeof ReconciliationProfileSchema>;
