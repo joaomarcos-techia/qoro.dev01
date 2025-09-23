@@ -23,7 +23,7 @@ import { listAccounts } from '@/ai/flows/finance-management';
 import { ReconciliationProfile, AccountProfile } from '@/ai/schemas';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -38,6 +38,7 @@ export default function ConciliacaoPage() {
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const router = useRouter();
+  const pathname = usePathname();
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedReconciliation, setSelectedReconciliation] = useState<ReconciliationProfile | null>(null);
@@ -61,7 +62,7 @@ export default function ConciliacaoPage() {
       ]);
       setReconciliations(recs);
       setAccounts(accs);
-      if (accs.length > 0) {
+      if (accs.length > 0 && !selectedAccountId) {
         setSelectedAccountId(accs[0].id);
       }
     } catch (err: any) {
@@ -70,11 +71,11 @@ export default function ConciliacaoPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentUser]);
+  }, [currentUser, selectedAccountId]);
 
   useEffect(() => {
     fetchInitialData();
-  }, [fetchInitialData]);
+  }, [fetchInitialData, pathname]); // Re-fetch when returning to the page
 
   const handleFileImportClick = () => {
     fileInputRef.current?.click();

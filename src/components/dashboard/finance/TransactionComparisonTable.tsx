@@ -40,7 +40,6 @@ export function TransactionComparisonTable({ reconciliation, ofxTransactions, sy
   const [isBulkCreating, setIsBulkCreating] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isFullyReconciled, setIsFullyReconciled] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -49,7 +48,7 @@ export function TransactionComparisonTable({ reconciliation, ofxTransactions, sy
     return () => unsubscribe();
   }, []);
 
-  const { matched, unmatchedOfx, unmatchedSystem } = useMemo(() => {
+  const { matched, unmatchedOfx, unmatchedSystem, isFullyReconciled } = useMemo(() => {
     const localOfx = ofxTransactions || [];
     const localSys = systemTransactions || [];
     const systemCopy = [...localSys];
@@ -59,6 +58,7 @@ export function TransactionComparisonTable({ reconciliation, ofxTransactions, sy
     
     for (const ofxT of localOfx) {
       const matchIndex = systemCopy.findIndex(s => {
+        // More robust matching logic
         const sameDate = formatDate(s.date as string) === formatDate(ofxT.date);
         const sameAmount = Math.abs(s.amount - Math.abs(ofxT.amount)) < 0.01;
         return sameDate && sameAmount;
@@ -73,16 +73,32 @@ export function TransactionComparisonTable({ reconciliation, ofxTransactions, sy
     }
     
     const fullyReconciled = finalUnmatchedOfx.length === 0 && systemCopy.length === 0;
-    setIsFullyReconciled(fullyReconciled);
 
     return {
       matched: matchedPairs,
       unmatchedOfx: finalUnmatchedOfx,
       unmatchedSystem: systemCopy,
+      isFullyReconciled: fullyReconciled,
     }
 
   }, [ofxTransactions, systemTransactions]);
   
+  // Effect to update reconciliation status when it becomes fully reconciled
+  useEffect(() => {
+    if (isFullyReconciled && reconciliation?.status !== 'reconciled' && currentUser) {
+      updateReconciliation({
+        id: reconciliation!.id,
+        actor: currentUser.uid,
+        status: 'reconciled'
+      }).then(() => {
+        onRefresh(); // Refresh parent data to get the updated reconciliation object
+      }).catch(err => {
+        console.error("Failed to auto-update reconciliation status:", err);
+      });
+    }
+  }, [isFullyReconciled, reconciliation, currentUser, onRefresh]);
+
+
   const handleBulkCreate = async () => {
     if (!reconciliation || !currentUser || unmatchedOfx.length === 0) return;
 
@@ -104,15 +120,7 @@ export function TransactionComparisonTable({ reconciliation, ofxTransactions, sy
         });
 
         // After successful bulk creation, if there are no more unmatched system transactions,
-        // it means we are fully reconciled.
-        if (unmatchedSystem.length === 0) {
-            await updateReconciliation({
-                id: reconciliation.id,
-                actor: currentUser.uid,
-                status: 'reconciled'
-            });
-        }
-
+        // it means we are fully reconciled. The useEffect above will handle the status update.
         onRefresh();
     } catch(err: any) {
         console.error("Error during bulk creation:", err);
