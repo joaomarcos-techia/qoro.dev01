@@ -1,6 +1,5 @@
 
 'use client';
-import * as React from 'react';
 import { useState, useMemo, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -58,10 +57,10 @@ export function TransactionComparisonTable({ reconciliation, ofxTransactions, sy
     
     for (const ofxT of localOfx) {
       const matchIndex = systemCopy.findIndex(s => {
-        // More robust matching logic
         const sameDate = formatDate(s.date as string) === formatDate(ofxT.date);
         const sameAmount = Math.abs(s.amount - Math.abs(ofxT.amount)) < 0.01;
-        return sameDate && sameAmount;
+        const sameType = s.type === ofxT.type;
+        return sameDate && sameAmount && sameType;
       });
 
       if (matchIndex > -1) {
@@ -83,47 +82,40 @@ export function TransactionComparisonTable({ reconciliation, ofxTransactions, sy
 
   }, [ofxTransactions, systemTransactions]);
   
-  // Effect to update reconciliation status when it becomes fully reconciled
-  useEffect(() => {
-    if (isFullyReconciled && reconciliation?.status !== 'reconciled' && currentUser) {
-      updateReconciliation({
-        id: reconciliation!.id,
-        actor: currentUser.uid,
-        status: 'reconciled'
-      }).then(() => {
-        onRefresh(); // Refresh parent data to get the updated reconciliation object
-      }).catch(err => {
-        console.error("Failed to auto-update reconciliation status:", err);
-      });
-    }
-  }, [isFullyReconciled, reconciliation, currentUser, onRefresh]);
-
-
   const handleBulkCreate = async () => {
     if (!reconciliation || !currentUser || unmatchedOfx.length === 0) return;
-
+  
     setIsBulkCreating(true);
     setError(null);
     try {
-        const transactionsToCreate: z.infer<typeof TransactionSchema>[] = unmatchedOfx.map(ofx => ({
-            description: ofx.description,
-            amount: Math.abs(ofx.amount),
-            date: parseISO(ofx.date),
-            type: ofx.type,
-            status: 'paid' as const,
-        }));
-        
-        await bulkCreateTransactions({
-            transactions: transactionsToCreate,
-            accountId: reconciliation.accountId,
-            actor: currentUser.uid,
-        });
+      const transactionsToCreate: z.infer<typeof TransactionSchema>[] = unmatchedOfx.map(ofx => ({
+          description: ofx.description,
+          amount: Math.abs(ofx.amount),
+          date: parseISO(ofx.date),
+          type: ofx.type,
+          status: 'paid' as const,
+      }));
+      
+      await bulkCreateTransactions({
+          transactions: transactionsToCreate,
+          accountId: reconciliation.accountId,
+          actor: currentUser.uid,
+      });
 
-        // After successful bulk creation, if there are no more unmatched system transactions,
-        // it means we are fully reconciled. The useEffect above will handle the status update.
-        onRefresh();
+      // After successful creation, check if everything is now reconciled
+      // This is a more deterministic approach than relying on a separate useEffect
+      if (unmatchedSystem.length === 0) {
+        await updateReconciliation({
+          id: reconciliation.id,
+          actor: currentUser.uid,
+          status: 'reconciled'
+        });
+      }
+  
+      // Refresh the entire dataset after all operations are complete
+      onRefresh();
     } catch(err: any) {
-        console.error("Error during bulk creation:", err);
+        console.error("Error during bulk creation or status update:", err);
         setError(err.message || 'Ocorreu um erro ao criar as transações.');
     } finally {
         setIsBulkCreating(false);
