@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { getDashboardMetrics } from '@/ai/flows/task-management';
+import { getTaskDashboardMetrics } from '@/ai/flows/task-management';
 import { Bar, BarChart, CartesianGrid, Pie, PieChart, Cell } from 'recharts';
 import CustomXAxis from '@/components/utils/CustomXAxis';
 import CustomYAxis from '@/components/utils/CustomYAxis';
@@ -60,7 +60,7 @@ export default function RelatoriosPage() {
     if (currentUser) {
         setIsLoading(true);
         setError(null);
-        getDashboardMetrics({ actor: currentUser.uid })
+        getTaskDashboardMetrics({ actor: currentUser.uid })
             .then(setMetrics)
             .catch((err) => {
                 console.error("Erro ao buscar métricas de tarefas:", err);
