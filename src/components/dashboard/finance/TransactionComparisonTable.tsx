@@ -1,16 +1,14 @@
 
 'use client';
 import * as React from 'react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { TransactionProfile, ReconciliationProfile, TransactionSchema } from '@/ai/schemas';
-import { ArrowRight, CheckCircle, Loader2, GitMerge, PlusCircle } from 'lucide-react';
+import { TransactionProfile, ReconciliationProfile } from '@/ai/schemas';
+import { ArrowRight, CheckCircle, Loader2, GitMerge, PlusCircle, ServerCrash } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { TransactionForm } from './TransactionForm';
-import { z } from 'zod';
 import { bulkCreateTransactions } from '@/ai/flows/finance-management';
+import { updateReconciliation } from '@/ai/flows/reconciliation-flow';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 
@@ -40,48 +38,42 @@ export function TransactionComparisonTable({ reconciliation, ofxTransactions, sy
 
   const [isBulkCreating, setIsBulkCreating] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isFullyReconciled, setIsFullyReconciled] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
     });
     return () => unsubscribe();
   }, []);
 
-
   const { matched, unmatchedOfx, unmatchedSystem } = useMemo(() => {
     const localOfx = ofxTransactions || [];
     const localSys = systemTransactions || [];
-    const matched = new Set<string>();
     const systemCopy = [...localSys];
-    const ofxCopy = [...localOfx];
-
-    const findMatch = (ofx: OfxTransaction, sys: TransactionProfile[]) => {
-      // Use .find() for clarity, handle potential undefined result
-      return sys.find(s => {
-        const sameDate = formatDate(s.date as string) === formatDate(ofx.date);
-        const sameAmount = Math.abs(s.amount - Math.abs(ofx.amount)) < 0.01;
-        return sameDate && sameAmount;
-      });
-    };
 
     const matchedPairs: {ofx: OfxTransaction, system: TransactionProfile}[] = [];
     const finalUnmatchedOfx: OfxTransaction[] = [];
     
-    for (const ofxT of ofxCopy) {
-      const match = findMatch(ofxT, systemCopy);
-      if (match) {
-        matchedPairs.push({ofx: ofxT, system: match});
-        // Remove the matched item from systemCopy
-        const index = systemCopy.findIndex(s => s.id === match.id);
-        if (index > -1) {
-            systemCopy.splice(index, 1);
-        }
+    for (const ofxT of localOfx) {
+      const matchIndex = systemCopy.findIndex(s => {
+        const sameDate = formatDate(s.date as string) === formatDate(ofxT.date);
+        const sameAmount = Math.abs(s.amount - Math.abs(ofxT.amount)) < 0.01;
+        return sameDate && sameAmount;
+      });
+
+      if (matchIndex > -1) {
+        matchedPairs.push({ofx: ofxT, system: systemCopy[matchIndex]});
+        systemCopy.splice(matchIndex, 1);
       } else {
         finalUnmatchedOfx.push(ofxT);
       }
     }
     
+    const fullyReconciled = finalUnmatchedOfx.length === 0 && systemCopy.length === 0;
+    setIsFullyReconciled(fullyReconciled);
+
     return {
       matched: matchedPairs,
       unmatchedOfx: finalUnmatchedOfx,
@@ -90,16 +82,35 @@ export function TransactionComparisonTable({ reconciliation, ofxTransactions, sy
 
   }, [ofxTransactions, systemTransactions]);
   
+  useEffect(() => {
+    if(isFullyReconciled && reconciliation && reconciliation.status !== 'reconciled' && currentUser) {
+        const updateStatus = async () => {
+            try {
+                await updateReconciliation({
+                    id: reconciliation.id,
+                    fileName: reconciliation.fileName,
+                    actor: currentUser.uid,
+                    status: 'reconciled'
+                })
+            } catch (err) {
+                console.error("Failed to update reconciliation status", err);
+            }
+        }
+        updateStatus();
+    }
+  }, [isFullyReconciled, reconciliation, currentUser]);
+  
   const handleBulkCreate = async () => {
     if (!reconciliation || !currentUser || unmatchedOfx.length === 0) return;
 
     setIsBulkCreating(true);
+    setError(null);
     try {
         const transactionsToCreate = unmatchedOfx.map(ofx => ({
             description: ofx.description,
             amount: Math.abs(ofx.amount),
             date: parseISO(ofx.date).toISOString(),
-            type: ofx.amount > 0 ? 'income' : 'expense',
+            type: ofx.type,
             status: 'paid' as const,
         }));
         
@@ -110,9 +121,9 @@ export function TransactionComparisonTable({ reconciliation, ofxTransactions, sy
         });
 
         onRefresh();
-    } catch(err) {
+    } catch(err: any) {
         console.error("Error during bulk creation:", err);
-        // Here you might want to set an error state to show in the UI
+        setError(err.message || 'Ocorreu um erro ao criar as transações.');
     } finally {
         setIsBulkCreating(false);
     }
@@ -158,7 +169,7 @@ export function TransactionComparisonTable({ reconciliation, ofxTransactions, sy
                     </TableCell>
                   </TableRow>
                 ))}
-                {matched.length === 0 && <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground">Nenhuma transação perfeitamente correspondida.</TableCell></TableRow>}
+                {matched.length === 0 && <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground h-24">Nenhuma transação perfeitamente correspondida.</TableCell></TableRow>}
               </TableBody>
             </Table>
           </div>
@@ -169,6 +180,15 @@ export function TransactionComparisonTable({ reconciliation, ofxTransactions, sy
           <h3 className="text-xl font-bold text-yellow-400 mb-4 flex items-center">
               <GitMerge className="w-6 h-6 mr-3"/> Transações Não Conciliadas
           </h3>
+          {error && (
+            <div className="bg-destructive/10 border border-destructive p-4 rounded-lg text-destructive-foreground mb-4">
+                <div className="flex items-center">
+                    <ServerCrash className="w-5 h-5 mr-3"/>
+                    <p className="font-bold">Falha na Sincronização</p>
+                </div>
+                <p className="text-sm mt-1">{error}</p>
+            </div>
+          )}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Unmatched OFX */}
               <div className="bg-card p-4 rounded-2xl border border-border">
@@ -190,7 +210,7 @@ export function TransactionComparisonTable({ reconciliation, ofxTransactions, sy
                           {unmatchedOfx.map((t, i) => (
                               <TableRow key={`ofx-${i}`}>
                                 <TableCell>{t.description}<br/><span className='text-xs text-muted-foreground'>{formatDate(t.date)}</span></TableCell>
-                                <TableCell className="text-right font-medium">{formatCurrency(t.amount)}</TableCell>
+                                <TableCell className={`text-right font-medium ${t.amount > 0 ? 'text-green-400' : 'text-red-400'}`}>{formatCurrency(t.amount)}</TableCell>
                               </TableRow>
                           ))}
                            {unmatchedOfx.length === 0 && <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground h-24">Todas as transações do extrato foram conciliadas.</TableCell></TableRow>}
@@ -204,9 +224,24 @@ export function TransactionComparisonTable({ reconciliation, ofxTransactions, sy
                       <TableHeader><TableRow><TableHead>Descrição</TableHead><TableHead className="text-right">Valor</TableHead></TableRow></TableHeader>
                        <TableBody>
                           {unmatchedSystem.map((t) => (
-                               <TableRow key={t.id}><TableCell>{t.description}<br/><span className='text-xs text-muted-foreground'>{formatDate(t.date as string)}</span></TableCell><TableCell className="text-right font-medium">{formatCurrency(t.amount)}</TableCell></TableRow>
+                               <TableRow key={t.id}><TableCell>{t.description}<br/><span className='text-xs text-muted-foreground'>{formatDate(t.date as string)}</span></TableCell>
+                               <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
+                                 {(t.type === 'income' ? '' : '-') + formatCurrency(t.amount)}
+                                </TableCell>
+                              </TableRow>
                           ))}
-                          {unmatchedSystem.length === 0 && <TableRow><TableCell colSpan={2} className="text-center text-muted-foreground h-24">Todas as transações do sistema foram conciliadas.</TableCell></TableRow>}
+                          {unmatchedSystem.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={2} className="text-center text-muted-foreground h-24">
+                                {isFullyReconciled ? (
+                                    <div className='text-green-400 flex flex-col items-center justify-center gap-2'>
+                                        <CheckCircle className='w-8 h-8'/>
+                                        <span className='font-semibold'>Conciliação completa!</span>
+                                    </div>
+                                ) : "Todas as transações do sistema foram conciliadas."}
+                                </TableCell>
+                            </TableRow>
+                          )}
                        </TableBody>
                    </Table>
               </div>

@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { GitCompareArrows, Upload, FileText, Loader2, ServerCrash, MoreHorizontal, Edit, Trash2, Eye, Landmark } from 'lucide-react';
+import { GitCompareArrows, Upload, FileText, Loader2, ServerCrash, MoreHorizontal, Edit, Trash2, Eye, Landmark, BadgeCheck, BadgeAlert } from 'lucide-react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { listReconciliations, createReconciliation, deleteReconciliation, updateReconciliation } from '@/ai/flows/reconciliation-flow';
@@ -178,6 +178,7 @@ export default function ConciliacaoPage() {
               <TableRow className="hover:bg-transparent rounded-lg">
                 <TableHead>Arquivo</TableHead>
                 <TableHead>Conta Bancária</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Data de Envio</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
@@ -194,6 +195,17 @@ export default function ConciliacaoPage() {
                         <Landmark className="w-4 h-4 mr-3 text-muted-foreground"/>
                         {rec.accountName || 'Não especificada'}
                     </div>
+                  </TableCell>
+                  <TableCell>
+                    {rec.status === 'reconciled' ? (
+                        <span className="flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-300 w-fit">
+                            <BadgeCheck className="w-4 h-4 mr-2"/> Conciliado
+                        </span>
+                    ) : (
+                        <span className="flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-yellow-500/20 text-yellow-300 w-fit">
+                            <BadgeAlert className="w-4 h-4 mr-2"/> Pendente
+                        </span>
+                    )}
                   </TableCell>
                   <TableCell>{format(new Date(rec.createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</TableCell>
                   <TableCell className="text-right">

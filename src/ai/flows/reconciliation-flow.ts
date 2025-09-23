@@ -1,10 +1,11 @@
+
 'use server';
 /**
  * @fileOverview Finance reconciliation flows.
  * - createReconciliation - Saves a new bank statement file.
  * - getReconciliation - Retrieves a specific reconciliation record.
  * - listReconciliations - Lists all saved reconciliations.
- * - updateReconciliation - Updates the name of a reconciliation record.
+ * - updateReconciliation - Updates a reconciliation record (e.g., name or status).
  * - deleteReconciliation - Deletes a reconciliation record.
  */
 import { ai } from '@/ai/genkit';
@@ -15,7 +16,12 @@ import { listAccounts } from './finance-management';
 
 const ActorSchema = z.object({ actor: z.string() });
 const GetReconciliationInputSchema = z.object({ id: z.string(), actor: z.string() });
-const UpdateReconciliationInputSchema = z.object({ id: z.string(), fileName: z.string(), actor: z.string() });
+const UpdateReconciliationInputSchema = z.object({ 
+    id: z.string(), 
+    actor: z.string(),
+    fileName: z.string().optional(), 
+    status: ReconciliationSchema.shape.status.optional(),
+});
 const DeleteReconciliationInputSchema = z.object({ id: z.string(), actor: z.string() });
 
 // --- Define Flows ---
@@ -65,7 +71,7 @@ const updateReconciliationFlow = ai.defineFlow(
         inputSchema: UpdateReconciliationInputSchema,
         outputSchema: z.object({ id: z.string() }),
     },
-    async ({ id, fileName, actor }) => reconciliationService.updateReconciliation(id, fileName, actor)
+    async (input) => reconciliationService.updateReconciliation(input)
 );
 
 const deleteReconciliationFlow = ai.defineFlow(

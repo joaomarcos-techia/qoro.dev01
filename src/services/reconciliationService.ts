@@ -19,6 +19,7 @@ export const createReconciliation = async (input: z.infer<typeof ReconciliationS
         fileName: input.fileName,
         ofxContent: input.ofxContent,
         accountId: input.accountId,
+        status: 'pending', // Always start as pending
         createdAt: FieldValue.serverTimestamp(),
     };
 
@@ -69,6 +70,7 @@ export const listReconciliations = async (actor: string): Promise<z.infer<typeof
         return ReconciliationProfileSchema.parse({
             id: doc.id,
             ...data,
+            status: data.status || 'pending', // Default old records to pending
             createdAt: data.createdAt.toDate().toISOString(),
         });
     }).filter((rec): rec is z.infer<typeof ReconciliationProfileSchema> => rec !== null);
@@ -76,17 +78,28 @@ export const listReconciliations = async (actor: string): Promise<z.infer<typeof
     return reconciliations;
 };
 
-export const updateReconciliation = async (id: string, fileName: string, actor: string) => {
-    const { companyId } = await getAdminAndOrg(actor);
-    const docRef = adminDb.collection('reconciliations').doc(id);
+export const updateReconciliation = async (input: {id: string, actor: string, fileName?: string, status?: 'pending' | 'reconciled'}) => {
+    const { companyId } = await getAdminAndOrg(input.actor);
+    const docRef = adminDb.collection('reconciliations').doc(input.id);
     const docSnap = await docRef.get();
 
     if (!docSnap.exists || docSnap.data()?.companyId !== companyId) {
         throw new Error('Conciliação não encontrada ou acesso negado.');
     }
     
-    await docRef.update({ fileName });
-    return { id };
+    const updateData: { [key: string]: any } = {};
+    if (input.fileName) {
+        updateData.fileName = input.fileName;
+    }
+    if (input.status) {
+        updateData.status = input.status;
+    }
+
+    if (Object.keys(updateData).length > 0) {
+        await docRef.update(updateData);
+    }
+    
+    return { id: input.id };
 };
 
 export const deleteReconciliation = async (id: string, actor: string) => {
