@@ -56,6 +56,17 @@ export function TransactionForm({ onAction, transaction }: TransactionFormProps)
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
+    defaultValues: {
+        type: 'expense',
+        status: 'paid',
+        paymentMethod: 'pix',
+        date: new Date(),
+        description: '',
+        amount: 0,
+        accountId: '',
+        customerId: '',
+        category: ''
+    }
   });
 
   useEffect(() => {
@@ -80,11 +91,10 @@ export function TransactionForm({ onAction, transaction }: TransactionFormProps)
   useEffect(() => {
     if (transaction) {
         const dateValue = transaction.date;
-        // Check if dateValue is already a Date object or a valid string
         const date = dateValue 
             ? (dateValue instanceof Date ? dateValue : parseISO(dateValue as string))
             : new Date();
-        reset({ ...transaction, date, customerId: transaction.customerId || '' });
+        reset({ ...transaction, date, accountId: transaction.accountId || '', customerId: transaction.customerId || '' });
     } else {
         reset({
             type: 'expense',
@@ -109,18 +119,14 @@ export function TransactionForm({ onAction, transaction }: TransactionFormProps)
     setIsLoading(true);
     setError(null);
     try {
+        const submissionData = {
+            ...data,
+            date: data.date ? data.date.toISOString() : new Date().toISOString(),
+        };
+
         if (isEditMode) {
-            const submissionData = {
-                ...data,
-                id: transaction.id, 
-                date: data.date ? data.date.toISOString() : new Date().toISOString(),
-            };
-            await updateTransaction({ ...submissionData, actor: currentUser.uid });
+            await updateTransaction({ ...submissionData, id: transaction.id, actor: currentUser.uid });
         } else {
-            const submissionData = {
-                ...data,
-                date: data.date ? data.date.toISOString() : new Date().toISOString(),
-            };
             await createTransaction({ ...submissionData, actor: currentUser.uid });
         }
       onAction();
