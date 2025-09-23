@@ -64,12 +64,15 @@ export const listBills = async (actorUid: string): Promise<z.infer<typeof BillPr
         if (data.entityId) {
             entityName = data.entityType === 'customer' ? customers[data.entityId] : suppliers[data.entityId];
         }
+        
+        const dueDate = data.dueDate?.toDate ? data.dueDate.toDate().toISOString() : new Date().toISOString();
+        const createdAt = data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString();
 
         const rawData = {
             id: doc.id,
             ...data,
-            dueDate: data.dueDate?.toDate().toISOString(),
-            createdAt: data.createdAt?.toDate().toISOString(),
+            dueDate: dueDate,
+            createdAt: createdAt,
             entityName: entityName || undefined,
         };
 

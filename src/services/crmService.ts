@@ -166,10 +166,11 @@ export const listProducts = async (actorUid: string): Promise<z.infer<typeof Pro
     }
     const products: z.infer<typeof ProductProfileSchema>[] = productsSnapshot.docs.map(doc => {
         const data = doc.data();
+        const createdAt = data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString();
         return ProductProfileSchema.parse({
             id: doc.id,
             ...data,
-            createdAt: data.createdAt.toDate().toISOString(),
+            createdAt: createdAt,
         });
     });
     return products;
@@ -256,12 +257,16 @@ export const listQuotes = async (actorUid: string): Promise<QuoteProfile[]> => {
         const data = doc.data();
         const customerInfo = customers[data.customerId] || {};
         
+        const createdAt = data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString();
+        const updatedAt = data.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : new Date().toISOString();
+        const validUntil = data.validUntil?.toDate ? data.validUntil.toDate().toISOString() : null;
+
         const parsedData = {
             id: doc.id,
             ...data,
-            validUntil: data.validUntil?.toDate ? data.validUntil.toDate().toISOString() : null,
-            createdAt: data.createdAt.toDate().toISOString(),
-            updatedAt: data.updatedAt.toDate().toISOString(),
+            validUntil: validUntil,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
             customerName: customerInfo.name,
             organizationName
         };

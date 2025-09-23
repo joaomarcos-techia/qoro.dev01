@@ -36,6 +36,10 @@ export const getReconciliation = async (id: string, actor: string): Promise<z.in
     }
 
     const data = docSnap.data()!;
+     if (!data.accountId) {
+        console.warn(`Reconciliation doc ${id} is missing accountId.`);
+        return null; // Don't return records without an accountId
+    }
     return ReconciliationProfileSchema.parse({
         id: docSnap.id,
         ...data,
@@ -58,12 +62,16 @@ export const listReconciliations = async (actor: string): Promise<z.infer<typeof
 
     const reconciliations = snapshot.docs.map(doc => {
         const data = doc.data();
+        if (!data.accountId) {
+            console.warn(`Skipping reconciliation doc ${doc.id} - missing accountId.`);
+            return null;
+        }
         return ReconciliationProfileSchema.parse({
             id: doc.id,
             ...data,
             createdAt: data.createdAt.toDate().toISOString(),
         });
-    });
+    }).filter((rec): rec is z.infer<typeof ReconciliationProfileSchema> => rec !== null);
     
     return reconciliations;
 };
