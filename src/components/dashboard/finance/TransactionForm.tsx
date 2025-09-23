@@ -79,7 +79,10 @@ export function TransactionForm({ onAction, transaction }: TransactionFormProps)
 
   useEffect(() => {
     if (transaction) {
-        const date = transaction.date ? parseISO(transaction.date) : new Date();
+        const dateValue = transaction.date;
+        const date = dateValue 
+            ? (typeof dateValue === 'string' ? parseISO(dateValue) : dateValue)
+            : new Date();
         reset({ ...transaction, date, customerId: transaction.customerId || '' });
     } else {
         reset({
