@@ -73,7 +73,7 @@ const navItems: Record<string, NavItem[]> = {
     finance: [
         { href: '/dashboard/finance/transacoes', label: 'Transações', icon: ArrowLeftRight },
         { href: '/dashboard/finance/contas', label: 'Contas', icon: Landmark },
-        { href: '/dashboard/finance/contas-a-pagar', label: 'Contas a Pagar/Receber', icon: Receipt },
+        { href: '/dashboard/finance/contas-a-pagar', label: 'A pagar/receber', icon: Receipt },
         { href: '/dashboard/finance/fornecedores', label: 'Fornecedores', icon: Truck },
         { href: '/dashboard/finance/conciliacao', label: 'Conciliação', icon: GitCompareArrows },
     ],
