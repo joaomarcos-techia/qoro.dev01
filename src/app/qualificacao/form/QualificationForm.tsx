@@ -44,7 +44,6 @@ const questions = [
     type: 'radio',
     key: 'urgency',
     options: Array.from({ length: 11 }, (_, i) => i.toString()),
-    isScale: true,
   },
   {
     step: 5,
@@ -173,7 +172,7 @@ export default function QualificationForm() {
               <RadioGroup
                 value={answers[currentQuestion.key] || ''}
                 onValueChange={(value) => handleInputChange(currentQuestion.key, value)}
-                className={cn("grid gap-3", currentQuestion.isScale ? 'grid-cols-6 md:grid-cols-11' : 'grid-cols-1')}
+                className="grid grid-cols-1 gap-3"
               >
                 {currentQuestion.options.map((option, index) => (
                   <Label key={option} className={cn(
