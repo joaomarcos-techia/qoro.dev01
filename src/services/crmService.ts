@@ -107,17 +107,16 @@ export const deleteCustomer = async (customerId: string, actorUid: string) => {
         throw new Error('Cliente não encontrado ou acesso negado.');
     }
 
-    const quotesQuery = adminDb.collection('quotes').where('customerId', '==', customerId).limit(1).get();
-    const transactionsQuery = adminDb.collection('transactions').where('customerId', '==', customerId).limit(1).get();
-
-    const [quotesSnapshot, transactionsSnapshot] = await Promise.all([quotesQuery, transactionsQuery]);
-
-    if (!quotesSnapshot.empty) {
-        throw new Error('Não é possível excluir o cliente pois existem orçamentos associados a ele.');
-    }
-    if (!transactionsSnapshot.empty) {
-        throw new Error('Não é possível excluir o cliente pois existem transações associadas a ele.');
-    }
+    // A verificação de dependências foi removida para permitir a exclusão direta.
+    // const quotesQuery = adminDb.collection('quotes').where('customerId', '==', customerId).limit(1).get();
+    // const transactionsQuery = adminDb.collection('transactions').where('customerId', '==', customerId).limit(1).get();
+    // const [quotesSnapshot, transactionsSnapshot] = await Promise.all([quotesQuery, transactionsQuery]);
+    // if (!quotesSnapshot.empty) {
+    //     throw new Error('Não é possível excluir o cliente pois existem orçamentos associados a ele.');
+    // }
+    // if (!transactionsSnapshot.empty) {
+    //     throw new Error('Não é possível excluir o cliente pois existem transações associadas a ele.');
+    // }
 
     await customerRef.delete();
 
