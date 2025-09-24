@@ -2,7 +2,7 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, FileText } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Logo } from '@/components/ui/logo';
 import Link from 'next/link';
 
@@ -16,8 +16,8 @@ export default function QualificationIntroPage() {
         </Link>
 
       <div className="max-w-2xl">
-        <div className="mx-auto mb-8 inline-block rounded-2xl bg-primary/10 p-5 border border-primary/20">
-            <FileText className="h-10 w-10 text-primary" />
+        <div className="mx-auto mb-8">
+            <Logo height={60} />
         </div>
         <h1 className="text-3xl md:text-5xl font-bold text-white mb-6">
             Vamos encontrar a solução perfeita para você
