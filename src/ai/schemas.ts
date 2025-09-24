@@ -334,7 +334,7 @@ export const BillSchema = z.object({
     entityId: z.string().optional(),
     notes: z.string().optional(),
     // Fields from TransactionSchema
-    accountId: z.string().min(1, "A conta financeira é obrigatória.").optional(),
+    accountId: z.string().min(1, "A conta financeira é obrigatória."),
     category: z.string().optional(),
     paymentMethod: z.enum(['cash', 'credit_card', 'debit_card', 'pix', 'bank_transfer', 'boleto']).optional(),
     tags: z.array(z.string()).optional(),

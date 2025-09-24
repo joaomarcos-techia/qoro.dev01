@@ -49,6 +49,9 @@ export function BillForm({ onAction, bill }: BillFormProps) {
     register, handleSubmit, control, reset, watch, setValue, formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
+    defaultValues: {
+      accountId: '', // Initialize to prevent uncontrolled -> controlled warning
+    }
   });
 
   const billType = watch('type');

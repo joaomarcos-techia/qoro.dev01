@@ -97,7 +97,8 @@ export const updateBill = async (input: z.infer<typeof UpdateBillSchema>, actorU
     if (!doc.exists || doc.data()?.companyId !== organizationId) {
         throw new Error("Conta não encontrada ou acesso negado.");
     }
-    const oldStatus = doc.data()?.status;
+    const oldData = doc.data()!;
+    const oldStatus = oldData.status;
     const isAlreadyPaid = oldStatus === 'paid';
 
     await billRef.update({
@@ -108,8 +109,8 @@ export const updateBill = async (input: z.infer<typeof UpdateBillSchema>, actorU
 
     // Check if the status is being updated to 'paid' and it wasn't paid before
     if (updateData.status === 'paid' && !isAlreadyPaid) {
-        // Use the accountId from the bill itself, which is now mandatory for paid bills
-        const accountId = updateData.accountId;
+        // Use the accountId from the bill itself
+        const accountId = updateData.accountId || oldData.accountId;
         if (!accountId) {
              throw new Error("A conta financeira é obrigatória para marcar como pago.");
         }
