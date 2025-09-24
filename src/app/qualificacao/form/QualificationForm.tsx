@@ -40,10 +40,14 @@ const questions = [
   {
     step: 4,
     section: 'Problema',
-    title: 'Em uma escala de 0 a 10, qual é a urgência em resolver esse problema?',
+    title: 'Qual o nível de prioridade que você dá para resolver esse problema?',
     type: 'radio',
     key: 'urgency',
-    options: Array.from({ length: 11 }, (_, i) => i.toString()),
+    options: [
+        'Alta (preciso resolver agora, mesmo que demande investimento maior)',
+        'Média (quero resolver em breve, mas depende do custo-benefício)',
+        'Baixa (só estou explorando possibilidades)',
+    ],
   },
   {
     step: 5,
