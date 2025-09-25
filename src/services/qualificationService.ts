@@ -1,15 +1,13 @@
-
 'use server';
 /**
  * @fileOverview Service for managing qualification leads in Firestore.
  */
 
 import { FieldValue } from 'firebase-admin/firestore';
-import { z } from 'zod';
-import { QualificationLeadSchema } from '@/ai/schemas';
 import { adminDb } from '@/lib/firebase-admin';
 
-export const createQualificationLead = async (input: z.infer<typeof QualificationLeadSchema>) => {
+// O serviço agora espera um objeto genérico, já que a formatação é feita no fluxo.
+export const createQualificationLead = async (input: Record<string, any>) => {
     const newLeadData = {
         ...input,
         createdAt: FieldValue.serverTimestamp(),
