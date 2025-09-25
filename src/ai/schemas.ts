@@ -365,3 +365,18 @@ export const ReconciliationProfileSchema = ReconciliationSchema.extend({
     accountName: z.string().optional(),
 });
 export type ReconciliationProfile = z.infer<typeof ReconciliationProfileSchema>;
+
+// Schema for Qualification Form
+export const QualificationLeadSchema = z.object({
+  fullName: z.string().optional(),
+  role: z.string().optional(),
+  email: z.string().email().optional(),
+  companySize: z.string().optional(),
+  inefficientProcesses: z.string().optional(),
+  currentTools: z.string().optional(),
+  urgency: z.string().optional(),
+  interestedServices: z.record(z.array(z.string())).optional(),
+  investmentRange: z.string().optional(),
+  desiredOutcome: z.string().optional(),
+});
+export type QualificationLead = z.infer<typeof QualificationLeadSchema>;

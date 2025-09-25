@@ -1,6 +1,6 @@
 
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Loader2, Send, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -45,9 +45,9 @@ const questions = [
     type: 'radio',
     key: 'urgency',
     options: [
-        'Alta (preciso resolver agora, mesmo que demande investimento maior)',
-        'Média (quero resolver em breve, mas depende do custo-benefício)',
-        'Baixa (só estou explorando possibilidades)',
+      'Alta (preciso resolver agora, mesmo que demande investimento maior)',
+      'Média (quero resolver em breve, mas depende do custo-benefício)',
+      'Baixa (só estou explorando possibilidades)',
     ],
   },
   {
@@ -99,7 +99,7 @@ export default function QualificationForm() {
 
   const currentQuestion = questions[currentStep];
   const progress = ((currentStep + 1) / totalSteps) * 100;
-  
+
   const navigate = (direction: 'next' | 'back') => {
     setIsAnimatingOut(true);
     setTimeout(() => {
@@ -109,7 +109,7 @@ export default function QualificationForm() {
         setCurrentStep(currentStep - 1);
       }
       setIsAnimatingOut(false);
-    }, 300); // Animation duration
+    }, 300);
   };
 
   const handleNext = () => navigate('next');
@@ -118,46 +118,47 @@ export default function QualificationForm() {
   const handleInputChange = (key: string, value: any) => {
     setAnswers({ ...answers, [key]: value });
   };
-  
+
   const handleCheckboxChange = (category: string, item: string, checked: boolean) => {
     const key = 'interestedServices';
     const currentServices = answers[key] || {};
-    const categoryServices = currentServices[category] || [];
+    const categoryServices: string[] = currentServices[category] || [];
 
-    let newCategoryServices;
-    if (checked) {
-      newCategoryServices = [...categoryServices, item];
-    } else {
-      newCategoryServices = categoryServices.filter((s: string) => s !== item);
-    }
-    
+    const newCategoryServices = checked
+      ? [...categoryServices, item]
+      : categoryServices.filter((s: string) => s !== item);
+
     handleInputChange(key, { ...currentServices, [category]: newCategoryServices });
-  }
+  };
 
   const handleSubmit = async () => {
     setIsLoading(true);
     try {
-      await submitQualificationForm(answers);
-      router.push('/qualificacao/obrigado');
-    } catch (error) {
-      console.error("Failed to submit form:", error);
-      // Handle error display to the user
-      alert("Ocorreu um erro ao enviar suas respostas. Por favor, tente novamente.");
+      const result = await submitQualificationForm(answers);
+      if (result.success) {
+        router.push('/qualificacao/obrigado');
+      } else {
+        alert(`Erro ao enviar formulário: ${result.message}`);
+      }
+    } catch (error: any) {
+      console.error("❌ Falha ao enviar formulário:", error);
+      const message = error?.message || "Erro desconhecido ao enviar o formulário.";
+      alert(`Erro: ${message}`);
     } finally {
       setIsLoading(false);
     }
   };
 
   const isNextButtonDisabled = () => {
-    const value = answers[currentQuestion.key];
+    const value = answers[currentQuestion.key as string];
     if (currentQuestion.type === 'textarea' || currentQuestion.type === 'contact') {
-        if(currentQuestion.type === 'contact') {
-            return !answers['fullName'] || !answers['email'];
-        }
-        return !value || value.trim() === '';
+      if (currentQuestion.type === 'contact') {
+        return !answers['fullName'] || !answers['email'];
+      }
+      return !value || value.trim() === '';
     }
     if (currentQuestion.type === 'checkbox') {
-        return !value || Object.values(value).every(v => Array.isArray(v) && v.length === 0);
+      return !value || Object.values(value).every(v => Array.isArray(v) && v.length === 0);
     }
     return !value;
   };
@@ -182,19 +183,19 @@ export default function QualificationForm() {
             {currentQuestion.type === 'radio' && (
               <RadioGroup
                 value={answers[currentQuestion.key] || ''}
-                onValueChange={(value) => handleInputChange(currentQuestion.key, value)}
+                onValueChange={(value) => handleInputChange(currentQuestion.key as string, value)}
                 className="grid grid-cols-1 gap-3"
               >
-                {currentQuestion.options.map((option, index) => (
+                {currentQuestion.options?.map((option) => (
                   <Label key={option} className={cn(
                     "flex items-center justify-start p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 h-full",
-                    answers[currentQuestion.key] === option 
-                      ? 'bg-primary/10 border-primary' 
+                    answers[currentQuestion.key as string] === option
+                      ? 'bg-primary/10 border-primary'
                       : 'border-border hover:border-primary/50'
                   )}>
                     <RadioGroupItem value={option} id={option} className="sr-only" />
-                    <div className={cn("w-6 h-6 rounded-md border-2 flex-shrink-0 mr-4 flex items-center justify-center", answers[currentQuestion.key] === option ? 'border-primary bg-primary' : 'border-border')}>
-                      {answers[currentQuestion.key] === option && <Check className="w-4 h-4 text-primary-foreground" />}
+                    <div className={cn("w-6 h-6 rounded-md border-2 flex-shrink-0 mr-4 flex items-center justify-center", answers[currentQuestion.key as string] === option ? 'border-primary bg-primary' : 'border-border')}>
+                      {answers[currentQuestion.key as string] === option && <Check className="w-4 h-4 text-primary-foreground" />}
                     </div>
                     <span className="font-semibold">{option}</span>
                   </Label>
@@ -205,7 +206,7 @@ export default function QualificationForm() {
             {currentQuestion.type === 'textarea' && (
               <Textarea
                 value={answers[currentQuestion.key] || ''}
-                onChange={(e) => handleInputChange(currentQuestion.key, e.target.value)}
+                onChange={(e) => handleInputChange(currentQuestion.key as string, e.target.value)}
                 placeholder={currentQuestion.placeholder}
                 className="min-h-[150px] text-lg bg-input border-border focus:border-primary rounded-xl p-4"
               />
@@ -213,15 +214,15 @@ export default function QualificationForm() {
 
             {currentQuestion.type === 'checkbox' && (
               <div className="space-y-8">
-                {currentQuestion.options.map(({ category, items }) => (
+                {currentQuestion.options?.map(({ category, items }) => (
                   <div key={category}>
                     <h3 className="font-semibold text-xl mb-4">{category}</h3>
                     <div className="space-y-3">
                       {items.map((item) => {
-                         const isChecked = answers[currentQuestion.key]?.[category]?.includes(item) || false;
-                         return(
+                        const isChecked = answers[currentQuestion.key]?.[category]?.includes(item) || false;
+                        return (
                           <Label key={item} className={cn("flex items-center justify-start p-4 border-2 rounded-xl cursor-pointer transition-all duration-200",
-                             isChecked ? 'bg-primary/10 border-primary' : 'border-border hover:border-primary/50'
+                            isChecked ? 'bg-primary/10 border-primary' : 'border-border hover:border-primary/50'
                           )}>
                             <Checkbox
                               id={item}
@@ -230,31 +231,31 @@ export default function QualificationForm() {
                               className="sr-only"
                             />
                             <div className={cn("w-6 h-6 rounded-md border-2 flex-shrink-0 mr-4 flex items-center justify-center", isChecked ? 'border-primary bg-primary' : 'border-border')}>
-                               {isChecked && <Check className="w-4 h-4 text-primary-foreground" />}
+                              {isChecked && <Check className="w-4 h-4 text-primary-foreground" />}
                             </div>
                             <span className="font-semibold">{item}</span>
                           </Label>
-                         )
+                        );
                       })}
                     </div>
                   </div>
                 ))}
               </div>
             )}
-            
+
             {currentQuestion.type === 'contact' && (
               <div className="space-y-6">
                 <div>
                   <Label htmlFor="fullName" className="text-muted-foreground">Nome Completo *</Label>
-                  <Input id="fullName" value={answers['fullName'] || ''} onChange={(e) => handleInputChange('fullName', e.target.value)} className="h-14 text-lg bg-input border-border p-4 rounded-xl"/>
+                  <Input id="fullName" value={answers['fullName'] || ''} onChange={(e) => handleInputChange('fullName', e.target.value)} className="h-14 text-lg bg-input border-border p-4 rounded-xl" />
                 </div>
-                 <div>
+                <div>
                   <Label htmlFor="role" className="text-muted-foreground">Cargo</Label>
-                  <Input id="role" value={answers['role'] || ''} onChange={(e) => handleInputChange('role', e.target.value)} className="h-14 text-lg bg-input border-border p-4 rounded-xl"/>
+                  <Input id="role" value={answers['role'] || ''} onChange={(e) => handleInputChange('role', e.target.value)} className="h-14 text-lg bg-input border-border p-4 rounded-xl" />
                 </div>
-                 <div>
+                <div>
                   <Label htmlFor="email" className="text-muted-foreground">E-mail *</Label>
-                  <Input id="email" type="email" value={answers['email'] || ''} onChange={(e) => handleInputChange('email', e.target.value)} className="h-14 text-lg bg-input border-border p-4 rounded-xl"/>
+                  <Input id="email" type="email" value={answers['email'] || ''} onChange={(e) => handleInputChange('email', e.target.value)} className="h-14 text-lg bg-input border-border p-4 rounded-xl" />
                 </div>
               </div>
             )}
@@ -265,7 +266,7 @@ export default function QualificationForm() {
               <ArrowLeft className="mr-2 h-4 w-4" />
               Voltar
             </Button>
-            
+
             {currentStep < totalSteps - 1 ? (
               <Button size="lg" onClick={handleNext} disabled={isNextButtonDisabled()}>
                 Avançar <ArrowRight className="ml-2 h-4 w-4" />
