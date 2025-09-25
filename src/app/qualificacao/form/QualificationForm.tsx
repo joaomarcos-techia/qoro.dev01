@@ -261,11 +261,16 @@ export default function QualificationForm() {
             )}
           </div>
 
-          <div className="mt-12 flex items-center justify-between">
-            <Button variant="outline" size="lg" onClick={handleBack} disabled={currentStep === 0 || isLoading}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Voltar
-            </Button>
+          <div className={cn(
+              "mt-12 flex items-center",
+              currentStep > 0 ? "justify-between" : "justify-end"
+            )}>
+            {currentStep > 0 && (
+              <Button variant="outline" size="lg" onClick={handleBack} disabled={isLoading}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Voltar
+              </Button>
+            )}
 
             {currentStep < totalSteps - 1 ? (
               <Button size="lg" onClick={handleNext} disabled={isNextButtonDisabled()}>
