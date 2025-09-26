@@ -164,7 +164,7 @@ export default function QualificationForm() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-black text-white p-4">
+    <div className="flex flex-col min-h-screen bg-black text-white p-4 sm:p-6 md:p-8">
       <header className="fixed top-0 left-0 right-0 p-4 z-10">
         <Progress value={progress} className="w-full h-1.5" />
       </header>
@@ -172,11 +172,11 @@ export default function QualificationForm() {
       <main className="flex-grow flex items-center justify-center">
         <div className={cn("w-full max-w-3xl transition-all duration-300", isAnimatingOut ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0')}>
           <div className="mb-8">
-            <p className="text-primary font-semibold mb-2 flex items-center">
+            <p className="text-primary font-semibold mb-2 flex items-center text-sm sm:text-base">
               {currentQuestion.step} <ArrowRight className="w-4 h-4 mx-2 text-muted-foreground" /> {currentQuestion.section}
             </p>
-            <h1 className="text-3xl md:text-4xl font-bold">{currentQuestion.title}</h1>
-            {currentQuestion.subtitle && <p className="text-muted-foreground mt-2 text-lg">{currentQuestion.subtitle}</p>}
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">{currentQuestion.title}</h1>
+            {currentQuestion.subtitle && <p className="text-muted-foreground mt-2 text-base md:text-lg">{currentQuestion.subtitle}</p>}
           </div>
 
           <div className="min-h-[300px]">
@@ -197,7 +197,7 @@ export default function QualificationForm() {
                     <div className={cn("w-6 h-6 rounded-md border-2 flex-shrink-0 mr-4 flex items-center justify-center", answers[currentQuestion.key as string] === option ? 'border-primary bg-primary' : 'border-border')}>
                       {answers[currentQuestion.key as string] === option && <Check className="w-4 h-4 text-primary-foreground" />}
                     </div>
-                    <span className="font-semibold">{option}</span>
+                    <span className="font-semibold text-sm sm:text-base">{option}</span>
                   </Label>
                 ))}
               </RadioGroup>
@@ -208,15 +208,15 @@ export default function QualificationForm() {
                 value={answers[currentQuestion.key] || ''}
                 onChange={(e) => handleInputChange(currentQuestion.key as string, e.target.value)}
                 placeholder={currentQuestion.placeholder}
-                className="min-h-[150px] text-lg bg-input border-border focus:border-primary rounded-xl p-4"
+                className="min-h-[150px] text-base md:text-lg bg-input border-border focus:border-primary rounded-xl p-4"
               />
             )}
 
             {currentQuestion.type === 'checkbox' && (
-              <div className="space-y-8">
+              <div className="space-y-6">
                 {currentQuestion.options?.map(({ category, items }) => (
                   <div key={category}>
-                    <h3 className="font-semibold text-xl mb-4">{category}</h3>
+                    <h3 className="font-semibold text-lg sm:text-xl mb-3">{category}</h3>
                     <div className="space-y-3">
                       {items.map((item) => {
                         const isChecked = answers[currentQuestion.key]?.[category]?.includes(item) || false;
@@ -233,7 +233,7 @@ export default function QualificationForm() {
                             <div className={cn("w-6 h-6 rounded-md border-2 flex-shrink-0 mr-4 flex items-center justify-center", isChecked ? 'border-primary bg-primary' : 'border-border')}>
                               {isChecked && <Check className="w-4 h-4 text-primary-foreground" />}
                             </div>
-                            <span className="font-semibold">{item}</span>
+                            <span className="font-semibold text-sm sm:text-base">{item}</span>
                           </Label>
                         );
                       })}
@@ -244,40 +244,40 @@ export default function QualificationForm() {
             )}
 
             {currentQuestion.type === 'contact' && (
-              <div className="space-y-6">
+              <div className="space-y-4">
                 <div>
                   <Label htmlFor="fullName" className="text-muted-foreground">Nome Completo *</Label>
-                  <Input id="fullName" value={answers['fullName'] || ''} onChange={(e) => handleInputChange('fullName', e.target.value)} className="h-14 text-lg bg-input border-border p-4 rounded-xl" />
+                  <Input id="fullName" value={answers['fullName'] || ''} onChange={(e) => handleInputChange('fullName', e.target.value)} className="h-12 text-base md:text-lg bg-input border-border p-4 rounded-xl" />
                 </div>
                 <div>
                   <Label htmlFor="role" className="text-muted-foreground">Cargo</Label>
-                  <Input id="role" value={answers['role'] || ''} onChange={(e) => handleInputChange('role', e.target.value)} className="h-14 text-lg bg-input border-border p-4 rounded-xl" />
+                  <Input id="role" value={answers['role'] || ''} onChange={(e) => handleInputChange('role', e.target.value)} className="h-12 text-base md:text-lg bg-input border-border p-4 rounded-xl" />
                 </div>
                 <div>
                   <Label htmlFor="email" className="text-muted-foreground">E-mail *</Label>
-                  <Input id="email" type="email" value={answers['email'] || ''} onChange={(e) => handleInputChange('email', e.target.value)} className="h-14 text-lg bg-input border-border p-4 rounded-xl" />
+                  <Input id="email" type="email" value={answers['email'] || ''} onChange={(e) => handleInputChange('email', e.target.value)} className="h-12 text-base md:text-lg bg-input border-border p-4 rounded-xl" />
                 </div>
               </div>
             )}
           </div>
 
           <div className={cn(
-              "mt-12 flex items-center",
+              "mt-12 flex flex-col-reverse sm:flex-row gap-4",
               currentStep > 0 ? "justify-between" : "justify-end"
             )}>
             {currentStep > 0 && (
-              <Button variant="outline" size="lg" onClick={handleBack} disabled={isLoading}>
+              <Button variant="outline" size="lg" onClick={handleBack} disabled={isLoading} className="w-full sm:w-auto">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Voltar
               </Button>
             )}
 
             {currentStep < totalSteps - 1 ? (
-              <Button size="lg" onClick={handleNext} disabled={isNextButtonDisabled()}>
+              <Button size="lg" onClick={handleNext} disabled={isNextButtonDisabled()} className="w-full sm:w-auto">
                 Avançar <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             ) : (
-              <Button size="lg" onClick={handleSubmit} disabled={isLoading || isNextButtonDisabled()}>
+              <Button size="lg" onClick={handleSubmit} disabled={isLoading || isNextButtonDisabled()} className="w-full sm:w-auto">
                 {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
                 {isLoading ? 'Enviando...' : 'Enviar Respostas'}
               </Button>
@@ -288,3 +288,5 @@ export default function QualificationForm() {
     </div>
   );
 }
+
+    
