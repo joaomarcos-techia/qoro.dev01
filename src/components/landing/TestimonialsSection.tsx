@@ -35,7 +35,7 @@ const testimonials = [
     color: 'text-task-primary',
   },
   {
-    quote: "Com a Qoro, finalmente saímos das planilhas. A automação entre o financeiro e o CRM nos economiza pelo menos 10 horas de trabalho manual por semana. É a clareza que precisávamos para tomar decisões.",
+    quote: "Com a Qoro, finalmente saímos das planilhas. As opções do QoroFinance nos economiza pelo menos 10 horas de trabalho manual por semana. É a clareza que precisávamos para tomar decisões.",
     name: 'Lucas F.',
     company: 'Diretor, LF Consultoria',
     avatar: 'https://picsum.photos/100/100?random=5',
