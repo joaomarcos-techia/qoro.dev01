@@ -117,26 +117,27 @@ function DashboardContent() {
 
 
   const fetchUserAccess = useCallback(async (user: FirebaseUser) => {
-    setIsLoading(prev => ({ ...prev, access: true }));
+    // This part is quick, so we don't need a separate loading state.
     try {
         const info = await getUserAccessInfo({ actor: user.uid });
         setUserAccess(info);
     } catch (e) {
         console.error("Failed to fetch user access info", e);
+        setError("Não foi possível carregar as informações do seu plano.");
         setUserAccess(null);
-    } finally {
-      setIsLoading(prev => ({...prev, access: false}));
     }
   }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user: FirebaseUser | null) => {
-      setCurrentUser(user);
       if (user) {
+        setCurrentUser(user);
         fetchUserAccess(user);
       } else {
+        // If no user, stop loading and clear data.
+        setCurrentUser(null);
         setUserAccess(null);
-        setIsLoading(prev => ({...prev, access: false}));
+        setIsLoading({ access: false, metrics: false });
       }
     });
     return () => unsubscribe();
@@ -147,7 +148,7 @@ function DashboardContent() {
     async function fetchAllMetrics() {
         if (!currentUser) return;
 
-        setIsLoading(prev => ({...prev, metrics: true}));
+        setIsLoading(prev => ({...prev, metrics: true, access: false })); // Access is loaded, now load metrics
         setError(null);
 
         try {
@@ -175,9 +176,9 @@ function DashboardContent() {
     }
   }, [currentUser]);
 
-  if (isLoading.access) {
+  if (isLoading.access || isLoading.metrics) {
     return (
-      <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+      <div className="flex items-center justify-center h-full">
         <Loader2 className="w-12 h-12 text-primary animate-spin" />
       </div>
     )
@@ -185,11 +186,11 @@ function DashboardContent() {
   
   if (!currentUser) {
     return (
-        <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+        <div className="flex items-center justify-center h-full">
           <div className="text-center">
             <AlertTriangle className="mx-auto w-12 h-12 text-destructive" />
-            <h3 className="mt-4 text-lg font-medium text-foreground">Não foi possível carregar suas permissões.</h3>
-            <p className="mt-2 text-sm text-muted-foreground">Tente recarregar a página.</p>
+            <h3 className="mt-4 text-lg font-medium text-foreground">Sessão expirada ou inválida.</h3>
+            <p className="mt-2 text-sm text-muted-foreground">Por favor, faça login novamente.</p>
           </div>
         </div>
       );
@@ -269,8 +270,10 @@ function DashboardContent() {
 
 export default function Dashboard() {
     return (
-        <ErrorBoundary FallbackComponent={DashboardErrorFallback}>
-            <DashboardContent />
-        </ErrorBoundary>
+        <div className="h-full">
+            <ErrorBoundary FallbackComponent={DashboardErrorFallback}>
+                <DashboardContent />
+            </ErrorBoundary>
+        </div>
     )
 }
