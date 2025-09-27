@@ -28,16 +28,19 @@ const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>, hre
 
 export function Footer() {
   return (
-    <footer id="footer" className="bg-black border-t border-white/10 pt-12 pb-8">
+    <footer id="footer" className="bg-black border-t border-white/10 pt-8 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12 mb-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-8 mb-8">
           {/* Coluna da Logo e Descrição */}
           <div className="lg:col-span-2">
             <Link href="/#home" onClick={(e) => handleLinkClick(e, '/#home')}>
               <Logo height={32} />
             </Link>
-            <p className="text-white/60 mt-4 mb-6 leading-relaxed max-w-sm">
+            <p className="text-white/60 mt-4 mb-2 leading-relaxed max-w-sm">
               O fim da desorganização. O começo da clareza.
+            </p>
+            <p className="text-white/40 text-sm mt-2 mb-6">
+              CNPJ: 61.698.053/0001-12
             </p>
             <div className="flex space-x-2">
               <a href="#" className="text-white/60 hover:text-primary transition-colors p-2 rounded-xl" aria-label="LinkedIn">
@@ -78,7 +81,7 @@ export function Footer() {
           </div>
         </div>
         
-        <div className="border-t border-white/10 pt-8 mt-8 flex flex-col sm:flex-row justify-between items-center text-sm text-white/50">
+        <div className="border-t border-white/10 pt-6 mt-6 flex flex-col sm:flex-row justify-between items-center text-sm text-white/50">
           <p>&copy; {new Date().getFullYear()} Qoro. Todos os direitos reservados.</p>
         </div>
       </div>
