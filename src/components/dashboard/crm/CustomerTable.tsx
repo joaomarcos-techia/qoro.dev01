@@ -9,12 +9,8 @@ import {
   useReactTable,
   SortingState,
   getSortedRowModel,
-  ColumnFiltersState,
-  getFilteredRowModel,
   getPaginationRowModel,
-  FilterFn,
 } from '@tanstack/react-table';
-import { rankItem } from '@tanstack/match-sorter-utils'
 import {
   Table,
   TableBody,
@@ -83,34 +79,6 @@ const formatPhone = (value: string) => {
 const normalizeString = (str: string) => {
     return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
-
-const alphabeticalFilter: FilterFn<any> = (row, columnId, filterValue, addMeta) => {
-    const searchTerm = normalizeString(String(filterValue));
-
-    if (!searchTerm) return true;
-
-    // Check name (accent-insensitive, starts with)
-    const name = normalizeString(row.original.name || '');
-    if (name.startsWith(searchTerm)) {
-        return true;
-    }
-
-    // Check email (case-insensitive, starts with)
-    const email = (row.original.email || '').toLowerCase();
-    if (email.startsWith(searchTerm)) {
-        return true;
-    }
-    
-    // Check CPF (digit-only, starts with)
-    const cpf = (row.original.cpf || '').replace(/\D/g, '');
-    const cleanSearchTerm = searchTerm.replace(/\D/g, '');
-    if (cpf.startsWith(cleanSearchTerm)) {
-        return true;
-    }
-    
-    return false;
-}
-
 
 export function CustomerTable() {
   const [data, setData] = React.useState<CustomerProfile[]>([]);
@@ -293,8 +261,30 @@ export function CustomerTable() {
   }, []);
 
   const filteredData = React.useMemo(() => {
-    return data.filter(customer => showArchived || customer.status !== 'archived');
-  }, [data, showArchived]);
+    let filtered = data;
+
+    if (!showArchived) {
+        filtered = filtered.filter(customer => customer.status !== 'archived');
+    }
+
+    if (globalFilter) {
+        const searchTerm = normalizeString(globalFilter);
+        filtered = filtered.filter(customer => {
+            const normalizedName = normalizeString(customer.name || '');
+            const normalizedEmail = (customer.email || '').toLowerCase();
+            const normalizedCpf = (customer.cpf || '').replace(/\D/g, '');
+            const cleanSearchTerm = searchTerm.replace(/\D/g, '');
+
+            return (
+                normalizedName.startsWith(searchTerm) ||
+                normalizedEmail.startsWith(searchTerm) ||
+                (cleanSearchTerm.length > 0 && normalizedCpf.startsWith(cleanSearchTerm))
+            );
+        });
+    }
+
+    return filtered;
+  }, [data, showArchived, globalFilter]);
 
   React.useEffect(() => {
     async function fetchData() {
@@ -322,12 +312,8 @@ export function CustomerTable() {
     getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
-    onGlobalFilterChange: setGlobalFilter,
-    globalFilterFn: alphabeticalFilter,
-    getFilteredRowModel: getFilteredRowModel(),
     state: {
       sorting,
-      globalFilter,
     },
   });
 
@@ -381,7 +367,7 @@ export function CustomerTable() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                 placeholder="Buscar por nome, email ou CPF..."
-                value={globalFilter ?? ''}
+                value={globalFilter}
                 onChange={(event) =>
                     setGlobalFilter(event.target.value)
                 }
@@ -462,4 +448,3 @@ export function CustomerTable() {
     </>
   );
 }
-
