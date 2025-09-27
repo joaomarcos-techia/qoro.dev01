@@ -1,135 +1,97 @@
-Política de Privacidade da Qoro
+'use client';
 
-Data de Efetivação: 26 de setembro de 2025
+import { useEffect, useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Loader2 } from 'lucide-react';
 
-1. Introdução
+interface LegalPopupProps {
+  content: 'terms' | 'policy' | null;
+  onOpenChange: (isOpen: boolean) => void;
+}
 
-A Qoro, pessoa jurídica de direito privado, inscrita no CNPJ sob o nº [INSERIR CNPJ], com sede em [INSERIR ENDEREÇO COMPLETO], valoriza a sua privacidade e a proteção dos seus dados pessoais. Esta Política de Privacidade descreve como coletamos, usamos, armazenamos, compartilhamos e protegemos as informações pessoais dos nossos usuários ao utilizarem a Plataforma Qoro (nosso software como serviço - SaaS) ou ao contratar nossos Serviços de Consultoria. Nosso compromisso é com a transparência e o respeito à legislação brasileira, em especial a Lei Geral de Proteção de Dados Pessoais (Lei nº 13.709/2018 - LGPD).
+const documents = {
+  terms: {
+    title: 'Termos e Condições de Uso',
+    description: 'Leia nossos termos e condições de uso para entender seus direitos e obrigações.',
+    filePath: '/terms.md',
+  },
+  policy: {
+    title: 'Política de Privacidade',
+    description: 'Entenda como coletamos, usamos e protegemos seus dados pessoais.',
+    filePath: '/politica.md',
+  },
+};
 
-Definições:
+const useMarkdownContent = (filePath: string) => {
+  const [html, setHtml] = useState('');
+  const [loading, setLoading] = useState(true);
 
-•
-**Dados Pessoais**: Informação relacionada a pessoa natural identificada ou identificável.
-•
-**Titular**: Pessoa natural a quem se referem os dados pessoais que são objeto de tratamento.
-•
-**Tratamento**: Toda operação realizada com dados pessoais, como coleta, produção, utilização, acesso, armazenamento, eliminação, etc.
-•
-**Controlador**: A Qoro, a quem competem as decisões referentes ao tratamento dos dados pessoais dos seus usuários diretos.
-•
-**Operador**: A Qoro, quando trata dados pessoais inseridos na plataforma pelos seus Usuários (por exemplo, dados dos clientes dos Usuários no QoroCRM), atuando sob as instruções do Usuário, que neste caso é o Controlador.
-•
-**LGPD**: Lei Geral de Proteção de Dados Pessoais (Lei nº 13.709/2018).
+  useEffect(() => {
+    if (!filePath) return;
+    setLoading(true);
+    fetch(filePath)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Falha ao carregar o documento.');
+        }
+        return response.text();
+      })
+      .then(text => {
+        const parsedHtml = text
+          .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold mt-6 mb-4 text-white">$1</h1>')
+          .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold mt-5 mb-3 text-gray-200">$1</h2>')
+          .replace(/^### (.*$)/gim, '<h3 class="text-lg font-semibold mt-4 mb-2 text-gray-300">$1</h3>')
+          .replace(/•\s*(.*$)/gim, '<li class="flex items-start"><span class="mr-2 mt-1.5 text-primary">&#8226;</span>$1</li>')
+          .replace(/(<li.*>.*?<\/li>\s*)+/gim, (match) => `<ul class="space-y-2 my-4">${match.trim()}</ul>`)
+          .split(/\n\s*\n/)
+          .map(paragraph => {
+            const trimmed = paragraph.trim();
+            if (!trimmed || trimmed.startsWith('<h') || trimmed.startsWith('<ul')) return trimmed;
+            return `<p class="text-gray-400 leading-relaxed">${trimmed.replace(/\n/g, '<br />')}</p>`;
+          })
+          .join('\n\n');
+          
+        setHtml(parsedHtml);
+      })
+      .catch(error => {
+        console.error("Error fetching markdown file:", error);
+        setHtml('<p class="text-destructive">Não foi possível carregar o documento.</p>');
+      })
+      .finally(() => setLoading(false));
+  }, [filePath]);
 
-2. Dados Coletados
+  return { html, loading };
+};
 
-A Qoro coleta diferentes tipos de dados pessoais para fornecer e aprimorar seus serviços:
-
-2.1. Dados Fornecidos Ativamente pelo Usuário
-
-•
-**No cadastro e uso da Plataforma Qoro**: Nome completo, e-mail, telefone, cargo, nome da empresa, CNPJ, e dados de pagamento (processados por nosso parceiro Stripe; a Qoro não armazena diretamente os dados do seu cartão de crédito).
-•
-**Dados inseridos nos módulos da Plataforma (em que atuamos como Operadores)**:
-    - **QoroCRM**: Dados de clientes, prospects, orçamentos e produtos/serviços dos nossos Usuários.
-    - **QoroTask**: Detalhes de tarefas, projetos, comentários e responsáveis.
-    - **QoroFinance**: Transações financeiras, contas, saldos e dados de fornecedores.
-    - **QoroPulse**: Perguntas e interações com o nosso assistente de IA.
-•
-**Na contratação de Serviços de Consultoria**: Além dos dados de cadastro, coletamos informações específicas do projeto, requisitos técnicos e, quando necessário para integrações, dados de acesso a sistemas de terceiros (sempre com autorização expressa do cliente).
-
-2.2. Dados Coletados Automaticamente
-
-•
-**Dados de Navegação**: Endereço IP, tipo de navegador, sistema operacional, páginas visitadas, tempo de permanência e URLs de referência.
-•
-**Dados de Uso da Plataforma**: Funcionalidades mais utilizadas, frequência de acesso e padrões de interação com a interface para aprimorar a experiência.
-•
-**Cookies e Tecnologias Similares**: Para entender como você interage com nossos serviços, personalizar sua experiência e para fins de marketing. Veja mais na Seção 8.
-
-2.3. Dados de Terceiros
-
-Podemos receber dados de terceiros quando você autoriza integrações com outros serviços através da Plataforma Qoro, sempre em conformidade com as políticas de privacidade desses terceiros.
-
-3. Finalidade do Tratamento dos Dados
-
-Seus dados pessoais são tratados para as seguintes finalidades:
-
-•
-**Prestação dos Serviços**: Gerenciar sua conta, fornecer acesso aos módulos contratados, processar pagamentos e garantir o funcionamento da plataforma.
-•
-**Execução de Consultoria**: Desenvolver soluções personalizadas de automação e IA, integrar sistemas e atender aos requisitos de cada projeto.
-•
-**Melhoria Contínua**: Analisar o uso dos serviços para identificar tendências, corrigir falhas, desenvolver novas funcionalidades e aprimorar a experiência do usuário.
-•
-**Comunicação**: Enviar notificações sobre o serviço, atualizações, informações de suporte e comunicados de marketing (sempre com seu consentimento).
-•
-**Segurança**: Proteger nossos sistemas e seus dados contra acessos não autorizados, fraudes e outras atividades ilícitas.
-•
-**Cumprimento de Obrigações Legais**: Atender a exigências legais, ordens judiciais ou de autoridades competentes.
-
-4. Base Legal para o Tratamento
-
-O tratamento de dados pela Qoro é fundamentado nas seguintes hipóteses da LGPD:
-
-•
-**Execução de Contrato**: Para a prestação dos serviços contratados da Plataforma Qoro ou da Consultoria.
-•
-**Legítimo Interesse**: Para aprimorar nossos serviços, garantir a segurança da plataforma e analisar dados de uso, sempre respeitando seus direitos e liberdades.
-•
-**Consentimento**: Para o envio de comunicações de marketing e outras situações onde a lei exigir.
-•
-**Cumprimento de Obrigação Legal**: Para atender a determinações legais ou regulatórias.
-
-5. Compartilhamento de Dados
-
-A Qoro não vende seus dados pessoais. O compartilhamento ocorre apenas nas seguintes situações:
-
-•
-**Parceiros e Fornecedores**: Com empresas que nos auxiliam na prestação dos serviços, como provedores de hospedagem (Google Cloud), processadores de pagamento (Stripe) e ferramentas de análise. Todos são contratualmente obrigados a proteger seus dados.
-•
-**Autoridades Governamentais**: Em resposta a solicitações legais ou para cumprir obrigações regulatórias.
-•
-**Com o seu Consentimento**: Em outras situações, o compartilhamento só ocorrerá com sua autorização expressa.
-
-6. Armazenamento e Segurança dos Dados
-
-Seus dados são armazenados em servidores seguros, localizados em infraestrutura de nuvem de ponta (Google Cloud Platform), e são mantidos pelo tempo necessário para cumprir as finalidades para as quais foram coletados, respeitando os prazos legais de retenção. Empregamos medidas de segurança técnicas e administrativas, como criptografia, controle de acesso e monitoramento contínuo, para proteger seus dados.
-
-7. Seus Direitos como Titular
-
-Conforme a LGPD, você tem o direito de:
-
-•
-Confirmar a existência e acessar seus dados.
-•
-Corrigir dados incompletos, inexatos ou desatualizados.
-•
-Solicitar a anonimização, bloqueio ou eliminação de dados desnecessários.
-•
-Solicitar a portabilidade dos seus dados.
-•
-Revogar seu consentimento a qualquer momento.
-
-Para exercer seus direitos, entre em contato conosco através dos canais na Seção 11.
-
-8. Cookies e Tecnologias Similares
-
-Utilizamos cookies essenciais para o funcionamento da plataforma (ex: manter você logado) e cookies de análise para entender como nossos serviços são utilizados. Você pode gerenciar suas preferências de cookies através das configurações do seu navegador.
-
-9. Links para Sites de Terceiros
-
-Nossos serviços podem conter links para sites de terceiros. Não somos responsáveis pelas práticas de privacidade deles. Recomendamos que você revise as políticas de privacidade de qualquer site que visitar.
-
-10. Alterações na Política de Privacidade
-
-Podemos atualizar esta Política de Privacidade periodicamente. Quaisquer alterações significativas serão comunicadas por e-mail ou através de aviso em destaque na plataforma.
-
-11. Contato
-
-Para quaisquer dúvidas ou para exercer seus direitos como titular de dados, entre em contato com nosso Encarregado de Dados (DPO):
-
-•
-**E-mail**: [INSERIR E-MAIL DO DPO]
-•
-**Endereço**: [INSERIR ENDEREÇO COMPLETO DA QORO]
+export function LegalPopup({ content, onOpenChange }: LegalPopupProps) {
+  const docInfo = content ? documents[content] : null;
+  const { html, loading } = useMarkdownContent(docInfo?.filePath || '');
+  
+  return (
+    <Dialog open={!!content} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-3xl max-h-[80vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold text-foreground">{docInfo?.title || 'Carregando...'}</DialogTitle>
+           {docInfo?.description && (
+             <DialogDescription>{docInfo.description}</DialogDescription>
+           )}
+        </DialogHeader>
+        <div className="flex-grow overflow-y-auto pr-4 -mr-6">
+          {loading ? (
+            <div className="flex items-center justify-center h-48">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <article className="prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: html }} />
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

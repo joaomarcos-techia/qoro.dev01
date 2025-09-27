@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Loader2 } from 'lucide-react';
 
@@ -17,10 +18,12 @@ interface LegalPopupProps {
 const documents = {
   terms: {
     title: 'Termos e Condições de Uso',
+    description: 'Leia nossos termos e condições de uso para entender seus direitos e obrigações.',
     filePath: '/terms.md',
   },
   policy: {
     title: 'Política de Privacidade',
+    description: 'Entenda como coletamos, usamos e protegemos seus dados pessoais.',
     filePath: '/politica.md',
   },
 };
@@ -75,6 +78,9 @@ export function LegalPopup({ content, onOpenChange }: LegalPopupProps) {
       <DialogContent className="sm:max-w-3xl max-h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-foreground">{docInfo?.title || 'Carregando...'}</DialogTitle>
+           {docInfo?.description && (
+             <DialogDescription>{docInfo.description}</DialogDescription>
+           )}
         </DialogHeader>
         <div className="flex-grow overflow-y-auto pr-4 -mr-6">
           {loading ? (
