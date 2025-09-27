@@ -44,18 +44,28 @@ const useMarkdownContent = (filePath: string) => {
       })
       .then(text => {
         const parsedHtml = text
+          // Headers
           .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold mt-6 mb-4 text-white">$1</h1>')
           .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold mt-5 mb-3 text-gray-200">$1</h2>')
           .replace(/^### (.*$)/gim, '<h3 class="text-lg font-semibold mt-4 mb-2 text-gray-300">$1</h3>')
-          .replace(/•\s*(.*$)/gim, '<li class="flex items-start"><span class="mr-2 mt-1.5 text-primary">&#8226;</span>$1</li>')
-          .replace(/(<li.*>.*?<\/li>\s*)+/gim, (match) => `<ul class="space-y-2 my-4">${match.trim()}</ul>`)
+          // Bold
+          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+          .replace(/__(.*?)__/g, '<strong>$1</strong>')
+          // Italic
+          .replace(/\*(.*?)\*/g, '<em>$1</em>')
+          .replace(/_(.*?)_/g, '<em>$1</em>')
+          // Unordered List
+          .replace(/^\s*[\-\*]\s+(.*)/gm, (match, content) => `<li class="flex items-start"><span class="mr-2 mt-1.5 text-primary">&#8226;</span>${content}</li>`)
+          .replace(/((<li.*<\/li>\s*)+)/g, (match) => `<ul class="space-y-2 my-4">${match.trim()}</ul>`)
+          // Paragraphs
           .split(/\n\s*\n/)
           .map(paragraph => {
             const trimmed = paragraph.trim();
-            if (!trimmed || trimmed.startsWith('<h') || trimmed.startsWith('<ul')) return trimmed;
+            if (!trimmed) return '';
+            if (trimmed.startsWith('<h') || trimmed.startsWith('<ul')) return trimmed;
             return `<p class="text-gray-400 leading-relaxed">${trimmed.replace(/\n/g, '<br />')}</p>`;
           })
-          .join('\n\n');
+          .join('');
           
         setHtml(parsedHtml);
       })
