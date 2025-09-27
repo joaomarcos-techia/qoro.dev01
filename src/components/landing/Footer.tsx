@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -80,10 +79,6 @@ export function Footer() {
         
         <div className="border-t border-white/10 pt-8 mt-8 flex flex-col sm:flex-row justify-between items-center text-sm text-white/50">
           <p>&copy; {new Date().getFullYear()} Qoro. Todos os direitos reservados.</p>
-          <div className="flex gap-4 mt-4 sm:mt-0">
-            <Link href="/termos-de-uso" className="hover:text-white transition-colors">Termos</Link>
-            <Link href="/politica-de-privacidade" className="hover:text-white transition-colors">Privacidade</Link>
-          </div>
         </div>
       </div>
     </footer>
