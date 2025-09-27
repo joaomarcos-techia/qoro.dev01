@@ -3,6 +3,6 @@
 
 // This layout is now simplified to just render children.
 // The main DashboardLayout handles the sidebar and overall page structure.
-export default function FinanceLayout({ children }: { children: React.ReactNode }) {
+export default function TaskLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }

@@ -1,3 +1,4 @@
+
 'use client';
 
 // This layout is now simplified to just render children.
