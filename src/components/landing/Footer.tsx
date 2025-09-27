@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -27,9 +28,9 @@ const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>, hre
 
 export function Footer() {
   return (
-    <footer id="footer" className="bg-black border-t border-white/10 pt-16 pb-8">
+    <footer id="footer" className="bg-black border-t border-white/10 pt-12 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12 mb-12">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12 mb-8">
           {/* Coluna da Logo e Descrição */}
           <div className="lg:col-span-2">
             <Link href="/#home" onClick={(e) => handleLinkClick(e, '/#home')}>
