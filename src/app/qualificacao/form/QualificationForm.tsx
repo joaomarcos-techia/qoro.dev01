@@ -131,22 +131,15 @@ export default function QualificationForm() {
     handleInputChange(key, { ...currentServices, [category]: newCategoryServices });
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     setIsLoading(true);
-    try {
-      const result = await submitQualificationForm(answers);
-      if (result.success) {
-        router.push('/qualificacao/obrigado');
-      } else {
-        alert(`Erro ao enviar formulário: ${result.message}`);
-      }
-    } catch (error: any) {
-      console.error("❌ Falha ao enviar formulário:", error);
-      const message = error?.message || "Erro desconhecido ao enviar o formulário.";
-      alert(`Erro: ${message}`);
-    } finally {
-      setIsLoading(false);
-    }
+    // Fire-and-forget: we don't await the result.
+    submitQualificationForm(answers).catch(error => {
+        // Log the error for debugging, but don't block the user.
+        console.error("❌ Falha no envio do formulário em segundo plano:", error);
+    });
+    // Immediately redirect the user.
+    router.push('/qualificacao/obrigado');
   };
 
   const isNextButtonDisabled = () => {
@@ -288,5 +281,3 @@ export default function QualificationForm() {
     </div>
   );
 }
-
-    
