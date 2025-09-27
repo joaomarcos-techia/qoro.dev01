@@ -30,7 +30,7 @@ export function Footer() {
   return (
     <footer id="footer" className="bg-black border-t border-white/10 pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-x-8 gap-y-12 mb-12">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12 mb-12">
           {/* Coluna da Logo e Descrição */}
           <div className="lg:col-span-2">
             <Link href="/#home" onClick={(e) => handleLinkClick(e, '/#home')}>
@@ -49,22 +49,10 @@ export function Footer() {
             </div>
           </div>
           
-          {/* Coluna de Soluções */}
-          <div>
-            <h3 className="text-sm font-semibold text-white/80 mb-4 tracking-wider uppercase">Soluções</h3>
-            <ul className="space-y-3">
-              <li><a href="#produtos" onClick={(e) => handleLinkClick(e, '#produtos')} className="text-white/60 hover:text-white transition-colors">QoroCRM</a></li>
-              <li><a href="#produtos" onClick={(e) => handleLinkClick(e, '#produtos')} className="text-white/60 hover:text-white transition-colors">QoroPulse</a></li>
-              <li><a href="#produtos" onClick={(e) => handleLinkClick(e, '#produtos')} className="text-white/60 hover:text-white transition-colors">QoroTask</a></li>
-              <li><a href="#produtos" onClick={(e) => handleLinkClick(e, '#produtos')} className="text-white/60 hover:text-white transition-colors">QoroFinance</a></li>
-            </ul>
-          </div>
-          
           {/* Coluna de Empresa */}
           <div>
             <h3 className="text-sm font-semibold text-white/80 mb-4 tracking-wider uppercase">Empresa</h3>
             <ul className="space-y-3">
-              <li><a href="#sobre" onClick={(e) => handleLinkClick(e, '#sobre')} className="text-white/60 hover:text-white transition-colors">Sobre nós</a></li>
               <li><Link href="/politica-de-privacidade" className="text-white/60 hover:text-white transition-colors">Política de Privacidade</Link></li>
               <li><Link href="/termos-de-uso" className="text-white/60 hover:text-white transition-colors">Termos de Uso</Link></li>
             </ul>
