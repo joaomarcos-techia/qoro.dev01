@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Service layer for QoroPulse conversations, using Firebase Admin SDK.
@@ -19,6 +20,7 @@ const COLLECTION = 'pulse_conversations';
 
 /**
  * Converts a Firestore Timestamp or other date representation to a safe ISO string.
+ * Returns the current ISO string as a fallback for invalid inputs.
  */
 function toISOStringSafe(date: any): string {
     if (!date) return new Date().toISOString();
@@ -29,23 +31,32 @@ function toISOStringSafe(date: any): string {
             const parsed = new Date(date);
             if (!isNaN(parsed.getTime())) return parsed.toISOString();
         } catch (e) {
-            // Ignore invalid date strings
+            // Fallthrough to fallback for invalid date strings
         }
     }
+    // Fallback for unexpected types or invalid strings
     return new Date().toISOString();
 }
+
 
 /**
  * Sanitizes messages to ensure they are valid and dates are strings.
  */
 function sanitizeMessages(messages?: any[]): PulseMessage[] {
   if (!Array.isArray(messages)) return [];
+  
+  const validRoles = new Set(['user', 'assistant', 'tool', 'model']);
+
   return messages
-    .filter(m => m && typeof m.content === 'string' && m.content.trim().length > 0)
-    .map(m => PulseMessageSchema.parse({ 
-        role: m.role || 'user', 
-        content: m.content.trim() 
-    }));
+    .map(m => {
+        if (!m || typeof m.content !== 'string' || m.content.trim().length === 0) {
+            return null; // Filter out invalid messages
+        }
+        const role = validRoles.has(m.role) ? m.role : 'user'; // Default to 'user' if role is invalid
+        return { role, content: m.content.trim() };
+    })
+    .filter((m): m is PulseMessage => m !== null)
+    .map(m => PulseMessageSchema.parse(m));
 }
 
 
@@ -72,7 +83,7 @@ export async function getConversation(input: {
 
   return {
     id: docSnap.id,
-    title: data.title,
+    title: data.title || 'Conversa',
     messages: sanitizeMessages(data.messages),
     updatedAt: toISOStringSafe(data.updatedAt),
   };
@@ -119,13 +130,16 @@ export async function listConversations(input: {
   const profiles: ConversationProfile[] = [];
   snapshot.forEach(doc => {
       const data = doc.data();
+      // Safe parsing with Zod to prevent crashes on schema mismatches
       const profile = ConversationProfileSchema.safeParse({
           id: doc.id,
-          title: data.title,
+          title: data.title || 'Conversa', // Provide a fallback title
           updatedAt: toISOStringSafe(data.updatedAt)
       });
       if (profile.success) {
           profiles.push(profile.data);
+      } else {
+          console.warn(`Could not parse conversation profile for doc ${doc.id}:`, profile.error);
       }
   });
 

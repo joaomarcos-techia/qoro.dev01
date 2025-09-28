@@ -135,25 +135,21 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
       
       if (doc.exists) {
         const docData = doc.data();
-        const currentTitle = docData?.title;
-  
         const updatePayload: { [key: string]: any } = {
           messages: finalMessages.map(m => ({ ...m })),
           updatedAt: FieldValue.serverTimestamp(),
         };
   
-        if (currentTitle === 'Nova Conversa') {
-          const userMessages = finalMessages.filter(m => m.role === 'user');
-          if (userMessages.length >= 2) {
-            const contextForTitle = userMessages
+        // Only try to generate a new title if the current one is the default
+        if (docData?.title === 'Nova Conversa' && finalMessages.filter(m => m.role === 'user').length >= 2) {
+          const contextForTitle = finalMessages
+              .filter(m => m.role === 'user')
               .slice(0, 2)
               .map(m => m.content)
               .join(' ');
-              
-            const newTitle = await generateConversationTitle(contextForTitle);
-            if (newTitle !== 'Nova Conversa') {
-              updatePayload.title = newTitle;
-            }
+          const newTitle = await generateConversationTitle(contextForTitle);
+          if (newTitle !== 'Nova Conversa') {
+            updatePayload.title = newTitle;
           }
         }
         await conversationRef.update(updatePayload);
