@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
@@ -8,8 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { User as FirebaseUser, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { askPulse } from '@/ai/flows/pulse-flow';
-import type { PulseMessage } from '@/ai/schemas';
 
 const ArrowUpIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" {...props}>
@@ -39,62 +36,16 @@ export default function PulsePage() {
         return () => unsubscribe();
     }, [router]);
 
-    const validateInput = (text: string): { isValid: boolean; error?: string } => {
-        const trimmed = text.trim();
-        if (!trimmed) {
-            return { isValid: false, error: 'Por favor, digite uma mensagem' };
-        }
-        if (trimmed.length > 4000) {
-            return { isValid: false, error: 'Mensagem muito longa. Máximo 4000 caracteres' };
-        }
-        return { isValid: true };
-    };
-
-    const handleSendMessage = async (e?: FormEvent) => {
+    const handleSendMessage = (e?: FormEvent) => {
         e?.preventDefault();
-        
-        const validation = validateInput(input);
-        if (!validation.isValid) {
-            setError(validation.error || 'Entrada inválida');
+        const message = input.trim();
+        if (!message) {
+            setError('Por favor, digite uma mensagem.');
             return;
         }
-
-        if (isLoading || !currentUser) {
-            setError('Usuário não autenticado ou operação em andamento.');
-            return;
-        }
-
-        const messageText = input.trim();
         setIsLoading(true);
-        setError(null);
-
-        try {
-            const userMessage: PulseMessage = { role: 'user', content: messageText };
-            
-            // For a new conversation, we don't pass a conversationId
-            const result = await askPulse({
-                actor: currentUser.uid,
-                messages: [userMessage],
-            });
-
-            if (!result?.conversationId) {
-                throw new Error('Erro interno: a conversa foi criada mas não retornou um identificador válido.');
-            }
-
-            setInput('');
-            router.push(`/dashboard/pulse/${result.conversationId}`);
-
-        } catch (error: any) {
-            let errorMessage = 'Ocorreu um erro inesperado. Tente novamente em alguns momentos.';
-            if (error?.message) {
-                if (error.message.includes('Network')) errorMessage = 'Erro de conexão. Verifique sua internet e tente novamente.';
-                else if (error.message.includes('500')) errorMessage = 'Erro interno do servidor. Nossa equipe foi notificada.';
-                else if (error.message.includes('401') || error.message.includes('403')) errorMessage = 'Sessão expirada. Faça login novamente.';
-                else errorMessage = error.message;
-            }
-            setError(errorMessage);
-            setIsLoading(false);
-        }
+        // Redirect to the conversation page, passing the initial message as a query parameter.
+        router.push(`/dashboard/pulse/new?q=${encodeURIComponent(message)}`);
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -122,9 +73,6 @@ export default function PulsePage() {
                         <div className="flex flex-col items-center justify-center">
                             <Loader2 className="w-12 h-12 text-primary animate-spin" />
                             <p className="mt-4 text-muted-foreground">Iniciando conversa...</p>
-                            <p className="mt-2 text-xs text-muted-foreground/60">
-                                Isso pode levar alguns segundos
-                            </p>
                         </div>
                     ) : (
                         <div className="text-center">
@@ -171,12 +119,6 @@ export default function PulsePage() {
                             <div className="text-destructive text-sm mt-3 p-3 bg-destructive/10 border border-destructive/20 rounded-lg flex items-start">
                                 <AlertCircle className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" />
                                 <span>{error}</span>
-                            </div>
-                        )}
-
-                        {input.length > 3500 && (
-                            <div className="text-xs text-muted-foreground mt-2 text-center">
-                                {input.length}/4000 caracteres
                             </div>
                         )}
                     </div>

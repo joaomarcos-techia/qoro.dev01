@@ -1,8 +1,7 @@
-
 'use client';
 
-import { useState, useRef, useEffect, FormEvent, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useState, useRef, useEffect, FormEvent, useCallback, useTransition } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { BrainCircuit, Loader2, AlertCircle, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -27,11 +26,101 @@ export default function PulseConversationPage() {
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [currentConversationId, setCurrentConversationId] = useState(useParams().id as string);
+  const [isPending, startTransition] = useTransition();
   
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const params = useParams();
-  const conversationId = params.id as string;
+  const searchParams = useSearchParams();
+
+  // Effect to handle initial message for new conversations
+  useEffect(() => {
+    if (currentConversationId === 'new' && currentUser) {
+      const initialQuery = searchParams.get('q');
+      if (initialQuery) {
+        // Use a ref to ensure this only runs once
+        if (!isSending) {
+           handleSendMessage(undefined, initialQuery);
+        }
+      } else {
+        setIsLoadingHistory(false);
+      }
+    }
+  }, [currentConversationId, currentUser, searchParams]);
+
+
+  const handleSendMessage = useCallback(async (e?: FormEvent, initialMessage?: string) => {
+    e?.preventDefault();
+    const messageContent = initialMessage || input.trim();
+    if (isSending || !currentUser?.uid || !messageContent) return;
+
+    const optimisticUserMessage: PulseMessage = { role: 'user', content: messageContent };
+    
+    // Optimistically update UI
+    setMessages(prev => [...prev, optimisticUserMessage]);
+    if (!initialMessage) {
+      setInput('');
+    }
+    
+    setIsSending(true);
+    setError(null);
+    
+    try {
+      const conversationIdToSend = currentConversationId === 'new' ? undefined : currentConversationId;
+      
+      const result = await askPulse({
+        messages: [...messages, optimisticUserMessage],
+        actor: currentUser.uid,
+        conversationId: conversationIdToSend,
+      });
+
+      if (result?.response) {
+        // Replace optimistic user message with full history + AI response
+        setMessages(prev => [...prev, result.response]);
+      } else {
+        throw new Error('Resposta inválida da IA.');
+      }
+      
+      // If this was a new conversation, update the URL with the real ID
+      if (currentConversationId === 'new' && result.conversationId) {
+        setCurrentConversationId(result.conversationId);
+        startTransition(() => {
+            router.replace(`/dashboard/pulse/${result.conversationId}`, { scroll: false });
+        });
+      }
+
+    } catch (err: any) {
+      setError(err.message || 'Erro ao comunicar com a IA.');
+      // Revert optimistic user message on failure
+      setMessages(prev => prev.slice(0, -1)); 
+    } finally {
+      setIsSending(false);
+    }
+  }, [currentUser, currentConversationId, isSending, messages, input, router]);
+  
+  const fetchConversation = useCallback(async () => {
+    if (!currentUser || !currentConversationId || currentConversationId === 'new') {
+        setIsLoadingHistory(false);
+        return;
+    }
+
+    setIsLoadingHistory(true);
+    setError(null);
+    try {
+        const conversation = await getConversation({ conversationId: currentConversationId, actor: currentUser.uid });
+        if (conversation?.messages) {
+            setMessages(conversation.messages);
+        } else {
+            // If conversation is not found, maybe it was deleted. Redirect.
+            router.push('/dashboard/pulse');
+        }
+    } catch (err: any) {
+        setError(err.message || 'Não foi possível carregar a conversa.');
+        setTimeout(() => router.push('/dashboard/pulse'), 3000);
+    } finally {
+        setIsLoadingHistory(false);
+    }
+  }, [currentUser, currentConversationId, router]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -43,72 +132,10 @@ export default function PulseConversationPage() {
     });
     return () => unsubscribe();
   }, [router]);
-  
-  const handleSendMessage = useCallback(async (e?: FormEvent) => {
-    e?.preventDefault();
-    if (isSending || !currentUser?.uid || !input.trim()) return;
-
-    const currentInput = input.trim();
-    const optimisticUserMessage: PulseMessage = { role: 'user', content: currentInput };
-
-    setMessages(prev => [...prev, optimisticUserMessage]);
-    setInput('');
-    
-    setIsSending(true);
-    setError(null);
-    
-    try {
-      const result = await askPulse({
-        messages: [...messages, optimisticUserMessage],
-        actor: currentUser.uid,
-        conversationId,
-      });
-
-      if (result?.response) {
-        setMessages(prev => [...prev, result.response]);
-      } else {
-        throw new Error('Resposta inválida da IA.');
-      }
-    } catch (err: any) {
-      setError(err.message || 'Erro ao comunicar com a IA.');
-      setMessages(prev => prev.slice(0, -1)); // Revert optimistic user message on failure
-    } finally {
-      setIsSending(false);
-    }
-  }, [currentUser, conversationId, isSending, messages, input]);
-  
-  const fetchConversation = useCallback(async () => {
-    if (!currentUser || !conversationId) return;
-    
-    // Handle special case for new conversations
-    if (conversationId === 'new') {
-        setMessages([]);
-        setIsLoadingHistory(false);
-        return;
-    }
-
-    setIsLoadingHistory(true);
-    setError(null);
-    try {
-        const conversation = await getConversation({ conversationId, actor: currentUser.uid });
-        if (conversation?.messages) {
-            setMessages(conversation.messages);
-        } else {
-            throw new Error('Conversa não encontrada ou acesso negado.');
-        }
-    } catch (err: any) {
-        setError(err.message || 'Não foi possível carregar a conversa.');
-        setTimeout(() => router.push('/dashboard/pulse'), 3000);
-    } finally {
-        setIsLoadingHistory(false);
-    }
-  }, [currentUser, conversationId, router]);
 
   useEffect(() => {
-    if (currentUser) {
-        fetchConversation();
-    }
-  }, [currentUser, conversationId, fetchConversation]);
+    fetchConversation();
+  }, [currentConversationId, fetchConversation]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -133,7 +160,9 @@ export default function PulseConversationPage() {
       );
     }
 
-    return messages.map((message, index) => (
+    const displayedMessages = messages;
+
+    return displayedMessages.map((message, index) => (
       <div key={index} className={`flex items-start gap-4 mx-auto w-full ${message.role === 'user' ? 'justify-end' : ''}`}>
         {message.role !== 'user' && (
           <div className="flex-shrink-0 w-8 h-8 rounded-full bg-pulse-primary text-black flex items-center justify-center">
@@ -161,7 +190,7 @@ export default function PulseConversationPage() {
       <div className="flex-grow flex flex-col items-center w-full px-4 relative">
         <div ref={scrollAreaRef} className="flex-grow w-full max-w-4xl overflow-y-auto space-y-8 flex flex-col pt-8 pb-32">
           {renderMessages()}
-          {isSending && messages.length > 0 && messages[messages.length - 1].role === 'user' &&(
+          {isSending && messages[messages.length - 1]?.role === 'user' && (
             <div className="flex items-start gap-4 mx-auto w-full">
               <div className="flex-shrink-0 w-8 h-8 rounded-full bg-pulse-primary text-black flex items-center justify-center"><BrainCircuit size={18} /></div>
               <div className="max-w-lg px-5 py-3 rounded-2xl bg-card text-foreground border flex items-center">
