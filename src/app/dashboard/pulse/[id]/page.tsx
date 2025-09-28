@@ -79,6 +79,13 @@ export default function PulseConversationPage() {
   
   const fetchConversation = useCallback(async () => {
     if (!currentUser || !conversationId) return;
+    
+    // Handle special case for new conversations
+    if (conversationId === 'new') {
+        setMessages([]);
+        setIsLoadingHistory(false);
+        return;
+    }
 
     setIsLoadingHistory(true);
     setError(null);
@@ -86,8 +93,6 @@ export default function PulseConversationPage() {
         const conversation = await getConversation({ conversationId, actor: currentUser.uid });
         if (conversation?.messages) {
             setMessages(conversation.messages);
-        } else if (conversationId === 'new') {
-            setMessages([]); // Start a new conversation
         } else {
             throw new Error('Conversa não encontrada ou acesso negado.');
         }

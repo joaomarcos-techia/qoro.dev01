@@ -71,6 +71,7 @@ export default function PulsePage() {
         try {
             const userMessage: PulseMessage = { role: 'user', content: messageText };
             
+            // For a new conversation, we don't pass a conversationId
             const result = await askPulse({
                 actor: currentUser.uid,
                 messages: [userMessage],
