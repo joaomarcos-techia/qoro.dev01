@@ -108,7 +108,7 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
     let result;
     try {
       result = await ai.generate({
-        model: googleAI.model('gemini-1.5-flash-latest'),
+        model: googleAI.model('gemini-1.5-flash'),
         system: systemPrompt,
         messages: conversationHistory,
         config: { temperature: 0.5, maxOutputTokens: 1024 },
