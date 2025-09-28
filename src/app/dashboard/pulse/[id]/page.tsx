@@ -75,13 +75,11 @@ export default function PulseConversationPage() {
       });
 
       if (result?.response) {
-        // Replace optimistic user message with full history + AI response
         setMessages(prev => [...prev, result.response]);
       } else {
         throw new Error('Resposta inválida da IA.');
       }
       
-      // If this was a new conversation, update the URL with the real ID
       if (currentConversationId === 'new' && result.conversationId) {
         setCurrentConversationId(result.conversationId);
         startTransition(() => {
@@ -90,8 +88,7 @@ export default function PulseConversationPage() {
       }
 
     } catch (err: any) {
-      setError(err.message || 'Erro ao comunicar com a IA.');
-      // Revert optimistic user message on failure
+      setError(err.message || 'Falha ao gerar resposta da IA.');
       setMessages(prev => prev.slice(0, -1)); 
     } finally {
       setIsSending(false);
@@ -111,7 +108,6 @@ export default function PulseConversationPage() {
         if (conversation?.messages) {
             setMessages(conversation.messages);
         } else {
-            // If conversation is not found, maybe it was deleted. Redirect.
             router.push('/dashboard/pulse');
         }
     } catch (err: any) {
