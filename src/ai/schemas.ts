@@ -109,6 +109,7 @@ export const CustomerProfileSchema = CustomerSchema.extend({
 });
 export type CustomerProfile = z.infer<typeof CustomerProfileSchema>;
 
+// Schema for Products (always fixed price)
 export const ProductSchema = z.object({
     name: z.string().min(1, 'Nome do produto é obrigatório.'),
     description: z.string().optional(),
@@ -117,8 +118,6 @@ export const ProductSchema = z.object({
     category: z.string().optional(),
     sku: z.string().optional(),
     isActive: z.boolean().default(true),
-    pricingModel: z.enum(['fixed', 'per_hour']).default('fixed').optional(),
-    durationHours: z.coerce.number().optional(),
 });
 
 export const UpdateProductSchema = ProductSchema.extend({
@@ -130,6 +129,27 @@ export const ProductProfileSchema = ProductSchema.extend({
     createdAt: z.string(),
 });
 export type ProductProfile = z.infer<typeof ProductProfileSchema>;
+
+// Schema for Services (can be fixed or per_hour)
+export const ServiceSchema = z.object({
+    name: z.string().min(1, 'Nome do serviço é obrigatório.'),
+    description: z.string().optional(),
+    pricingModel: z.enum(['fixed', 'per_hour']).default('per_hour'),
+    price: z.coerce.number().min(0, 'O preço deve ser um número positivo.'),
+    durationHours: z.coerce.number().optional(), // Relevant for per_hour
+    category: z.string().optional(),
+    isActive: z.boolean().default(true),
+});
+
+export const UpdateServiceSchema = ServiceSchema.extend({
+    id: z.string(),
+});
+
+export const ServiceProfileSchema = ServiceSchema.extend({
+    id: z.string(),
+    createdAt: z.string(),
+});
+export type ServiceProfile = z.infer<typeof ServiceProfileSchema>;
 
 export const QuoteItemSchema = z.object({
     type: z.enum(['product', 'service']),
@@ -380,3 +400,5 @@ export const QualificationLeadSchema = z.object({
   desiredOutcome: z.string().optional(),
 });
 export type QualificationLead = z.infer<typeof QualificationLeadSchema>;
+
+    

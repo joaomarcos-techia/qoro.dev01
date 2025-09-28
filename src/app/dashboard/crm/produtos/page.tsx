@@ -62,24 +62,26 @@ export default function ProdutosPage() {
               onClick={handleAdd}
               className="bg-crm-primary text-black px-4 py-2 rounded-xl hover:bg-crm-primary/90 transition-all duration-300 border border-transparent hover:border-crm-primary/50 flex items-center justify-center font-semibold">
               <PlusCircle className="mr-2 w-5 h-5" />
-              Adicionar Item
+              Adicionar Produto
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-foreground">{selectedProduct ? 'Editar Item' : 'Adicionar Novo Item'}</DialogTitle>
+              <DialogTitle className="text-2xl font-bold text-foreground">{selectedProduct ? 'Editar Produto' : 'Adicionar Novo Produto'}</DialogTitle>
               <DialogDescription>
-                {selectedProduct ? 'Altere as informações do item abaixo.' : 'Preencha as informações para cadastrar um novo produto ou serviço.'}
+                {selectedProduct ? 'Altere as informações do produto abaixo.' : 'Preencha as informações para cadastrar um novo produto.'}
               </DialogDescription>
             </DialogHeader>
-            <ProductForm onProductAction={handleProductAction} product={selectedProduct} defaultType='product' />
+            <ProductForm onProductAction={handleProductAction} product={selectedProduct} />
           </DialogContent>
         </Dialog>
       </div>
 
       <div className="bg-card p-6 rounded-2xl border-border">
-        <ProductTable key={refreshCounter} onEdit={handleEdit} onRefresh={triggerRefresh} itemType='product'/>
+        <ProductTable key={refreshCounter} onEdit={handleEdit} onRefresh={triggerRefresh} />
       </div>
     </div>
   );
 }
+
+    

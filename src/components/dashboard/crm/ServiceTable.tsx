@@ -42,28 +42,29 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MoreHorizontal, ArrowUpDown, Search, Loader2, ShoppingCart, Edit, Trash2, Copy } from 'lucide-react';
-import { listProducts, deleteProduct } from '@/ai/flows/crm-management';
-import type { ProductProfile } from '@/ai/schemas';
+import { MoreHorizontal, ArrowUpDown, Search, Loader2, Wrench, Edit, Trash2 } from 'lucide-react';
+import { listServices, deleteService } from '@/ai/flows/crm-management';
+import type { ServiceProfile } from '@/ai/schemas';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 
-const formatCurrency = (value: number | null | undefined) => {
+const formatCurrency = (value: number | null | undefined, pricingModel: 'fixed' | 'per_hour' | undefined) => {
     if (value === null || value === undefined) return '-';
-    return new Intl.NumberFormat('pt-BR', {
+    const formattedValue = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL',
     }).format(value);
+    return pricingModel === 'per_hour' ? `${formattedValue}/h` : formattedValue;
 };
 
 
-interface ProductTableProps {
-    onEdit: (product: ProductProfile) => void;
+interface ServiceTableProps {
+    onEdit: (service: ServiceProfile) => void;
     onRefresh: () => void;
 }
 
-export function ProductTable({ onEdit, onRefresh }: ProductTableProps) {
-  const [data, setData] = React.useState<ProductProfile[]>([]);
+export function ServiceTable({ onEdit, onRefresh }: ServiceTableProps) {
+  const [data, setData] = React.useState<ServiceProfile[]>([]);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [isLoading, setIsLoading] = React.useState(true);
@@ -77,18 +78,18 @@ export function ProductTable({ onEdit, onRefresh }: ProductTableProps) {
     return () => unsubscribe();
   }, []);
 
-  const handleDelete = async (productId: string) => {
+  const handleDelete = async (serviceId: string) => {
     if (!currentUser) return;
     try {
-        await deleteProduct({ productId, actor: currentUser.uid });
+        await deleteService({ serviceId, actor: currentUser.uid });
         onRefresh();
     } catch(err: any) {
-        console.error("Failed to delete product:", err);
-        setError(err.message || "Não foi possível excluir o item.");
+        console.error("Failed to delete service:", err);
+        setError(err.message || "Não foi possível excluir o serviço.");
     }
   };
 
-  const columns: ColumnDef<ProductProfile>[] = [
+  const columns: ColumnDef<ServiceProfile>[] = [
     {
       accessorKey: 'name',
       header: ({ column }) => (
@@ -101,17 +102,17 @@ export function ProductTable({ onEdit, onRefresh }: ProductTableProps) {
     {
       accessorKey: 'price',
       header: 'Preço',
-      cell: ({ row }) => formatCurrency(row.getValue('price')),
+      cell: ({ row }) => formatCurrency(row.getValue('price'), row.original.pricingModel),
+    },
+    {
+        accessorKey: 'pricingModel',
+        header: 'Modelo de Preço',
+        cell: ({ row }) => row.original.pricingModel === 'per_hour' ? 'Por Hora' : 'Fixo',
     },
     {
       accessorKey: 'category',
       header: 'Categoria',
       cell: ({ row }) => row.getValue('category') || '-',
-    },
-    {
-      accessorKey: 'sku',
-      header: 'SKU',
-      cell: ({ row }) => row.getValue('sku') || '-',
     },
     {
       accessorKey: 'createdAt',
@@ -121,7 +122,7 @@ export function ProductTable({ onEdit, onRefresh }: ProductTableProps) {
     {
       id: 'actions',
       cell: ({ row }) => {
-        const product = row.original;
+        const service = row.original;
         return (
           <AlertDialog>
             <DropdownMenu>
@@ -133,19 +134,15 @@ export function ProductTable({ onEdit, onRefresh }: ProductTableProps) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="rounded-2xl">
                 <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => onEdit(product)} className="rounded-xl">
+                <DropdownMenuItem onClick={() => onEdit(service)} className="rounded-xl">
                     <Edit className="mr-2 h-4 w-4" />
-                    Editar Produto
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigator.clipboard.writeText(product.sku || '')} className="rounded-xl">
-                    <Copy className="mr-2 h-4 w-4" />
-                    Copiar Código
+                    Editar Serviço
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <AlertDialogTrigger asChild>
                     <DropdownMenuItem className="text-red-500 focus:bg-destructive/20 focus:text-red-400 rounded-xl">
                         <Trash2 className="mr-2 h-4 w-4" />
-                        Excluir Produto
+                        Excluir Serviço
                     </DropdownMenuItem>
                 </AlertDialogTrigger>
               </DropdownMenuContent>
@@ -154,12 +151,12 @@ export function ProductTable({ onEdit, onRefresh }: ProductTableProps) {
                 <AlertDialogHeader>
                     <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
                     <AlertDialogDescription>
-                    Esta ação não pode ser desfeita. Isso excluirá permanentemente o produto <span className='font-bold'>{product.name}</span>.
+                    Esta ação não pode ser desfeita. Isso excluirá permanentemente o serviço <span className='font-bold'>{service.name}</span>.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => handleDelete(product.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    <AlertDialogAction onClick={() => handleDelete(service.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                     Sim, excluir
                     </AlertDialogAction>
                 </AlertDialogFooter>
@@ -176,11 +173,11 @@ export function ProductTable({ onEdit, onRefresh }: ProductTableProps) {
       setIsLoading(true);
       setError(null);
       try {
-        const products = await listProducts({ actor: currentUser.uid });
-        setData(products);
+        const services = await listServices({ actor: currentUser.uid });
+        setData(services);
       } catch (err) {
-        console.error('Failed to fetch products:', err);
-        setError('Não foi possível carregar os produtos.');
+        console.error('Failed to fetch services:', err);
+        setError('Não foi possível carregar os serviços.');
       } finally {
         setIsLoading(false);
       }
@@ -207,7 +204,7 @@ export function ProductTable({ onEdit, onRefresh }: ProductTableProps) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
         <Loader2 className="w-12 h-12 text-primary animate-spin" />
-        <p className="mt-4 text-muted-foreground">Carregando produtos...</p>
+        <p className="mt-4 text-muted-foreground">Carregando serviços...</p>
       </div>
     );
   }
@@ -219,9 +216,9 @@ export function ProductTable({ onEdit, onRefresh }: ProductTableProps) {
   if (data.length === 0) {
     return (
         <div className="flex flex-col items-center justify-center text-center min-h-[400px]">
-            <ShoppingCart className="w-16 h-16 text-muted-foreground/30 mb-4" />
-            <h3 className="text-xl font-bold text-foreground">Nenhum produto cadastrado</h3>
-            <p className="text-muted-foreground mt-2">Comece adicionando um produto para vê-lo aqui.</p>
+            <Wrench className="w-16 h-16 text-muted-foreground/30 mb-4" />
+            <h3 className="text-xl font-bold text-foreground">Nenhum serviço cadastrado</h3>
+            <p className="text-muted-foreground mt-2">Comece adicionando um serviço para vê-lo aqui.</p>
         </div>
     )
   }
@@ -229,7 +226,7 @@ export function ProductTable({ onEdit, onRefresh }: ProductTableProps) {
   return (
     <div>
        <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-foreground">Seu Catálogo de Produtos</h2>
+            <h2 className="text-xl font-bold text-foreground">Seu Catálogo de Serviços</h2>
             <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input

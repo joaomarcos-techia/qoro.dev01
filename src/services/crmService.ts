@@ -3,7 +3,7 @@
 
 import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
-import { CustomerSchema, CustomerProfileSchema, ProductSchema, ProductProfileSchema, QuoteSchema, QuoteProfileSchema, UpdateCustomerSchema, UpdateProductSchema, UpdateQuoteSchema, BillSchema } from '@/ai/schemas';
+import { CustomerSchema, CustomerProfileSchema, ProductSchema, ProductProfileSchema, QuoteSchema, QuoteProfileSchema, UpdateCustomerSchema, UpdateProductSchema, UpdateQuoteSchema, BillSchema, ServiceSchema, ServiceProfileSchema, UpdateServiceSchema } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
 import type { QuoteProfile, CustomerProfile } from '@/ai/schemas';
 import { adminDb } from '@/lib/firebase-admin';
@@ -107,16 +107,17 @@ export const deleteCustomer = async (customerId: string, actorUid: string) => {
         throw new Error('Cliente não encontrado ou acesso negado.');
     }
 
-    // A verificação de dependências foi removida para permitir a exclusão direta.
-    // const quotesQuery = adminDb.collection('quotes').where('customerId', '==', customerId).limit(1).get();
-    // const transactionsQuery = adminDb.collection('transactions').where('customerId', '==', customerId).limit(1).get();
-    // const [quotesSnapshot, transactionsSnapshot] = await Promise.all([quotesQuery, transactionsQuery]);
-    // if (!quotesSnapshot.empty) {
-    //     throw new Error('Não é possível excluir o cliente pois existem orçamentos associados a ele.');
-    // }
-    // if (!transactionsSnapshot.empty) {
-    //     throw new Error('Não é possível excluir o cliente pois existem transações associadas a ele.');
-    // }
+    // Security Check: Re-add dependency checks for data integrity
+    const quotesQuery = adminDb.collection('quotes').where('customerId', '==', customerId).limit(1).get();
+    const transactionsQuery = adminDb.collection('transactions').where('customerId', '==', customerId).limit(1).get();
+    const [quotesSnapshot, transactionsSnapshot] = await Promise.all([quotesQuery, transactionsQuery]);
+    
+    if (!quotesSnapshot.empty) {
+        throw new Error('Não é possível excluir o cliente pois existem orçamentos associados a ele.');
+    }
+    if (!transactionsSnapshot.empty) {
+        throw new Error('Não é possível excluir o cliente pois existem transações associadas a ele.');
+    }
 
     await customerRef.delete();
 
@@ -143,6 +144,7 @@ export const getOrganizationDetails = async (actorUid: string) => {
     return { id: orgDoc.id, ...orgDoc.data() };
 }
 
+// Product services
 export const createProduct = async (input: z.infer<typeof ProductSchema>, actorUid: string) => {
     const { organizationId } = await getAdminAndOrg(actorUid);
     const newProductData = {
@@ -196,11 +198,7 @@ export const updateProduct = async (productId: string, input: z.infer<typeof Upd
 };
 
 export const deleteProduct = async (productId: string, actorUid: string) => {
-    const { organizationId, userRole } = await getAdminAndOrg(actorUid);
-
-    if (userRole !== 'admin') {
-        throw new Error("Permissão negada. Apenas administradores podem excluir produtos.");
-    }
+    const { organizationId } = await getAdminAndOrg(actorUid);
 
     const productRef = adminDb.collection('products').doc(productId);
 
@@ -214,6 +212,75 @@ export const deleteProduct = async (productId: string, actorUid: string) => {
     return { id: productId, success: true };
 };
 
+
+// Service services
+export const createService = async (input: z.infer<typeof ServiceSchema>, actorUid: string) => {
+    const { organizationId } = await getAdminAndOrg(actorUid);
+    const newServiceData = {
+        ...input,
+        companyId: organizationId,
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+    };
+    const serviceRef = await adminDb.collection('services').add(newServiceData);
+    return { id: serviceRef.id };
+};
+
+export const listServices = async (actorUid: string): Promise<z.infer<typeof ServiceProfileSchema>[]> => {
+    const { organizationId } = await getAdminAndOrg(actorUid);
+    const servicesSnapshot = await adminDb.collection('services')
+                                     .where('companyId', '==', organizationId)
+                                     .orderBy('createdAt', 'desc')
+                                     .get();
+    if (servicesSnapshot.empty) {
+        return [];
+    }
+    const services: z.infer<typeof ServiceProfileSchema>[] = servicesSnapshot.docs.map(doc => {
+        const data = doc.data();
+        const createdAt = data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString();
+        return ServiceProfileSchema.parse({
+            id: doc.id,
+            ...data,
+            createdAt: createdAt,
+        });
+    });
+    return services;
+};
+
+export const updateService = async (serviceId: string, input: z.infer<typeof UpdateServiceSchema>, actorUid: string) => {
+    const { organizationId } = await getAdminAndOrg(actorUid);
+    const serviceRef = adminDb.collection('services').doc(serviceId);
+
+    const serviceDoc = await serviceRef.get();
+    if (!serviceDoc.exists || serviceDoc.data()?.companyId !== organizationId) {
+        throw new Error('Serviço não encontrado ou acesso negado.');
+    }
+
+    const { id, ...updateData } = input;
+
+    await serviceRef.update({
+        ...updateData,
+        updatedAt: FieldValue.serverTimestamp(),
+    });
+
+    return { id: serviceId };
+};
+
+export const deleteService = async (serviceId: string, actorUid: string) => {
+    const { organizationId } = await getAdminAndOrg(actorUid);
+    const serviceRef = adminDb.collection('services').doc(serviceId);
+
+    const serviceDoc = await serviceRef.get();
+    if (!serviceDoc.exists || serviceDoc.data()?.companyId !== organizationId) {
+        throw new Error('Serviço não encontrado ou acesso negado.');
+    }
+
+    await serviceRef.delete();
+    return { id: serviceId, success: true };
+};
+
+
+// Quote Services
 export const createQuote = async (input: z.infer<typeof QuoteSchema>, actorUid: string) => {
     const { organizationId } = await getAdminAndOrg(actorUid);
     
@@ -328,3 +395,5 @@ export const deleteQuote = async (quoteId: string, actorUid: string) => {
     await quoteRef.delete();
     return { id: quoteId, success: true };
 };
+
+    

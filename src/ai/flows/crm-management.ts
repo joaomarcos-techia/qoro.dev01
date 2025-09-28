@@ -9,6 +9,10 @@
  * - listProducts - Lists all products.
  * - updateProduct - Updates a product.
  * - deleteProduct - Deletes a product.
+ * - createService - Creates a new service.
+ * - listServices - Lists all services.
+ * - updateService - Updates a service.
+ * - deleteService - Deletes a service.
  * - createQuote - Creates a new quote.
  * - listQuotes - Lists all quotes.
  * - updateQuote - Updates a quote.
@@ -20,7 +24,7 @@
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { CustomerSchema, CustomerProfileSchema, ProductSchema, ProductProfileSchema, QuoteSchema, QuoteProfileSchema, UpdateCustomerSchema, UpdateProductSchema, UpdateQuoteSchema, OrganizationProfileSchema } from '@/ai/schemas';
+import { CustomerSchema, CustomerProfileSchema, ProductSchema, ProductProfileSchema, QuoteSchema, QuoteProfileSchema, UpdateCustomerSchema, UpdateProductSchema, UpdateQuoteSchema, OrganizationProfileSchema, ServiceSchema, ServiceProfileSchema, UpdateServiceSchema } from '@/ai/schemas';
 import * as crmService from '@/services/crmService';
 
 const ActorSchema = z.object({ actor: z.string() });
@@ -42,6 +46,10 @@ const DeleteCustomerInputSchema = z.object({
 
 const DeleteProductInputSchema = z.object({
     productId: z.string(),
+}).extend(ActorSchema.shape);
+
+const DeleteServiceInputSchema = z.object({
+    serviceId: z.string(),
 }).extend(ActorSchema.shape);
 
 const DeleteQuoteInputSchema = z.object({
@@ -124,6 +132,43 @@ const deleteProductFlow = ai.defineFlow(
         outputSchema: z.object({ id: z.string(), success: z.boolean() })
     },
     async (input) => crmService.deleteProduct(input.productId, input.actor)
+);
+
+// Service Flows
+const createServiceFlow = ai.defineFlow(
+    {
+        name: 'createServiceFlow',
+        inputSchema: ServiceSchema.extend(ActorSchema.shape),
+        outputSchema: z.object({ id: z.string() })
+    },
+    async (input) => crmService.createService(input, input.actor)
+);
+
+const listServicesFlow = ai.defineFlow(
+    {
+        name: 'listServicesFlow',
+        inputSchema: ActorSchema,
+        outputSchema: z.array(ServiceProfileSchema)
+    },
+    async ({ actor }) => crmService.listServices(actor)
+);
+
+const updateServiceFlow = ai.defineFlow(
+    {
+        name: 'updateServiceFlow',
+        inputSchema: UpdateServiceSchema.extend(ActorSchema.shape),
+        outputSchema: z.object({ id: z.string() })
+    },
+    async (input) => crmService.updateService(input.id, input, input.actor)
+);
+
+const deleteServiceFlow = ai.defineFlow(
+    {
+        name: 'deleteServiceFlow',
+        inputSchema: DeleteServiceInputSchema,
+        outputSchema: z.object({ id: z.string(), success: z.boolean() })
+    },
+    async (input) => crmService.deleteService(input.serviceId, input.actor)
 );
 
 
@@ -224,6 +269,22 @@ export async function deleteProduct(input: z.infer<typeof DeleteProductInputSche
     return deleteProductFlow(input);
 }
 
+export async function createService(input: z.infer<typeof ServiceSchema> & z.infer<typeof ActorSchema>): Promise<{ id: string; }> {
+    return createServiceFlow(input);
+}
+
+export async function listServices(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof ServiceProfileSchema>[]> {
+    return listServicesFlow(input);
+}
+
+export async function updateService(input: z.infer<typeof UpdateServiceSchema> & z.infer<typeof ActorSchema>): Promise<{ id: string; }> {
+    return updateServiceFlow(input);
+}
+
+export async function deleteService(input: z.infer<typeof DeleteServiceInputSchema>): Promise<{ id: string, success: boolean }> {
+    return deleteServiceFlow(input);
+}
+
 export async function createQuote(input: z.infer<typeof QuoteSchema> & z.infer<typeof ActorSchema>): Promise<{ id: string; number: string; }> {
     return createQuoteFlow(input);
 }
@@ -251,3 +312,5 @@ export async function deleteCustomer(input: z.infer<typeof DeleteCustomerInputSc
 export async function updateCustomer(input: z.infer<typeof UpdateCustomerSchema> & z.infer<typeof ActorSchema>): Promise<{ id: string; }> {
     return updateCustomerFlow(input);
 }
+
+    

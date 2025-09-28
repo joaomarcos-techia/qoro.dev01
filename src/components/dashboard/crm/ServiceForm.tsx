@@ -2,30 +2,31 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { createProduct, updateProduct } from '@/ai/flows/crm-management';
-import { ProductSchema, ProductProfile } from '@/ai/schemas';
+import { createService, updateService } from '@/ai/flows/crm-management';
+import { ServiceSchema, ServiceProfile } from '@/ai/schemas';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Loader2, AlertCircle } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-type ProductFormProps = {
-  onProductAction: () => void;
-  product?: ProductProfile | null;
+type ServiceFormProps = {
+  onServiceAction: () => void;
+  service?: ServiceProfile | null;
 };
 
-export function ProductForm({ onProductAction, product }: ProductFormProps) {
+export function ServiceForm({ onServiceAction, service }: ServiceFormProps) {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isEditMode = !!product;
+  const isEditMode = !!service;
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -37,29 +38,39 @@ export function ProductForm({ onProductAction, product }: ProductFormProps) {
   const {
     register,
     handleSubmit,
+    control,
+    watch,
     reset,
     setValue,
     formState: { errors },
-  } = useForm<z.infer<typeof ProductSchema>>({
-    resolver: zodResolver(ProductSchema),
+  } = useForm<z.infer<typeof ServiceSchema>>({
+    resolver: zodResolver(ServiceSchema),
   });
 
   useEffect(() => {
-    if (product) {
-      reset(product);
+    if (service) {
+      reset(service);
     } else {
       reset({
           name: '',
           description: '',
           category: '',
-          sku: '',
           price: 0,
-          cost: undefined,
+          pricingModel: 'per_hour',
+          durationHours: 1,
       });
     }
-  }, [product, reset]);
+  }, [service, reset]);
 
-  const handleNumericInput = (e: React.ChangeEvent<HTMLInputElement>, fieldName: keyof z.infer<typeof ProductSchema>) => {
+  const pricingModel = watch('pricingModel');
+
+  useEffect(() => {
+    if (pricingModel === 'fixed') {
+        setValue('durationHours', undefined);
+    }
+  }, [pricingModel, setValue]);
+
+  const handleNumericInput = (e: React.ChangeEvent<HTMLInputElement>, fieldName: keyof z.infer<typeof ServiceSchema>) => {
     const value = e.target.value;
     if (value === '' || value === null) {
       setValue(fieldName, undefined as any, { shouldValidate: true });
@@ -73,7 +84,7 @@ export function ProductForm({ onProductAction, product }: ProductFormProps) {
   };
 
 
-  const onSubmit = async (data: z.infer<typeof ProductSchema>) => {
+  const onSubmit = async (data: z.infer<typeof ServiceSchema>) => {
     if (!currentUser) {
       setError('Você precisa estar autenticado para executar esta ação.');
       return;
@@ -82,34 +93,53 @@ export function ProductForm({ onProductAction, product }: ProductFormProps) {
     setError(null);
     try {
       if (isEditMode) {
-        await updateProduct({ ...data, id: product.id, actor: currentUser.uid });
+        await updateService({ ...data, id: service.id, actor: currentUser.uid });
       } else {
-        await createProduct({ ...data, actor: currentUser.uid });
+        await createService({ ...data, actor: currentUser.uid });
       }
-      onProductAction();
+      onServiceAction();
     } catch (err: any) {
       console.error(err);
-      setError(err.message || `Falha ao salvar o produto. Tente novamente.`);
+      setError(err.message || `Falha ao salvar o serviço. Tente novamente.`);
     } finally {
       setIsLoading(false);
     }
   };
-  
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 py-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="name">Nome do Produto*</Label>
-          <Input id="name" {...register('name')} placeholder={"Ex: Assinatura Mensal Pro"} />
+          <Label htmlFor="name">Nome do Serviço*</Label>
+          <Input id="name" {...register('name')} placeholder={"Ex: Consultoria de Marketing"} />
           {errors.name && <p className="text-destructive text-sm">{errors.name.message}</p>}
         </div>
         <div className="space-y-2 md:col-span-2">
           <Label htmlFor="description">Descrição</Label>
-          <Textarea id="description" {...register('description')} placeholder="Detalhes, características, etc." />
+          <Textarea id="description" {...register('description')} placeholder="Detalhes, entregáveis, escopo, etc." />
+        </div>
+        
+        <div className="space-y-2">
+            <Label>Modelo de Preço*</Label>
+            <Controller
+              name="pricingModel"
+              control={control}
+              render={({ field }) => (
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o modelo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="per_hour">Preço por Hora</SelectItem>
+                    <SelectItem value="fixed">Preço Fixo (Pacote)</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
         </div>
        
         <div className="space-y-2">
-          <Label htmlFor="price">Preço de Venda (R$)*</Label>
+          <Label htmlFor="price">{pricingModel === 'per_hour' ? 'Preço por Hora (R$)*' : 'Preço Fixo (R$)*'}</Label>
           <Input 
             id="price" 
             type="text" 
@@ -120,24 +150,23 @@ export function ProductForm({ onProductAction, product }: ProductFormProps) {
           {errors.price && <p className="text-destructive text-sm">{errors.price.message}</p>}
         </div>
         
-        <div className="space-y-2">
-            <Label htmlFor="cost">Custo (R$)</Label>
-            <Input 
-            id="cost" 
-            type="text" 
-            inputMode='decimal' 
-            {...register('cost')} 
-            onChange={(e) => handleNumericInput(e, 'cost')}
-            />
-        </div>
+        {pricingModel === 'per_hour' && (
+            <div className="space-y-2">
+                <Label htmlFor="durationHours">Duração Padrão (horas)</Label>
+                <Input 
+                    id="durationHours" 
+                    type="text" 
+                    inputMode='decimal' 
+                    {...register('durationHours')} 
+                    onChange={(e) => handleNumericInput(e, 'durationHours')}
+                    placeholder="Ex: 8"
+                />
+            </div>
+        )}
 
         <div className="space-y-2">
           <Label htmlFor="category">Categoria</Label>
-          <Input id="category" {...register('category')} placeholder="Ex: Software, Assinatura" />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="sku">SKU (Código)</Label>
-          <Input id="sku" {...register('sku')} placeholder="Ex: PROD-001" />
+          <Input id="category" {...register('category')} placeholder="Ex: Consultoria, Desenvolvimento" />
         </div>
       </div>
        {error && (
@@ -149,7 +178,7 @@ export function ProductForm({ onProductAction, product }: ProductFormProps) {
       <div className="flex justify-end pt-4">
         <Button type="submit" disabled={isLoading} className="bg-crm-primary text-black px-6 py-3 rounded-xl hover:bg-crm-primary/90 transition-all duration-300 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
           {isLoading ? <Loader2 className="mr-2 w-5 h-5 animate-spin" /> : null}
-          {isLoading ? 'Salvando...' : (isEditMode ? 'Salvar Alterações' : `Salvar Produto`)}
+          {isLoading ? 'Salvando...' : (isEditMode ? 'Salvar Alterações' : `Salvar Serviço`)}
         </Button>
       </div>
     </form>
