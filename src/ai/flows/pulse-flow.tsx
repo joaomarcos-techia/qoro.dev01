@@ -1,4 +1,3 @@
-
 'use server';
 
 import { ai } from '@/ai/genkit';
@@ -148,9 +147,13 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
         });
       } else {
         // --- Cria uma nova conversa ---
+        if (messages.length > 0) {
+            finalTitle = await generateConversationTitle(messages[0].content);
+        }
+        
         const newConversationData = {
           userId,
-          title: finalTitle, // Sempre começa com "Nova Conversa"
+          title: finalTitle, 
           messages: finalMessages.map(m => ({ ...m })),
           createdAt: FieldValue.serverTimestamp(),
           updatedAt: FieldValue.serverTimestamp(),
