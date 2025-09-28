@@ -1,3 +1,4 @@
+
 'use server';
 
 import { ai } from '@/ai/genkit';
@@ -130,15 +131,18 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
 
     if (conversationId) {
       const conversationRef = adminDb.collection('pulse_conversations').doc(conversationId);
-      const updatePayload: { [key: string]: any } = {
-        messages: finalMessages.map(m => ({ ...m })),
-        updatedAt: FieldValue.serverTimestamp(),
-      };
-      
       const doc = await conversationRef.get();
+      
       if (doc.exists) {
-        const currentTitle = doc.data()?.title;
-
+        const docData = doc.data();
+        const currentTitle = docData?.title;
+  
+        const updatePayload: { [key: string]: any } = {
+          messages: finalMessages.map(m => ({ ...m })),
+          updatedAt: FieldValue.serverTimestamp(),
+          title: currentTitle, // Start with the existing title
+        };
+  
         // Only try to generate a new title if the current one is the default placeholder.
         if (currentTitle === 'Nova Conversa') {
           const userMessages = finalMessages.filter(m => m.role === 'user');
