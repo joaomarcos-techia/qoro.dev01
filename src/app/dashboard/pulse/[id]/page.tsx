@@ -64,7 +64,8 @@ const ArrowUpIcon = (props: React.SVGProps<SVGSVGElement>) => (
                                                 });
                                           
                                                 if (result?.response) {
-                                                  setMessages(prev => [...prev.slice(0, -1), optimisticUserMessage, result.response]);
+                                                  // Replace optimistic response with actual response
+                                                  setMessages([...messages, optimisticUserMessage, result.response]);
                                                 } else {
                                                   throw new Error('Resposta inválida da IA.');
                                                 }
