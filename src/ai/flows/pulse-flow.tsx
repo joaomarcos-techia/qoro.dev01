@@ -120,6 +120,8 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
 
     const responseText = result.text ?? 'Desculpe, não consegui processar sua pergunta. Tente novamente.';
     const responseMessage: PulseMessage = { role: 'assistant', content: responseText };
+    
+    // Adiciona a resposta da IA ao histórico final
     const finalMessages = [...messages, responseMessage];
 
     // Lógica robusta de salvamento e atualização
@@ -131,11 +133,8 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
         // --- Atualiza uma conversa existente ---
         const conversationRef = adminDb.collection('pulse_conversations').doc(conversationId);
         const doc = await conversationRef.get();
-        const docData = doc.data();
+        finalTitle = doc.data()?.title || finalTitle;
 
-        finalTitle = docData?.title || 'Nova Conversa';
-
-        // Gera um novo título apenas se o atual for o padrão e houver mensagens suficientes
         const userMessages = finalMessages.filter(m => m.role === 'user');
         if (finalTitle === 'Nova Conversa' && userMessages.length >= 2) {
           const contextForTitle = userMessages.slice(0, 2).map(m => m.content).join(' ');
@@ -143,7 +142,7 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
         }
 
         await conversationRef.update({
-          messages: finalMessages.map(m => ({ ...m })), // Garante que é um objeto simples
+          messages: finalMessages.map(m => ({ ...m })),
           title: finalTitle,
           updatedAt: FieldValue.serverTimestamp(),
         });
@@ -151,7 +150,7 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
         // --- Cria uma nova conversa ---
         const newConversationData = {
           userId,
-          title: finalTitle, // Começa com o título padrão "Nova Conversa"
+          title: finalTitle, // Sempre começa com "Nova Conversa"
           messages: finalMessages.map(m => ({ ...m })),
           createdAt: FieldValue.serverTimestamp(),
           updatedAt: FieldValue.serverTimestamp(),
