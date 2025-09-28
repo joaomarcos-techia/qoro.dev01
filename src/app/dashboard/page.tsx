@@ -23,6 +23,7 @@ import { getTaskDashboardMetrics } from '@/ai/flows/task-management';
 import { getFinanceDashboardMetrics } from '@/ai/flows/finance-management';
 import { ErrorBoundary } from 'react-error-boundary';
 import { UserAccessInfo, CustomerProfile } from '@/ai/schemas';
+import { useRouter } from 'next/navigation';
 
 
 interface DashboardMetrics {
@@ -84,6 +85,15 @@ const AppCard = ({
     color: string; 
     description: string;
 }) => {
+    const router = useRouter();
+    const [isNavigating, setIsNavigating] = useState(false);
+
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault();
+        setIsNavigating(true);
+        router.push(href);
+    };
+
     return (
       <div className="group bg-card rounded-2xl border border-border hover:border-primary/50 hover:-translate-y-1 transition-all duration-200 flex flex-col h-full">
           <div className="p-6 flex-grow flex flex-col">
@@ -98,10 +108,23 @@ const AppCard = ({
           <p className="text-sm text-muted-foreground mb-6 flex-grow">
               {description}
           </p>
-          <Link href={href} className="group/button w-full bg-secondary text-secondary-foreground hover:bg-secondary/80 py-2.5 px-4 rounded-full transition-colors flex items-center justify-center text-sm font-medium">
-            <span>Acessar</span>
-            <ArrowRight className="w-4 h-4 ml-2 transform transition-transform duration-300 group-hover/button:translate-x-1" />
-          </Link>
+          <button 
+            onClick={handleClick}
+            disabled={isNavigating}
+            className="group/button w-full bg-secondary text-secondary-foreground hover:bg-secondary/80 py-2.5 px-4 rounded-full transition-colors flex items-center justify-center text-sm font-medium disabled:opacity-75"
+          >
+            {isNavigating ? (
+                <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <span>Carregando...</span>
+                </>
+            ) : (
+                <>
+                    <span>Acessar</span>
+                    <ArrowRight className="w-4 h-4 ml-2 transform transition-transform duration-300 group-hover/button:translate-x-1" />
+                </>
+            )}
+          </button>
           </div>
       </div>
     );
