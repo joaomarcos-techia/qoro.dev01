@@ -64,10 +64,10 @@ const ArrowUpIcon = (props: React.SVGProps<SVGSVGElement>) => (
                                                 });
                                           
                                                 if (result?.response) {
-                                                  // Replace optimistic response with actual response
+                                                  // Substitui a mensagem otimista e a resposta real para ter uma fonte única da verdade
                                                   setMessages([...messages, optimisticUserMessage, result.response]);
                                                 } else {
-                                                  throw new Error('Resposta inválida da IA.');
+                                                  throw new Error('A IA não retornou uma resposta válida.');
                                                 }
                                           
                                                 if (currentConversationId === 'new' && result.conversationId) {
@@ -79,7 +79,9 @@ const ArrowUpIcon = (props: React.SVGProps<SVGSVGElement>) => (
                                           
                                               } catch (err: any) {
                                                 console.error("Error in handleSendMessage:", err);
-                                                setError(err.message || 'Falha ao gerar resposta da IA.');
+                                                const errorMessage = err.message || 'Falha ao gerar resposta da IA. Verifique sua conexão ou tente novamente mais tarde.';
+                                                setError(errorMessage);
+                                                // Reverte a UI para o estado anterior em caso de erro
                                                 setMessages(prev => prev.slice(0, -1));
                                               } finally {
                                                 setIsSending(false);
@@ -191,7 +193,7 @@ const ArrowUpIcon = (props: React.SVGProps<SVGSVGElement>) => (
                   <div className="w-full max-w-4xl flex-grow flex flex-col justify-end">
                     <div className="space-y-6 py-8">
                         {renderMessages()}
-                        {isSending && (
+                        {isSending && !error && (
                             <div className="flex items-start gap-4 mx-auto w-full">
                                 <div className="flex-shrink-0 w-8 h-8 rounded-full bg-pulse-primary text-black flex items-center justify-center">
                                 <Loader2 className="animate-spin" size={18} />

@@ -108,14 +108,15 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
     let result;
     try {
       result = await ai.generate({
-        model: googleAI.model('gemini-1.5-flash'),
+        model: googleAI.model('gemini-1.5-flash-latest'),
         system: systemPrompt,
         messages: conversationHistory,
         config: { temperature: 0.5, maxOutputTokens: 1024 },
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error('AI Generation Error in pulse-flow:', err);
-      throw new Error('Falha ao gerar resposta da IA.');
+      // Lança um erro claro que será capturado pelo frontend.
+      throw new Error(`Falha na API de IA: ${err.message || 'Erro desconhecido'}`);
     }
 
     const responseText = result.text ?? 'Desculpe, não consegui processar sua pergunta. Tente novamente.';
