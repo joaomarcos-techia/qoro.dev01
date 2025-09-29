@@ -323,7 +323,7 @@ export const TransactionSchema = z.object({
     amount: z.coerce.number().positive('O valor deve ser maior que zero.'),
     type: z.enum(['income', 'expense']),
     accountId: z.string().optional(),
-    date: z.union([z.string(), z.date()]).optional(),
+    date: z.date().optional(),
     category: z.string().optional(),
     status: z.enum(['pending', 'paid', 'cancelled']).optional().default('paid'),
     paymentMethod: z.enum(['cash', 'credit_card', 'debit_card', 'pix', 'bank_transfer', 'boleto']).optional(),
@@ -400,5 +400,3 @@ export const QualificationLeadSchema = z.object({
   desiredOutcome: z.string().optional(),
 });
 export type QualificationLead = z.infer<typeof QualificationLeadSchema>;
-
-    

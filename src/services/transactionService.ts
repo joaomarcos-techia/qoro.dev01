@@ -253,7 +253,7 @@ export const bulkCreateTransactions = async (
 
                 const newTransactionData = {
                     ...transaction,
-                    date: new Date(transaction.date as Date).toISOString(), // Ensure date is string
+                    date: transaction.date, // Pass the Date object directly
                     accountId,
                     companyId: organizationId,
                     createdBy: actorUid,
