@@ -253,6 +253,7 @@ export const bulkCreateTransactions = async (
 
                 const newTransactionData = {
                     ...transaction,
+                    date: new Date(transaction.date as Date).toISOString(), // Ensure date is string
                     accountId,
                     companyId: organizationId,
                     createdBy: actorUid,
@@ -272,3 +273,5 @@ export const bulkCreateTransactions = async (
         throw new Error(`Falha ao salvar as transações: ${error.message}`);
     }
 };
+
+    

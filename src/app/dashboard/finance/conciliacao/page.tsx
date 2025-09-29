@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { GitCompareArrows, Upload, FileText, Loader2, ServerCrash, MoreHorizontal, Edit, Trash2, Eye, Landmark, BadgeCheck, BadgeAlert } from 'lucide-react';
+import { GitCompareArrows, Upload, FileText, Loader2, ServerCrash, MoreHorizontal, Edit, Trash2, Eye, Landmark } from 'lucide-react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { listReconciliations, createReconciliation, deleteReconciliation, updateReconciliation } from '@/ai/flows/reconciliation-flow';
@@ -312,3 +312,5 @@ export default function ConciliacaoPage() {
     </div>
   );
 }
+
+    
