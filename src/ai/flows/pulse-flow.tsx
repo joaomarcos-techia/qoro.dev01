@@ -59,7 +59,7 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
    - **Avançada:** estratégia, análise ou plano de ação → detalhe diagnóstico, opções estratégicas e exemplos práticos.  
 4. Estruture as respostas em 3 camadas sempre que possível:  
    - **Diagnóstico inicial:** descreva o problema ou situação.  
-   - **Soluções/estratégias:** mostre opções práticas (inclua frameworks quando aplicável).  
+   - **Soluções/estratégias:** showstre opções práticas (inclua frameworks quando aplicável).  
    - **Exemplo aplicado:** traga um caso real ou ilustrativo.  
 5. Utilize frameworks conhecidos para cada área:  
    - **Vendas:** AIDA (Atenção, Interesse, Desejo, Ação), SPIN Selling, Funil de Vendas.  
@@ -134,12 +134,16 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
         // --- Atualiza uma conversa existente ---
         const conversationRef = adminDb.collection('pulse_conversations').doc(conversationId);
         const doc = await conversationRef.get();
-        const existingData = doc.data();
+
+        if (!doc.exists) {
+          throw new Error(`Conversa com ID ${conversationId} não encontrada.`);
+        }
         
-        let titleToUpdate = existingData?.title || 'Nova Conversa';
+        const existingData = doc.data();
+        let titleToUpdate = existingData.title || 'Nova Conversa';
 
         // Lógica de geração de título na segunda interação do usuário
-        if (titleToUpdate === 'Nova Conversa' && existingData?.messages?.length >= 1) {
+        if (titleToUpdate === 'Nova Conversa' && existingData.messages?.length >= 1) {
             const contextForTitle = 
                 `Usuário: ${existingData.messages[0].content}\n` +
                 `Assistente: ${responseText}`;
@@ -183,5 +187,3 @@ export async function askPulse(
 ): Promise<z.infer<typeof AskPulseOutputSchema>> {
   return pulseFlow(input);
 }
-
-    

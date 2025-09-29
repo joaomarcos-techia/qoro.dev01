@@ -27,7 +27,7 @@ ${context}
     `.trim();
 
     const result = await ai.generate({
-      model: googleAI.model('gemini-1.5-flash-001'),
+      model: googleAI.model('gemini-2.5-flash'),
       prompt: aiPrompt,
       config: { temperature: 0.1, maxOutputTokens: 15 },
     });
