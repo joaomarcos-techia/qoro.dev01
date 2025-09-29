@@ -134,13 +134,18 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
         // --- Atualiza uma conversa existente ---
         const conversationRef = adminDb.collection('pulse_conversations').doc(conversationId);
         const doc = await conversationRef.get();
-        finalTitle = doc.data()?.title || finalTitle;
+        const existingData = doc.data();
+        
+        let titleToUpdate = existingData?.title || 'Nova Conversa';
 
-        // Se o título ainda for o padrão e esta for a segunda interação do usuário, gere um título contextual.
-        if (finalTitle === 'Nova Conversa' && messages.length >= 2) {
-          const contextForTitle = messages.slice(0, 2).map(m => `${m.role}: ${m.content}`).join('\n');
-          finalTitle = await generateConversationTitle(contextForTitle);
+        // Lógica de geração de título na segunda interação do usuário
+        if (titleToUpdate === 'Nova Conversa' && existingData?.messages?.length >= 1) {
+            const contextForTitle = 
+                `Usuário: ${existingData.messages[0].content}\n` +
+                `Assistente: ${responseText}`;
+            titleToUpdate = await generateConversationTitle(contextForTitle);
         }
+        finalTitle = titleToUpdate;
 
         await conversationRef.update({
           messages: finalMessages.map(m => ({ ...m })),
@@ -152,7 +157,7 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
         // Na primeira interação, o título é sempre "Nova Conversa" para evitar chamadas desnecessárias à IA.
         const newConversationData = {
           userId,
-          title: finalTitle, 
+          title: 'Nova Conversa', 
           messages: finalMessages.map(m => ({ ...m })),
           createdAt: FieldValue.serverTimestamp(),
           updatedAt: FieldValue.serverTimestamp(),

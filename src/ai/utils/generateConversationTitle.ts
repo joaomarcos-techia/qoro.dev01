@@ -14,27 +14,9 @@ export async function generateConversationTitle(context: string): Promise<string
     return 'Nova Conversa';
   }
 
-  const trimmedContext = context.trim().toLowerCase();
-
-  const greetings = [
-    'oi', 'ola', 'olá', 'bom dia', 'boa tarde', 
-    'boa noite', 'tudo bem', 'e ai', 'eae'
-  ];
-
-  const isGreeting = (text: string): boolean => {
-    return greetings.some(greeting => text.startsWith(greeting) && text.length < 20);
-  };
-
-  // Extrai a primeira mensagem do usuário para checar se é apenas uma saudação
-  const firstUserMessage = trimmedContext.split('\n')[0].replace(/^user:\s*/, '').trim();
-
-  if (isGreeting(firstUserMessage)) {
-    return 'Nova Conversa';
-  }
-
   try {
     const aiPrompt = `
-Crie um título curto e preciso de no máximo 3 palavras para a conversa abaixo.
+Crie um título curto e preciso de no máximo 3-4 palavras para a conversa abaixo.
 Foque no tema central ou objetivo da conversa.
 Retorne apenas o título, sem pontuação ou aspas.
 
@@ -47,7 +29,7 @@ ${context}
     const result = await ai.generate({
       model: googleAI.model('gemini-1.5-flash-001'),
       prompt: aiPrompt,
-      config: { temperature: 0.1, maxOutputTokens: 10 },
+      config: { temperature: 0.1, maxOutputTokens: 15 },
     });
 
     const rawTitle = result.text ?? '';
@@ -55,7 +37,7 @@ ${context}
     const title = rawTitle.trim().replace(/^["']|["']$/g, '').replace(/[.!?]+$/, '');
 
     // Valida se o título gerado é útil
-    if (title && title.split(/\s+/).length <= 5 && !isGreeting(title.toLowerCase())) {
+    if (title && title.split(/\s+/).length <= 5) {
       return title;
     }
   } catch (error) {
@@ -64,7 +46,7 @@ ${context}
   }
 
   // Fallback: Pega as 3 primeiras palavras úteis se a IA falhar ou retornar algo inválido
-  const usefulWords = trimmedContext.replace(/\b(user|assistant|model|user:|assistant:|model:)\b/gi, '').trim().split(/\s+/).filter(word => word.length > 2).slice(0, 3);
+  const usefulWords = context.replace(/\b(user|assistant|model|user:|assistant:|model:)\b/gi, '').trim().split(/\s+/).filter(word => word.length > 2).slice(0, 3);
 
   if (usefulWords.length > 0) {
     return usefulWords.join(' ');
