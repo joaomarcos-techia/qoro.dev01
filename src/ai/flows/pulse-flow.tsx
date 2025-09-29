@@ -134,12 +134,12 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
         // --- Atualiza uma conversa existente ---
         const conversationRef = adminDb.collection('pulse_conversations').doc(conversationId);
         const doc = await conversationRef.get();
-
-        if (!doc.exists) {
-          throw new Error(`Conversa com ID ${conversationId} não encontrada.`);
-        }
         
         const existingData = doc.data();
+        if (!doc.exists || !existingData) {
+            throw new Error(`Conversa com ID ${conversationId} não encontrada.`);
+        }
+        
         let titleToUpdate = existingData.title || 'Nova Conversa';
 
         // Lógica de geração de título na segunda interação do usuário
