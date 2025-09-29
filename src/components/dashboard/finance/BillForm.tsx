@@ -122,7 +122,7 @@ export function BillForm({ onAction, bill }: BillFormProps) {
     setIsLoading(true);
     setError(null);
     try {
-        const submissionData = { ...data, dueDate: data.dueDate.toISOString() };
+        const submissionData = { ...data, dueDate: data.dueDate.toISOString(), status: isEditMode ? data.status : 'pending' };
         if (isEditMode) {
             await updateBill({ ...submissionData, id: bill.id, actor: currentUser.uid });
         } else {

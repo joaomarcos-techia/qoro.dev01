@@ -279,7 +279,6 @@ export function TransactionForm({ onAction, transaction }: TransactionFormProps)
                 <SelectContent>
                     <SelectItem value="paid">Pago</SelectItem>
                     <SelectItem value="pending">Pendente</SelectItem>
-                    <SelectItem value="cancelled">Cancelada</SelectItem>
                 </SelectContent>
             </Select>
           )}/>
