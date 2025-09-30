@@ -1,16 +1,14 @@
-
 'use client';
 import * as React from 'react';
 import { useState, useMemo, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { TransactionProfile, ReconciliationProfile, TransactionSchema } from '@/ai/schemas';
+import { TransactionProfile, ReconciliationProfile } from '@/ai/schemas';
 import { CheckCircle, Loader2, GitMerge, PlusCircle, ServerCrash } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, differenceInDays } from 'date-fns';
 import { bulkCreateTransactions } from '@/ai/flows/finance-management';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { z } from 'zod';
 
 
 export interface OfxTransaction {
@@ -32,7 +30,14 @@ const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 };
 
-const formatDate = (dateStr: string) => format(parseISO(dateStr), 'dd/MM/yyyy');
+const formatDate = (dateStr: string) => {
+    if (!dateStr) return '';
+    try {
+        return format(parseISO(dateStr), 'dd/MM/yyyy');
+    } catch (e) {
+        return 'Data Inválida'
+    }
+};
 
 export function TransactionComparisonTable({ reconciliation, ofxTransactions, systemTransactions, isLoading, onRefresh }: TransactionComparisonTableProps) {
 
@@ -48,33 +53,40 @@ export function TransactionComparisonTable({ reconciliation, ofxTransactions, sy
   }, []);
 
   const { matched, unmatchedOfx, unmatchedSystem } = useMemo(() => {
-    const localOfx = ofxTransactions || [];
-    const localSys = systemTransactions || [];
-    const systemCopy = [...localSys];
-
+    const localOfx = [...(ofxTransactions || [])];
+    const localSys = [...(systemTransactions || [])];
     const matchedPairs: {ofx: OfxTransaction, system: TransactionProfile}[] = [];
-    const finalUnmatchedOfx: OfxTransaction[] = [];
-    
-    for (const ofxT of localOfx) {
-      const matchIndex = systemCopy.findIndex(s => {
-        const sameDate = formatDate(s.date as string) === formatDate(ofxT.date);
-        const sameAmount = Math.abs(s.amount - Math.abs(ofxT.amount)) < 0.01;
-        const sameType = s.type === ofxT.type;
-        return sameDate && sameAmount && sameType;
-      });
+    const usedSystemIndexes = new Set<number>();
 
-      if (matchIndex > -1) {
-        matchedPairs.push({ofx: ofxT, system: systemCopy[matchIndex]});
-        systemCopy.splice(matchIndex, 1);
-      } else {
-        finalUnmatchedOfx.push(ofxT);
-      }
-    }
+    const finalUnmatchedOfx = localOfx.filter((ofxT) => {
+        const ofxDate = new Date(ofxT.date);
+        
+        const matchIndex = localSys.findIndex((sysT, index) => {
+            if (usedSystemIndexes.has(index)) {
+                return false; // Skip already matched system transactions
+            }
+            const sysDate = new Date(sysT.date as string);
+            const sameAmount = Math.abs(Math.abs(ofxT.amount) - sysT.amount) < 0.01;
+            const sameType = ofxT.type === sysT.type;
+            const dateDifference = Math.abs(differenceInDays(ofxDate, sysDate));
+            
+            return sameAmount && sameType && dateDifference <= 2;
+        });
+
+        if (matchIndex > -1) {
+            matchedPairs.push({ ofx: ofxT, system: localSys[matchIndex] });
+            usedSystemIndexes.add(matchIndex);
+            return false; // This OFX transaction is matched
+        }
+        return true; // This OFX transaction is unmatched
+    });
+    
+    const finalUnmatchedSystem = localSys.filter((_, index) => !usedSystemIndexes.has(index));
 
     return {
       matched: matchedPairs,
       unmatchedOfx: finalUnmatchedOfx,
-      unmatchedSystem: systemCopy,
+      unmatchedSystem: finalUnmatchedSystem,
     }
 
   }, [ofxTransactions, systemTransactions]);
@@ -88,7 +100,7 @@ export function TransactionComparisonTable({ reconciliation, ofxTransactions, sy
       const transactionsToCreate = unmatchedOfx.map(ofx => ({
           description: ofx.description,
           amount: Math.abs(ofx.amount),
-          date: new Date(ofx.date).toISOString(), // Corrigido: Envia a data como string ISO
+          date: new Date(ofx.date),
           type: ofx.type,
       }));
       
