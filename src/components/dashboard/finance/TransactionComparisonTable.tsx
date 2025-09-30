@@ -88,7 +88,7 @@ export function TransactionComparisonTable({ reconciliation, ofxTransactions, sy
       const transactionsToCreate = unmatchedOfx.map(ofx => ({
           description: ofx.description,
           amount: Math.abs(ofx.amount),
-          date: new Date(ofx.date),
+          date: new Date(ofx.date).toISOString(), // Corrigido: Envia a data como string ISO
           type: ofx.type,
       }));
       

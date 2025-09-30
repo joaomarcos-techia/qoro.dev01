@@ -251,10 +251,8 @@ export const bulkCreateTransactions = async (
                 }
 
                 const newTransactionData = {
-                    description: transaction.description,
-                    amount: transaction.amount,
-                    type: transaction.type,
-                    date: new Date(transaction.date as Date),
+                    ...transaction,
+                    date: new Date(transaction.date as string), // Corrigido: Converte a string ISO para objeto Date
                     status: 'paid',
                     accountId,
                     companyId: organizationId,
