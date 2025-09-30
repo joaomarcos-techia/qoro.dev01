@@ -1,7 +1,7 @@
 
 import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
-import { TransactionSchema, TransactionProfile, UpdateTransactionSchema } from '@/ai/schemas';
+import { TransactionSchema, TransactionProfile, UpdateTransactionSchema, TransactionProfileSchema } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
 import { adminDb } from '@/lib/firebase-admin';
 
