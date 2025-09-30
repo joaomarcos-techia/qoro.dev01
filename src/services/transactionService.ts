@@ -201,8 +201,7 @@ export const listTransactions = async (
         const accountInfo = accounts[data.accountId] || {};
         const customerInfo = customers[data.customerId] || {};
         
-        // Handle both Firestore Timestamps and ISO strings
-        const date = data.date ? (typeof data.date.toDate === 'function' ? data.date.toDate() : new Date(data.date)) : new Date();
+        const date = data.date?.toDate ? data.date.toDate() : new Date();
 
         const parsedData = TransactionProfileSchema.parse({
             id: doc.id,
@@ -255,9 +254,8 @@ export const bulkCreateTransactions = async (
                     description: transaction.description,
                     amount: transaction.amount,
                     type: transaction.type,
-                    date: transaction.date,
-                    status: 'paid', // Default status
-                    paymentMethod: 'bank_transfer', // Default payment method
+                    date: new Date(transaction.date as Date),
+                    status: 'paid',
                     accountId,
                     companyId: organizationId,
                     createdBy: actorUid,
