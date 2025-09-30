@@ -115,6 +115,14 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
       });
     } catch (err: any) {
       console.error('AI Generation Error in pulse-flow:', err);
+      
+      // Verifica se a mensagem de erro contém o código de sobrecarga.
+      const isOverloaded = err.message?.includes('503') && err.message?.toLowerCase().includes('overloaded');
+
+      if (isOverloaded) {
+          throw new Error('A IA está com alta demanda no momento. Por favor, tente novamente em alguns instantes.');
+      }
+
       // Lança um erro claro que será capturado pelo frontend.
       throw new Error(`Falha na API de IA: ${err.message || 'Erro desconhecido'}`);
     }
