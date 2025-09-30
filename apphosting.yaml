@@ -35,15 +35,9 @@ env:
   - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
     value: "G-L3D1C3SYVV"
 
-  # As variáveis de ambiente do Stripe foram removidas para teste.
-  # Adicione-as novamente quando for reativar a integração com o Stripe.
-  # - variable: NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID
-  #   value: "seu-valor-aqui"
-  # - variable: NEXT_PUBLIC_STRIPE_PERFORMANCE_PLAN_PRICE_ID
-  #   value: "seu-valor-aqui"
-  # - variable: STRIPE_SECRET_KEY
-  #   secret: STRIPE_SECRET_KEY_SECRET_NAME
-  # - variable: STRIPE_WEBHOOK_SECRET
-  #   secret: STRIPE_WEBHOOK_SECRET_NAME
-
-
+  # Para produção, gerencie as chaves do Stripe como segredos no Firebase.
+  # https://firebase.google.com/docs/app-hosting/configure-backend#secrets
+  - variable: STRIPE_SECRET_KEY
+    secret: STRIPE_SECRET_KEY_PROD
+  - variable: STRIPE_WEBHOOK_SECRET
+    secret: STRIPE_WEBHOOK_SECRET_PROD
