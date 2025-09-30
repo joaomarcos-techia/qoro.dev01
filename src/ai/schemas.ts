@@ -325,7 +325,7 @@ export const TransactionSchema = z.object({
     accountId: z.string().optional(),
     date: z.date().optional(),
     category: z.string().optional(),
-    status: z.enum(['pending', 'paid', 'cancelled']).optional().default('paid'),
+    status: z.enum(['pending', 'paid', 'cancelled']).default('paid').optional(),
     paymentMethod: z.enum(['cash', 'credit_card', 'debit_card', 'pix', 'bank_transfer', 'boleto']).optional(),
     tags: z.array(z.string()).optional(),
     customerId: z.string().optional(),
@@ -382,6 +382,7 @@ export const ReconciliationProfileSchema = ReconciliationSchema.extend({
     id: z.string(),
     createdAt: z.string(),
     userId: z.string(),
+    status: z.enum(['reconciled', 'pending']).default('pending'),
     accountName: z.string().optional(),
 });
 export type ReconciliationProfile = z.infer<typeof ReconciliationProfileSchema>;

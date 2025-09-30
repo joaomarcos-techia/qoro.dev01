@@ -1,7 +1,7 @@
 
 import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
-import { TransactionSchema, TransactionProfileSchema, TransactionProfile, UpdateTransactionSchema } from '@/ai/schemas';
+import { TransactionSchema, TransactionProfile, UpdateTransactionSchema } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
 import { adminDb } from '@/lib/firebase-admin';
 
@@ -224,7 +224,7 @@ export const listTransactions = async (
 };
 
 export const bulkCreateTransactions = async (
-    transactions: z.infer<typeof TransactionSchema>[],
+    transactions: Pick<z.infer<typeof TransactionSchema>, 'description' | 'amount' | 'type' | 'date'>[],
     accountId: string,
     actorUid: string
 ) => {
@@ -252,8 +252,12 @@ export const bulkCreateTransactions = async (
                 }
 
                 const newTransactionData = {
-                    ...transaction,
-                    date: transaction.date, // Pass the Date object directly
+                    description: transaction.description,
+                    amount: transaction.amount,
+                    type: transaction.type,
+                    date: transaction.date,
+                    status: 'paid', // Default status
+                    paymentMethod: 'bank_transfer', // Default payment method
                     accountId,
                     companyId: organizationId,
                     createdBy: actorUid,
@@ -273,5 +277,4 @@ export const bulkCreateTransactions = async (
         throw new Error(`Falha ao salvar as transações: ${error.message}`);
     }
 };
-
     
