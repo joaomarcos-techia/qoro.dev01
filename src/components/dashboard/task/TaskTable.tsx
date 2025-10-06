@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -58,8 +59,8 @@ const priorityMap: Record<TaskProfile['priority'], { text: string; color: string
 };
 
 const statusMap: Record<TaskProfile['status'], { text: string; color: string }> = {
-    todo: { text: 'A Fazer', color: 'bg-gray-500/20 text-gray-300' },
-    in_progress: { text: 'Em Progresso', color: 'bg-blue-500/20 text-blue-300' },
+    todo: { text: 'A fazer', color: 'bg-gray-500/20 text-gray-300' },
+    in_progress: { text: 'Em progresso', color: 'bg-blue-500/20 text-blue-300' },
     review: { text: 'Revisão', color: 'bg-purple-500/20 text-purple-300' },
     done: { text: 'Concluída', color: 'bg-green-500/20 text-green-300' },
 };
@@ -176,13 +177,13 @@ export function TaskTable({ tasks, users, isLoading, error, onRefresh, onEdit }:
                     <DropdownMenuLabel>Ações</DropdownMenuLabel>
                     <DropdownMenuItem onClick={() => onEdit(task)} className="rounded-xl">
                         <Edit className="mr-2 h-4 w-4" />
-                        Editar Tarefa
+                        Editar tarefa
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <AlertDialogTrigger asChild>
                         <DropdownMenuItem className="text-red-500 focus:bg-destructive/20 focus:text-red-400 rounded-xl">
                             <Trash2 className="mr-2 h-4 w-4" />
-                            Excluir Tarefa
+                            Excluir tarefa
                         </DropdownMenuItem>
                     </AlertDialogTrigger>
                     </DropdownMenuContent>
@@ -249,7 +250,7 @@ export function TaskTable({ tasks, users, isLoading, error, onRefresh, onEdit }:
   return (
     <div>
        <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-foreground">Todas as Tarefas</h2>
+            <h2 className="text-xl font-bold text-foreground">Todas as tarefas</h2>
             <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
@@ -320,5 +321,3 @@ export function TaskTable({ tasks, users, isLoading, error, onRefresh, onEdit }:
     </div>
   );
 }
-
-    

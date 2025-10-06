@@ -151,8 +151,8 @@ export default function ProgressoPage() {
   const columns = useMemo(() => {
     const statusOrder: TaskProfile['status'][] = ['todo', 'in_progress', 'review', 'done'];
     const statusNames: Record<TaskProfile['status'], string> = {
-        todo: 'A Fazer',
-        in_progress: 'Em Progresso',
+        todo: 'A fazer',
+        in_progress: 'Em progresso',
         review: 'Revisão',
         done: 'Concluída'
     };
@@ -200,10 +200,10 @@ export default function ProgressoPage() {
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
                <DialogTitle className="text-2xl font-bold text-foreground">
-                {selectedTask ? (isViewOnlyModal ? 'Detalhes da Tarefa' : 'Editar Tarefa') : 'Criar Nova Tarefa'}
+                {selectedTask ? (isViewOnlyModal ? 'Detalhes da tarefa' : 'Editar tarefa') : 'Criar nova tarefa'}
               </DialogTitle>
               <DialogDescription>
-                {isViewOnlyModal ? "Visualize os detalhes e adicione comentários. Para editar, acesse a Minha Lista." : "Preencha as informações para criar ou editar a tarefa."}
+                {isViewOnlyModal ? "Visualize os detalhes e adicione comentários. Para editar, acesse a minha lista." : "Preencha as informações para criar ou editar a tarefa."}
               </DialogDescription>
             </DialogHeader>
             <TaskForm onTaskAction={handleTaskAction} task={selectedTask} users={users} viewOnly={isViewOnlyModal}/>
@@ -213,7 +213,7 @@ export default function ProgressoPage() {
       <div className="flex-shrink-0">
         <div className="flex justify-between items-center mb-6">
             <div>
-            <h1 className="text-4xl font-bold text-foreground">Quadro de Tarefas</h1>
+            <h1 className="text-4xl font-bold text-foreground">Quadro de tarefas</h1>
             <p className="text-muted-foreground">
                 Visualize e mova suas tarefas entre as fases do fluxo de trabalho.
             </p>
@@ -222,7 +222,7 @@ export default function ProgressoPage() {
                 {isPending && <Loader2 className="w-6 h-6 text-task-primary animate-spin" />}
                  <Button onClick={handleAddTask} className="bg-task-primary text-black px-4 py-2 rounded-xl hover:bg-task-primary/90 transition-all duration-300 border border-transparent hover:border-task-primary/50 flex items-center justify-center font-semibold">
                     <PlusCircle className="mr-2 w-5 h-5" />
-                    Criar Tarefa
+                    Criar tarefa
                 </Button>
             </div>
         </div>

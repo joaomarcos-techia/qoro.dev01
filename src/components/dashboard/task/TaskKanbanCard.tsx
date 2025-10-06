@@ -116,12 +116,12 @@ export function TaskKanbanCard({ task, stageIds, onMove, onDelete, onSelect, onU
             <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => handleMove('prev')} disabled={currentStageIndex <= 0}>
                 <ChevronLeft className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-muted-foreground hover:bg-secondary/80 hover:text-foreground" title="Ver Detalhes" onClick={() => onSelect(task)}>
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-muted-foreground hover:bg-secondary/80 hover:text-foreground" title="Ver detalhes" onClick={() => onSelect(task)}>
                 <Eye className="w-4 h-4" />
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-muted-foreground hover:bg-destructive/20 hover:text-red-400" title="Excluir Tarefa">
+                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-muted-foreground hover:bg-destructive/20 hover:text-red-400" title="Excluir tarefa">
                     <Trash2 className="w-4 h-4" />
                 </Button>
               </AlertDialogTrigger>
@@ -134,7 +134,7 @@ export function TaskKanbanCard({ task, stageIds, onMove, onDelete, onSelect, onU
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => onDelete(task.id)} className='bg-destructive text-destructive-foreground hover:bg-destructive/90'>Sim, Excluir</AlertDialogAction>
+                  <AlertDialogAction onClick={() => onDelete(task.id)} className='bg-destructive text-destructive-foreground hover:bg-destructive/90'>Sim, excluir</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>

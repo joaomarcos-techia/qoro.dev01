@@ -133,7 +133,7 @@ export default function VisaoGeralPage() {
     return (
         <div className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <MetricCard title="Total de Tarefas" value={metrics?.totalTasks ?? 0} icon={ListTodo} isLoading={isLoading} />
+                <MetricCard title="Total de tarefas" value={metrics?.totalTasks ?? 0} icon={ListTodo} isLoading={isLoading} />
                 <MetricCard title="Concluídas" value={metrics?.completedTasks ?? 0} icon={Check} isLoading={isLoading} colorClass="bg-green-500 shadow-green-500/30"/>
                 <MetricCard title="Pendentes" value={metrics?.pendingTasks ?? 0} icon={Clock} isLoading={isLoading} colorClass="bg-yellow-500 shadow-yellow-500/30"/>
                 <MetricCard title="Atrasadas" value={metrics?.overdueTasks ?? 0} icon={AlertOctagon} isLoading={isLoading} colorClass="bg-red-500 shadow-red-500/30"/>
@@ -141,7 +141,7 @@ export default function VisaoGeralPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="bg-card p-6 rounded-2xl border-border">
-                    <h3 className="text-lg font-bold text-red-400 mb-4">Atenção Imediata (Atrasadas)</h3>
+                    <h3 className="text-lg font-bold text-red-400 mb-4">Atenção imediata (atrasadas)</h3>
                     <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
                         {metrics?.overdue && metrics.overdue.length > 0 ? (
                             metrics.overdue.map(task => <TaskRow key={task.id} task={task} onSelect={handleSelectTask} />)
@@ -151,7 +151,7 @@ export default function VisaoGeralPage() {
                     </div>
                 </div>
                  <div className="bg-card p-6 rounded-2xl border-border">
-                    <h3 className="text-lg font-bold text-yellow-400 mb-4">Próximos Prazos (7 dias)</h3>
+                    <h3 className="text-lg font-bold text-yellow-400 mb-4">Próximos prazos (7 dias)</h3>
                      <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
                         {metrics?.dueSoon && metrics.dueSoon.length > 0 ? (
                             metrics.dueSoon.map(task => <TaskRow key={task.id} task={task} onSelect={handleSelectTask} />)
@@ -170,8 +170,8 @@ export default function VisaoGeralPage() {
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
             <DialogContent className="sm:max-w-[600px]">
                 <DialogHeader>
-                    <DialogTitle className="text-2xl font-bold text-foreground">Detalhes da Tarefa</DialogTitle>
-                    <DialogDescription>Visualize os detalhes e adicione comentários. Para editar, acesse a "Minha Lista".</DialogDescription>
+                    <DialogTitle className="text-2xl font-bold text-foreground">Detalhes da tarefa</DialogTitle>
+                    <DialogDescription>Visualize os detalhes e adicione comentários. Para editar, acesse a "Minha lista".</DialogDescription>
                 </DialogHeader>
                 <TaskForm onTaskAction={handleTaskAction} task={selectedTask} users={users} viewOnly />
             </DialogContent>
@@ -180,7 +180,7 @@ export default function VisaoGeralPage() {
         <div>
             <div className="flex justify-between items-center mb-8">
                 <div>
-                    <h1 className="text-4xl font-bold text-foreground">Visão Geral de Tarefas</h1>
+                    <h1 className="text-4xl font-bold text-foreground">Visão geral de tarefas</h1>
                     <p className="text-muted-foreground">
                         Seu painel rápido de produtividade e prioridades.
                     </p>

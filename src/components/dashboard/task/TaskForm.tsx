@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -181,7 +182,7 @@ export function TaskForm({ onTaskAction, task, users, viewOnly = false }: TaskFo
       {/* Main Task Info */}
       <div className="space-y-4">
         <div className="space-y-2">
-            <Label htmlFor="title">Título da Tarefa*</Label>
+            <Label htmlFor="title">Título da tarefa*</Label>
             <Input id="title" {...register('title')} placeholder="Ex: Fazer follow-up com cliente X" disabled={viewOnly}/>
             {errors.title && <p className="text-destructive text-sm">{errors.title.message}</p>}
         </div>
@@ -197,7 +198,7 @@ export function TaskForm({ onTaskAction, task, users, viewOnly = false }: TaskFo
           <Label>Status</Label>
           <Controller name="status" control={control} render={({ field }) => (
               <Select onValueChange={field.onChange} value={field.value} disabled={viewOnly}><SelectTrigger><SelectValue/></SelectTrigger>
-                <SelectContent><SelectItem value="todo">A Fazer</SelectItem><SelectItem value="in_progress">Em Progresso</SelectItem><SelectItem value="review">Revisão</SelectItem><SelectItem value="done">Concluída</SelectItem></SelectContent>
+                <SelectContent><SelectItem value="todo">A fazer</SelectItem><SelectItem value="in_progress">Em progresso</SelectItem><SelectItem value="review">Revisão</SelectItem><SelectItem value="done">Concluída</SelectItem></SelectContent>
               </Select>
           )}/>
         </div>
@@ -218,7 +219,7 @@ export function TaskForm({ onTaskAction, task, users, viewOnly = false }: TaskFo
             )}/>
         </div>
         <div className="space-y-2">
-           <Label>Data de Vencimento</Label>
+           <Label>Data de vencimento</Label>
             <Controller name="dueDate" control={control} render={({ field }) => (
                 <Popover>
                     <PopoverTrigger asChild><Button variant={"outline"} disabled={viewOnly} className={cn("w-full justify-start text-left font-normal",!field.value && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), "PPP", {locale: ptBR}) : <span>Escolha uma data</span>}</Button></PopoverTrigger>
@@ -230,7 +231,7 @@ export function TaskForm({ onTaskAction, task, users, viewOnly = false }: TaskFo
 
       {/* Subtasks */}
       <div className="space-y-4">
-        <Label className="flex items-center"><CheckSquare className="w-4 h-4 mr-2 text-muted-foreground"/>Subtarefas (Checklist)</Label>
+        <Label className="flex items-center"><CheckSquare className="w-4 h-4 mr-2 text-muted-foreground"/>Subtarefas (checklist)</Label>
         <div className="p-4 rounded-xl border border-border bg-secondary/30 space-y-2">
             {subtaskFields.map((item, index) => (
                 <div key={item.id} className="flex items-center gap-2 group">
@@ -281,7 +282,7 @@ export function TaskForm({ onTaskAction, task, users, viewOnly = false }: TaskFo
       <div className="flex justify-end pt-4">
         <Button type="submit" disabled={isLoading} className="bg-task-primary text-black px-6 py-3 rounded-xl hover:bg-task-primary/90 transition-all duration-300 border border-transparent hover:border-task-primary/50 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
           {isLoading ? <Loader2 className="mr-2 w-5 h-5 animate-spin" /> : null}
-          {viewOnly ? 'Fechar' : (isEditMode ? 'Salvar Alterações' : 'Salvar Tarefa')}
+          {viewOnly ? 'Fechar' : (isEditMode ? 'Salvar alterações' : 'Salvar tarefa')}
         </Button>
       </div>
     </form>

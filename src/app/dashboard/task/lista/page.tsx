@@ -71,7 +71,7 @@ export default function ListaPage() {
        <Dialog open={isModalOpen} onOpenChange={handleModalOpenChange}>
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-foreground">{selectedTask ? 'Editar Tarefa' : 'Criar Nova Tarefa'}</DialogTitle>
+              <DialogTitle className="text-2xl font-bold text-foreground">{selectedTask ? 'Editar tarefa' : 'Criar nova tarefa'}</DialogTitle>
               <DialogDescription>
                 {selectedTask ? 'Altere as informações da tarefa abaixo.' : 'Preencha as informações abaixo para adicionar uma nova tarefa.'}
               </DialogDescription>
@@ -82,7 +82,7 @@ export default function ListaPage() {
 
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-4xl font-bold text-foreground">Minha Lista de Tarefas</h1>
+          <h1 className="text-4xl font-bold text-foreground">Minha lista de tarefas</h1>
           <p className="text-muted-foreground">
             Visualize e gerencie todas as suas tarefas em um só lugar.
           </p>
@@ -92,7 +92,7 @@ export default function ListaPage() {
           className="bg-task-primary text-black px-4 py-2 rounded-xl hover:bg-task-primary/90 transition-all duration-300 border border-transparent hover:border-task-primary/50 flex items-center justify-center font-semibold"
         >
           <PlusCircle className="mr-2 w-5 h-5" />
-          Criar Tarefa
+          Criar tarefa
         </Button>
       </div>
 
