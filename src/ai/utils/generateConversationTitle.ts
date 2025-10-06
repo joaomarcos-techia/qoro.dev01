@@ -2,7 +2,7 @@
 'use server';
 
 import { ai } from '../genkit';
-import { googleAI } from '@genkit-ai/googleai';
+import { googleAI } from '@genkit-ai/google-genai';
 import { PulseMessage } from '../schemas';
 
 /**

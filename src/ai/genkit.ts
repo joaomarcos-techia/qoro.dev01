@@ -1,7 +1,7 @@
 
 // src/ai/genkit.ts
 import { genkit } from 'genkit';
-import { googleAI } from '@genkit-ai/googleai';
+import { googleAI } from '@genkit-ai/google-genai';
 
 const apiKey = process.env.GOOGLE_API_KEY || '';
 if (!apiKey) {
