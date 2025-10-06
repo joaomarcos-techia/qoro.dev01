@@ -135,7 +135,7 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
 
     // Lógica robusta de salvamento e atualização
     let conversationId = existingConvId;
-    let finalTitle = 'Nova Conversa';
+    let finalTitle = 'Nova conversa';
 
     try {
       if (conversationId) {
@@ -148,10 +148,10 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
             throw new Error(`Conversa com ID ${conversationId} não encontrada.`);
         }
         
-        let titleToUpdate = existingData.title || 'Nova Conversa';
+        let titleToUpdate = existingData.title || 'Nova conversa';
 
         // Lógica de geração de título na segunda interação do usuário
-        if (titleToUpdate === 'Nova Conversa' && existingData.messages?.length >= 1) {
+        if (titleToUpdate.toLowerCase() === 'nova conversa' && existingData.messages?.length >= 1) {
             const contextMessages = [...existingData.messages, messages[messages.length-1]];
             titleToUpdate = await generateConversationTitle(contextMessages.slice(0, 2));
         }
@@ -164,10 +164,10 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
         });
       } else {
         // --- Cria uma nova conversa ---
-        // Na primeira interação, o título é sempre "Nova Conversa" para evitar chamadas desnecessárias à IA.
+        // Na primeira interação, o título é sempre "Nova conversa" para evitar chamadas desnecessárias à IA.
         const newConversationData = {
           userId,
-          title: 'Nova Conversa', 
+          title: 'Nova conversa', 
           messages: finalMessages.map(m => ({ ...m })),
           createdAt: FieldValue.serverTimestamp(),
           updatedAt: FieldValue.serverTimestamp(),

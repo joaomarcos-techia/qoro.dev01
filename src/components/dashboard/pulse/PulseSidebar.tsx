@@ -109,7 +109,7 @@ export function PulseSidebar() {
     }
     return conversations.map((convo) => {
         const isActive = pathname.includes(convo.id);
-        const displayTitle = convo.title || "Nova Conversa";
+        const displayTitle = convo.title || "Nova conversa";
         return (
             <div key={convo.id} className="group relative flex items-center justify-between p-3 my-1 rounded-xl transition-all duration-200 hover:bg-secondary">
                 <Link href={`/dashboard/pulse/${convo.id}`} passHref className="flex-grow flex items-center min-w-0">
@@ -162,7 +162,7 @@ export function PulseSidebar() {
             </div>
             <Link href="/dashboard" className="flex items-center text-muted-foreground hover:text-foreground transition-colors text-sm font-medium">
                 <ChevronLeft className="w-4 h-4 mr-2" />
-                <span>Voltar ao Dashboard</span>
+                <span>Voltar ao dashboard</span>
             </Link>
         </div>
       
@@ -173,7 +173,7 @@ export function PulseSidebar() {
           className="w-full flex items-center justify-center bg-pulse-primary text-black px-4 py-2.5 rounded-xl hover:bg-pulse-primary/90 transition-all duration-300 font-semibold"
         >
           <PlusCircle className="w-5 h-5 mr-2" />
-          Nova Conversa
+          Nova conversa
         </button>
       </div>
       

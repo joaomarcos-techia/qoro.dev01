@@ -11,7 +11,7 @@ import { PulseMessage } from '../schemas';
  * @param messages Histórico inicial da conversa (PulseMessage[]).
  */
 export async function generateConversationTitle(messages: PulseMessage[]): Promise<string> {
-  const fallbackTitle = 'Nova Conversa';
+  const fallbackTitle = 'Nova conversa';
 
   if (!Array.isArray(messages) || messages.length === 0) {
     return fallbackTitle;
