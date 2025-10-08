@@ -22,10 +22,9 @@ export const createCustomer = async (input: z.infer<typeof CustomerSchema>, acto
         const snapshot = await query.count().get();
         const count = snapshot.data().count;
         if (count >= FREE_PLAN_LIMITS.customers) {
-            throw new Error(`Limite de ${FREE_PLAN_LIMITS.customers} clientes atingido para o plano gratuito.`);
+            throw new Error(`Limite de ${FREE_PLAN_LIMITS.customers} clientes atingido no plano gratuito. Faça upgrade para adicionar mais.`);
         }
     }
-
 
     const newCustomerData = {
         ...input,

@@ -115,7 +115,7 @@ export function CustomerForm({ onCustomerAction, customer, customerCount }: Cust
       return;
     }
     if (isLimitReached) {
-        setError(`Limite de ${FREE_PLAN_LIMIT} clientes atingido. Faça upgrade para adicionar mais.`);
+        setError(`Limite de ${FREE_PLAN_LIMIT} clientes atingido no plano gratuito. Faça upgrade para adicionar mais.`);
         return;
     }
     setIsLoading(true);

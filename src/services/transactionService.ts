@@ -17,7 +17,7 @@ export const createTransaction = async (input: z.infer<typeof TransactionSchema>
         const snapshot = await query.count().get();
         const count = snapshot.data().count;
         if (count >= FREE_PLAN_LIMITS.transactions) {
-            throw new Error(`Limite de ${FREE_PLAN_LIMITS.transactions} transações atingido para o plano gratuito.`);
+            throw new Error(`Limite de ${FREE_PLAN_LIMITS.transactions} transações atingido para o plano gratuito. Faça upgrade para adicionar mais.`);
         }
     }
 

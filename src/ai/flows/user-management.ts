@@ -1,4 +1,5 @@
 
+
 'use server';
 /**
  * @fileOverview User and organization management flows.
@@ -69,10 +70,29 @@ const getUserAccessInfoFlow = ai.defineFlow(
     { name: 'getUserAccessInfoFlow', inputSchema: ActorSchema, outputSchema: UserAccessInfoSchema },
     async ({ actor }) => {
         const { planId, userData } = await getAdminAndOrg(actor);
-        const defaultPermissions = { qoroCrm: true, qoroPulse: true, qoroTask: true, qoroFinance: true };
+
+        // Permissions for free plan
+        let permissions = {
+            qoroPulse: true,
+            qoroTask: true,
+            // CRM and Finance are limited by record count, but core features are enabled
+            qoroCrm: true, 
+            qoroFinance: true,
+        };
+
+        // Paid plans get all permissions
+        if (planId === 'growth' || planId === 'performance') {
+            permissions = {
+                qoroCrm: true,
+                qoroPulse: true,
+                qoroTask: true,
+                qoroFinance: true,
+            };
+        }
+        
         return {
             planId,
-            permissions: { ...defaultPermissions, ...userData.permissions }
+            permissions
         }
     }
 );

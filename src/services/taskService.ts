@@ -47,7 +47,7 @@ export const createTask = async (
         const snapshot = await query.count().get();
         const count = snapshot.data().count;
         if (count >= FREE_PLAN_LIMITS.tasks) {
-            throw new Error(`Limite de ${FREE_PLAN_LIMITS.tasks} tarefas atingido para o plano gratuito.`);
+            throw new Error(`Limite de ${FREE_PLAN_LIMITS.tasks} tarefas atingido para o plano gratuito. Faça upgrade para adicionar mais.`);
         }
     }
 
@@ -67,6 +67,9 @@ export const createTask = async (
     return { id: taskRef.id };
   } catch (error) {
     console.error('🚨 Erro em createTask:', error);
+    if (error instanceof Error) {
+        throw error;
+    }
     throw new Error('Falha ao criar a tarefa.');
   }
 };

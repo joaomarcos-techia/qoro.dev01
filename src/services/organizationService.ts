@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { FieldValue } from 'firebase-admin/firestore';
@@ -58,7 +59,14 @@ export const signUp = async (input: z.infer<typeof ServerSignUpSchema>): Promise
 };
 
 export const inviteUser = async (email: string, actor: string): Promise<{ uid: string; email: string; organizationId: string; }> => {
-    const { organizationId, adminUid } = await getAdminAndOrg(actor);
+    const { organizationId, adminUid, planId } = await getAdminAndOrg(actor);
+
+    if (planId === 'free') {
+        const usersSnapshot = await adminDb.collection('users').where('organizationId', '==', organizationId).get();
+        if (usersSnapshot.size >= 2) {
+            throw new Error('O plano gratuito permite apenas 2 usuários. Faça upgrade para convidar mais membros.');
+        }
+    }
     
     let userRecord: UserRecord;
     try {
