@@ -29,8 +29,7 @@ const qualificationFlow = ai.defineFlow(
     outputSchema: z.object({ success: z.boolean(), message: z.string() }),
   },
   async (answers) => {
-    // O 'await' foi removido desta função para que ela execute em segundo plano.
-    // Isso permite que a interface do usuário avance sem esperar pela conclusão do salvamento.
+    // A função de salvamento agora é interna e não é esperada pelo cliente.
     const processAndSaveLead = async () => {
       try {
         const formattedAnswers = questions.map(q => {
@@ -60,17 +59,18 @@ const qualificationFlow = ai.defineFlow(
         };
 
         await qualificationService.createQualificationLead(dataToSave);
+        console.log("✅ Lead de qualificação salvo com sucesso em segundo plano.");
       } catch (error: any) {
         // Log do erro no servidor para monitoramento, sem impactar o usuário.
-        console.error("❌ Erro ao salvar lead em segundo plano:", error);
+        console.error("❌ Erro ao salvar lead de qualificação em segundo plano:", error);
       }
     };
     
-    // Inicia o processo de salvamento, mas não espera por ele.
+    // Inicia o processo de salvamento, mas não espera por ele (fire-and-forget).
     processAndSaveLead();
 
-    // Retorna sucesso imediatamente para a interface.
-    return { success: true, message: 'Processamento iniciado.' };
+    // Retorna sucesso imediatamente para a interface, mesmo que o salvamento ainda esteja ocorrendo.
+    return { success: true, message: 'Processamento do formulário iniciado.' };
   }
 );
 

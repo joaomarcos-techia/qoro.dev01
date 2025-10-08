@@ -133,12 +133,12 @@ export default function QualificationForm() {
 
   const handleSubmit = () => {
     setIsLoading(true);
-    // Fire-and-forget: we don't await the result.
+    // Fire-and-forget: we don't await the result, providing immediate user feedback.
     submitQualificationForm(answers).catch(error => {
-        // Log the error for debugging, but don't block the user.
+        // This error will only be visible in the server logs, not to the user.
         console.error("❌ Falha no envio do formulário em segundo plano:", error);
     });
-    // Immediately redirect the user.
+    // Immediately redirect the user for a snappy experience.
     router.push('/qualificacao/obrigado');
   };
 
