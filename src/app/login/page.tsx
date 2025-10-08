@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -126,7 +125,7 @@ export default function LoginPage() {
         <div className="text-center mt-8">
           <p className="text-sm text-muted-foreground">
             Não tem uma conta?{' '}
-            <Link href="/signup?plan=free">
+            <Link href="/#precos">
               <span className="font-medium text-primary hover:underline">
                 Crie uma agora
               </span>
