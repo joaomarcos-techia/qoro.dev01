@@ -31,8 +31,8 @@ export default function LoginPage() {
       if ((err as any).code === 'auth/email-not-verified') {
         setError('Seu e-mail ainda não foi verificado.');
         setShowResend(true);
-      } else if ((err as any).code === 'auth/user-not-found' || (err as any).code === 'auth/invalid-credential') {
-        setError('E-mail ou senha inválidos. Verifique seus dados ou crie uma nova conta.');
+      } else if ((err as any).code === 'auth/invalid-credential') {
+        setError('E-mail ou senha inválidos. Verifique seus dados ou crie uma nova conta se a anterior foi excluída.');
       }
       else {
         setError(err.message || 'Ocorreu um erro desconhecido. Tente novamente.');
