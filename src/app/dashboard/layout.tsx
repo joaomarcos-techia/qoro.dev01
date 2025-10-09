@@ -65,7 +65,7 @@ const navItems: Record<string, NavItem[]> = {
     task: [
         { href: '/dashboard/task/visao-geral', label: 'Visão Geral', icon: Home, permissionKey: 'qoroTask', plan: ['free', 'growth', 'performance'] },
         { href: '/dashboard/task/lista', label: 'Minha Lista', icon: List, permissionKey: 'qoroTask', plan: ['free', 'growth', 'performance'] },
-        { href: '/dashboard/task/tarefas', label: 'Quadro', icon: LayoutGrid, permissionKey: 'qoroTask', plan: ['free', 'growth', 'performance'] },
+        { href: '/dashboard/task/tarefas', label: 'Quadro', icon: LayoutGrid, permissionKey: 'qoroTask', plan: ['growth', 'performance'] },
         { href: '/dashboard/task/calendario', label: 'Calendário', icon: Calendar, permissionKey: 'qoroTask', plan: ['growth', 'performance'] },
     ],
     finance: [
