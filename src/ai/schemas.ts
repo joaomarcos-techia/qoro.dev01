@@ -90,7 +90,7 @@ export const CustomerSchema = z.object({
   phone: z.string().optional(),
   company: z.string().optional(),
   cpf: z.string().optional(),
-  cnpj: zstring().optional(),
+  cnpj: z.string().optional(),
   birthDate: z.union([z.string(), z.date()]).optional().nullable(),
   address: AddressSchema.optional(),
   tags: z.array(z.string()).optional(),
