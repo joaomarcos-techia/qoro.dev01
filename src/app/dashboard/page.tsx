@@ -13,7 +13,7 @@ import {
   AlertTriangle,
   Lock,
 } from 'lucide-react';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
@@ -23,6 +23,8 @@ import { getFinanceDashboardMetrics } from '@/ai/flows/finance-management';
 import { ErrorBoundary } from 'react-error-boundary';
 import { UserAccessInfo, CustomerProfile } from '@/ai/schemas';
 import { useRouter } from 'next/navigation';
+import { usePlan } from '@/contexts/PlanContext';
+import { cn } from '@/lib/utils';
 
 
 interface DashboardMetrics {
@@ -76,54 +78,64 @@ const AppCard = ({
     title, 
     icon: Icon, 
     color, 
-    description, 
+    description,
+    isLocked = false,
 }: { 
     href: string;
     title: string; 
     icon: React.ElementType; 
     color: string; 
     description: string;
+    isLocked?: boolean;
 }) => {
     const router = useRouter();
     const [isNavigating, setIsNavigating] = useState(false);
 
-    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (isLocked) return;
         e.preventDefault();
         setIsNavigating(true);
         router.push(href);
     };
 
     return (
-      <div className="group bg-card rounded-2xl border border-border hover:border-primary/50 hover:-translate-y-1 transition-all duration-200 flex flex-col h-full">
+      <div 
+        onClick={handleClick}
+        className={cn(
+            "group bg-card rounded-2xl border border-border transition-all duration-200 flex flex-col h-full",
+            isLocked ? "opacity-50 cursor-not-allowed" : "hover:border-primary/50 hover:-translate-y-1 cursor-pointer"
+        )}
+      >
           <div className="p-6 flex-grow flex flex-col">
-          <div className="flex items-center mb-4">
-              <div className={`p-3 rounded-xl ${color} text-black mr-4 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
-              <Icon className="w-6 h-6" />
+              <div className="flex items-center mb-4">
+                  <div className={cn("p-3 rounded-xl text-black mr-4 group-hover:scale-110 transition-transform duration-300 shadow-lg", color)}>
+                      <Icon className="w-6 h-6" />
+                  </div>
+                  <div>
+                      <h4 className="text-lg font-bold text-foreground">{title}</h4>
+                  </div>
               </div>
-              <div>
-              <h4 className="text-lg font-bold text-foreground">{title}</h4>
+              <p className="text-sm text-muted-foreground mb-6 flex-grow">
+                  {description}
+              </p>
+              <div className="w-full bg-secondary text-secondary-foreground py-2.5 px-4 rounded-full flex items-center justify-center text-sm font-medium">
+                  {isLocked ? (
+                      <>
+                          <Lock className="w-4 h-4 mr-2" />
+                          <span>Disponível no plano Performance</span>
+                      </>
+                  ) : isNavigating ? (
+                      <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          <span>Carregando...</span>
+                      </>
+                  ) : (
+                      <>
+                          <span>Acessar</span>
+                          <ArrowRight className="w-4 h-4 ml-2 transform transition-transform duration-300 group-hover:translate-x-1" />
+                      </>
+                  )}
               </div>
-          </div>
-          <p className="text-sm text-muted-foreground mb-6 flex-grow">
-              {description}
-          </p>
-          <button 
-            onClick={handleClick}
-            disabled={isNavigating}
-            className="group/button w-full bg-secondary text-secondary-foreground hover:bg-secondary/80 py-2.5 px-4 rounded-full transition-colors flex items-center justify-center text-sm font-medium disabled:opacity-75"
-          >
-            {isNavigating ? (
-                <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    <span>Carregando...</span>
-                </>
-            ) : (
-                <>
-                    <span>Acessar</span>
-                    <ArrowRight className="w-4 h-4 ml-2 transform transition-transform duration-300 group-hover/button:translate-x-1" />
-                </>
-            )}
-          </button>
           </div>
       </div>
     );
@@ -131,46 +143,30 @@ const AppCard = ({
 
 
 function DashboardContent() {
-  const [userAccess, setUserAccess] = useState<UserAccessInfo | null>(null);
+  const { planId, permissions, isLoading: isPlanLoading } = usePlan();
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
-  const [isLoading, setIsLoading] = useState({ access: true, metrics: true });
+  const [isLoadingMetrics, setIsLoadingMetrics] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [metrics, setMetrics] = useState<DashboardMetrics>({ totalCustomers: 0, activeLeads: 0, pendingTasks: 0, totalBalance: 0 });
-
-
-  const fetchUserAccess = useCallback(async (user: FirebaseUser) => {
-    // This part is quick, so we don't need a separate loading state.
-    try {
-        const info = await getUserAccessInfo({ actor: user.uid });
-        setUserAccess(info);
-    } catch (e) {
-        console.error("Failed to fetch user access info", e);
-        setError("Não foi possível carregar as informações do seu plano.");
-        setUserAccess(null);
-    }
-  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user: FirebaseUser | null) => {
       if (user) {
         setCurrentUser(user);
-        fetchUserAccess(user);
       } else {
-        // If no user, stop loading and clear data.
         setCurrentUser(null);
-        setUserAccess(null);
-        setIsLoading({ access: false, metrics: false });
+        setIsLoadingMetrics(false);
       }
     });
     return () => unsubscribe();
-  }, [fetchUserAccess]);
+  }, []);
 
 
   useEffect(() => {
     async function fetchAllMetrics() {
         if (!currentUser) return;
 
-        setIsLoading(prev => ({...prev, metrics: true, access: false })); // Access is loaded, now load metrics
+        setIsLoadingMetrics(true);
         setError(null);
 
         try {
@@ -188,7 +184,7 @@ function DashboardContent() {
             console.error("Dashboard Metrics Error:", err);
             setError("Não foi possível carregar as métricas do dashboard.");
         } finally {
-             setIsLoading(prev => ({...prev, metrics: false}));
+             setIsLoadingMetrics(false);
         }
     }
     
@@ -197,7 +193,7 @@ function DashboardContent() {
     }
   }, [currentUser]);
 
-  if (isLoading.access || isLoading.metrics) {
+  if (isPlanLoading) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="w-12 h-12 text-primary animate-spin" />
@@ -217,6 +213,7 @@ function DashboardContent() {
       );
   }
 
+  const isPulseLocked = !permissions?.qoroPulse;
 
   return (
     <div
@@ -236,10 +233,10 @@ function DashboardContent() {
        <div className="mb-12">
             <h3 className="text-xl font-bold text-foreground mb-6">Métricas e Insights Rápidos</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <MetricCard title="Total de Clientes" value={String(metrics.totalCustomers)} icon={Users} isLoading={isLoading.metrics} error={!!error} colorClass='bg-crm-primary' />
-                <MetricCard title="Clientes no Funil" value={String(metrics.activeLeads)} icon={TrendingUp} isLoading={isLoading.metrics} error={!!error} colorClass='bg-crm-primary' />
-                <MetricCard title="Tarefas Pendentes" value={String(metrics.pendingTasks)} icon={ListTodo} isLoading={isLoading.metrics} error={!!error} colorClass='bg-task-primary' />
-                <MetricCard title="Saldo em Contas" value={formatCurrency(metrics.totalBalance)} icon={DollarSign} isLoading={isLoading.metrics} error={!!error} colorClass='bg-finance-primary' />
+                <MetricCard title="Total de Clientes" value={String(metrics.totalCustomers)} icon={Users} isLoading={isLoadingMetrics} error={!!error} colorClass='bg-crm-primary' />
+                <MetricCard title="Clientes no Funil" value={String(metrics.activeLeads)} icon={TrendingUp} isLoading={isLoadingMetrics} error={!!error} colorClass='bg-crm-primary' />
+                <MetricCard title="Tarefas Pendentes" value={String(metrics.pendingTasks)} icon={ListTodo} isLoading={isLoadingMetrics} error={!!error} colorClass='bg-task-primary' />
+                <MetricCard title="Saldo em Contas" value={formatCurrency(metrics.totalBalance)} icon={DollarSign} isLoading={isLoadingMetrics} error={!!error} colorClass='bg-finance-primary' />
             </div>
              {error && (
                 <div className="mt-4 p-4 bg-yellow-800/20 border-l-4 border-yellow-500 text-yellow-300 rounded-lg text-sm">
@@ -268,6 +265,7 @@ function DashboardContent() {
                 icon={Activity}
                 color="bg-pulse-primary"
                 description="O sistema nervoso central da sua operação, revelando insights para otimização automática e inteligente."
+                isLocked={isPulseLocked}
             />
             <AppCard 
                 href="/dashboard/task/visao-geral"
