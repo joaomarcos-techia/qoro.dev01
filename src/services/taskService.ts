@@ -47,7 +47,7 @@ export const createTask = async (
         const snapshot = await query.count().get();
         const count = snapshot.data().count;
         if (count >= FREE_PLAN_LIMITS.tasks) {
-            throw new Error(`Limite de ${FREE_PLAN_LIMITS.tasks} tarefas atingido para o plano gratuito. Faça upgrade para adicionar mais.`);
+            throw new Error(`Limite de ${FREE_PLAN_LIMITS.tasks} tarefas atingido no plano gratuito. Faça upgrade para adicionar mais.`);
         }
     }
 

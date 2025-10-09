@@ -16,11 +16,12 @@ import { createTask, updateTask } from '@/ai/flows/task-management';
 import { TaskSchema, TaskProfile, UserProfile } from '@/ai/schemas';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { Loader2, AlertCircle, CalendarIcon, PlusCircle, Trash2, Send, MessageSquare, CheckSquare } from 'lucide-react';
+import { Loader2, AlertCircle, CalendarIcon, PlusCircle, Trash2, Send, MessageSquare, CheckSquare, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Checkbox } from '@/components/ui/checkbox';
+import { usePlan } from '@/contexts/TasksContext';
 
 const FormSchema = TaskSchema.extend({
     dueDate: z.union([z.date(), z.null()]).optional(),
@@ -41,8 +42,12 @@ export function TaskForm({ onTaskAction, task, users, viewOnly = false }: TaskFo
   const [error, setError] = useState<string | null>(null);
   const [newSubtaskText, setNewSubtaskText] = useState('');
   const [newCommentText, setNewCommentText] = useState('');
+  const { planId, tasks } = usePlan();
   
   const isEditMode = !!task;
+  const FREE_PLAN_LIMIT = 5;
+  const isLimitReached = !isEditMode && planId === 'free' && tasks.length >= FREE_PLAN_LIMIT;
+
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -147,6 +152,10 @@ export function TaskForm({ onTaskAction, task, users, viewOnly = false }: TaskFo
     if (!currentUser) {
       setError('Você precisa estar autenticado para realizar esta ação.');
       return;
+    }
+    if (isLimitReached) {
+        setError(`Limite de ${FREE_PLAN_LIMIT} tarefas atingido no plano gratuito. Faça upgrade para adicionar mais.`);
+        return;
     }
     if (viewOnly) { // If it's view only, the main button shouldn't submit the whole form
         onTaskAction();
@@ -279,8 +288,14 @@ export function TaskForm({ onTaskAction, task, users, viewOnly = false }: TaskFo
               <span className="text-sm">{error}</span>
             </div>
         )}
+        {isLimitReached && (
+             <div className="bg-yellow-500/20 border-l-4 border-yellow-500 text-yellow-300 p-4 rounded-lg flex items-center">
+                <Info className="w-5 h-5 mr-3" />
+                <span className="text-sm">Você atingiu o limite de {FREE_PLAN_LIMIT} tarefas do plano gratuito. <a href="/#precos" className="font-bold underline">Faça upgrade</a> para adicionar mais.</span>
+            </div>
+        )}
       <div className="flex justify-end pt-4">
-        <Button type="submit" disabled={isLoading} className="bg-task-primary text-black px-6 py-3 rounded-xl hover:bg-task-primary/90 transition-all duration-300 border border-transparent hover:border-task-primary/50 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
+        <Button type="submit" disabled={isLoading || isLimitReached} className="bg-task-primary text-black px-6 py-3 rounded-xl hover:bg-task-primary/90 transition-all duration-300 border border-transparent hover:border-task-primary/50 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
           {isLoading ? <Loader2 className="mr-2 w-5 h-5 animate-spin" /> : null}
           {viewOnly ? 'Fechar' : (isEditMode ? 'Salvar alterações' : 'Salvar tarefa')}
         </Button>

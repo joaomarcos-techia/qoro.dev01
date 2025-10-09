@@ -16,6 +16,7 @@ import {
 import { TransactionForm } from '@/components/dashboard/finance/TransactionForm';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import { listTransactions } from '@/ai/flows/finance-management';
 
 
 export default function TransacoesPage() {
@@ -23,12 +24,19 @@ export default function TransacoesPage() {
     const [refreshKey, setRefreshKey] = useState(0);
     const [initialLoading, setInitialLoading] = useState(true);
     const [currentUser, setCurrentUser] = useState<User | null>(null);
+    const [transactionCount, setTransactionCount] = useState(0);
 
     useEffect(() => {
       const unsubscribe = onAuthStateChanged(auth, (user) => {
         setCurrentUser(user);
-        // Only stop initial loading when auth state is determined
-        setInitialLoading(false);
+        if(user) {
+          listTransactions({ actor: user.uid }).then(transactions => {
+            setTransactionCount(transactions.length);
+            setInitialLoading(false);
+          });
+        } else {
+          setInitialLoading(false);
+        }
       });
       return () => unsubscribe();
     }, []);
@@ -36,6 +44,11 @@ export default function TransacoesPage() {
     const handleAction = () => {
       setIsModalOpen(false);
       setRefreshKey(prev => prev + 1);
+      if(currentUser) {
+        listTransactions({ actor: currentUser.uid }).then(transactions => {
+          setTransactionCount(transactions.length);
+        });
+      }
     };
 
     const renderContent = () => {
@@ -88,7 +101,7 @@ export default function TransacoesPage() {
                             Preencha as informações para registrar uma nova movimentação financeira.
                         </DialogDescription>
                     </DialogHeader>
-                    <TransactionForm onAction={handleAction} />
+                    <TransactionForm onAction={handleAction} transactionCount={transactionCount} />
                 </DialogContent>
             </Dialog>
         </div>

@@ -71,16 +71,15 @@ const getUserAccessInfoFlow = ai.defineFlow(
     async ({ actor }) => {
         const { planId, userData } = await getAdminAndOrg(actor);
 
-        // Permissions for free plan
+        // Permissões padrão para o plano gratuito
         let permissions = {
-            qoroPulse: true,
-            qoroTask: true,
-            // CRM and Finance are limited by record count, but core features are enabled
-            qoroCrm: true, 
-            qoroFinance: true,
+            qoroPulse: false, // Bloqueado no plano gratuito
+            qoroTask: true,   // Módulo base de tarefas é permitido
+            qoroCrm: true,    // Módulo base de CRM é permitido
+            qoroFinance: true, // Módulo base de Finanças é permitido
         };
 
-        // Paid plans get all permissions
+        // Planos pagos (Growth e Performance) têm acesso a tudo
         if (planId === 'growth' || planId === 'performance') {
             permissions = {
                 qoroCrm: true,

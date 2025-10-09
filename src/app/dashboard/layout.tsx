@@ -8,7 +8,6 @@ import {
   LayoutGrid,
   CheckSquare,
   Calendar,
-  BarChart3,
   DollarSign,
   Activity,
   ChevronLeft,
@@ -38,7 +37,8 @@ interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
-  permissionKey?: 'qoroCrm' | 'qoroTask' | 'qoroFinance' | 'qoroPulse';
+  permissionKey: 'qoroCrm' | 'qoroTask' | 'qoroFinance' | 'qoroPulse';
+  plan: ('free' | 'growth' | 'performance')[];
 }
 
 interface NavGroup {
@@ -56,40 +56,39 @@ const navConfig: Record<string, NavGroup> = {
 
 const navItems: Record<string, NavItem[]> = {
     crm: [
-        { href: '/dashboard/crm/clientes', label: 'Clientes', icon: Users, permissionKey: 'qoroCrm' },
-        { href: '/dashboard/crm/funil', label: 'Funil', icon: LayoutGrid, permissionKey: 'qoroCrm' },
-        { href: '/dashboard/crm/produtos', label: 'Produtos', icon: Package, permissionKey: 'qoroCrm' },
-        { href: '/dashboard/crm/servicos', label: 'Serviços', icon: Wrench, permissionKey: 'qoroCrm' },
-        { href: '/dashboard/crm/orcamentos', label: 'Orçamentos', icon: FileText, permissionKey: 'qoroCrm' },
+        { href: '/dashboard/crm/clientes', label: 'Clientes', icon: Users, permissionKey: 'qoroCrm', plan: ['free', 'growth', 'performance'] },
+        { href: '/dashboard/crm/funil', label: 'Funil', icon: LayoutGrid, permissionKey: 'qoroCrm', plan: ['free', 'growth', 'performance'] },
+        { href: '/dashboard/crm/produtos', label: 'Produtos', icon: Package, permissionKey: 'qoroCrm', plan: ['growth', 'performance'] },
+        { href: '/dashboard/crm/servicos', label: 'Serviços', icon: Wrench, permissionKey: 'qoroCrm', plan: ['growth', 'performance'] },
+        { href: '/dashboard/crm/orcamentos', label: 'Orçamentos', icon: FileText, permissionKey: 'qoroCrm', plan: ['growth', 'performance'] },
     ],
     task: [
-        { href: '/dashboard/task/visao-geral', label: 'Visão Geral', icon: Home, permissionKey: 'qoroTask' },
-        { href: '/dashboard/task/lista', label: 'Minha Lista', icon: List, permissionKey: 'qoroTask' },
-        { href: '/dashboard/task/tarefas', label: 'Quadro', icon: LayoutGrid, permissionKey: 'qoroTask' },
-        { href: '/dashboard/task/calendario', label: 'Calendário', icon: Calendar, permissionKey: 'qoroTask' },
+        { href: '/dashboard/task/visao-geral', label: 'Visão Geral', icon: Home, permissionKey: 'qoroTask', plan: ['free', 'growth', 'performance'] },
+        { href: '/dashboard/task/lista', label: 'Minha Lista', icon: List, permissionKey: 'qoroTask', plan: ['free', 'growth', 'performance'] },
+        { href: '/dashboard/task/tarefas', label: 'Quadro', icon: LayoutGrid, permissionKey: 'qoroTask', plan: ['free', 'growth', 'performance'] },
+        { href: '/dashboard/task/calendario', label: 'Calendário', icon: Calendar, permissionKey: 'qoroTask', plan: ['growth', 'performance'] },
     ],
     finance: [
-        { href: '/dashboard/finance/transacoes', label: 'Transações', icon: ArrowLeftRight, permissionKey: 'qoroFinance' },
-        { href: '/dashboard/finance/contas', label: 'Contas', icon: Landmark, permissionKey: 'qoroFinance' },
-        { href: '/dashboard/finance/contas-a-pagar', label: 'A pagar/receber', icon: Receipt, permissionKey: 'qoroFinance' },
-        { href: '/dashboard/finance/fornecedores', label: 'Fornecedores', icon: Truck, permissionKey: 'qoroFinance' },
-        { href: '/dashboard/finance/conciliacao', label: 'Conciliação', icon: GitCompareArrows, permissionKey: 'qoroFinance' },
+        { href: '/dashboard/finance/transacoes', label: 'Transações', icon: ArrowLeftRight, permissionKey: 'qoroFinance', plan: ['free', 'growth', 'performance'] },
+        { href: '/dashboard/finance/contas', label: 'Contas', icon: Landmark, permissionKey: 'qoroFinance', plan: ['free', 'growth', 'performance'] },
+        { href: '/dashboard/finance/contas-a-pagar', label: 'A pagar/receber', icon: Receipt, permissionKey: 'qoroFinance', plan: ['growth', 'performance'] },
+        { href: '/dashboard/finance/fornecedores', label: 'Fornecedores', icon: Truck, permissionKey: 'qoroFinance', plan: ['performance'] },
+        { href: '/dashboard/finance/conciliacao', label: 'Conciliação', icon: GitCompareArrows, permissionKey: 'qoroFinance', plan: ['performance'] },
     ],
 }
 
 
 function ModuleSidebar() {
     const pathname = usePathname();
-    const { permissions, isLoading } = usePlan();
+    const { permissions, isLoading, planId } = usePlan();
     const segments = pathname.split('/');
     const currentModule = segments.length > 2 ? segments[2] : 'home';
-    const hasModuleSidebar = navConfig.hasOwnProperty(currentModule);
   
     if (currentModule === 'pulse') {
         return <PulseSidebar />;
     }
   
-    if (!hasModuleSidebar || !navConfig[currentModule]) {
+    if (!navConfig.hasOwnProperty(currentModule) || !navConfig[currentModule]) {
       return null;
     }
   
@@ -98,9 +97,10 @@ function ModuleSidebar() {
     const [bgColor, textColor] = colorClass.split(' ');
 
     const isAllowed = (item: NavItem) => {
-      if (isLoading) return false; // Disable while loading to avoid flickering
-      if (!item.permissionKey) return true; // Always allow if no permission key is set
-      return permissions?.[item.permissionKey] ?? false;
+      if (isLoading || !planId) return false;
+      const hasPlanPermission = item.plan.includes(planId);
+      const hasRolePermission = permissions?.[item.permissionKey] ?? false;
+      return hasPlanPermission && hasRolePermission;
     }
   
     return (
@@ -122,6 +122,17 @@ function ModuleSidebar() {
             {moduleItems.map((item) => {
               const isActive = pathname.startsWith(item.href);
               const allowed = isAllowed(item);
+
+              if (isLoading) {
+                return (
+                  <li key={item.href} className="flex items-center justify-between px-4 py-3 my-1 rounded-xl text-sm font-medium text-muted-foreground/50">
+                    <div className="flex items-center">
+                      <Loader2 className="w-5 h-5 mr-3 animate-spin" />
+                      {item.label}
+                    </div>
+                  </li>
+                );
+              }
 
               if (!allowed) {
                 return (

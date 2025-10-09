@@ -6,6 +6,7 @@ import { listTasks } from '@/ai/flows/task-management';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { TaskProfile } from '@/ai/schemas';
+import { usePlan } from './PlanContext';
 
 interface TasksContextType {
   tasks: TaskProfile[];
@@ -13,6 +14,7 @@ interface TasksContextType {
   error: string | null;
   refreshTasks: () => void;
   updateTaskInState: (updatedTask: TaskProfile) => void;
+  planId: 'free' | 'growth' | 'performance' | null;
 }
 
 const TasksContext = createContext<TasksContextType | null>(null);
@@ -23,6 +25,7 @@ export const TasksProvider = ({ children }: { children: React.ReactNode }) => {
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const { planId, isLoading: isPlanLoading } = usePlan();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -51,8 +54,8 @@ export const TasksProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const fetchTasks = async () => {
-      if (!currentUser) {
-        setLoading(false);
+      if (!currentUser || isPlanLoading) {
+        setLoading(isPlanLoading);
         return;
       }
       
@@ -71,10 +74,10 @@ export const TasksProvider = ({ children }: { children: React.ReactNode }) => {
     };
     
     fetchTasks();
-  }, [currentUser, refreshTrigger]);
+  }, [currentUser, refreshTrigger, isPlanLoading]);
   
   return (
-    <TasksContext.Provider value={{ tasks, loading, error, refreshTasks, updateTaskInState }}>
+    <TasksContext.Provider value={{ tasks, loading: loading || isPlanLoading, error, refreshTasks, updateTaskInState, planId }}>
       {children}
     </TasksContext.Provider>
   );
@@ -86,4 +89,13 @@ export const useTasks = () => {
     throw new Error('useTasks deve ser usado dentro de TasksProvider');
   }
   return context;
+};
+
+// Renamed to avoid conflict with PlanContext's usePlan
+export const usePlanInTasks = () => {
+    const context = useContext(TasksContext);
+    if (!context) {
+      throw new Error('usePlanInTasks must be used within a TasksProvider');
+    }
+    return { planId: context.planId, tasks: context.tasks };
 };

@@ -16,13 +16,16 @@ import { listCustomers } from '@/ai/flows/crm-management';
 import { TransactionSchema, AccountProfile, CustomerProfile, TransactionProfile } from '@/ai/schemas';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { Loader2, AlertCircle, CalendarIcon, Search } from 'lucide-react';
+import { Loader2, AlertCircle, CalendarIcon, Search, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
+import { usePlan } from '@/contexts/PlanContext';
+import { adminDb } from '@/lib/firebase-admin';
 
 type TransactionFormProps = {
   onAction: () => void;
   transaction?: TransactionProfile | null;
+  transactionCount: number;
 };
 
 const FormSchema = TransactionSchema.extend({
@@ -30,7 +33,7 @@ const FormSchema = TransactionSchema.extend({
 });
 type FormValues = z.infer<typeof FormSchema>;
 
-export function TransactionForm({ onAction, transaction }: TransactionFormProps) {
+export function TransactionForm({ onAction, transaction, transactionCount }: TransactionFormProps) {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,8 +41,12 @@ export function TransactionForm({ onAction, transaction }: TransactionFormProps)
   const [customers, setCustomers] = useState<CustomerProfile[]>([]);
   const [customerSearch, setCustomerSearch] = useState('');
   const [isCustomerPopoverOpen, setIsCustomerPopoverOpen] = useState(false);
+  const { planId } = usePlan();
   
   const isEditMode = !!transaction?.id;
+  const FREE_PLAN_LIMIT = 10;
+  const isLimitReached = !isEditMode && planId === 'free' && transactionCount >= FREE_PLAN_LIMIT;
+
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -122,6 +129,10 @@ export function TransactionForm({ onAction, transaction }: TransactionFormProps)
     if (!currentUser) {
       setError('Você precisa estar autenticado para executar esta ação.');
       return;
+    }
+     if (isLimitReached) {
+        setError(`Limite de ${FREE_PLAN_LIMIT} transações atingido no plano gratuito. Faça upgrade para adicionar mais.`);
+        return;
     }
     setIsLoading(true);
     setError(null);
@@ -291,8 +302,14 @@ export function TransactionForm({ onAction, transaction }: TransactionFormProps)
               <span className="text-sm">{error}</span>
             </div>
         )}
+        {isLimitReached && (
+             <div className="bg-yellow-500/20 border-l-4 border-yellow-500 text-yellow-300 p-4 rounded-lg flex items-center">
+                <Info className="w-5 h-5 mr-3" />
+                <span className="text-sm">Você atingiu o limite de {FREE_PLAN_LIMIT} transações do plano gratuito. <a href="/#precos" className="font-bold underline">Faça upgrade</a> para adicionar mais.</span>
+            </div>
+        )}
       <div className="flex justify-end pt-4">
-        <Button type="submit" disabled={isLoading} className="bg-finance-primary text-black px-6 py-3 rounded-xl hover:bg-finance-primary/90 transition-all duration-300 border border-transparent hover:border-finance-primary/50 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
+        <Button type="submit" disabled={isLoading || isLimitReached} className="bg-finance-primary text-black px-6 py-3 rounded-xl hover:bg-finance-primary/90 transition-all duration-300 border border-transparent hover:border-finance-primary/50 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
           {isLoading ? <Loader2 className="mr-2 w-5 h-5 animate-spin" /> : null}
           {isLoading ? 'Salvando...' : (isEditMode ? 'Salvar alterações' : 'Salvar transação')}
         </Button>
