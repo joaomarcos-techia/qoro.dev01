@@ -1,14 +1,15 @@
 
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Mail, Lock, LogIn, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { Mail, Lock, LogIn, AlertCircle, CheckCircle, Loader2, RefreshCw } from 'lucide-react';
 import { signIn, sendPasswordResetEmail } from '@/lib/auth';
 import { Logo } from '@/components/ui/logo';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -19,6 +20,31 @@ export default function LoginPage() {
   const [resendSuccess, setResendSuccess] = useState<string | null>(null);
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isPaymentSuccess = searchParams.get('payment_success') === 'true';
+  const [isSyncing, setIsSyncing] = useState(isPaymentSuccess);
+
+
+  useEffect(() => {
+    if (isSyncing) {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (user) {
+                const interval = setInterval(async () => {
+                    const userDocRef = doc(db, "users", user.uid);
+                    const userDoc = await getDoc(userDocRef);
+                    if (userDoc.exists() && userDoc.data().organizationId) {
+                        clearInterval(interval);
+                        router.push('/dashboard');
+                    }
+                }, 3000);
+
+                return () => clearInterval(interval);
+            }
+        });
+        return () => unsubscribe();
+    }
+  }, [isSyncing, router]);
+
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +75,6 @@ export default function LoginPage() {
     setError(null);
     setIsLoading(true);
     try {
-        // Firebase uses the password reset flow to also handle verification for new accounts
         await sendPasswordResetEmail(email);
         setResendSuccess('Um novo e-mail de verificação/configuração de conta foi enviado. Verifique sua caixa de entrada.');
         setShowResend(false);
@@ -57,6 +82,18 @@ export default function LoginPage() {
         setError(err.message);
     }
     setIsLoading(false);
+  }
+
+  if (isSyncing) {
+    return (
+        <main className="flex items-center justify-center min-h-screen bg-black p-4">
+            <div className="w-full max-w-md mx-auto bg-card rounded-2xl border border-border p-8 md:p-12 text-center">
+                <RefreshCw className="w-12 h-12 text-primary mx-auto animate-spin mb-6"/>
+                <h2 className="text-2xl font-bold text-foreground mb-4">Pagamento confirmado!</h2>
+                <p className="text-muted-foreground">Estamos sincronizando sua conta e preparando tudo para o primeiro acesso. Você será redirecionado em instantes.</p>
+            </div>
+        </main>
+    );
   }
 
   return (
