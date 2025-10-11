@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -98,7 +99,7 @@ export default function SignUpForm() {
         });
 
         // Redirect to Stripe checkout
-        router.push(sessionId); // Assuming sessionId is the checkout URL from Stripe
+        window.location.assign(sessionId); // Correct way to redirect to an external URL
       } else {
         // For the free plan, create the organization directly
         await signUp({
