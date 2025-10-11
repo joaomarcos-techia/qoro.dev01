@@ -1,3 +1,4 @@
+
 // src/app/api/stripe/webhook/route.ts
 import type { Stripe } from 'stripe';
 import { NextResponse } from 'next/server';
@@ -27,6 +28,8 @@ const relevantEvents = new Set([
   'checkout.session.completed',
   'customer.subscription.updated',
   'customer.subscription.deleted',
+  'customer.subscription.paused',
+  'customer.subscription.resumed',
 ]);
 
 export async function POST(req: Request) {
@@ -58,21 +61,21 @@ export async function POST(req: Request) {
           }
           await updateSubscription({
             subscriptionId: checkoutSession.subscription,
-            customerId: checkoutSession.customer as string,
             isCreating: true,
           });
           break;
         case 'customer.subscription.updated':
         case 'customer.subscription.deleted':
+        case 'customer.subscription.paused':
+        case 'customer.subscription.resumed':
           const subscription = event.data.object as Stripe.Subscription;
           await updateSubscription({
             subscriptionId: subscription.id,
-            customerId: subscription.customer as string,
             isCreating: false,
           });
           break;
         default:
-          throw new Error(`Unhandled relevant event type: ${event.type}`);
+          console.log(`Webhook event não tratado: ${event.type}`);
       }
     } catch (error) {
       console.error('Error handling webhook event:', error);

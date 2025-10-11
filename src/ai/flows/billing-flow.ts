@@ -30,7 +30,6 @@ const CreateBillingPortalSessionSchema = z.object({
 
 const UpdateSubscriptionSchema = z.object({
   subscriptionId: z.string(),
-  customerId: z.string(),
   isCreating: z.boolean(),
 });
 
@@ -78,10 +77,6 @@ const createCheckoutSessionFlow = ai.defineFlow(
       name: name,
       metadata: {
         firebaseUID: actor,
-        organizationName: organizationName,
-        cnpj: cnpj,
-        contactEmail: contactEmail || '',
-        contactPhone: contactPhone || '',
       },
     });
 
@@ -91,11 +86,15 @@ const createCheckoutSessionFlow = ai.defineFlow(
       billing_address_collection: 'required',
       customer: customer.id,
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard?payment_success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard?payment_cancelled=true`,
+      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/login?payment_success=true`,
+      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/signup?plan=growth&payment_cancelled=true`,
       subscription_data: {
         metadata: {
-          firebaseUID: actor,
+            firebaseUID: actor,
+            organizationName: organizationName,
+            cnpj: cnpj,
+            contactEmail: contactEmail || '',
+            contactPhone: contactPhone || '',
         }
       },
     });
@@ -140,14 +139,16 @@ const updateSubscriptionFlow = ai.defineFlow(
       inputSchema: UpdateSubscriptionSchema,
       outputSchema: z.object({ success: z.boolean() }),
     },
-    async ({ subscriptionId, customerId, isCreating }) => {
+    async ({ subscriptionId, isCreating }) => {
       
       const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
-        expand: ['default_payment_method', 'items.data.price'],
+        expand: ['default_payment_method'],
       });
       
-      const firebaseUID = subscription.metadata.firebaseUID;
+      const { firebaseUID, organizationName, cnpj, contactEmail, contactPhone } = subscription.metadata;
+
       if (!firebaseUID) {
+        console.error('CRITICAL: Firebase UID not found in subscription metadata for subscription ID:', subscriptionId);
         throw new Error('Firebase UID not found in subscription metadata.');
       }
       
@@ -155,11 +156,10 @@ const updateSubscriptionFlow = ai.defineFlow(
       let orgRef;
 
       if (isCreating) {
-        const customer = await stripe.customers.retrieve(customerId);
-        if (customer.deleted) {
-             throw new Error('Stripe customer has been deleted.');
+        if (!organizationName || !cnpj) {
+            console.error('CRITICAL: Organization details missing in subscription metadata for subscription ID:', subscriptionId);
+            throw new Error('Organization details missing in subscription metadata.');
         }
-        const { organizationName, cnpj, contactEmail, contactPhone } = customer.metadata;
 
         orgRef = await adminDb.collection('organizations').add({
           name: organizationName,
@@ -167,7 +167,7 @@ const updateSubscriptionFlow = ai.defineFlow(
           contactEmail,
           contactPhone,
           owner: firebaseUID,
-          stripeCustomerId: customerId,
+          stripeCustomerId: subscription.customer,
           stripeSubscriptionId: subscription.id,
           stripePriceId: subscription.items.data[0].price.id,
           stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
@@ -177,7 +177,6 @@ const updateSubscriptionFlow = ai.defineFlow(
         
         const planId = subscription.items.data[0].price.id === process.env.NEXT_PUBLIC_STRIPE_PERFORMANCE_PLAN_PRICE_ID ? 'performance' : 'growth';
 
-        // Use `set` with { merge: true } to create the document if it doesn't exist, or update it if it does.
         await userRef.set({
             organizationId: orgRef.id,
             planId: planId,
@@ -198,11 +197,15 @@ const updateSubscriptionFlow = ai.defineFlow(
             subscription.customer
         );
         if (customerUpdateParams) {
-            await stripe.customers.update(customerId, customerUpdateParams);
+            await stripe.customers.update(subscription.customer as string, customerUpdateParams);
         }
 
       } else {
          const userDoc = await userRef.get();
+         if (!userDoc.exists) {
+            console.error(`CRITICAL: User document not found for UID: ${firebaseUID} during subscription update.`);
+            throw new Error(`Usuário não encontrado durante a atualização da assinatura.`);
+         }
          const organizationId = userDoc.data()?.organizationId;
          if (!organizationId) {
              throw new Error(`Organização não encontrada para o UID: ${firebaseUID}`);
