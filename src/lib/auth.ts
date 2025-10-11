@@ -42,16 +42,16 @@ export const signIn = async (email: string, password: string): Promise<User> => 
   
       if (!user.emailVerified) {
         await firebaseSignOut(auth); 
-        const notVerifiedError = new Error('E-mail não verificado.');
+        const notVerifiedError = new Error('Seu e-mail ainda não foi verificado.');
         (notVerifiedError as any).code = 'auth/email-not-verified';
         throw notVerifiedError;
       }
       
-      const orgDoc = await getDoc(doc(db, 'users', user.uid));
-      if (orgDoc.exists()) {
-        const orgData = orgDoc.data();
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
         // If it's a paid plan and the subscription isn't active, block login
-        if (orgData?.planId !== 'free' && orgData?.stripeSubscriptionStatus !== 'active') {
+        if (userData?.planId !== 'free' && userData?.stripeSubscriptionStatus !== 'active') {
              await firebaseSignOut(auth);
              throw new Error('Seu pagamento está pendente. Por favor, conclua a assinatura para acessar sua conta.');
         }
