@@ -177,11 +177,19 @@ const updateSubscriptionFlow = ai.defineFlow(
         
         const planId = subscription.items.data[0].price.id === process.env.NEXT_PUBLIC_STRIPE_PERFORMANCE_PLAN_PRICE_ID ? 'performance' : 'growth';
 
-        await userRef.update({
+        // Use `set` with { merge: true } to create the document if it doesn't exist, or update it if it does.
+        await userRef.set({
             organizationId: orgRef.id,
             planId: planId,
             stripeSubscriptionStatus: subscription.status,
-        });
+            role: 'admin',
+            permissions: {
+                qoroCrm: true,
+                qoroPulse: true,
+                qoroTask: true,
+                qoroFinance: true,
+            }
+        }, { merge: true });
 
         await adminAuth.setCustomUserClaims(firebaseUID, { organizationId: orgRef.id, role: 'admin', planId });
         
