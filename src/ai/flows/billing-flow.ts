@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Billing and subscription management flows.
@@ -11,6 +12,7 @@ import { adminDb, adminAuth } from '@/lib/firebase-admin';
 import { stripe } from '@/lib/stripe';
 import { getAdminAndOrg } from '@/services/utils';
 import type { Stripe } from 'stripe';
+import { FieldValue } from 'firebase-admin/firestore';
 
 const CreateCheckoutSessionSchema = z.object({
   priceId: z.string(),
