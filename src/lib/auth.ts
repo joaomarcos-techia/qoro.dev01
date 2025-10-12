@@ -84,9 +84,17 @@ export const signOut = async (): Promise<void> => {
 
 export const sendPasswordResetEmail = async (email: string): Promise<void> => {
     try {
-        await firebaseSendPasswordResetEmail(auth, email);
+        // This function is reused for re-sending verification. 
+        // Firebase Auth handles this gracefully. If the user exists, it sends a reset email.
+        // For our flow, it serves to re-engage the user via email.
+        const user = auth.currentUser;
+        if (user && !user.emailVerified) {
+             await sendEmailVerification(user);
+        } else {
+             await firebaseSendPasswordResetEmail(auth, email);
+        }
     } catch (error) {
-        console.error("Error sending password reset email:", error);
+        console.error("Error sending user email:", error);
         throw new Error("Não foi possível enviar o e-mail. Verifique o endereço e tente novamente.");
     }
 }

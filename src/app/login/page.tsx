@@ -31,7 +31,7 @@ export default function LoginPage() {
             if (user) {
                 const interval = setInterval(async () => {
                     const userDocRef = doc(db, "users", user.uid);
-                    const userDoc = await getDoc(userDocRef);
+                    const userDoc = await userDoc.get();
                     if (userDoc.exists() && userDoc.data().organizationId) {
                         clearInterval(interval);
                         router.push('/dashboard');
