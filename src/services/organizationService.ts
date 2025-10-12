@@ -143,6 +143,7 @@ export const listUsers = async (actor: string): Promise<UserProfile[]> => {
             name: data.name,
             organizationId: data.organizationId,
             role: data.role,
+            planId: data.planId || 'free',
             permissions: { ...defaultPermissions, ...userPermissions },
         });
     });

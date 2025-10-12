@@ -1,4 +1,5 @@
 
+
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
@@ -11,6 +12,7 @@ import { auth } from '@/lib/firebase';
 import { OrganizationForm } from '@/components/dashboard/settings/OrganizationForm';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { usePlan } from '@/contexts/PlanContext';
 
 type AppPermission = 'qoroCrm' | 'qoroPulse' | 'qoroTask' | 'qoroFinance';
 
@@ -21,6 +23,14 @@ const appPermissionsMap: Record<AppPermission, string> = {
     qoroFinance: 'QoroFinance',
 };
 
+const planNames: Record<string, string> = {
+    free: 'Essencial',
+    growth: 'Growth',
+    performance: 'Performance'
+};
+
+const FREE_PLAN_USER_LIMIT = 2;
+
 export default function SettingsPage() {
     const [activeTab, setActiveTab] = useState('account');
     const [inviteEmail, setInviteEmail] = useState('');
@@ -29,6 +39,10 @@ export default function SettingsPage() {
     const [isLoading, setIsLoading] = useState({ invite: false, password: false, users: true, permissions: '' });
     const [feedback, setFeedback] = useState<{ type: 'error' | 'success', message: string, context: string } | null>(null);
     const [users, setUsers] = useState<UserProfile[]>([]);
+    const { planId } = usePlan();
+
+    const isUserLimitReached = planId === 'free' && users.length >= FREE_PLAN_USER_LIMIT;
+
 
     const clearFeedback = (context: string) => {
         if (feedback?.context === context) {
@@ -91,6 +105,10 @@ export default function SettingsPage() {
     const handleInviteUser = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!currentUser) return;
+        if(isUserLimitReached) {
+            setFeedback({ type: 'error', message: `Limite de ${FREE_PLAN_USER_LIMIT} usuários atingido. Faça upgrade para convidar mais.`, context: 'invite' });
+            return;
+        }
         setIsLoading(prev => ({ ...prev, invite: true }));
         clearFeedback('invite');
         try {
@@ -212,7 +230,7 @@ export default function SettingsPage() {
                                             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                                             <Input type="email" placeholder="E-mail do convidado" value={inviteEmail} onChange={(e) => {setInviteEmail(e.target.value); clearFeedback('invite');}} required className="w-full pl-12 pr-4 py-3 bg-secondary rounded-xl border-border"/>
                                         </div>
-                                        <button type="submit" disabled={isLoading.invite} className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 font-semibold disabled:opacity-75">
+                                        <button type="submit" disabled={isLoading.invite || isUserLimitReached} className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 font-semibold disabled:opacity-75">
                                             {isLoading.invite ? <Loader2 className="w-5 h-5 animate-spin"/> : <Send className="w-5 h-5" />}
                                         </button>
                                     </form>
@@ -233,8 +251,11 @@ export default function SettingsPage() {
                                 <div className="space-y-4">
                                     {users.map(user => (
                                         <div key={user.uid} className="flex flex-col md:flex-row md:items-center justify-between p-4 rounded-xl border border-border bg-secondary/50">
-                                            <div>
-                                                <p className="font-bold text-foreground">{user.name || user.email}</p>
+                                            <div className="flex-grow">
+                                                <div className="flex items-center gap-4">
+                                                    <p className="font-bold text-foreground">{user.name || user.email}</p>
+                                                    <span className="text-xs font-semibold px-2 py-1 bg-primary/20 text-primary rounded-full">{planNames[user.planId || 'free'] || 'N/A'}</span>
+                                                </div>
                                                 <p className="text-sm text-muted-foreground">{user.email}</p>
                                                 <p className="text-xs text-primary uppercase font-semibold mt-1">{user.role}</p>
                                             </div>
