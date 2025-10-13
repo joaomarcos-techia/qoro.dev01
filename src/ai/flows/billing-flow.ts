@@ -13,7 +13,6 @@ import { stripe } from '@/lib/stripe';
 import { getAdminAndOrg } from '@/services/utils';
 import type { Stripe } from 'stripe';
 import * as orgService from '@/services/organizationService';
-import { UpdateSubscriptionSchema } from '@/ai/schemas';
 
 const CreateCheckoutSessionSchema = z.object({
   priceId: z.string(),
@@ -115,12 +114,10 @@ const createBillingPortalSessionFlow = ai.defineFlow(
 const updateSubscriptionFlow = ai.defineFlow(
     {
         name: 'updateSubscriptionFlow',
-        inputSchema: z.any(),
+        inputSchema: z.object({ subscriptionId: z.string(), isCreating: z.boolean() }),
         outputSchema: z.object({ success: z.boolean() }),
     },
-    async (rawInput) => {
-        const { subscriptionId, isCreating } = rawInput;
-
+    async ({ subscriptionId, isCreating }) => {
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
         
         if (isCreating) {
@@ -137,32 +134,26 @@ const updateSubscriptionFlow = ai.defineFlow(
                 return { success: true };
             }
             
-            const validatedMetadata = UpdateSubscriptionSchema.safeParse(subscription.metadata);
-
-            if (!validatedMetadata.success) {
-                console.error("Validation error on subscription creation metadata:", validatedMetadata.error.flatten());
-                throw new Error(`Dados de metadados da assinatura inválidos: ${validatedMetadata.error.message}`);
-            }
-            
             const userRecord = await adminAuth.getUser(firebaseUID);
             
             await orgService.createUserProfile({
                 uid: firebaseUID,
-                name: userRecord.displayName || validatedMetadata.data.organizationName,
+                name: userRecord.displayName || subscription.metadata.organizationName,
                 email: userRecord.email!,
-                organizationName: validatedMetadata.data.organizationName,
-                cnpj: validatedMetadata.data.cnpj,
-                contactEmail: validatedMetadata.data.contactEmail,
-                contactPhone: validatedMetadata.data.contactPhone,
-                planId: validatedMetadata.data.planId,
-                stripePriceId: validatedMetadata.data.stripePriceId,
-                password: '',
+                organizationName: subscription.metadata.organizationName,
+                cnpj: subscription.metadata.cnpj,
+                contactEmail: subscription.metadata.contactEmail,
+                contactPhone: subscription.metadata.contactPhone,
+                planId: subscription.metadata.planId,
+                stripePriceId: subscription.metadata.stripePriceId,
+                password: '', // Password is set on client
                 stripeCustomerId: subscription.customer as string,
                 stripeSubscriptionId: subscription.id,
                 stripeSubscriptionStatus: subscription.status,
             });
 
         } else {
+            // This part handles updates like cancellations or plan changes.
             const customer = await stripe.customers.retrieve(subscription.customer as string) as Stripe.Customer;
             const firebaseUID = customer.metadata.firebaseUID;
 

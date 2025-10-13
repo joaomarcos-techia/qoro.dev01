@@ -85,19 +85,6 @@ export const UpdateOrganizationDetailsSchema = z.object({
     contactPhone: z.string().optional(),
 });
 
-// Schema for validating expected metadata from the subscription webhook
-export const UpdateSubscriptionSchema = z.object({
-  isCreating: z.boolean(),
-  firebaseUID: z.string(),
-  planId: z.enum(['growth', 'performance']),
-  organizationName: z.string().min(1, 'Nome da organização é obrigatório.'),
-  cnpj: z.string().min(1, 'CNPJ é obrigatório.'),
-  contactEmail: z.string().optional(),
-  contactPhone: z.string().optional(),
-  stripePriceId: z.string().min(1, 'ID do preço do Stripe é obrigatório.'),
-});
-
-
 // Schemas for CRM
 export const AddressSchema = z.object({
     street: z.string().optional(),
