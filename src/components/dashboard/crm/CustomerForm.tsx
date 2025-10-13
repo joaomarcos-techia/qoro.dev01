@@ -68,7 +68,7 @@ export function CustomerForm({ onCustomerAction, customer, customerCount }: Cust
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { planId } = usePlan();
+  const { planId, isLoading: isPlanLoading } = usePlan();
 
   const isEditMode = !!customer;
   const isLimitReached = !isEditMode && planId === 'free' && customerCount >= FREE_PLAN_LIMIT;
@@ -295,9 +295,9 @@ export function CustomerForm({ onCustomerAction, customer, customerCount }: Cust
             </div>
         )}
       <div className="flex justify-end pt-4">
-        <Button type="submit" disabled={isLoading || isLimitReached} className="bg-crm-primary text-black px-6 py-3 rounded-xl hover:bg-crm-primary/90 transition-all duration-200 border border-transparent hover:border-crm-primary/50 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
-          {isLoading ? <Loader2 className="mr-2 w-5 h-5 animate-spin" /> : null}
-          {isLoading ? 'Salvando...' : (isEditMode ? 'Salvar alterações' : 'Salvar cliente')}
+        <Button type="submit" disabled={isLoading || isLimitReached || isPlanLoading} className="bg-crm-primary text-black px-6 py-3 rounded-xl hover:bg-crm-primary/90 transition-all duration-200 border border-transparent hover:border-crm-primary/50 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
+          {isLoading || isPlanLoading ? <Loader2 className="mr-2 w-5 h-5 animate-spin" /> : null}
+          {isLoading || isPlanLoading ? 'Salvando...' : (isEditMode ? 'Salvar alterações' : 'Salvar cliente')}
         </Button>
       </div>
     </form>

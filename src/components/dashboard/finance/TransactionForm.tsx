@@ -42,7 +42,7 @@ export function TransactionForm({ onAction, transaction, transactionCount = 0 }:
   const [customers, setCustomers] = useState<CustomerProfile[]>([]);
   const [customerSearch, setCustomerSearch] = useState('');
   const [isCustomerPopoverOpen, setIsCustomerPopoverOpen] = useState(false);
-  const { planId } = usePlan();
+  const { planId, isLoading: isPlanLoading } = usePlan();
   
   const isEditMode = !!transaction?.id;
   const isLimitReached = !isEditMode && planId === 'free' && transactionCount >= FREE_PLAN_LIMIT;
@@ -307,9 +307,9 @@ export function TransactionForm({ onAction, transaction, transactionCount = 0 }:
             </div>
         )}
       <div className="flex justify-end pt-4">
-        <Button type="submit" disabled={isLoading || (isLimitReached && !isEditMode)} className="bg-finance-primary text-black px-6 py-3 rounded-xl hover:bg-finance-primary/90 transition-all duration-300 border border-transparent hover:border-finance-primary/50 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
-          {isLoading ? <Loader2 className="mr-2 w-5 h-5 animate-spin" /> : null}
-          {isLoading ? 'Salvando...' : (isEditMode ? 'Salvar alterações' : 'Salvar transação')}
+        <Button type="submit" disabled={isLoading || isLimitReached || isPlanLoading} className="bg-finance-primary text-black px-6 py-3 rounded-xl hover:bg-finance-primary/90 transition-all duration-300 border border-transparent hover:border-finance-primary/50 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
+          {isLoading || isPlanLoading ? <Loader2 className="mr-2 w-5 h-5 animate-spin" /> : null}
+          {isLoading || isPlanLoading ? 'Salvando...' : (isEditMode ? 'Salvar alterações' : 'Salvar transação')}
         </Button>
       </div>
     </form>

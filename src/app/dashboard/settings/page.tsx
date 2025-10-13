@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Mail, Send, KeyRound, UserPlus, Building, AlertCircle, CheckCircle, ArrowLeft, User, Shield, Users, Loader2 } from 'lucide-react';
-import { inviteUser, listUsers, updateUserPermissions } from '@/ai/flows/user-management';
+import { inviteUser, listUsers, updateUserPermissions, getUserProfile } from '@/ai/flows/user-management';
 import { changePassword } from '@/lib/auth';
 import { UserProfile } from '@/ai/schemas';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';

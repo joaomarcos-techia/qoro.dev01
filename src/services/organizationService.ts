@@ -67,7 +67,10 @@ export const createUserProfile = async (input: z.infer<typeof UserProfileCreatio
 
 
 export const inviteUser = async (email: string, actor: string): Promise<{ uid: string; email: string; organizationId: string; }> => {
-    const { organizationId, adminUid, planId } = await getAdminAndOrg(actor);
+    const adminOrgData = await getAdminAndOrg(actor);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+
+    const { organizationId, adminUid, planId } = adminOrgData;
 
     if (planId === 'free') {
         const usersSnapshot = await adminDb.collection('users').where('organizationId', '==', organizationId).get();

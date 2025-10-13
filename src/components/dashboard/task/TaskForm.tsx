@@ -43,7 +43,7 @@ export function TaskForm({ onTaskAction, task, users, viewOnly = false }: TaskFo
   const [error, setError] = useState<string | null>(null);
   const [newSubtaskText, setNewSubtaskText] = useState('');
   const [newCommentText, setNewCommentText] = useState('');
-  const { planId } = usePlan();
+  const { planId, isLoading: isPlanLoading } = usePlan();
   const { tasks } = useTasks();
   
   const isEditMode = !!task;
@@ -290,8 +290,8 @@ export function TaskForm({ onTaskAction, task, users, viewOnly = false }: TaskFo
             </div>
         )}
       <div className="flex justify-end pt-4">
-        <Button type="submit" disabled={isLoading || (isLimitReached && !isEditMode)} className="bg-task-primary text-black px-6 py-3 rounded-xl hover:bg-task-primary/90 transition-all duration-300 border border-transparent hover:border-task-primary/50 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
-          {isLoading ? <Loader2 className="mr-2 w-5 h-5 animate-spin" /> : null}
+        <Button type="submit" disabled={isLoading || (isLimitReached && !isEditMode) || isPlanLoading} className="bg-task-primary text-black px-6 py-3 rounded-xl hover:bg-task-primary/90 transition-all duration-300 border border-transparent hover:border-task-primary/50 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed">
+          {isLoading || isPlanLoading ? <Loader2 className="mr-2 w-5 h-5 animate-spin" /> : null}
           {viewOnly ? 'Fechar' : (isEditMode ? 'Salvar alterações' : 'Salvar tarefa')}
         </Button>
       </div>
