@@ -12,7 +12,9 @@ import { getAdminAndOrg } from './utils';
 import { adminDb } from '@/lib/firebase-admin';
 
 export const createReconciliation = async (input: z.infer<typeof ReconciliationSchema> & { actor: string }) => {
-    const { organizationId, adminUid } = await getAdminAndOrg(input.actor);
+    const adminOrgData = await getAdminAndOrg(input.actor);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId, adminUid } = adminOrgData;
 
     const newReconciliationData = {
         companyId: organizationId,
@@ -29,7 +31,10 @@ export const createReconciliation = async (input: z.infer<typeof ReconciliationS
 };
 
 export const getReconciliation = async (id: string, actor: string): Promise<z.infer<typeof ReconciliationProfileSchema> | null> => {
-    const { organizationId } = await getAdminAndOrg(actor);
+    const adminOrgData = await getAdminAndOrg(actor);
+    if (!adminOrgData) return null;
+    const { organizationId } = adminOrgData;
+
     const docRef = adminDb.collection('reconciliations').doc(id);
     const docSnap = await docRef.get();
 
@@ -50,7 +55,9 @@ export const getReconciliation = async (id: string, actor: string): Promise<z.in
 };
 
 export const listReconciliations = async (actor: string): Promise<z.infer<typeof ReconciliationProfileSchema>[]> => {
-    const { organizationId } = await getAdminAndOrg(actor);
+    const adminOrgData = await getAdminAndOrg(actor);
+    if (!adminOrgData) return [];
+    const { organizationId } = adminOrgData;
 
     const snapshot = await adminDb.collection('reconciliations')
         .where('companyId', '==', organizationId)
@@ -79,7 +86,10 @@ export const listReconciliations = async (actor: string): Promise<z.infer<typeof
 };
 
 export const updateReconciliation = async (input: {id: string, actor: string, fileName?: string, status?: 'reconciled' | 'pending'}) => {
-    const { organizationId } = await getAdminAndOrg(input.actor);
+    const adminOrgData = await getAdminAndOrg(input.actor);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId } = adminOrgData;
+
     const docRef = adminDb.collection('reconciliations').doc(input.id);
     const docSnap = await docRef.get();
 
@@ -103,7 +113,10 @@ export const updateReconciliation = async (input: {id: string, actor: string, fi
 };
 
 export const deleteReconciliation = async (id: string, actor: string) => {
-    const { organizationId } = await getAdminAndOrg(actor);
+    const adminOrgData = await getAdminAndOrg(actor);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId } = adminOrgData;
+
     const docRef = adminDb.collection('reconciliations').doc(id);
     const docSnap = await docRef.get();
     
@@ -116,7 +129,10 @@ export const deleteReconciliation = async (id: string, actor: string) => {
 };
 
 export const updateReconciliationStatus = async (input: {id: string, actor: string, status: 'reconciled' | 'pending'}) => {
-    const { organizationId } = await getAdminAndOrg(input.actor);
+    const adminOrgData = await getAdminAndOrg(input.actor);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId } = adminOrgData;
+
     const docRef = adminDb.collection('reconciliations').doc(input.id);
     const docSnap = await docRef.get();
 

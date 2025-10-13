@@ -10,7 +10,9 @@ const FREE_PLAN_LIMITS = {
 };
 
 export const createTransaction = async (input: z.infer<typeof TransactionSchema>, actorUid: string) => {
-    const { organizationId, planId } = await getAdminAndOrg(actorUid);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId, planId } = adminOrgData;
 
     if (planId === 'free') {
         const query = adminDb.collection('transactions').where('companyId', '==', organizationId);
@@ -72,7 +74,10 @@ export const createTransaction = async (input: z.infer<typeof TransactionSchema>
 };
 
 export const updateTransaction = async (input: z.infer<typeof UpdateTransactionSchema>, actorUid: string) => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId } = adminOrgData;
+
     const { id: transactionId, ...updateData } = input;
     const transactionRef = adminDb.collection('transactions').doc(transactionId);
     
@@ -96,15 +101,12 @@ export const updateTransaction = async (input: z.infer<typeof UpdateTransactionS
             const oldAccountDoc = await t.get(oldAccountRef);
             if (!oldAccountDoc.exists) throw new Error("Conta antiga não encontrada.");
             let oldAccountBalance = oldAccountDoc.data()!.balance;
-            // Revert old transaction amount
             oldAccountBalance += (oldData?.type === 'expense' ? oldAmount : -oldAmount);
             
-            // If account is the same, use the already reverted balance
             if (oldData?.accountId === updateData.accountId) {
                 const newBalance = oldAccountBalance + (updateData.type === 'income' ? newAmount : -newAmount);
                 t.update(newAccountRef, { balance: newBalance });
             } else {
-                // If account is different, update both
                 const newAccountDoc = await t.get(newAccountRef);
                 if (!newAccountDoc.exists) throw new Error("Nova conta não encontrada.");
                 let newAccountBalance = newAccountDoc.data()!.balance;
@@ -123,9 +125,11 @@ export const updateTransaction = async (input: z.infer<typeof UpdateTransactionS
     }
 };
 
-
 export const deleteTransaction = async (transactionId: string, actorUid: string) => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId } = adminOrgData;
+
     const transactionRef = adminDb.collection('transactions').doc(transactionId);
 
     try {
@@ -158,13 +162,14 @@ export const deleteTransaction = async (transactionId: string, actorUid: string)
     }
 };
 
-
 export const listTransactions = async (
     actorUid: string, 
     dateRange?: { from?: string; to?: string },
     accountId?: string
 ): Promise<TransactionProfile[]> => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) return [];
+    const { organizationId } = adminOrgData;
     
     let query = adminDb.collection('transactions')
                       .where('companyId', '==', organizationId);
@@ -239,7 +244,10 @@ export const bulkCreateTransactions = async (
     accountId: string,
     actorUid: string
 ) => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId } = adminOrgData;
+
     const accountRef = adminDb.collection('accounts').doc(accountId);
 
     try {
@@ -264,7 +272,7 @@ export const bulkCreateTransactions = async (
 
                 const newTransactionData = {
                     ...transaction,
-                    date: new Date(transaction.date as string), // Corrigido: Converte a string ISO para objeto Date
+                    date: new Date(transaction.date as string),
                     status: 'paid',
                     accountId,
                     companyId: organizationId,

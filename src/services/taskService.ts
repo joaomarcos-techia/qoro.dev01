@@ -14,7 +14,6 @@ const FREE_PLAN_LIMITS = {
     tasks: 5,
 };
 
-// Helper function to safely convert Firestore Timestamps or ISO strings to a Date object string.
 const toISOStringSafe = (date: any): string | null => {
     if (!date) return null;
     if (date instanceof Timestamp) return date.toDate().toISOString();
@@ -34,13 +33,14 @@ const toISOStringSafe = (date: any): string | null => {
     return null;
 };
 
-
 export const createTask = async (
   input: z.infer<typeof TaskSchema>, 
   actorUid: string
 ) => {
   try {
-    const { organizationId, planId } = await getAdminAndOrg(actorUid);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId, planId } = adminOrgData;
 
     if (planId === 'free') {
         const query = adminDb.collection('tasks').where('companyId', '==', organizationId);
@@ -60,7 +60,7 @@ export const createTask = async (
       updatedAt: FieldValue.serverTimestamp(),
       completedAt: null,
       subtasks: input.subtasks || [],
-      comments: [], // Comments are not created with the task
+      comments: [],
       recurrence: input.recurrence || null,
     };
     const taskRef = await adminDb.collection('tasks').add(newTaskData);
@@ -80,7 +80,10 @@ export const updateTask = async (
   actorUid: string
 ) => {
   try {
-    const { organizationId, userData } = await getAdminAndOrg(actorUid);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId } = adminOrgData;
+
     const taskRef = adminDb.collection('tasks').doc(taskId);
     const taskDoc = await taskRef.get();
     const data = taskDoc.data() || {};
@@ -89,7 +92,6 @@ export const updateTask = async (
       throw new Error('Tarefa não encontrada ou acesso negado.');
     }
 
-    // If only adding a comment, update only the comments field
     if (input.__commentOnlyUpdate) {
         if (input.comments) {
              const commentsWithDate = input.comments.map(c => ({...c, createdAt: new Date(c.createdAt as string)}));
@@ -101,16 +103,12 @@ export const updateTask = async (
         }
     }
 
-
     const { id, comments, ...updateData } = input;
-    
-    // For full updates, we still manage comments safely.
     const existingComments = (Array.isArray(data.comments) ? data.comments : []).map(c => ({
         ...c,
         createdAt: toISOStringSafe(c.createdAt)
     }));
 
-    // Prevent overwriting existing timestamps if not explicitly provided
     const payload = {
         ...updateData,
         dueDate: updateData.dueDate ? new Date(updateData.dueDate) : data.dueDate,
@@ -118,16 +116,13 @@ export const updateTask = async (
         comments: existingComments.map(c => ({...c, createdAt: new Date(c.createdAt!)})),
     };
 
-
     await taskRef.update(payload);
-
     return { id: taskId };
   } catch (error) {
     console.error('🚨 Erro em updateTask:', error);
     throw new Error('Falha ao atualizar a tarefa.');
   }
 };
-
 
 export const listTasks = async (
   actorUid: string
@@ -137,7 +132,10 @@ export const listTasks = async (
       throw new Error('Identificação do usuário é necessária para listar tarefas.');
   }
   try {
-    const { organizationId } = await getAdminAndOrg(actorUid);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) return [];
+    const { organizationId } = adminOrgData;
+
     const tasksSnapshot = await adminDb.collection('tasks')
       .where('companyId', '==', organizationId)
       .orderBy('createdAt', 'desc')
@@ -204,7 +202,10 @@ export const updateTaskStatus = async (
   actorUid: string
 ) => {
   try {
-    const { organizationId } = await getAdminAndOrg(actorUid);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId } = adminOrgData;
+
     const taskRef = adminDb.collection('tasks').doc(taskId);
     const taskDoc = await taskRef.get();
     const data = taskDoc.data() || {};
@@ -225,7 +226,6 @@ export const updateTaskStatus = async (
     }
 
     await taskRef.update(updatePayload);
-
     return { id: taskId, status };
   } catch (error) {
     console.error('🚨 Erro em updateTaskStatus:', error);
@@ -238,7 +238,10 @@ export const deleteTask = async (
   actorUid: string
 ) => {
   try {
-    const { organizationId } = await getAdminAndOrg(actorUid);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId } = adminOrgData;
+
     const taskRef = adminDb.collection('tasks').doc(taskId);
     const taskDoc = await taskRef.get();
     const data = taskDoc.data() || {};

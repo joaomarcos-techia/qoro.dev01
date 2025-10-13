@@ -6,7 +6,9 @@ import { getAdminAndOrg } from './utils';
 import { adminDb } from '@/lib/firebase-admin';
 
 export const createSupplier = async (input: z.infer<typeof SupplierSchema>, actorUid: string) => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId } = adminOrgData;
 
     const newSupplierData = {
         ...input,
@@ -16,14 +18,15 @@ export const createSupplier = async (input: z.infer<typeof SupplierSchema>, acto
     };
 
     const supplierRef = await adminDb.collection('suppliers').add(newSupplierData);
-
     return { id: supplierRef.id };
 };
 
 export const updateSupplier = async (supplierId: string, input: z.infer<typeof UpdateSupplierSchema>, actorUid: string) => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
-    const supplierRef = adminDb.collection('suppliers').doc(supplierId);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId } = adminOrgData;
 
+    const supplierRef = adminDb.collection('suppliers').doc(supplierId);
     const doc = await supplierRef.get();
     if (!doc.exists || doc.data()?.companyId !== organizationId) {
         throw new Error('Fornecedor não encontrado ou acesso negado.');
@@ -40,7 +43,9 @@ export const updateSupplier = async (supplierId: string, input: z.infer<typeof U
 };
 
 export const listSuppliers = async (actorUid: string): Promise<z.infer<typeof SupplierProfileSchema>[]> => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) return [];
+    const { organizationId } = adminOrgData;
     
     const suppliersSnapshot = await adminDb.collection('suppliers')
                                     .where('companyId', '==', organizationId)
@@ -64,14 +69,15 @@ export const listSuppliers = async (actorUid: string): Promise<z.infer<typeof Su
 };
 
 export const deleteSupplier = async (supplierId: string, actorUid: string) => {
-    const { organizationId, userRole } = await getAdminAndOrg(actorUid);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId, userRole } = adminOrgData;
 
     if (userRole !== 'admin') {
         throw new Error("Permissão negada. Apenas administradores podem excluir fornecedores.");
     }
     
     const supplierRef = adminDb.collection('suppliers').doc(supplierId);
-
     const doc = await supplierRef.get();
     if (!doc.exists || doc.data()?.companyId !== organizationId) {
         throw new Error('Fornecedor não encontrado ou acesso negado.');
@@ -81,7 +87,6 @@ export const deleteSupplier = async (supplierId: string, actorUid: string) => {
     if (!billsQuery.empty) {
         throw new Error("Não é possível excluir o fornecedor, pois existem contas a pagar/receber associadas a ele.");
     }
-
 
     await supplierRef.delete();
     return { id: supplierId, success: true };

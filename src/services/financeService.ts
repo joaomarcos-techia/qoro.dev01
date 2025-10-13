@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { FieldValue } from 'firebase-admin/firestore';
@@ -9,7 +10,9 @@ import { adminDb } from '@/lib/firebase-admin';
 import { startOfMonth, endOfMonth } from 'date-fns';
 
 export const createAccount = async (input: z.infer<typeof AccountSchema>, actorUid: string) => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId } = adminOrgData;
 
     const newAccountData = {
         ...input,
@@ -27,9 +30,10 @@ export const createAccount = async (input: z.infer<typeof AccountSchema>, actorU
     }
 };
 
-
 export const listAccounts = async (actorUid: string): Promise<z.infer<typeof AccountProfileSchema>[]> => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) return [];
+    const { organizationId } = adminOrgData;
     
     try {
         const accountsSnapshot = await adminDb.collection('accounts')
@@ -55,15 +59,16 @@ export const listAccounts = async (actorUid: string): Promise<z.infer<typeof Acc
         return accounts;
     } catch (error) {
         console.error("Erro ao buscar contas:", error);
-        // Lançar um erro mais genérico para o cliente, mas logar o erro real no servidor
         throw new Error("Não foi possível carregar as contas financeiras devido a um erro no servidor.");
     }
 };
 
 export const updateAccount = async (accountId: string, input: z.infer<typeof UpdateAccountSchema>, actorUid: string) => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
-    const accountRef = adminDb.collection('accounts').doc(accountId);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId } = adminOrgData;
 
+    const accountRef = adminDb.collection('accounts').doc(accountId);
     const accountDoc = await accountRef.get();
     if (!accountDoc.exists || accountDoc.data()?.companyId !== organizationId) {
         throw new Error('Conta não encontrada ou acesso negado.');
@@ -80,15 +85,16 @@ export const updateAccount = async (accountId: string, input: z.infer<typeof Upd
 };
 
 export const deleteAccount = async (accountId: string, actorUid: string) => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
-    const accountRef = adminDb.collection('accounts').doc(accountId);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId } = adminOrgData;
 
+    const accountRef = adminDb.collection('accounts').doc(accountId);
     const accountDoc = await accountRef.get();
     if (!accountDoc.exists || accountDoc.data()?.companyId !== organizationId) {
         throw new Error('Conta não encontrada ou acesso negado.');
     }
     
-    // Security check: prevent deletion if transactions are associated with the account
     const transactionsSnapshot = await adminDb.collection('transactions')
                                             .where('accountId', '==', accountId)
                                             .limit(1)
@@ -98,18 +104,17 @@ export const deleteAccount = async (accountId: string, actorUid: string) => {
         throw new Error("Não é possível excluir a conta, pois existem transações associadas a ela.");
     }
 
-
     await accountRef.delete();
-
     return { id: accountId, success: true };
 };
 
-
 export const getFinanceDashboardMetrics = async (actorUid: string, dateRange?: { from?: string; to?: string }) => {
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) return { totalBalance: 0, totalIncome: 0, totalExpense: 0, netProfit: 0 };
+    const { organizationId } = adminOrgData;
+
     const accounts = await listAccounts(actorUid);
     const totalBalance = accounts.reduce((sum, account) => sum + (account.balance || 0), 0);
-    
-    const { organizationId } = await getAdminAndOrg(actorUid);
     
     const startDate = dateRange?.from ? new Date(dateRange.from) : startOfMonth(new Date());
     const endDate = dateRange?.to ? new Date(dateRange.to) : endOfMonth(new Date());

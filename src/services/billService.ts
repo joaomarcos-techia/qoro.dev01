@@ -12,7 +12,9 @@ import { adminDb } from '@/lib/firebase-admin';
 import * as transactionService from './transactionService';
 
 export const createBill = async (input: z.infer<typeof BillSchema>, actorUid: string) => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId } = adminOrgData;
 
     const newBillData = {
         ...input,
@@ -27,7 +29,9 @@ export const createBill = async (input: z.infer<typeof BillSchema>, actorUid: st
 };
 
 export const listBills = async (actorUid: string): Promise<z.infer<typeof BillProfileSchema>[]> => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) return [];
+    const { organizationId } = adminOrgData;
     
     const billsSnapshot = await adminDb.collection('bills')
                                      .where('companyId', '==', organizationId)
@@ -68,7 +72,6 @@ export const listBills = async (actorUid: string): Promise<z.infer<typeof BillPr
         const dueDate = data.dueDate?.toDate ? data.dueDate.toDate().toISOString() : new Date().toISOString();
         const createdAt = data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString();
 
-        // Safe parse to avoid crashes on schema mismatch
         const parsed = BillProfileSchema.safeParse({
             id: doc.id,
             ...data,
@@ -89,7 +92,10 @@ export const listBills = async (actorUid: string): Promise<z.infer<typeof BillPr
 };
 
 export const updateBill = async (input: z.infer<typeof UpdateBillSchema>, actorUid: string) => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId } = adminOrgData;
+
     const { id, ...updateData } = input;
     const billRef = adminDb.collection('bills').doc(id);
 
@@ -107,9 +113,7 @@ export const updateBill = async (input: z.infer<typeof UpdateBillSchema>, actorU
         updatedAt: FieldValue.serverTimestamp(),
     });
 
-    // Check if the status is being updated to 'paid' and it wasn't paid before
     if (updateData.status === 'paid' && !isAlreadyPaid) {
-        // Use the accountId from the bill itself
         const accountId = updateData.accountId || oldData.accountId;
         if (!accountId) {
              throw new Error("Por favor, edite esta pendência e associe uma conta financeira antes de marcá-la como paga.");
@@ -134,9 +138,11 @@ export const updateBill = async (input: z.infer<typeof UpdateBillSchema>, actorU
 };
 
 export const deleteBill = async (billId: string, actorUid: string) => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
-    const billRef = adminDb.collection('bills').doc(billId);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId } = adminOrgData;
 
+    const billRef = adminDb.collection('bills').doc(billId);
     const doc = await billRef.get();
     if (!doc.exists || doc.data()?.companyId !== organizationId) {
         throw new Error("Conta não encontrada ou acesso negado.");
@@ -154,7 +160,6 @@ export const deleteBill = async (billId: string, actorUid: string) => {
             await transactionService.deleteTransaction(transactionId, actorUid);
         }
     }
-
 
     await billRef.delete();
     return { id: billId, success: true };

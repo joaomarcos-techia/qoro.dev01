@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { FieldValue } from 'firebase-admin/firestore';
@@ -15,7 +14,9 @@ const FREE_PLAN_LIMITS = {
 };
 
 export const createCustomer = async (input: z.infer<typeof CustomerSchema>, actorUid: string) => {
-    const { organizationId, planId } = await getAdminAndOrg(actorUid);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta. Tente novamente em alguns instantes.");
+    const { organizationId, planId } = adminOrgData;
 
     if (planId === 'free') {
         const query = adminDb.collection('customers').where('companyId', '==', organizationId);
@@ -39,7 +40,9 @@ export const createCustomer = async (input: z.infer<typeof CustomerSchema>, acto
 };
 
 export const listCustomers = async (actorUid: string): Promise<z.infer<typeof CustomerProfileSchema>[]> => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) return []; // Return empty array if org data is not ready
+    const { organizationId } = adminOrgData;
     
     const customersSnapshot = await adminDb.collection('customers')
                                      .where('companyId', '==', organizationId)
@@ -52,7 +55,6 @@ export const listCustomers = async (actorUid: string): Promise<z.infer<typeof Cu
     
     const customers: z.infer<typeof CustomerProfileSchema>[] = customersSnapshot.docs.map(doc => {
         const data = doc.data();
-        // Garantir que a data seja sempre uma string ISO para consistência
         const createdAt = data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString();
         const birthDate = data.birthDate ? (data.birthDate.toDate ? data.birthDate.toDate().toISOString() : data.birthDate) : null;
 
@@ -69,9 +71,11 @@ export const listCustomers = async (actorUid: string): Promise<z.infer<typeof Cu
 };
 
 export const updateCustomer = async (customerId: string, input: z.infer<typeof UpdateCustomerSchema>, actorUid: string) => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
-    const customerRef = adminDb.collection('customers').doc(customerId);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId } = adminOrgData;
 
+    const customerRef = adminDb.collection('customers').doc(customerId);
     const customerDoc = await customerRef.get();
     if (!customerDoc.exists || customerDoc.data()?.companyId !== organizationId) {
         throw new Error('Cliente não encontrado ou acesso negado.');
@@ -92,9 +96,11 @@ export const updateCustomerStatus = async (
     status: z.infer<typeof CustomerProfileSchema>['status'], 
     actorUid: string
 ) => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId } = adminOrgData;
+
     const customerRef = adminDb.collection('customers').doc(customerId);
-    
     const customerDoc = await customerRef.get();
     if (!customerDoc.exists || customerDoc.data()?.companyId !== organizationId) {
         throw new Error('Cliente não encontrado ou acesso negado.');
@@ -109,7 +115,9 @@ export const updateCustomerStatus = async (
 };
 
 export const deleteCustomer = async (customerId: string, actorUid: string) => {
-    const { organizationId, userRole } = await getAdminAndOrg(actorUid);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId, userRole } = adminOrgData;
 
     if (userRole !== 'admin') {
         throw new Error("Permissão negada. Apenas administradores podem excluir clientes.");
@@ -121,7 +129,6 @@ export const deleteCustomer = async (customerId: string, actorUid: string) => {
         throw new Error('Cliente não encontrado ou acesso negado.');
     }
 
-    // Security Check: Re-add dependency checks for data integrity
     const quotesQuery = adminDb.collection('quotes').where('customerId', '==', customerId).limit(1).get();
     const transactionsQuery = adminDb.collection('transactions').where('customerId', '==', customerId).limit(1).get();
     const [quotesSnapshot, transactionsSnapshot] = await Promise.all([quotesQuery, transactionsQuery]);
@@ -139,6 +146,9 @@ export const deleteCustomer = async (customerId: string, actorUid: string) => {
 };
 
 export const getCrmDashboardMetrics = async (actorUid: string) => {
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) return { totalCustomers: 0, activeLeads: 0 }; // Return zeroed metrics if not ready
+
     const customers = await listCustomers(actorUid);
     const leadStatuses: CustomerProfile['status'][] = ['new', 'initial_contact', 'qualification', 'proposal', 'negotiation'];
     const activeLeads = customers.filter(c => leadStatuses.includes(c.status)).length;
@@ -150,7 +160,10 @@ export const getCrmDashboardMetrics = async (actorUid: string) => {
 };
 
 export const getOrganizationDetails = async (actorUid: string) => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) return null;
+    const { organizationId } = adminOrgData;
+
     const orgDoc = await adminDb.collection('organizations').doc(organizationId).get();
     if (!orgDoc.exists) {
         throw new Error('Organização não encontrada.');
@@ -160,7 +173,10 @@ export const getOrganizationDetails = async (actorUid: string) => {
 
 // Product services
 export const createProduct = async (input: z.infer<typeof ProductSchema>, actorUid: string) => {
-    const { organizationId, planId } = await getAdminAndOrg(actorUid);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId, planId } = adminOrgData;
+
      if (planId === 'free') {
         throw new Error("O cadastro de produtos não está disponível no plano gratuito.");
     }
@@ -175,7 +191,10 @@ export const createProduct = async (input: z.infer<typeof ProductSchema>, actorU
 };
 
 export const listProducts = async (actorUid: string): Promise<z.infer<typeof ProductProfileSchema>[]> => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) return [];
+    const { organizationId } = adminOrgData;
+
     const productsSnapshot = await adminDb.collection('products')
                                      .where('companyId', '==', organizationId)
                                      .orderBy('createdAt', 'desc')
@@ -196,9 +215,11 @@ export const listProducts = async (actorUid: string): Promise<z.infer<typeof Pro
 };
 
 export const updateProduct = async (productId: string, input: z.infer<typeof UpdateProductSchema>, actorUid: string) => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
-    const productRef = adminDb.collection('products').doc(productId);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId } = adminOrgData;
 
+    const productRef = adminDb.collection('products').doc(productId);
     const productDoc = await productRef.get();
     if (!productDoc.exists || productDoc.data()?.companyId !== organizationId) {
         throw new Error('Produto não encontrado ou acesso negado.');
@@ -215,10 +236,11 @@ export const updateProduct = async (productId: string, input: z.infer<typeof Upd
 };
 
 export const deleteProduct = async (productId: string, actorUid: string) => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId } = adminOrgData;
 
     const productRef = adminDb.collection('products').doc(productId);
-
     const productDoc = await productRef.get();
     if (!productDoc.exists || productDoc.data()?.companyId !== organizationId) {
         throw new Error('Produto não encontrado ou acesso negado.');
@@ -229,10 +251,12 @@ export const deleteProduct = async (productId: string, actorUid: string) => {
     return { id: productId, success: true };
 };
 
-
 // Service services
 export const createService = async (input: z.infer<typeof ServiceSchema>, actorUid: string) => {
-    const { organizationId, planId } = await getAdminAndOrg(actorUid);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId, planId } = adminOrgData;
+
      if (planId === 'free') {
         throw new Error("O cadastro de serviços não está disponível no plano gratuito.");
     }
@@ -247,7 +271,10 @@ export const createService = async (input: z.infer<typeof ServiceSchema>, actorU
 };
 
 export const listServices = async (actorUid: string): Promise<z.infer<typeof ServiceProfileSchema>[]> => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) return [];
+    const { organizationId } = adminOrgData;
+
     const servicesSnapshot = await adminDb.collection('services')
                                      .where('companyId', '==', organizationId)
                                      .orderBy('createdAt', 'desc')
@@ -268,9 +295,11 @@ export const listServices = async (actorUid: string): Promise<z.infer<typeof Ser
 };
 
 export const updateService = async (serviceId: string, input: z.infer<typeof UpdateServiceSchema>, actorUid: string) => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
-    const serviceRef = adminDb.collection('services').doc(serviceId);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId } = adminOrgData;
 
+    const serviceRef = adminDb.collection('services').doc(serviceId);
     const serviceDoc = await serviceRef.get();
     if (!serviceDoc.exists || serviceDoc.data()?.companyId !== organizationId) {
         throw new Error('Serviço não encontrado ou acesso negado.');
@@ -287,9 +316,11 @@ export const updateService = async (serviceId: string, input: z.infer<typeof Upd
 };
 
 export const deleteService = async (serviceId: string, actorUid: string) => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
-    const serviceRef = adminDb.collection('services').doc(serviceId);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId } = adminOrgData;
 
+    const serviceRef = adminDb.collection('services').doc(serviceId);
     const serviceDoc = await serviceRef.get();
     if (!serviceDoc.exists || serviceDoc.data()?.companyId !== organizationId) {
         throw new Error('Serviço não encontrado ou acesso negado.');
@@ -299,10 +330,12 @@ export const deleteService = async (serviceId: string, actorUid: string) => {
     return { id: serviceId, success: true };
 };
 
-
 // Quote Services
 export const createQuote = async (input: z.infer<typeof QuoteSchema>, actorUid: string) => {
-    const { organizationId, planId } = await getAdminAndOrg(actorUid);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId, planId } = adminOrgData;
+
     if (planId === 'free') {
         throw new Error("A criação de orçamentos não está disponível no plano gratuito.");
     }
@@ -322,7 +355,9 @@ export const createQuote = async (input: z.infer<typeof QuoteSchema>, actorUid: 
 };
 
 export const listQuotes = async (actorUid: string): Promise<QuoteProfile[]> => {
-    const { organizationId, organizationName } = await getAdminAndOrg(actorUid);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) return [];
+    const { organizationId, organizationName } = adminOrgData;
 
     const quotesSnapshot = await adminDb.collection('quotes')
         .where('companyId', '==', organizationId)
@@ -368,9 +403,11 @@ export const listQuotes = async (actorUid: string): Promise<QuoteProfile[]> => {
 };
 
 export const updateQuote = async (quoteId: string, input: z.infer<typeof UpdateQuoteSchema>, actorUid: string) => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
-    const quoteRef = adminDb.collection('quotes').doc(quoteId);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId } = adminOrgData;
 
+    const quoteRef = adminDb.collection('quotes').doc(quoteId);
     const quoteDoc = await quoteRef.get();
     if (!quoteDoc.exists || quoteDoc.data()?.companyId !== organizationId) {
         throw new Error('Orçamento não encontrado ou acesso negado.');
@@ -384,7 +421,6 @@ export const updateQuote = async (quoteId: string, input: z.infer<typeof UpdateQ
         updatedAt: FieldValue.serverTimestamp(),
     });
 
-    // If status changed to 'accepted'
     if (updateData.status === 'accepted' && oldStatus !== 'accepted') {
         const quoteData = quoteDoc.data();
         if (!quoteData) throw new Error("Dados do orçamento não encontrados após a atualização.");
@@ -393,7 +429,7 @@ export const updateQuote = async (quoteId: string, input: z.infer<typeof UpdateQ
             description: `Orçamento #${quoteData.number}`,
             amount: updateData.total,
             type: 'receivable',
-            dueDate: new Date(updateData.validUntil || Date.now()), // Ensure dueDate is a valid Date
+            dueDate: new Date(updateData.validUntil || Date.now()),
             status: 'pending',
             entityType: 'customer',
             entityId: updateData.customerId,
@@ -407,9 +443,11 @@ export const updateQuote = async (quoteId: string, input: z.infer<typeof UpdateQ
 };
 
 export const deleteQuote = async (quoteId: string, actorUid: string) => {
-    const { organizationId } = await getAdminAndOrg(actorUid);
-    const quoteRef = adminDb.collection('quotes').doc(quoteId);
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+    const { organizationId } = adminOrgData;
 
+    const quoteRef = adminDb.collection('quotes').doc(quoteId);
     const doc = await quoteRef.get();
     if (!doc.exists || doc.data()?.companyId !== organizationId) {
         throw new Error('Orçamento não encontrado ou acesso negado.');
