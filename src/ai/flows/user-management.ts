@@ -34,6 +34,7 @@ const ActorSchema = z.object({ actor: z.string() });
 const UserProfileOutputSchema = z.object({
     name: z.string(),
     organizationName: z.string(),
+    planId: z.string(),
 });
 
 // Define flows
@@ -100,9 +101,9 @@ const getUserAccessInfoFlow = ai.defineFlow(
 
         // Permissões padrão para o plano gratuito
         let permissions = {
+            qoroCrm: true,
             qoroPulse: false,
             qoroTask: true,
-            qoroCrm: true,
             qoroFinance: true,
         };
 
@@ -129,10 +130,11 @@ const getUserProfileFlow = ai.defineFlow(
         if (!adminOrgData) {
             return null; // Return null if user/org data is not ready
         }
-        const { userData, organizationName } = adminOrgData;
+        const { userData, organizationName, planId } = adminOrgData;
         return {
             name: userData.name || userData.email || 'Usuário',
             organizationName: organizationName || 'Organização',
+            planId: planId || 'free',
         }
     }
 );

@@ -39,7 +39,7 @@ export default function SettingsPage() {
     const [isLoading, setIsLoading] = useState({ invite: false, password: false, users: true, permissions: '' });
     const [feedback, setFeedback] = useState<{ type: 'error' | 'success', message: string, context: string } | null>(null);
     const [users, setUsers] = useState<UserProfile[]>([]);
-    const { planId } = usePlan();
+    const { planId, isLoading: isPlanLoading } = usePlan();
 
     const isUserLimitReached = planId === 'free' && users.length >= FREE_PLAN_USER_LIMIT;
 
@@ -189,32 +189,45 @@ export default function SettingsPage() {
                             <div className="p-3 rounded-xl bg-primary text-black mr-4"><User className="w-6 h-6" /></div>
                             <h3 className="text-xl font-bold text-foreground">Minha Conta</h3>
                         </div>
-                        <form onSubmit={handlePasswordChange} className="space-y-4">
+                        <div className="space-y-4">
                             <div className="relative">
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                                 <Input type="email" value={currentUser?.email || 'Carregando...'} disabled className="w-full pl-12 pr-4 py-3 bg-secondary rounded-xl border-border cursor-not-allowed"/>
                             </div>
-                            <div className="relative">
-                                <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                                <Input type="password" placeholder="Senha Atual" value={passwords.current} onChange={(e) => setPasswords(p => ({...p, current: e.target.value}))} className="w-full pl-12 pr-4 py-3 bg-secondary rounded-xl border-border"/>
+                            <div className="bg-secondary rounded-xl p-4 border border-border">
+                                <p className="text-sm text-muted-foreground mb-1">Seu plano atual:</p>
+                                {isPlanLoading ? (
+                                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                                ) : (
+                                    <p className="text-lg font-bold text-primary">{planId ? planNames[planId] : 'Não identificado'}</p>
+                                )}
                             </div>
-                            <div className="relative">
-                                <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                                <Input type="password" placeholder="Nova Senha" value={passwords.new} onChange={(e) => setPasswords(p => ({...p, new: e.target.value}))} className="w-full pl-12 pr-4 py-3 bg-secondary rounded-xl border-border"/>
-                            </div>
-                             {feedback && feedback.context === 'password' && (
-                                <div className={`p-3 rounded-lg flex items-center text-sm ${feedback.type === 'success' ? 'bg-green-800/20 text-green-300' : 'bg-red-800/20 text-red-300'}`}>
-                                    <AlertCircle className="w-5 h-5 mr-3 flex-shrink-0" />
-                                    <span>{feedback.message}</span>
+                        </div>
+                        <div className="mt-8 pt-6 border-t border-border">
+                             <h4 className="text-md font-semibold text-foreground mb-4">Alterar senha</h4>
+                            <form onSubmit={handlePasswordChange} className="space-y-4">
+                                <div className="relative">
+                                    <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                                    <Input type="password" placeholder="Senha Atual" value={passwords.current} onChange={(e) => setPasswords(p => ({...p, current: e.target.value}))} className="w-full pl-12 pr-4 py-3 bg-secondary rounded-xl border-border"/>
                                 </div>
-                            )}
-                            <div className="flex justify-end pt-2">
-                                <Button type="submit" disabled={isLoading.password} className="bg-primary text-primary-foreground px-6 py-2 rounded-xl hover:bg-primary/90">
-                                    {isLoading.password && <Loader2 className="w-4 h-4 mr-2 animate-spin"/>}
-                                    {isLoading.password ? 'Salvando...' : 'Alterar Senha'}
-                                </Button>
-                            </div>
-                        </form>
+                                <div className="relative">
+                                    <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                                    <Input type="password" placeholder="Nova Senha" value={passwords.new} onChange={(e) => setPasswords(p => ({...p, new: e.target.value}))} className="w-full pl-12 pr-4 py-3 bg-secondary rounded-xl border-border"/>
+                                </div>
+                                {feedback && feedback.context === 'password' && (
+                                    <div className={`p-3 rounded-lg flex items-center text-sm ${feedback.type === 'success' ? 'bg-green-800/20 text-green-300' : 'bg-red-800/20 text-red-300'}`}>
+                                        <AlertCircle className="w-5 h-5 mr-3 flex-shrink-0" />
+                                        <span>{feedback.message}</span>
+                                    </div>
+                                )}
+                                <div className="flex justify-end pt-2">
+                                    <Button type="submit" disabled={isLoading.password} className="bg-primary text-primary-foreground px-6 py-2 rounded-xl hover:bg-primary/90">
+                                        {isLoading.password && <Loader2 className="w-4 h-4 mr-2 animate-spin"/>}
+                                        {isLoading.password ? 'Salvando...' : 'Alterar Senha'}
+                                    </Button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 )}
                 {activeTab === 'users' && (
