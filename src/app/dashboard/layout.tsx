@@ -60,7 +60,7 @@ const navItems: Record<string, NavItem[]> = {
         { href: '/dashboard/crm/funil', label: 'Funil', icon: LayoutGrid, permissionKey: 'qoroCrm', plan: ['free', 'growth', 'performance'] },
         { href: '/dashboard/crm/produtos', label: 'Produtos', icon: Package, permissionKey: 'qoroCrm', plan: ['growth', 'performance'] },
         { href: '/dashboard/crm/servicos', label: 'Serviços', icon: Wrench, permissionKey: 'qoroCrm', plan: ['growth', 'performance'] },
-        { href: '/dashboard/crm/orcamentos', label: 'Orçamentos', icon: FileText, permissionKey: 'qoroCrm', plan: ['growth', 'performance'] },
+        { href: '/dashboard/crm/orcamentos', label: 'Orçamentos', icon: FileText, permissionKey: 'qoroCrm', plan: ['performance'] },
     ],
     task: [
         { href: '/dashboard/task/visao-geral', label: 'Visão Geral', icon: Home, permissionKey: 'qoroTask', plan: ['free', 'growth', 'performance'] },

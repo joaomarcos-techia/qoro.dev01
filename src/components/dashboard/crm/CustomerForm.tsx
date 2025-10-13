@@ -291,7 +291,7 @@ export function CustomerForm({ onCustomerAction, customer, customerCount }: Cust
         {isLimitReached && (
              <div className="bg-yellow-500/20 border-l-4 border-yellow-500 text-yellow-300 p-4 rounded-lg flex items-center">
                 <Info className="w-5 h-5 mr-3" />
-                <span className="text-sm">Você atingiu o limite de {FREE_PLAN_LIMIT} clientes do plano gratuito. <a href="/#precos" className="font-bold underline">Faça upgrade</a> para adicionar mais.</span>
+                <span className="text-sm">Você atingiu o limite de ${FREE_PLAN_LIMIT} clientes do plano gratuito. <a href="/#precos" className="font-bold underline">Faça upgrade</a> para adicionar mais.</span>
             </div>
         )}
       <div className="flex justify-end pt-4">
