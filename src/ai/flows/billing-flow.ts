@@ -60,7 +60,7 @@ const createCheckoutSessionFlow = ai.defineFlow(
 
     const planId = priceId === process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID ? 'growth' : 'performance';
     
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace('9002', '9004') || 'http://localhost:9004';
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:9004';
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],

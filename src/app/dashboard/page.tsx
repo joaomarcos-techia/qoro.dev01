@@ -196,22 +196,29 @@ function DashboardContent() {
     )
   }
   
-  if (!currentUser || planError) {
+  if (planError === 'USER_DATA_NOT_FOUND') {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center bg-card border border-destructive/50 rounded-2xl p-8 max-w-lg">
+          <AlertTriangle className="mx-auto w-12 h-12 text-destructive mb-4" />
+          <h3 className="mt-4 text-lg font-bold text-foreground">Sincronização da conta pendente</h3>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Os dados da sua conta ainda não foram totalmente sincronizados. Isso pode levar alguns minutos após o cadastro ou pagamento. Por favor, recarregue a página ou tente novamente mais tarde.
+          </p>
+          <Button variant="outline" className="mt-6" onClick={() => window.location.reload()}>Recarregar a Página</Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
     return (
         <div className="flex items-center justify-center h-full">
           <div className="text-center bg-card border border-destructive/50 rounded-2xl p-8 max-w-lg">
             <AlertTriangle className="mx-auto w-12 h-12 text-destructive mb-4" />
-            <h3 className="mt-4 text-lg font-bold text-foreground">
-              {planError === 'USER_DATA_NOT_FOUND' 
-                ? "Sincronização da conta pendente" 
-                : "Sessão expirada ou inválida."
-              }
-            </h3>
+            <h3 className="mt-4 text-lg font-bold text-foreground">Sessão expirada ou inválida.</h3>
             <p className="mt-2 text-sm text-muted-foreground">
-              {planError === 'USER_DATA_NOT_FOUND'
-                ? "Os dados da sua conta ainda não foram totalmente sincronizados. Isso pode levar alguns minutos após o cadastro. Por favor, recarregue a página ou tente novamente mais tarde."
-                : "Por favor, faça login novamente para continuar."
-              }
+              Por favor, faça login novamente para continuar.
             </p>
              <Link href="/login">
                 <Button variant="outline" className="mt-6">Ir para o Login</Button>
