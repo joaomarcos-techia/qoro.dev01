@@ -196,10 +196,23 @@ function DashboardContent() {
   if (!currentUser || planError) {
     return (
         <div className="flex items-center justify-center h-full">
-          <div className="text-center">
-            <AlertTriangle className="mx-auto w-12 h-12 text-destructive" />
-            <h3 className="mt-4 text-lg font-medium text-foreground">{planError || "Sessão expirada ou inválida."}</h3>
-            <p className="mt-2 text-sm text-muted-foreground">Por favor, faça login novamente.</p>
+          <div className="text-center bg-card border border-destructive/50 rounded-2xl p-8 max-w-lg">
+            <AlertTriangle className="mx-auto w-12 h-12 text-destructive mb-4" />
+            <h3 className="mt-4 text-lg font-bold text-foreground">
+              {planError === 'USER_DATA_NOT_FOUND' 
+                ? "Sincronização da conta pendente" 
+                : "Sessão expirada ou inválida."
+              }
+            </h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {planError === 'USER_DATA_NOT_FOUND'
+                ? "Os dados da sua conta ainda não foram totalmente sincronizados. Isso pode levar alguns minutos após o cadastro. Por favor, recarregue a página ou tente novamente mais tarde."
+                : "Por favor, faça login novamente para continuar."
+              }
+            </p>
+             <Link href="/login">
+                <Button variant="outline" className="mt-6">Ir para o Login</Button>
+            </Link>
           </div>
         </div>
       );

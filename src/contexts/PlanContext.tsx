@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
@@ -71,7 +70,7 @@ export const PlanProvider = ({ children }: { children: React.ReactNode }) => {
           setTimeout(attemptFetch, delay);
         } else if (isMounted) {
           console.error("Failed to fetch plan info after multiple retries.");
-          setError("Não foi possível carregar as informações do seu plano. Por favor, tente recarregar a página.");
+          setError("USER_DATA_NOT_FOUND");
           setIsLoading(false);
         }
       }
