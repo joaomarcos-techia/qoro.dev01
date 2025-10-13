@@ -99,7 +99,7 @@ const getUserAccessInfoFlow = ai.defineFlow(
         
         const { planId, userData } = adminOrgData;
 
-        // Permissões padrão para o plano gratuito
+        // Default permissions are for the 'free' plan
         let permissions = {
             qoroCrm: true,
             qoroPulse: false,
@@ -107,13 +107,12 @@ const getUserAccessInfoFlow = ai.defineFlow(
             qoroFinance: true,
         };
 
-        if (planId === 'growth' || planId === 'performance') {
-            permissions = {
-                qoroCrm: true,
-                qoroPulse: true,
-                qoroTask: true,
-                qoroFinance: true,
-            };
+        // Grant access to QoroPulse only for the 'performance' plan
+        if (planId === 'performance') {
+            permissions.qoroPulse = true;
+        } else if (planId === 'growth') {
+            // Growth plan has access to everything BUT Pulse
+            permissions.qoroPulse = false;
         }
         
         return {

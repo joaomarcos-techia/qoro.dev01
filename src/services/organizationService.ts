@@ -7,6 +7,7 @@ import type { UserRecord } from 'firebase-admin/auth';
 import { z } from 'zod';
 import { 
     SignUpSchema, 
+    InviteUserSchema, 
     UpdateUserPermissionsSchema, 
     UpdateOrganizationDetailsSchema, 
     UserProfile,
@@ -36,11 +37,12 @@ export const createUserProfile = async (input: z.infer<typeof UserProfileCreatio
         contactPhone: contactPhone || null,
         stripeCustomerId: input.stripeCustomerId || null,
         stripeSubscriptionId: input.stripeSubscriptionId || null,
-        stripePriceId: stripePriceId, // Now correctly saving the price ID
+        stripePriceId: stripePriceId,
         stripeSubscriptionStatus: input.stripeSubscriptionStatus || (planId === 'free' ? 'active' : 'pending'),
     });
-
-    const isPaidPlan = planId !== 'free';
+    
+    // QoroPulse is only enabled for the 'performance' plan.
+    const hasPulseAccess = planId === 'performance';
 
     await adminDb.collection('users').doc(uid).set({
         name: name || '',
@@ -48,11 +50,11 @@ export const createUserProfile = async (input: z.infer<typeof UserProfileCreatio
         organizationId: orgRef.id,
         role: 'admin',
         planId: planId,
-        stripeSubscriptionStatus: input.stripeSubscriptionStatus || (isPaidPlan ? 'pending' : 'active'),
+        stripeSubscriptionStatus: input.stripeSubscriptionStatus || (planId !== 'free' ? 'pending' : 'active'),
         createdAt: FieldValue.serverTimestamp(),
         permissions: {
             qoroCrm: true,
-            qoroPulse: isPaidPlan, 
+            qoroPulse: hasPulseAccess, 
             qoroTask: true,
             qoroFinance: true,
         },
@@ -87,6 +89,7 @@ export const inviteUser = async (email: string, actor: string): Promise<{ uid: s
         throw error;
     }
 
+    const hasPulseAccess = planId === 'performance';
 
     await adminDb.collection('users').doc(userRecord.uid).set({
       email,
@@ -96,7 +99,7 @@ export const inviteUser = async (email: string, actor: string): Promise<{ uid: s
       role: 'member',
       permissions: {
         qoroCrm: true,
-        qoroPulse: true,
+        qoroPulse: hasPulseAccess,
         qoroTask: true,
         qoroFinance: true,
       }
