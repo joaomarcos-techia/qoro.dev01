@@ -1,15 +1,15 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, LogIn, AlertCircle, CheckCircle, Loader2, RefreshCw } from 'lucide-react';
 import { signIn, sendPasswordResetEmail } from '@/lib/auth';
 import { Logo } from '@/components/ui/logo';
-import { doc, getDoc } from 'firebase/firestore';
-import { db, auth } from '@/lib/firebase';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { getUserProfile } from '@/ai/flows/user-management';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -31,20 +31,21 @@ export default function LoginPage() {
             if (user) {
                 // Poll for user document creation
                 const interval = setInterval(async () => {
-                    const userDocRef = doc(db, "users", user.uid);
                     try {
-                        const userDoc = await getDoc(userDocRef);
-                        if (userDoc.exists() && userDoc.data().organizationId) {
+                        console.log("Polling for user profile...");
+                        // This function now internally checks for the user document in Firestore
+                        const profile = await getUserProfile({ actor: user.uid });
+                        if (profile) {
+                            console.log("Profile found! Redirecting to dashboard.");
                             clearInterval(interval);
-                            // Sign in the user again to refresh token with custom claims
+                            // Sign in the user again to refresh token with custom claims if necessary
                             await auth.currentUser?.getIdToken(true);
                             router.push('/dashboard');
                         }
                     } catch (e) {
-                         // This catch block is for firestore errors, not for failed signIn
-                         console.error("Error polling for user document:", e);
+                         console.error("Error polling for user profile:", e);
                     }
-                }, 2000); // Poll every 2 seconds
+                }, 3000); // Poll every 3 seconds
 
                 return () => clearInterval(interval);
             }
@@ -71,8 +72,7 @@ export default function LoginPage() {
         setShowResend(true);
       } else if (err.code === 'auth/invalid-credential') {
         setError('E-mail ou senha inválidos. Verifique seus dados ou crie uma nova conta se a anterior foi excluída.');
-      }
-      else {
+      } else {
         setError(err.message || 'Ocorreu um erro desconhecido. Tente novamente.');
       }
       setIsLoading(false);

@@ -74,6 +74,8 @@ const createCheckoutSessionFlow = ai.defineFlow(
         metadata: {
             firebaseUID: actor,
             organizationName: organizationName,
+            userName: name, // Passing user's name
+            userEmail: user.email!, // Passing user's email
             cnpj: cnpj,
             contactEmail: contactEmail || '',
             contactPhone: contactPhone || '',
@@ -132,23 +134,18 @@ const updateSubscriptionFlow = ai.defineFlow(
         
         if (isCreating) {
             console.log('✅ Handling subscription creation event...');
-            // Correctly use the subscription's metadata which contains the firebaseUID.
             const metadata = subscription.metadata;
 
             if (!metadata || !metadata.firebaseUID || !metadata.organizationName) {
                 console.error('CRITICAL: Firebase UID or Organization Name not found in subscription metadata for ID:', subscriptionId);
-                throw new Error('Metadados essenciais não encontrados na assinatura.');
+                throw new Error('Metadados essenciais (firebaseUID, organizationName) não encontrados na assinatura.');
             }
             
-            const { firebaseUID, organizationName, cnpj, contactEmail, contactPhone, planId, stripePriceId } = metadata;
-            
-            // Retrieve email from Stripe customer object as a fallback
-            const customer = await stripe.customers.retrieve(subscription.customer as string);
-            const userEmail = ('email' in customer && customer.email) ? customer.email : 'email_not_found';
+            const { firebaseUID, organizationName, userName, userEmail, cnpj, contactEmail, contactPhone, planId, stripePriceId } = metadata;
             
             const creationData: z.infer<typeof UserProfileCreationSchema> = {
                 uid: firebaseUID,
-                name: organizationName, // Use a reliable field, org name is good
+                name: userName || organizationName,
                 email: userEmail,
                 organizationName: organizationName,
                 cnpj: cnpj,
@@ -162,9 +159,8 @@ const updateSubscriptionFlow = ai.defineFlow(
                 stripeSubscriptionStatus: subscription.status,
             };
             
-            // This is the crucial call that was failing before.
             await orgService.createUserProfile(creationData);
-            console.log(`✅ User profile and organization created for UID: ${firebaseUID}`);
+            console.log(`✅ User profile and organization created successfully for UID: ${firebaseUID}`);
 
         } else {
             console.log(`🔄 Handling subscription update event for status: ${subscription.status}...`);
