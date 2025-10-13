@@ -67,7 +67,10 @@ const nextConfig = {
       },
     ];
   },
-  // Adding a comment to force cache invalidation.
+  // Force dynamic rendering to prevent stale data from being served from cache.
+  // This ensures all pages fetch the latest data on every request.
+  output: 'standalone',
+  
 };
 
 module.exports = nextConfig;
