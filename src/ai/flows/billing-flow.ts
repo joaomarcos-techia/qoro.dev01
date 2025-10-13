@@ -12,7 +12,6 @@ import { adminDb, adminAuth } from '@/lib/firebase-admin';
 import { stripe } from '@/lib/stripe';
 import { getAdminAndOrg } from '@/services/utils';
 import type { Stripe } from 'stripe';
-import { FieldValue } from 'firebase-admin/firestore';
 import * as orgService from '@/services/organizationService';
 import { UpdateSubscriptionSchema } from '@/ai/schemas';
 
@@ -122,13 +121,15 @@ const updateSubscriptionFlow = ai.defineFlow(
         const { subscriptionId, isCreating } = rawInput;
 
         const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
-            expand: ['default_payment_method'],
+            expand: ['default_payment_method', 'customer'],
         });
-      
-        const firebaseUID = subscription.metadata.firebaseUID;
+
+        const customer = subscription.customer as Stripe.Customer;
+        const firebaseUID = customer.metadata.firebaseUID;
+        
         if (!firebaseUID) {
-            console.error('CRITICAL: Firebase UID not found in subscription metadata for subscription ID:', subscriptionId);
-            throw new Error('Firebase UID not found in subscription metadata.');
+            console.error('CRITICAL: Firebase UID not found in customer metadata for subscription ID:', subscriptionId);
+            throw new Error('Firebase UID not found in customer metadata.');
         }
 
         if (isCreating) {
@@ -141,7 +142,7 @@ const updateSubscriptionFlow = ai.defineFlow(
             
             // Valida os dados da assinatura para garantir que temos tudo para criar a organização
             const validatedMetadata = UpdateSubscriptionSchema.safeParse({
-                ...subscription.metadata, // Passa todos os metadados da assinatura
+                ...subscription.metadata,
                 isCreating: isCreating,
             });
 
@@ -208,9 +209,6 @@ export async function createBillingPortalSession(input: z.infer<typeof CreateBil
   return createBillingPortalSessionFlow(input);
 }
 
-export async function updateSubscription(input: z.infer<typeof UpdateSubscriptionSchema>): Promise<{ success: boolean }> {
+export async function updateSubscription(input: { subscriptionId: string, isCreating: boolean }): Promise<{ success: boolean }> {
   return updateSubscriptionFlow(input);
 }
-
-
-    

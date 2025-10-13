@@ -53,7 +53,7 @@ export async function POST(req: Request) {
 
   if (relevantEvents.has(event.type)) {
     try {
-      let subscription: Stripe.Subscription;
+      let subscriptionId: string;
       let isCreating = false;
 
       switch (event.type) {
@@ -62,25 +62,27 @@ export async function POST(req: Request) {
           if (typeof checkoutSession.subscription !== 'string') {
             throw new Error('ID da assinatura não encontrado na sessão de checkout.');
           }
+           subscriptionId = checkoutSession.subscription;
            isCreating = true;
-           await updateSubscription({
-            subscriptionId: checkoutSession.subscription,
-            isCreating: true,
-          });
           break;
         case 'customer.subscription.updated':
         case 'customer.subscription.deleted':
         case 'customer.subscription.paused':
         case 'customer.subscription.resumed':
-          subscription = event.data.object as Stripe.Subscription;
-          await updateSubscription({
-            subscriptionId: subscription.id,
-            isCreating: false,
-          });
+          const subscription = event.data.object as Stripe.Subscription;
+          subscriptionId = subscription.id;
+          isCreating = false;
           break;
         default:
           console.log(`Webhook event não tratado: ${event.type}`);
+          return NextResponse.json({ received: true });
       }
+
+      await updateSubscription({
+        subscriptionId,
+        isCreating,
+      });
+
     } catch (error) {
       console.error('Error handling webhook event:', error);
       return NextResponse.json({ error: 'Webhook handler failed. View logs for more details.' }, { status: 500 });
