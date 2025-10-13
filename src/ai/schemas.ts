@@ -9,17 +9,17 @@ export const SignUpSchema = z.object({
     cnpj: z.string().min(1, "O CNPJ é obrigatório."),
     contactEmail: z.union([z.string().email({ message: "E-mail de contato inválido." }), z.literal('')]).optional(),
     contactPhone: z.union([z.string(), z.literal('')]).optional(),
-    planId: z.string().optional(), // Adicionado para o fluxo unificado
+    planId: z.string().optional(),
 });
 
-// Schema unificado para criação de perfil, usado por ambos os fluxos (gratuito e pago)
+
 export const UserProfileCreationSchema = SignUpSchema.extend({
     uid: z.string(),
     planId: z.string(),
+    stripePriceId: z.string(), // Tornando obrigatório para a criação unificada
     stripeCustomerId: z.string().optional(),
     stripeSubscriptionId: z.string().optional(),
     stripeSubscriptionStatus: z.string().optional(),
-    stripePriceId: z.string().optional(),
 });
 
 
@@ -85,11 +85,11 @@ export const UpdateOrganizationDetailsSchema = z.object({
     contactPhone: z.string().optional(),
 });
 
-// Schema para validar os metadados esperados do webhook da assinatura
+// Schema for validating expected metadata from the subscription webhook
 export const UpdateSubscriptionSchema = z.object({
   isCreating: z.boolean(),
-  firebaseUID: z.string(), // Obrigatório para a criação
-  planId: z.enum(['growth', 'performance']), // Obrigatório para a criação
+  firebaseUID: z.string(),
+  planId: z.enum(['growth', 'performance']),
   organizationName: z.string().min(1, 'Nome da organização é obrigatório.'),
   cnpj: z.string().min(1, 'CNPJ é obrigatório.'),
   contactEmail: z.string().optional(),
@@ -425,5 +425,3 @@ export const QualificationLeadSchema = z.object({
   desiredOutcome: z.string().optional(),
 });
 export type QualificationLead = z.infer<typeof QualificationLeadSchema>;
-
-    

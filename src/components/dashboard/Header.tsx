@@ -29,7 +29,14 @@ export function Header() {
     setError(null);
     try {
         const profile = await getUserProfile({ actor: user.uid });
-        setUserProfile(profile);
+        // Only set profile if it's not null (i.e., user doc is ready)
+        if (profile) {
+            setUserProfile(profile);
+        } else {
+            // If profile is null, it might be syncing. Don't set an error yet.
+            // The loading state will remain true, driven by the context.
+            return;
+        }
     } catch (err) {
         console.error("Falha ao buscar perfil do usuário:", err);
         setError("Não foi possível carregar os dados do perfil.");
@@ -78,7 +85,8 @@ export function Header() {
   }, []);
   
   const renderDropdownContent = () => {
-    if (isLoading) {
+    // Show loading if the initial fetch is happening or if the profile is still null (pending sync)
+    if (isLoading || !userProfile) {
       return <div className="p-4 text-center text-sm text-muted-foreground">Carregando...</div>;
     }
   
@@ -98,8 +106,7 @@ export function Header() {
       );
     }
   
-    if (userProfile) {
-      return (
+    return (
         <>
           <div className="p-4 border-b border-border">
             <div className="flex items-center">
@@ -127,9 +134,6 @@ export function Header() {
           </div>
         </>
       );
-    }
-  
-    return null; // Should not happen if logic is correct
   };
 
   return (

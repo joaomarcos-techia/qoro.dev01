@@ -20,7 +20,7 @@ import { adminAuth, adminDb } from '@/lib/firebase-admin';
 export const createUserProfile = async (input: z.infer<typeof UserProfileCreationSchema>): Promise<{uid: string}> => {
     const { uid, name, organizationName, cnpj, contactEmail, contactPhone, email, planId, stripePriceId } = input;
     
-    // Idempotency Check: se o usuário já tem uma org, não faz nada.
+    // Idempotency Check: if user already has an org, do nothing.
     const existingUserDoc = await adminDb.collection('users').doc(uid).get();
     if (existingUserDoc.exists && existingUserDoc.data()?.organizationId) {
         console.log(`Idempotency check: User ${uid} already belongs to an organization. Skipping profile creation.`);
@@ -36,8 +36,8 @@ export const createUserProfile = async (input: z.infer<typeof UserProfileCreatio
         contactPhone: contactPhone || null,
         stripeCustomerId: input.stripeCustomerId || null,
         stripeSubscriptionId: input.stripeSubscriptionId || null,
-        stripePriceId: stripePriceId || planId, // Usa o stripePriceId se existir, senão o planId (para o 'free')
-        stripeSubscriptionStatus: input.stripeSubscriptionStatus || 'free',
+        stripePriceId: stripePriceId, // Now correctly saving the price ID
+        stripeSubscriptionStatus: input.stripeSubscriptionStatus || (planId === 'free' ? 'active' : 'pending'),
     });
 
     const isPaidPlan = planId !== 'free';
@@ -52,11 +52,11 @@ export const createUserProfile = async (input: z.infer<typeof UserProfileCreatio
         createdAt: FieldValue.serverTimestamp(),
         permissions: {
             qoroCrm: true,
-            qoroPulse: isPaidPlan, // Pulse só está disponível em planos pagos
+            qoroPulse: isPaidPlan, 
             qoroTask: true,
             qoroFinance: true,
         },
-    }, { merge: true }); // Merge para não sobrescrever dados existentes (como o email)
+    }, { merge: true });
     
     await adminAuth.setCustomUserClaims(uid, { organizationId: orgRef.id, role: 'admin', planId: planId });
 
@@ -102,7 +102,6 @@ export const inviteUser = async (email: string, actor: string): Promise<{ uid: s
       }
     });
     
-    // Set custom claims for security rules if needed
     await adminAuth.setCustomUserClaims(userRecord.uid, { organizationId: organizationId, role: 'member' });
 
     return {
@@ -113,14 +112,18 @@ export const inviteUser = async (email: string, actor: string): Promise<{ uid: s
 };
 
 export const listUsers = async (actor: string): Promise<UserProfile[]> => {
-    const { organizationId } = await getAdminAndOrg(actor);
+    const adminOrgData = await getAdminAndOrg(actor);
+    if (!adminOrgData) {
+        // Return empty array if user/org is not ready yet, preventing crashes.
+        return [];
+    }
+    const { organizationId } = adminOrgData;
     
     const usersSnapshot = await adminDb.collection('users').where('organizationId', '==', organizationId).get();
     
     const users: UserProfile[] = [];
     usersSnapshot.forEach(doc => {
         const data = doc.data();
-        // Define default permissions and merge them with existing ones to avoid errors
         const defaultPermissions = { qoroCrm: true, qoroPulse: true, qoroTask: true, qoroFinance: true };
         const userPermissions = data.permissions || {};
 
@@ -139,7 +142,10 @@ export const listUsers = async (actor: string): Promise<UserProfile[]> => {
 };
 
 export const updateUserPermissions = async (input: z.infer<typeof UpdateUserPermissionsSchema>, actor: string): Promise<{ success: boolean }> => {
-    const { organizationId, adminUid } = await getAdminAndOrg(actor);
+    const adminOrgData = await getAdminAndOrg(actor);
+    if (!adminOrgData) throw new Error("Aguardando sincronização do usuário.");
+    
+    const { organizationId, adminUid } = adminOrgData;
     const { userId, permissions } = input;
 
     if (adminUid === userId) {
@@ -159,7 +165,10 @@ export const updateUserPermissions = async (input: z.infer<typeof UpdateUserPerm
 };
 
 export const getOrganizationDetails = async (actor: string): Promise<z.infer<typeof OrganizationProfileSchema>> => {
-    const { organizationId } = await getAdminAndOrg(actor);
+    const adminOrgData = await getAdminAndOrg(actor);
+    if (!adminOrgData) throw new Error("Aguardando sincronização do usuário.");
+    
+    const { organizationId } = adminOrgData;
     const orgDoc = await adminDb.collection('organizations').doc(organizationId).get();
 
     if (!orgDoc.exists) {
@@ -187,7 +196,10 @@ export const getOrganizationDetails = async (actor: string): Promise<z.infer<typ
 };
 
 export const updateOrganizationDetails = async (details: z.infer<typeof UpdateOrganizationDetailsSchema>, actor: string): Promise<{ success: boolean }> => {
-    const { organizationId } = await getAdminAndOrg(actor);
+    const adminOrgData = await getAdminAndOrg(actor);
+    if (!adminOrgData) throw new Error("Aguardando sincronização do usuário.");
+    
+    const { organizationId } = adminOrgData;
     
     const updateData: any = {};
     if(details.name) updateData.name = details.name;
@@ -199,5 +211,3 @@ export const updateOrganizationDetails = async (details: z.infer<typeof UpdateOr
 
     return { success: true };
 };
-
-    

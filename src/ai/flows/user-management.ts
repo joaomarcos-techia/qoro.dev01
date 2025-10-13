@@ -44,15 +44,14 @@ const signUpFlow = ai.defineFlow(
         outputSchema: z.object({ uid: z.string() }) 
     },
     async (input) => {
-        // This flow now only handles the free plan directly.
-        // Paid plans are handled via the billing webhook which calls the service directly.
         if (input.planId !== 'free') {
-            throw new Error("Este endpoint destina-se apenas ao plano gratuito. Planos pagos são ativados via webhook de pagamento.");
+            throw new Error("This endpoint is for the free plan only. Paid plans are activated via payment webhook.");
         }
         
         const creationData: z.infer<typeof UserProfileCreationSchema> = {
             ...input,
             planId: 'free',
+            stripePriceId: 'free', // Explicitly set for free plan
         };
 
         return orgService.createUserProfile(creationData);
@@ -75,9 +74,14 @@ const updateUserPermissionsFlow = ai.defineFlow(
 );
 
 const getOrganizationDetailsFlow = ai.defineFlow(
-    { name: 'getOrganizationDetailsFlow', inputSchema: ActorSchema, outputSchema: OrganizationProfileSchema },
-    async ({ actor }) => orgService.getOrganizationDetails(actor)
+    { name: 'getOrganizationDetailsFlow', inputSchema: ActorSchema, outputSchema: OrganizationProfileSchema.nullable() },
+    async ({ actor }) => {
+        const adminOrgData = await getAdminAndOrg(actor);
+        if (!adminOrgData) return null;
+        return orgService.getOrganizationDetails(actor);
+    }
 );
+
 
 const updateOrganizationDetailsFlow = ai.defineFlow(
     { name: 'updateOrganizationDetailsFlow', inputSchema: UpdateOrganizationDetailsSchema.extend(ActorSchema.shape), outputSchema: z.object({ success: z.boolean() }) },
@@ -85,19 +89,23 @@ const updateOrganizationDetailsFlow = ai.defineFlow(
 );
 
 const getUserAccessInfoFlow = ai.defineFlow(
-    { name: 'getUserAccessInfoFlow', inputSchema: ActorSchema, outputSchema: UserAccessInfoSchema },
+    { name: 'getUserAccessInfoFlow', inputSchema: ActorSchema, outputSchema: UserAccessInfoSchema.nullable() },
     async ({ actor }) => {
-        const { planId, userData } = await getAdminAndOrg(actor);
+        const adminOrgData = await getAdminAndOrg(actor);
+        if (!adminOrgData) {
+            return null; // Return null if user/org data is not ready
+        }
+        
+        const { planId, userData } = adminOrgData;
 
         // Permissões padrão para o plano gratuito
         let permissions = {
-            qoroPulse: false, // Bloqueado no plano gratuito
-            qoroTask: true,   // Módulo base de tarefas é permitido
-            qoroCrm: true,    // Módulo base de CRM é permitido
-            qoroFinance: true, // Módulo base de Finanças é permitido
+            qoroPulse: false,
+            qoroTask: true,
+            qoroCrm: true,
+            qoroFinance: true,
         };
 
-        // Planos pagos (Growth e Performance) têm acesso a tudo
         if (planId === 'growth' || planId === 'performance') {
             permissions = {
                 qoroCrm: true,
@@ -115,9 +123,13 @@ const getUserAccessInfoFlow = ai.defineFlow(
 );
 
 const getUserProfileFlow = ai.defineFlow(
-    { name: 'getUserProfileFlow', inputSchema: ActorSchema, outputSchema: UserProfileOutputSchema },
+    { name: 'getUserProfileFlow', inputSchema: ActorSchema, outputSchema: UserProfileOutputSchema.nullable() },
     async ({ actor }) => {
-        const { userData, organizationName } = await getAdminAndOrg(actor);
+        const adminOrgData = await getAdminAndOrg(actor);
+        if (!adminOrgData) {
+            return null; // Return null if user/org data is not ready
+        }
+        const { userData, organizationName } = adminOrgData;
         return {
             name: userData.name || userData.email || 'Usuário',
             organizationName: organizationName || 'Organização',
@@ -143,7 +155,7 @@ export async function updateUserPermissions(input: z.infer<typeof UpdateUserPerm
     return updateUserPermissionsFlow(input);
 }
 
-export async function getOrganizationDetails(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof OrganizationProfileSchema>> {
+export async function getOrganizationDetails(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof OrganizationProfileSchema> | null> {
     return getOrganizationDetailsFlow(input);
 }
 
@@ -151,12 +163,10 @@ export async function updateOrganizationDetails(input: z.infer<typeof UpdateOrga
     return updateOrganizationDetailsFlow(input);
 }
 
-export async function getUserAccessInfo(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof UserAccessInfoSchema>> {
+export async function getUserAccessInfo(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof UserAccessInfoSchema> | null> {
     return getUserAccessInfoFlow(input);
 }
 
-export async function getUserProfile(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof UserProfileOutputSchema>> {
+export async function getUserProfile(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof UserProfileOutputSchema> | null> {
     return getUserProfileFlow(input);
 }
-
-    
