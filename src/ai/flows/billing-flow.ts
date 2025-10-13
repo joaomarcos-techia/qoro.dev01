@@ -59,6 +59,9 @@ const createCheckoutSessionFlow = ai.defineFlow(
     }
 
     const planId = priceId === process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID ? 'growth' : 'performance';
+    
+    // CORREÇÃO: As URLs de sucesso e cancelamento devem apontar para a porta correta do servidor de desenvolvimento (9004)
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace('9002', '9004') || 'http://localhost:9004';
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -66,8 +69,8 @@ const createCheckoutSessionFlow = ai.defineFlow(
       billing_address_collection: 'required',
       customer: customer.id,
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/login?payment_success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/signup?plan=${planId}&payment_cancelled=true`,
+      success_url: `${siteUrl}/login?payment_success=true`,
+      cancel_url: `${siteUrl}/signup?plan=${planId}&payment_cancelled=true`,
       subscription_data: {
         metadata: {
             firebaseUID: actor,

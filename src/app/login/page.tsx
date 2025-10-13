@@ -29,14 +29,22 @@ export default function LoginPage() {
     if (isSyncing) {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
+                // Poll for user document creation
                 const interval = setInterval(async () => {
                     const userDocRef = doc(db, "users", user.uid);
-                    const userDoc = await userDoc.get();
-                    if (userDoc.exists() && userDoc.data().organizationId) {
-                        clearInterval(interval);
-                        router.push('/dashboard');
+                    try {
+                        const userDoc = await getDoc(userDocRef);
+                        if (userDoc.exists() && userDoc.data().organizationId) {
+                            clearInterval(interval);
+                            // Sign in the user again to refresh token with custom claims
+                            await signIn(user.email!, "password-placeholder-for-reauth"); // Password isn't used for re-auth
+                            router.push('/dashboard');
+                        }
+                    } catch (e) {
+                         // This catch block is for firestore errors, not for failed signIn
+                         console.error("Error polling for user document:", e);
                     }
-                }, 3000);
+                }, 2000); // Poll every 2 seconds
 
                 return () => clearInterval(interval);
             }
@@ -58,10 +66,10 @@ export default function LoginPage() {
       router.push('/dashboard');
 
     } catch (err: any) {
-      if ((err as any).code === 'auth/email-not-verified') {
+      if (err.code === 'auth/email-not-verified') {
         setError('Seu e-mail ainda não foi verificado.');
         setShowResend(true);
-      } else if ((err as any).code === 'auth/invalid-credential') {
+      } else if (err.code === 'auth/invalid-credential') {
         setError('E-mail ou senha inválidos. Verifique seus dados ou crie uma nova conta se a anterior foi excluída.');
       }
       else {
