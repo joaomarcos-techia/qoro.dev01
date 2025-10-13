@@ -13,6 +13,16 @@ export const SignUpSchema = z.object({
     planId: z.string().optional(), // Adicionado para o fluxo unificado
 });
 
+// Schema unificado para criação de perfil, usado por ambos os fluxos (gratuito e pago)
+export const UserProfileCreationSchema = SignUpSchema.extend({
+    uid: z.string(),
+    planId: z.string(),
+    stripeCustomerId: z.string().optional(),
+    stripeSubscriptionId: z.string().optional(),
+    stripeSubscriptionStatus: z.string().optional(),
+});
+
+
 export const InviteUserSchema = z.object({
     email: z.string().email('O e-mail fornecido não é válido.'),
 });

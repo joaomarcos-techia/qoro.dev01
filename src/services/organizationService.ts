@@ -10,19 +10,12 @@ import {
     UpdateUserPermissionsSchema, 
     UpdateOrganizationDetailsSchema, 
     UserProfile,
-    OrganizationProfileSchema 
+    OrganizationProfileSchema,
+    UserProfileCreationSchema
 } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
 
-// Schema unificado para criação de perfil, usado por ambos os fluxos (gratuito e pago)
-export const UserProfileCreationSchema = SignUpSchema.extend({
-    uid: z.string(),
-    planId: z.string(),
-    stripeCustomerId: z.string().optional(),
-    stripeSubscriptionId: z.string().optional(),
-    stripeSubscriptionStatus: z.string().optional(),
-});
 
 export const createUserProfile = async (input: z.infer<typeof UserProfileCreationSchema>): Promise<{uid: string}> => {
     const { uid, name, organizationName, cnpj, contactEmail, contactPhone, email, planId } = input;
