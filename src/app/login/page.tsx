@@ -37,7 +37,7 @@ export default function LoginPage() {
                         if (userDoc.exists() && userDoc.data().organizationId) {
                             clearInterval(interval);
                             // Sign in the user again to refresh token with custom claims
-                            await signIn(user.email!, "password-placeholder-for-reauth"); // Password isn't used for re-auth
+                            await auth.currentUser?.getIdToken(true);
                             router.push('/dashboard');
                         }
                     } catch (e) {
