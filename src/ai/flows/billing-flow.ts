@@ -72,7 +72,7 @@ const createCheckoutSessionFlow = ai.defineFlow(
             contactEmail: contactEmail || '',
             contactPhone: contactPhone || '',
             planId: planId,
-            stripePriceId: priceId, // Adicionado para passar o ID do preço
+            stripePriceId: priceId,
         }
       },
     });
@@ -120,26 +120,9 @@ const updateSubscriptionFlow = ai.defineFlow(
     async (rawInput) => {
         const { subscriptionId, isCreating } = rawInput;
 
-        const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
-            expand: ['default_payment_method', 'customer'],
-        });
-
-        const customer = subscription.customer as Stripe.Customer;
-        const firebaseUID = customer.metadata.firebaseUID;
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
         
-        if (!firebaseUID) {
-            console.error('CRITICAL: Firebase UID not found in customer metadata for subscription ID:', subscriptionId);
-            throw new Error('Firebase UID not found in customer metadata.');
-        }
-
         if (isCreating) {
-            // Idempotency Check: Verifique se já existe uma organização para este usuário
-            const existingOrgQuery = await adminDb.collection('users').where('uid', '==', firebaseUID).limit(1).get();
-            if (!existingOrgQuery.empty && existingOrgQuery.docs[0].data().organizationId) {
-                console.log(`Idempotency check: Organization already exists for user ${firebaseUID}. Skipping creation.`);
-                return { success: true };
-            }
-            
             // Valida os dados da assinatura para garantir que temos tudo para criar a organização
             const validatedMetadata = UpdateSubscriptionSchema.safeParse({
                 ...subscription.metadata,
@@ -152,6 +135,20 @@ const updateSubscriptionFlow = ai.defineFlow(
             }
             
             const { data } = validatedMetadata;
+            const firebaseUID = data.firebaseUID;
+            
+            if (!firebaseUID) {
+                console.error('CRITICAL: Firebase UID not found in subscription metadata for subscription ID:', subscriptionId);
+                throw new Error('Firebase UID not found in subscription metadata.');
+            }
+            
+            // Idempotency Check: Verifique se já existe uma organização para este usuário
+            const userDoc = await adminDb.collection('users').doc(firebaseUID).get();
+            if (userDoc.exists && userDoc.data()?.organizationId) {
+                console.log(`Idempotency check: Organization already exists for user ${firebaseUID}. Skipping creation.`);
+                return { success: true };
+            }
+            
             const userRecord = await adminAuth.getUser(firebaseUID);
 
             await orgService.createUserProfile({
@@ -171,6 +168,14 @@ const updateSubscriptionFlow = ai.defineFlow(
             });
 
         } else { // Atualizando uma assinatura existente (cancelamento, etc.)
+            const customer = await stripe.customers.retrieve(subscription.customer as string) as Stripe.Customer;
+            const firebaseUID = customer.metadata.firebaseUID;
+
+            if (!firebaseUID) {
+                console.error('CRITICAL: Firebase UID not found in customer metadata for subscription update ID:', subscriptionId);
+                throw new Error('Firebase UID not found for subscription update.');
+            }
+
             const userRef = adminDb.collection('users').doc(firebaseUID);
             const userDoc = await userRef.get();
             if (!userDoc.exists) {
