@@ -170,9 +170,9 @@ export const updateUserPermissions = async (input: z.infer<typeof UpdateUserPerm
     return { success: true };
 };
 
-export const getOrganizationDetails = async (actor: string): Promise<z.infer<typeof OrganizationProfileSchema>> => {
+export const getOrganizationDetails = async (actor: string): Promise<z.infer<typeof OrganizationProfileSchema> | null> => {
     const adminOrgData = await getAdminAndOrg(actor);
-    if (!adminOrgData) throw new Error("Aguardando sincronização do usuário.");
+    if (!adminOrgData) return null;
     
     const { organizationId } = adminOrgData;
     const orgDoc = await adminDb.collection('organizations').doc(organizationId).get();

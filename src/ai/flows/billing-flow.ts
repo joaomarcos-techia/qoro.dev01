@@ -121,36 +121,33 @@ const updateSubscriptionFlow = ai.defineFlow(
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
         
         if (isCreating) {
-            const firebaseUID = subscription.metadata.firebaseUID;
+            const metadata = subscription.metadata;
+            const firebaseUID = metadata.firebaseUID;
             
             if (!firebaseUID) {
                 console.error('CRITICAL: Firebase UID not found in subscription metadata for ID:', subscriptionId);
                 throw new Error('Firebase UID não encontrado nos metadados da assinatura.');
             }
-
-            const userDoc = await adminDb.collection('users').doc(firebaseUID).get();
-            if (userDoc.exists && userDoc.data()?.organizationId) {
-                console.log(`Idempotency check: Organization already exists for user ${firebaseUID}. Skipping creation.`);
-                return { success: true };
-            }
             
             const userRecord = await adminAuth.getUser(firebaseUID);
             
-            await orgService.createUserProfile({
+            const creationData = {
                 uid: firebaseUID,
-                name: userRecord.displayName || subscription.metadata.organizationName,
+                name: userRecord.displayName || metadata.organizationName,
                 email: userRecord.email!,
-                organizationName: subscription.metadata.organizationName,
-                cnpj: subscription.metadata.cnpj,
-                contactEmail: subscription.metadata.contactEmail,
-                contactPhone: subscription.metadata.contactPhone,
-                planId: subscription.metadata.planId,
-                stripePriceId: subscription.metadata.stripePriceId,
+                organizationName: metadata.organizationName,
+                cnpj: metadata.cnpj,
+                contactEmail: metadata.contactEmail,
+                contactPhone: metadata.contactPhone,
+                planId: metadata.planId,
+                stripePriceId: metadata.stripePriceId,
                 password: '', // Password is set on client
                 stripeCustomerId: subscription.customer as string,
                 stripeSubscriptionId: subscription.id,
                 stripeSubscriptionStatus: subscription.status,
-            });
+            };
+
+            await orgService.createUserProfile(creationData);
 
         } else {
             // This part handles updates like cancellations or plan changes.
