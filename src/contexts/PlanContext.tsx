@@ -41,11 +41,12 @@ export const PlanProvider = ({ children }: { children: React.ReactNode }) => {
       setIsLoading(false);
       return;
     }
-    
+  
+    setIsLoading(true);
     let attempts = 0;
     const maxAttempts = 10;
     const delay = 3000;
-
+  
     const attemptFetch = async () => {
       try {
         const accessInfo = await getUserAccessInfo({ actor: currentUser.uid });
@@ -54,6 +55,7 @@ export const PlanProvider = ({ children }: { children: React.ReactNode }) => {
           setPermissions(accessInfo.permissions);
           setIsLoading(false);
         } else {
+          // Lança erro para acionar a lógica de retentativa
           throw new Error('User data not ready');
         }
       } catch (error) {
@@ -71,14 +73,9 @@ export const PlanProvider = ({ children }: { children: React.ReactNode }) => {
     attemptFetch();
   }, [currentUser]);
 
-
   useEffect(() => {
-    if (currentUser) {
-        fetchPlan();
-    } else {
-        setIsLoading(false);
-    }
-  }, [currentUser, fetchPlan]);
+    fetchPlan();
+  }, [fetchPlan]);
 
 
   return (
