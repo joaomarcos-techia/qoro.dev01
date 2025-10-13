@@ -132,6 +132,7 @@ const updateSubscriptionFlow = ai.defineFlow(
         
         if (isCreating) {
             console.log('✅ Handling subscription creation event...');
+            // CRITICAL FIX: Use metadata from the retrieved subscription object
             const metadata = subscription.metadata;
 
             if (!metadata || !metadata.firebaseUID) {
@@ -152,7 +153,7 @@ const updateSubscriptionFlow = ai.defineFlow(
                 contactPhone: contactPhone,
                 planId: planId,
                 stripePriceId: stripePriceId,
-                password: '', 
+                password: '', // Password is not needed here
                 stripeCustomerId: subscription.customer as string,
                 stripeSubscriptionId: subscription.id,
                 stripeSubscriptionStatus: subscription.status,
