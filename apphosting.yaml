@@ -35,8 +35,7 @@ env:
     value: "seu-valor-aqui"
   - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
     value: "G-L3D1C3SYVV"
-  - variable: NEXT_PUBLIC_SITE_URL
-    value: "https://your-production-url.com" # Substitua pela sua URL de produção
+  # O NEXT_PUBLIC_SITE_URL será definido pelo App Hosting no momento do build.
 
   # Para produção, gerencie as chaves do Stripe como segredos no Firebase.
   # https://firebase.google.com/docs/app-hosting/configure-backend#secrets
@@ -44,5 +43,4 @@ env:
     secret: STRIPE_SECRET_KEY_PROD
   - variable: STRIPE_WEBHOOK_SECRET
     secret: STRIPE_WEBHOOK_SECRET_PROD
-
     

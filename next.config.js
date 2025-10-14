@@ -48,12 +48,13 @@ const nextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://www.gstatic.com https://*.firebaseapp.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' https://placehold.co https://storage.googleapis.com https://firebasestorage.googleapis.com https://picsum.photos data:; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' * https://www.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; frame-src 'self' https://*.firebaseapp.com;"
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.stripe.com https://apis.google.com https://www.gstatic.com https://*.firebaseapp.com https://*.googletagmanager.com https://*.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' https: data:; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' * wss:; frame-src 'self' https://*.firebaseapp.com https://*.stripe.com;"
           }
         ],
       },
     ];
   },
+  
 };
 
 module.exports = nextConfig;
