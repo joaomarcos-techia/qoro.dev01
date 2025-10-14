@@ -50,7 +50,9 @@ export default function LoginPage() {
                 return () => clearInterval(interval);
             }
         });
-        return () => unsubscribe();
+        return () => {
+            if(unsubscribe) unsubscribe();
+        };
     }
   }, [isSyncing, router]);
 
