@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -100,8 +99,8 @@ export default function SignUpForm() {
             contactPhone: formData.contactPhone.replace(/\D/g, '')
         });
         
-        // Redirect user to Stripe Checkout
-        router.push(sessionId);
+        // Redirect user to Stripe Checkout using full page navigation
+        window.location.assign(sessionId);
 
       } else { // Free Plan
         // For the free plan, create the organization and user profile directly
