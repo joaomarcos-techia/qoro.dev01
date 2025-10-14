@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -9,7 +8,7 @@ import { signIn, sendPasswordResetEmail } from '@/lib/auth';
 import { Logo } from '@/components/ui/logo';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { getUserProfile } from '@/ai/flows/user-management';
+import { getAdminAndOrg } from '@/services/utils'; // Importa a função de verificação direta
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -29,25 +28,28 @@ export default function LoginPage() {
     if (isSyncing) {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Poll for user document creation
+                // Inicia a sondagem para verificar se o perfil do usuário foi criado no banco de dados.
                 const interval = setInterval(async () => {
                     try {
                         console.log("Polling for user profile...");
-                        // This function now internally checks for the user document in Firestore
-                        const profile = await getUserProfile({ actor: user.uid });
-                        if (profile) {
+                        // Usa a função de backend que verifica diretamente a existência do documento do usuário
+                        const profileData = await getAdminAndOrg(user.uid);
+                        
+                        // Se `profileData` não for nulo, significa que o documento do usuário foi criado.
+                        if (profileData) {
                             console.log("Profile found! Redirecting to dashboard.");
                             clearInterval(interval);
-                            // Sign in the user again to refresh token with custom claims if necessary
-                            await auth.currentUser?.getIdToken(true);
+                            // Garante que o token do usuário seja atualizado com as permissões (claims)
+                            await user.getIdToken(true);
                             router.push('/dashboard');
                         }
                     } catch (e) {
                          console.error("Error polling for user profile:", e);
+                         // O erro não para o polling, ele continuará tentando.
                     }
-                }, 3000); // Poll every 3 seconds
+                }, 3000); // Tenta a cada 3 segundos
 
-                return () => clearInterval(interval);
+                return () => clearInterval(interval); // Limpa o intervalo ao desmontar
             }
         });
         return () => {
