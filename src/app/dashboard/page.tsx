@@ -1,3 +1,4 @@
+
 'use client';
 import Link from 'next/link';
 import {
@@ -145,13 +146,18 @@ function DashboardContent() {
   const [isLoadingMetrics, setIsLoadingMetrics] = useState(true);
   const [metricsError, setMetricsError] = useState<string | null>(null);
   const [metrics, setMetrics] = useState<DashboardMetrics>({ totalCustomers: 0, activeLeads: 0, pendingTasks: 0, totalBalance: 0 });
+  const router = useRouter();
+
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user: FirebaseUser | null) => {
       setCurrentUser(user);
+      if (!user) {
+        router.push('/login');
+      }
     });
     return () => unsubscribe();
-  }, []);
+  }, [router]);
 
 
   useEffect(() => {
@@ -188,7 +194,7 @@ function DashboardContent() {
     }
   }, [currentUser, isPlanLoading, planError]);
 
-  if (isPlanLoading) {
+  if (isPlanLoading || !currentUser) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="w-12 h-12 text-primary animate-spin" />
@@ -209,23 +215,6 @@ function DashboardContent() {
         </div>
       </div>
     );
-  }
-
-  if (!currentUser) {
-    return (
-        <div className="flex items-center justify-center h-full">
-          <div className="text-center bg-card border border-destructive/50 rounded-2xl p-8 max-w-lg">
-            <AlertTriangle className="mx-auto w-12 h-12 text-destructive mb-4" />
-            <h3 className="mt-4 text-lg font-bold text-foreground">Sessão expirada ou inválida.</h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Por favor, faça login novamente para continuar.
-            </p>
-             <Link href="/login">
-                <Button variant="outline" className="mt-6">Ir para o Login</Button>
-            </Link>
-          </div>
-        </div>
-      );
   }
 
   const isPulseLocked = !permissions?.qoroPulse;

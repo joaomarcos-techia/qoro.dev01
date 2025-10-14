@@ -32,11 +32,11 @@ const nextConfig = {
     ],
   },
   // Redirecionamentos para SEO
-  redirects: async () => {
+  async redirects() {
     return [
       {
-        source: '/:path*/', // Captura qualquer rota com uma barra no final
-        destination: '/:path*', // Redireciona para a mesma rota sem a barra
+        source: '/dashboard',
+        destination: '/dashboard/page',
         permanent: true,
       },
     ];
