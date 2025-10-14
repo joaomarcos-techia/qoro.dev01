@@ -19,7 +19,7 @@ const targetAudiences = [
     benefits: [
       'Funil de vendas colaborativo',
       'Delegação e acompanhamento de tarefas',
-      'Relatórios financeiros e de vendas',
+      'Controle de contas a pagar e receber',
     ],
     colorClass: 'text-pulse-primary'
   },
