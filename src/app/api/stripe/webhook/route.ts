@@ -1,8 +1,10 @@
+
 // src/app/api/stripe/webhook/route.ts
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { createUserProfile } from '@/services/organizationService';
 import type Stripe from 'stripe';
+import { adminDb } from '@/lib/firebase-admin';
 
 const relevantEvents = new Set([
   'checkout.session.completed',
@@ -19,20 +21,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Missing webhook secret' }, { status: 400 });
   }
 
-  const rawBody = await req.arrayBuffer();
-  const bodyBuffer = Buffer.from(rawBody);
-
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(bodyBuffer, sig, webhookSecret);
+    const rawBody = await req.text(); // Use text() to verify signature, then parse
+    event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
   } catch (err: any) {
     console.error('⚠️ Erro ao validar webhook:', err.message);
     return NextResponse.json({ error: `Webhook error: ${err.message}` }, { status: 400 });
   }
 
-  if (relevantEvents.has(event.type)) {
-    try {
-      if (event.type === 'checkout.session.completed') {
+  // --- Main Logic ---
+  try {
+    switch (event.type) {
+      case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         
         if (session.mode !== 'subscription') {
@@ -41,44 +42,70 @@ export async function POST(req: Request) {
         }
 
         const { firebaseUID, organizationName, userName, cnpj, contactEmail, contactPhone } = session.metadata || {};
-        const subscriptionId = session.subscription as string;
+        const subscriptionId = session.subscription;
         
-        if (!firebaseUID || !organizationName || !subscriptionId) {
-          console.error('CRITICAL: Metadados essenciais (firebaseUID, organizationName) ou subscriptionId não encontrados na sessão de checkout:', session.id);
-          throw new Error('Metadados essenciais não encontrados na sessão de checkout.');
+        if (!firebaseUID || !organizationName || !userName || !subscriptionId) {
+          console.error('CRITICAL: Metadados essenciais (firebaseUID, organizationName, userName) ou subscriptionId não encontrados na sessão de checkout:', session.id);
+          // Don't throw, just return an error to Stripe to potentially retry
+          return NextResponse.json({ error: 'Metadados essenciais não encontrados na sessão de checkout.' }, { status: 400 });
         }
 
-        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-        const customerId = subscription.customer as string;
-        const priceId = subscription.items.data[0].price.id;
-
-        const planId = priceId === process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID ? 'growth' : 'performance';
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId as string);
 
         await createUserProfile({
           uid: firebaseUID,
           name: userName,
           organizationName: organizationName,
-          email: session.customer_details?.email || '',
+          email: session.customer_details?.email || '', // Email comes from customer_details
           cnpj: cnpj,
           contactEmail: contactEmail,
           contactPhone: contactPhone,
-          planId: planId,
-          stripePriceId: priceId,
-          stripeCustomerId: customerId,
-          stripeSubscriptionId: subscriptionId,
+          planId: subscription.items.data[0].price.id === process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID ? 'growth' : 'performance',
+          stripePriceId: subscription.items.data[0].price.id,
+          stripeCustomerId: subscription.customer as string,
+          stripeSubscriptionId: subscription.id,
           stripeSubscriptionStatus: subscription.status,
-          password: '', // Senha é gerenciada pelo Firebase Auth no cliente
+          password: '', // Password is managed by Firebase Auth on the client
         });
         
         console.log(`✅ Perfil de usuário e organização criados com sucesso para UID: ${firebaseUID} via checkout.session.completed.`);
+        break;
       }
 
-      // TODO: Adicionar lógica para 'customer.subscription.updated' e 'deleted' se necessário no futuro.
+      case 'customer.subscription.updated': {
+        const subscription = event.data.object as Stripe.Subscription;
+        const orgQuery = await adminDb.collection('organizations').where('stripeSubscriptionId', '==', subscription.id).limit(1).get();
+        if (!orgQuery.empty) {
+            const orgDoc = orgQuery.docs[0];
+            await orgDoc.ref.update({
+                stripeSubscriptionStatus: subscription.status,
+                stripePriceId: subscription.items.data[0].price.id,
+            });
+            console.log(`✅ Status da assinatura atualizado para ${subscription.status} na organização ${orgDoc.id}`);
+        }
+        break;
+      }
 
-    } catch (err: any) {
-      console.error('🔥 Erro no handler do webhook:', err.message, err.stack);
-      return NextResponse.json({ error: `Webhook handler failed: ${err.message}` }, { status: 500 });
+      case 'customer.subscription.deleted': {
+        const subscription = event.data.object as Stripe.Subscription;
+        const orgQuery = await adminDb.collection('organizations').where('stripeSubscriptionId', '==', subscription.id).limit(1).get();
+        if (!orgQuery.empty) {
+            const orgDoc = orgQuery.docs[0];
+            await orgDoc.ref.update({
+                stripeSubscriptionStatus: 'canceled', // Or subscription.status
+            });
+            console.log(`✅ Assinatura cancelada para organização ${orgDoc.id}`);
+        }
+        break;
+      }
+
+      default:
+        console.warn(`🤷‍♀️ Evento não tratado: ${event.type}`);
     }
+
+  } catch (err: any) {
+    console.error('🔥 Erro no handler do webhook:', err.message, err.stack);
+    return NextResponse.json({ error: `Webhook handler failed: ${err.message}` }, { status: 500 });
   }
 
   return NextResponse.json({ received: true });

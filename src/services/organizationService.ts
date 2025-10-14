@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { FieldValue } from 'firebase-admin/firestore';
@@ -19,46 +18,56 @@ export const createUserProfile = async (input: z.infer<typeof UserProfileCreatio
     const { uid, name, organizationName, cnpj, contactEmail, contactPhone, email, planId, stripePriceId } = input;
     
     // Idempotency Check: if user already has an org, do nothing.
-    const existingUserDoc = await adminDb.collection('users').doc(uid).get();
-    if (existingUserDoc.exists && existingUserDoc.data()?.organizationId) {
+    const userDocRef = adminDb.collection('users').doc(uid);
+    const userDoc = await userDocRef.get();
+    
+    if (userDoc.exists && userDoc.data()?.organizationId) {
         console.log(`Idempotency check: User ${uid} already belongs to an organization. Skipping profile creation.`);
         return { uid };
     }
 
-    const orgRef = await adminDb.collection('organizations').add({
-        name: organizationName,
-        owner: uid,
-        createdAt: FieldValue.serverTimestamp(),
-        cnpj: cnpj,
-        contactEmail: contactEmail || null,
-        contactPhone: contactPhone || null,
-        stripeCustomerId: input.stripeCustomerId || null,
-        stripeSubscriptionId: input.stripeSubscriptionId || null,
-        stripePriceId: stripePriceId,
-        stripeSubscriptionStatus: input.stripeSubscriptionStatus || (planId === 'free' ? 'active' : 'pending'),
-    });
-    
-    const hasPulseAccess = planId === 'performance';
+    try {
+      const orgRef = await adminDb.collection('organizations').add({
+          name: organizationName,
+          owner: uid,
+          createdAt: FieldValue.serverTimestamp(),
+          cnpj: cnpj || null,
+          contactEmail: contactEmail || null,
+          contactPhone: contactPhone || null,
+          stripeCustomerId: input.stripeCustomerId || null,
+          stripeSubscriptionId: input.stripeSubscriptionId || null,
+          stripePriceId: stripePriceId,
+          stripeSubscriptionStatus: input.stripeSubscriptionStatus || (planId === 'free' ? 'active' : 'pending'),
+      });
+      
+      const hasPulseAccess = planId === 'performance';
+  
+      await userDocRef.set({
+          name: name || '',
+          email: email,
+          organizationId: orgRef.id,
+          role: 'admin',
+          planId: planId,
+          stripeSubscriptionStatus: input.stripeSubscriptionStatus || (planId !== 'free' ? 'pending' : 'active'),
+          createdAt: FieldValue.serverTimestamp(),
+          permissions: {
+              qoroCrm: true,
+              qoroPulse: hasPulseAccess, 
+              qoroTask: true,
+              qoroFinance: true,
+          },
+      }, { merge: true });
+      
+      await adminAuth.setCustomUserClaims(uid, { organizationId: orgRef.id, role: 'admin', planId: planId });
 
-    await adminDb.collection('users').doc(uid).set({
-        name: name || '',
-        email: email,
-        organizationId: orgRef.id,
-        role: 'admin',
-        planId: planId,
-        stripeSubscriptionStatus: input.stripeSubscriptionStatus || (planId !== 'free' ? 'pending' : 'active'),
-        createdAt: FieldValue.serverTimestamp(),
-        permissions: {
-            qoroCrm: true,
-            qoroPulse: hasPulseAccess, 
-            qoroTask: true,
-            qoroFinance: true,
-        },
-    }, { merge: true });
-    
-    await adminAuth.setCustomUserClaims(uid, { organizationId: orgRef.id, role: 'admin', planId: planId });
+      return { uid };
 
-    return { uid };
+    } catch (error) {
+      console.error("CRITICAL: Failed to create user profile and organization in Firestore transaction.", error);
+      // If this fails, we have an auth user without a profile. This is a critical state.
+      // Consider adding monitoring or a cleanup process for such cases.
+      throw new Error("Failed to finalize account setup.");
+    }
 };
 
 export const listUsers = async (actor: string): Promise<UserProfile[]> => {
