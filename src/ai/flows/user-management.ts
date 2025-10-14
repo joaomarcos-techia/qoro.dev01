@@ -3,8 +3,7 @@
 'use server';
 /**
  * @fileOverview User and organization management flows.
- * - signUp - Creates a new user and organization for the free plan.
- * - inviteUser - Invites a user to an organization via email.
+ * - signUp (deprecated, handled by webhook)
  * - listUsers - Lists all users within the caller's organization.
  * - updateUserPermissions - Updates the application permissions for a specific user.
  * - getOrganizationDetails - Fetches details for the user's organization.
@@ -15,19 +14,16 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { 
-    SignUpSchema, 
     InviteUserSchema, 
     UpdateUserPermissionsSchema, 
     UpdateOrganizationDetailsSchema, 
     OrganizationProfileSchema, 
     UserProfileSchema,
-    UserAccessInfoSchema,
-    UserProfileCreationSchema
+    UserAccessInfoSchema
 } from '@/ai/schemas';
 import * as orgService from '@/services/organizationService';
 import { getAdminAndOrg } from '@/services/utils';
 import type { UserProfile } from '@/ai/schemas';
-import { UserRecord } from 'firebase-admin/auth';
 
 const ActorSchema = z.object({ actor: z.string() });
 
@@ -36,33 +32,6 @@ const UserProfileOutputSchema = z.object({
     organizationName: z.string(),
     planId: z.string(),
 });
-
-// Define flows
-const signUpFlow = ai.defineFlow(
-    { 
-        name: 'signUpFlow', 
-        inputSchema: SignUpSchema.extend({ uid: z.string() }), 
-        outputSchema: z.object({ uid: z.string() }) 
-    },
-    async (input) => {
-        if (input.planId !== 'free') {
-            throw new Error("This endpoint is for the free plan only. Paid plans are activated via payment webhook.");
-        }
-        
-        const creationData: z.infer<typeof UserProfileCreationSchema> = {
-            ...input,
-            planId: 'free',
-            stripePriceId: 'free', // Explicitly set for free plan
-        };
-
-        return orgService.createUserProfile(creationData);
-    }
-);
-
-const inviteUserFlow = ai.defineFlow(
-    { name: 'inviteUserFlow', inputSchema: InviteUserSchema.extend(ActorSchema.shape), outputSchema: z.object({ uid: z.string(), email: z.string(), organizationId: z.string() }) },
-    async (input) => orgService.inviteUser(input.email, input.actor)
-);
 
 const listUsersFlow = ai.defineFlow(
     { name: 'listUsersFlow', inputSchema: ActorSchema, outputSchema: z.array(UserProfileSchema) },
@@ -140,13 +109,6 @@ const getUserProfileFlow = ai.defineFlow(
 
 
 // Exported functions (client-callable wrappers)
-export async function signUp(input: z.infer<typeof SignUpSchema> & { uid: string }): Promise<{uid: string}> {
-    return signUpFlow(input);
-}
-
-export async function inviteUser(input: z.infer<typeof InviteUserSchema> & z.infer<typeof ActorSchema>): Promise<{ uid: string; email: string; organizationId: string; }> {
-    return inviteUserFlow(input);
-}
 
 export async function listUsers(input: z.infer<typeof ActorSchema>): Promise<UserProfile[]> {
     return listUsersFlow(input);

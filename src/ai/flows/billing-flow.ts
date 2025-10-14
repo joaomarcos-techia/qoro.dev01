@@ -4,15 +4,12 @@
  * @fileOverview Billing and subscription management flows.
  * - createCheckoutSession: Creates a Stripe Checkout session for a user to subscribe.
  * - createBillingPortalSession: Creates a Stripe Billing Portal session for a user to manage their subscription.
- * - updateSubscription: Handles Stripe webhook events for creating or updating a subscription.
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { adminDb } from '@/lib/firebase-admin';
 import { stripe } from '@/lib/stripe';
 import { getAdminAndOrg } from '@/services/utils';
-import * as orgService from '@/services/organizationService';
-import { UserProfileCreationSchema } from '@/ai/schemas';
 
 const CreateCheckoutSessionSchema = z.object({
   priceId: z.string(),
@@ -28,11 +25,6 @@ const CreateBillingPortalSessionSchema = z.object({
   actor: z.string(),
 });
 
-const WebhookInputSchema = z.object({
-    subscriptionId: z.string(),
-    isCreating: z.boolean(),
-});
-
 const createCheckoutSessionFlow = ai.defineFlow(
   {
     name: 'createCheckoutSessionFlow',
@@ -41,38 +33,27 @@ const createCheckoutSessionFlow = ai.defineFlow(
   },
   async ({ priceId, actor, name, organizationName, cnpj, contactEmail, contactPhone }) => {
     
-    // Temporarily creating a simplified customer object in Stripe
-    const customer = await stripe.customers.create({
-        name: name,
-        metadata: {
-            firebaseUID: actor,
-        },
-    });
-
-    const planId = priceId === process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID ? 'growth' : 'performance';
+    // As informações do cliente agora são passadas nos metadados da sessão,
+    // o que é mais seguro e direto para o webhook.
     
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:9004';
+    const planId = priceId === process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID ? 'growth' : 'performance';
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'subscription',
       billing_address_collection: 'required',
-      customer: customer.id,
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${siteUrl}/login?payment_success=true`,
       cancel_url: `${siteUrl}/signup?plan=${planId}&payment_cancelled=true`,
-      subscription_data: {
-        metadata: {
-            firebaseUID: actor,
-            organizationName: organizationName,
-            userName: name,
-            userEmail: '', // Email will be set on the user object by Firebase Auth
-            cnpj: cnpj,
-            contactEmail: contactEmail || '',
-            contactPhone: contactPhone || '',
-            planId: planId,
-            stripePriceId: priceId,
-        }
+      // Metadados cruciais para o webhook reconstruir o perfil do usuário
+      metadata: {
+          firebaseUID: actor,
+          organizationName: organizationName,
+          userName: name,
+          cnpj: cnpj,
+          contactEmail: contactEmail || '',
+          contactPhone: contactPhone || '',
       },
     });
 
@@ -112,85 +93,6 @@ const createBillingPortalSessionFlow = ai.defineFlow(
     }
   );
   
-const updateSubscriptionFlow = ai.defineFlow(
-    {
-        name: 'updateSubscriptionFlow',
-        inputSchema: WebhookInputSchema,
-        outputSchema: z.object({ success: z.boolean() }),
-    },
-    async ({ subscriptionId, isCreating }) => {
-        const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
-            expand: ['default_payment_method'],
-        });
-        
-        if (isCreating) {
-            console.log('✅ Handling subscription creation event...');
-            // CRITICAL FIX: Read metadata from the subscription object, not the checkout session.
-            const metadata = subscription.metadata;
-
-            if (!metadata || !metadata.firebaseUID || !metadata.organizationName) {
-                console.error('CRITICAL: Firebase UID or Organization Name not found in subscription metadata for ID:', subscriptionId);
-                throw new Error('Metadados essenciais (firebaseUID, organizationName) não encontrados na assinatura.');
-            }
-            
-            const { firebaseUID, organizationName, userName, userEmail, cnpj, contactEmail, contactPhone, planId, stripePriceId } = metadata;
-            
-            const creationData: z.infer<typeof UserProfileCreationSchema> = {
-                uid: firebaseUID,
-                name: userName || organizationName,
-                email: userEmail, // Note: This might be empty, but createUserProfile handles it
-                organizationName: organizationName,
-                cnpj: cnpj,
-                contactEmail: contactEmail,
-                contactPhone: contactPhone,
-                planId: planId,
-                stripePriceId: stripePriceId,
-                password: '', // Password is not handled here
-                stripeCustomerId: subscription.customer as string,
-                stripeSubscriptionId: subscription.id,
-                stripeSubscriptionStatus: subscription.status,
-            };
-            
-            await orgService.createUserProfile(creationData);
-            console.log(`✅ User profile and organization created successfully for UID: ${firebaseUID}`);
-
-        } else {
-            console.log(`🔄 Handling subscription update event for status: ${subscription.status}...`);
-            
-            const usersSnapshot = await adminDb.collection('users')
-                .where('stripeSubscriptionId', '==', subscriptionId)
-                .limit(1)
-                .get();
-
-            if (usersSnapshot.empty) {
-                 console.error('CRITICAL: No user found with subscription ID:', subscriptionId);
-                 throw new Error('Usuário não encontrado para esta assinatura durante a atualização.');
-            }
-            const userDoc = usersSnapshot.docs[0];
-            const organizationId = userDoc.data()!.organizationId;
-
-            if (!organizationId) {
-                console.error(`CRITICAL: Organization ID missing for user UID: ${userDoc.id}`);
-                throw new Error('ID da organização não encontrado para este usuário.');
-            }
-
-            const orgRef = adminDb.collection('organizations').doc(organizationId);
-            const subscriptionData = {
-                stripeSubscriptionId: subscription.id,
-                stripePriceId: subscription.items.data[0].price.id,
-                stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
-                stripeSubscriptionStatus: subscription.status,
-            };
-    
-            await orgRef.update(subscriptionData);
-            await userDoc.ref.update({ stripeSubscriptionStatus: subscription.status });
-            console.log(`✅ Subscription status updated for org ${organizationId} to ${subscription.status}`);
-        }
-
-        return { success: true };
-    }
-);
-
 
 // --- Exported Functions ---
 
@@ -200,8 +102,4 @@ export async function createCheckoutSession(input: z.infer<typeof CreateCheckout
 
 export async function createBillingPortalSession(input: z.infer<typeof CreateBillingPortalSessionSchema>): Promise<{ url: string }> {
   return createBillingPortalSessionFlow(input);
-}
-
-export async function updateSubscription(input: z.infer<typeof WebhookInputSchema>): Promise<{ success: boolean }> {
-  return updateSubscriptionFlow(input);
 }

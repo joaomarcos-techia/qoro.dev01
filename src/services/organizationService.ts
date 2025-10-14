@@ -3,11 +3,8 @@
 'use server';
 
 import { FieldValue } from 'firebase-admin/firestore';
-import type { UserRecord } from 'firebase-admin/auth';
 import { z } from 'zod';
 import { 
-    SignUpSchema, 
-    InviteUserSchema, 
     UpdateUserPermissionsSchema, 
     UpdateOrganizationDetailsSchema, 
     UserProfile,
@@ -63,58 +60,6 @@ export const createUserProfile = async (input: z.infer<typeof UserProfileCreatio
     await adminAuth.setCustomUserClaims(uid, { organizationId: orgRef.id, role: 'admin', planId: planId });
 
     return { uid };
-};
-
-
-export const inviteUser = async (email: string, actor: string): Promise<{ uid: string; email: string; organizationId: string; }> => {
-    const adminOrgData = await getAdminAndOrg(actor);
-    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
-
-    const { organizationId, adminUid, planId } = adminOrgData;
-
-    if (planId === 'free') {
-        const usersSnapshot = await adminDb.collection('users').where('organizationId', '==', organizationId).get();
-        if (usersSnapshot.size >= 2) {
-            throw new Error('O plano gratuito permite apenas 2 usuários. Faça upgrade para convidar mais membros.');
-        }
-    }
-    
-    let userRecord: UserRecord;
-    try {
-        userRecord = await adminAuth.createUser({
-            email,
-            emailVerified: false,
-        });
-    } catch (error: any) {
-        if (error.code === 'auth/email-already-exists') {
-            throw new Error('Este usuário já existe no sistema.');
-        }
-        throw error;
-    }
-
-    const hasPulseAccess = planId === 'performance';
-
-    await adminDb.collection('users').doc(userRecord.uid).set({
-      email,
-      organizationId,
-      invitedBy: adminUid,
-      createdAt: FieldValue.serverTimestamp(),
-      role: 'member',
-      permissions: {
-        qoroCrm: true,
-        qoroPulse: hasPulseAccess,
-        qoroTask: true,
-        qoroFinance: true,
-      }
-    });
-    
-    await adminAuth.setCustomUserClaims(userRecord.uid, { organizationId: organizationId, role: 'member' });
-
-    return {
-      uid: userRecord.uid,
-      email: userRecord.email!,
-      organizationId,
-    };
 };
 
 export const listUsers = async (actor: string): Promise<UserProfile[]> => {

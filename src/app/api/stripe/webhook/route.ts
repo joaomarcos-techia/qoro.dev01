@@ -1,16 +1,13 @@
 // src/app/api/stripe/webhook/route.ts
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
-import { updateSubscription } from '@/ai/flows/billing-flow';
+import { createUserProfile } from '@/services/organizationService';
 import type Stripe from 'stripe';
 
-// Lista de eventos relevantes
 const relevantEvents = new Set([
   'checkout.session.completed',
   'customer.subscription.updated',
   'customer.subscription.deleted',
-  'customer.subscription.paused',
-  'customer.subscription.resumed',
 ]);
 
 export async function POST(req: Request) {
@@ -22,7 +19,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Missing webhook secret' }, { status: 400 });
   }
 
-  // ⚠️ Next.js App Router requer arrayBuffer()
   const rawBody = await req.arrayBuffer();
   const bodyBuffer = Buffer.from(rawBody);
 
@@ -36,38 +32,52 @@ export async function POST(req: Request) {
 
   if (relevantEvents.has(event.type)) {
     try {
-      let subscriptionId: string;
-      let isCreating = false;
+      if (event.type === 'checkout.session.completed') {
+        const session = event.data.object as Stripe.Checkout.Session;
+        
+        if (session.mode !== 'subscription') {
+            console.log('⚙️ Evento de checkout não relacionado a assinatura. Ignorando.');
+            return NextResponse.json({ received: true });
+        }
 
-      switch (event.type) {
-        case 'checkout.session.completed': {
-          const checkoutSession = event.data.object as Stripe.Checkout.Session;
-          if (!checkoutSession.subscription || typeof checkoutSession.subscription !== 'string') {
-            throw new Error('Subscription ID não encontrado na sessão.');
-          }
-          subscriptionId = checkoutSession.subscription;
-          isCreating = true;
-          break;
+        const { firebaseUID, organizationName, userName, cnpj, contactEmail, contactPhone } = session.metadata || {};
+        const subscriptionId = session.subscription as string;
+        
+        if (!firebaseUID || !organizationName || !subscriptionId) {
+          console.error('CRITICAL: Metadados essenciais (firebaseUID, organizationName) ou subscriptionId não encontrados na sessão de checkout:', session.id);
+          throw new Error('Metadados essenciais não encontrados na sessão de checkout.');
         }
-        case 'customer.subscription.updated':
-        case 'customer.subscription.deleted':
-        case 'customer.subscription.paused':
-        case 'customer.subscription.resumed': {
-          const subscription = event.data.object as Stripe.Subscription;
-          subscriptionId = subscription.id;
-          isCreating = false;
-          break;
-        }
-        default:
-          console.log(`⚙️ Evento ignorado: ${event.type}`);
-          return NextResponse.json({ received: true });
+
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        const customerId = subscription.customer as string;
+        const priceId = subscription.items.data[0].price.id;
+
+        const planId = priceId === process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID ? 'growth' : 'performance';
+
+        await createUserProfile({
+          uid: firebaseUID,
+          name: userName,
+          organizationName: organizationName,
+          email: session.customer_details?.email || '',
+          cnpj: cnpj,
+          contactEmail: contactEmail,
+          contactPhone: contactPhone,
+          planId: planId,
+          stripePriceId: priceId,
+          stripeCustomerId: customerId,
+          stripeSubscriptionId: subscriptionId,
+          stripeSubscriptionStatus: subscription.status,
+          password: '', // Senha é gerenciada pelo Firebase Auth no cliente
+        });
+        
+        console.log(`✅ Perfil de usuário e organização criados com sucesso para UID: ${firebaseUID} via checkout.session.completed.`);
       }
 
-      await updateSubscription({ subscriptionId, isCreating });
-      console.log(`✅ Webhook processado: ${event.type}`);
-    } catch (err) {
-      console.error('🔥 Erro no handler do webhook:', err);
-      return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 });
+      // TODO: Adicionar lógica para 'customer.subscription.updated' e 'deleted' se necessário no futuro.
+
+    } catch (err: any) {
+      console.error('🔥 Erro no handler do webhook:', err.message, err.stack);
+      return NextResponse.json({ error: `Webhook handler failed: ${err.message}` }, { status: 500 });
     }
   }
 
