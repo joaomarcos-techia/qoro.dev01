@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Mail, Lock, AlertCircle, CheckCircle, User, Building, FileText, Phone, Loader2 } from 'lucide-react';
+import { Mail, Lock, AlertCircle, CheckCircle, User, Building, FileText, Phone, Loader2, CreditCard } from 'lucide-react';
 import { createCheckoutSession } from '@/ai/flows/billing-flow';
 import { createUserAndSendVerification } from '@/lib/auth';
 import { Logo } from '@/components/ui/logo';
@@ -28,6 +28,7 @@ export default function SignUpForm() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
 
   const formatCNPJ = (value: string) => {
     if (!value) return "";
@@ -62,6 +63,7 @@ export default function SignUpForm() {
     e.preventDefault();
     setError(null);
     setSuccessMessage(null);
+    setCheckoutUrl(null);
     setIsLoading(true);
 
     if (formData.password.length < 6) {
@@ -100,8 +102,8 @@ export default function SignUpForm() {
             contactPhone: formData.contactPhone.replace(/\D/g, '')
         });
         
-        // Redirect user to Stripe Checkout using full page navigation
-        window.location.assign(sessionId);
+        setCheckoutUrl(sessionId);
+        setSuccessMessage('Credenciais criadas! Verifique seu e-mail e clique abaixo para concluir o pagamento.');
 
       } else { // Free Plan
         // For the free plan, create the organization and user profile directly
@@ -136,11 +138,23 @@ export default function SignUpForm() {
         {successMessage ? (
           <div className="bg-green-800/20 border-l-4 border-green-500 text-green-300 p-6 rounded-lg flex items-center text-center flex-col">
             <CheckCircle className="w-10 h-10 mb-4 text-green-400" />
-            <h3 className="text-xl font-bold text-white mb-2">Conta Criada com Sucesso!</h3>
+            <h3 className="text-xl font-bold text-white mb-2">{checkoutUrl ? 'Quase lá!' : 'Conta Criada com Sucesso!'}</h3>
             <p className="text-sm font-semibold mb-6">{successMessage}</p>
-            <Link href="/login" className="w-full bg-primary text-primary-foreground py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 border border-transparent hover:border-primary/50 flex items-center justify-center font-semibold">
-                Ir para Login
-            </Link>
+            
+            {checkoutUrl ? (
+                <a href={checkoutUrl} target="_blank" rel="noopener noreferrer" className="w-full bg-primary text-primary-foreground py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 border border-transparent hover:border-primary/50 flex items-center justify-center font-semibold">
+                    <CreditCard className="mr-2 h-5 w-5" />
+                    Ir para o Pagamento
+                </a>
+            ) : (
+                <Link href="/login" className="w-full bg-primary text-primary-foreground py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 border border-transparent hover:border-primary/50 flex items-center justify-center font-semibold">
+                    Ir para Login
+                </Link>
+            )}
+             <p className="text-xs text-muted-foreground mt-4">
+                {checkoutUrl ? 'Após pagar, verifique seu e-mail de confirmação e faça o login.' : ''}
+            </p>
+
           </div>
         ) : (
           <form onSubmit={handleSignUp} className="space-y-8">

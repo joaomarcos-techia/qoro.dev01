@@ -84,7 +84,7 @@ const createBillingPortalSessionFlow = ai.defineFlow(
   
       const { url } = await stripe.billingPortal.sessions.create({
         customer: stripeCustomerId,
-        return_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/settings`,
+        return_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:9004'}/dashboard/settings`,
       });
   
       return { url };
