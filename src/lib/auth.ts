@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -57,11 +56,9 @@ export const signIn = async (email: string, password: string): Promise<User> => 
              throw new Error('Sua assinatura não está ativa. Por favor, conclua o pagamento ou entre em contato com o suporte.');
         }
       } else {
-        // If user document doesn't exist (especially for paid plans), it's a sync issue.
-        if (password !== 'password-placeholder-for-reauth') { // Avoid this error during re-auth polling
-            await firebaseSignOut(auth);
-            throw new Error('Os dados da sua conta ainda não foram sincronizados. Por favor, aguarde alguns minutos e tente novamente.');
-        }
+        // If user document doesn't exist, it's a sync issue. Let the polling on login page handle it.
+        // Don't sign out here, as the polling needs the authenticated user.
+        throw new Error('Os dados da sua conta ainda não foram sincronizados. Por favor, aguarde alguns minutos e tente novamente.');
       }
 
       return user;

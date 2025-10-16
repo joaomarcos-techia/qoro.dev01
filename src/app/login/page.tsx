@@ -50,7 +50,19 @@ export default function LoginPage() {
                     }
                 }, 3000); // Tenta a cada 3 segundos
 
-                return () => clearInterval(interval); // Limpa o intervalo ao desmontar
+                // Cleanup do polling se o componente for desmontado ou após muito tempo
+                const timeout = setTimeout(() => {
+                    clearInterval(interval);
+                    if (isSyncing) {
+                        setError("A sincronização está demorando mais que o esperado. Tente fazer login manualmente em alguns instantes.");
+                        setIsSyncing(false);
+                    }
+                }, 45000); // Timeout de 45 segundos
+
+                return () => {
+                    clearInterval(interval)
+                    clearTimeout(timeout);
+                }; 
             }
         });
         return () => {
@@ -104,6 +116,12 @@ export default function LoginPage() {
                 <RefreshCw className="w-12 h-12 text-primary mx-auto animate-spin mb-6"/>
                 <h2 className="text-2xl font-bold text-foreground mb-4">Pagamento confirmado!</h2>
                 <p className="text-muted-foreground">Estamos sincronizando sua conta e preparando tudo para o primeiro acesso. Você será redirecionado em instantes.</p>
+                 {error && (
+                    <div className="mt-6 bg-destructive/20 border-l-4 border-destructive text-destructive-foreground p-4 rounded-lg flex items-center text-sm text-left">
+                        <AlertCircle className="w-5 h-5 mr-3 flex-shrink-0" />
+                        <div>{error}</div>
+                    </div>
+                 )}
             </div>
         </main>
     );
