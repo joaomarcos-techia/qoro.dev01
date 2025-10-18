@@ -11,7 +11,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "postinstall": "find node_modules -name 'vsda*' -type f -delete 2>/dev/null || true; rm -rf node_modules/genkit/genkit",
-    "stripe:listen": "npx stripe listen --forward-to localhost:9004/api/stripe/webhook"
+    "stripe:listen": "stripe listen --forward-to localhost:9004/api/stripe/webhook"
   },
   "dependencies": {
     "@fullcalendar/daygrid": "^6.1.15",
