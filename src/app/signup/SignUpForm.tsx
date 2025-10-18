@@ -102,8 +102,8 @@ export default function SignUpForm() {
             contactPhone: formData.contactPhone.replace(/\D/g, '')
         });
         
-        // Redirect to checkout
-        window.location.assign(sessionId);
+        setCheckoutUrl(sessionId);
+        setSuccessMessage('Credenciais criadas! O próximo passo é concluir o pagamento.');
 
       } else { // Free Plan
         // For the free plan, create the organization and user profile directly
