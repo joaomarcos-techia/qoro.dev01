@@ -4,6 +4,7 @@
 import { Check, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
 
 type Plan = {
   id: 'free' | 'growth' | 'performance'; 
@@ -78,21 +79,16 @@ const PricingCard = ({ plan }: { plan: Plan }) => {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
 
-    const cardBaseClasses = "bg-card border rounded-3xl p-6 md:p-8 backdrop-blur-sm transition-all duration-300 hover:-translate-y-2 h-full flex flex-col";
-    const popularClasses = "border-2 border-primary shadow-2xl shadow-primary/20 hover:shadow-primary/40";
-    const normalClasses = "border-border hover:border-primary";
-    
-    const buttonBaseClasses = "w-full py-3 rounded-xl transition-all duration-300 font-semibold mt-auto flex items-center justify-center";
-    const popularButtonClasses = "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl";
-    const normalButtonClasses = "bg-secondary hover:bg-secondary/80 text-white border border-border";
-
     const handlePlanSelection = async () => {
         setIsLoading(true);
         router.push(`/signup?plan=${plan.id}`);
     }
 
     return (
-      <div className={`${cardBaseClasses} ${plan.isPopular ? popularClasses : normalClasses} relative`}>
+      <div className={cn(
+          "bg-card border rounded-3xl p-6 md:p-8 backdrop-blur-sm transition-all duration-300 hover:-translate-y-2 h-full flex flex-col relative",
+          plan.isPopular ? "border-2 border-primary shadow-2xl shadow-primary/20 hover:shadow-primary/40" : "border-border hover:border-primary"
+      )}>
         {plan.isPopular && (
             <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                 <div className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-medium">
@@ -122,7 +118,10 @@ const PricingCard = ({ plan }: { plan: Plan }) => {
         <button 
             onClick={handlePlanSelection}
             disabled={isLoading}
-            className={`${buttonBaseClasses} ${plan.isPopular ? popularButtonClasses : normalButtonClasses}`}
+            className={cn(
+                "w-full py-3 rounded-xl transition-all duration-300 font-semibold mt-auto flex items-center justify-center hover:scale-105",
+                plan.isPopular ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl" : "bg-secondary hover:bg-secondary/80 text-white border border-border"
+            )}
         >
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isLoading ? 'Aguarde...' : plan.buttonText}
