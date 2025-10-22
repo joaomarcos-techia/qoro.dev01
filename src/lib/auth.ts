@@ -33,13 +33,21 @@ export const createUserAndSendVerification = async (email: string, password: str
     }
 };
 
+export const sendVerificationEmail = async (user: User): Promise<void> => {
+    try {
+        await sendEmailVerification(user);
+    } catch (error) {
+        console.error("Error sending verification email:", error);
+        throw new Error("Não foi possível reenviar o e-mail de verificação.");
+    }
+};
+
 export const signIn = async (email: string, password: string): Promise<User> => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
   
       if (!user.emailVerified) {
-        await firebaseSignOut(auth); 
         const notVerifiedError = new Error('Seu e-mail ainda não foi verificado.');
         (notVerifiedError as any).code = 'auth/email-not-verified';
         throw notVerifiedError;

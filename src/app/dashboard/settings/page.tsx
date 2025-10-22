@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Mail, Send, KeyRound, UserPlus, Building, AlertCircle, CheckCircle, ArrowLeft, User, Shield, Users, Loader2, ExternalLink, Trash2, Lock } from 'lucide-react';
 import { inviteUser, listUsers, updateUserPermissions, deleteUser } from '@/ai/flows/user-management';
-import { sendPasswordResetEmail } from '@/lib/auth';
+import { sendPasswordResetEmail, sendVerificationEmail } from '@/lib/auth';
 import { createBillingPortalSession } from '@/ai/flows/billing-flow';
 import { UserProfile, InviteUserSchema } from '@/ai/schemas';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
@@ -187,6 +187,7 @@ export default function SettingsPage() {
                     u.uid === userId ? { ...u, permissions: updatedPermissions } : u
                 )
             );
+            setFeedback({ type: 'success', message: 'Permissões atualizadas com sucesso!', context: `permissions-${userId}` });
         } catch (error) {
             console.error("Failed to update permissions:", error);
             const friendlyMessage = error instanceof Error && error.message.includes("Administradores não podem alterar as próprias permissões.")
@@ -300,7 +301,7 @@ export default function SettingsPage() {
                                 <div className="p-3 rounded-xl bg-primary text-black mr-6"><UserPlus className="w-6 h-6" /></div>
                                 <div className="flex-grow">
                                     <h3 className="text-xl font-bold text-foreground mb-1">Convidar novo usuário</h3>
-                                    <p className="text-muted-foreground mb-6">O membro convidado receberá um e-mail de verificação. Você deve fornecer a ele a senha.</p>
+                                    <p className="text-muted-foreground mb-6">O membro convidado receberá um e-mail para verificar a conta. Você deve fornecer a ele a senha de acesso.</p>
                                     <form onSubmit={handleInviteUser} className="flex flex-col md:flex-row items-start md:items-center gap-4">
                                         <div className="relative flex-grow w-full md:w-auto">
                                             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -344,7 +345,7 @@ export default function SettingsPage() {
 
                                         return (
                                             <div key={user.uid} className="flex flex-col md:flex-row md:items-center justify-between p-4 rounded-xl border border-border bg-secondary/50">
-                                                <div className="flex-grow">
+                                                <div className="flex-grow mb-4 md:mb-0">
                                                     <div className="flex items-center gap-4">
                                                         <p className="font-bold text-foreground">{user.name || user.email}</p>
                                                         {user.role === 'admin' && <span className="text-xs font-bold px-2 py-1 bg-primary/20 text-primary rounded-full flex items-center"><Shield className="w-3 h-3 mr-1.5"/>Admin</span>}
@@ -353,7 +354,7 @@ export default function SettingsPage() {
                                                 </div>
                                                 
                                                 {!isSelf && (
-                                                    <div className="flex items-center gap-4 mt-4 md:mt-0 relative">
+                                                    <div className="flex items-center gap-4 relative">
                                                         {Object.keys(appPermissionsMap).map(key => {
                                                             const perm = key as AppPermission;
                                                             const isPulsePermission = perm === 'qoroPulse';
@@ -399,7 +400,12 @@ export default function SettingsPage() {
                                                         {isLoading.permissions === user.uid && <Loader2 className="absolute -right-7 w-5 h-5 text-primary animate-spin" />}
                                                     </div>
                                                 )}
-                                                {feedback && feedback.context === `permissions-${user.uid}` && <p className='text-red-400 text-xs mt-2'>{feedback.message}</p>}
+                                                {feedback && feedback.context === `permissions-${user.uid}` && (
+                                                    <div className={`mt-2 p-2 rounded-lg flex items-center text-xs w-full ${feedback.type === 'success' ? 'bg-green-800/20 text-green-300' : 'bg-red-800/20 text-red-300'}`}>
+                                                        {feedback.type === 'success' ? <CheckCircle className="w-4 h-4 mr-2" /> : <AlertCircle className="w-4 h-4 mr-2" />}
+                                                        <span>{feedback.message}</span>
+                                                    </div>
+                                                )}
                                             </div>
                                         )
                                     })}

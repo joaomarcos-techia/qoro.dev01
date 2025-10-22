@@ -14,6 +14,7 @@ import {
 } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
+import { sendInviteEmail } from './emailService';
 
 export const createUserProfile = async (input: z.infer<typeof UserProfileCreationSchema>): Promise<{uid: string}> => {
     const { uid, name, organizationName, cnpj, contactEmail, contactPhone, email, planId, stripePriceId } = input;
@@ -104,10 +105,13 @@ export const updateUserPermissions = async (input: z.infer<typeof UpdateUserPerm
     const adminOrgData = await getAdminAndOrg(actor);
     if (!adminOrgData) throw new Error("Aguardando sincronização do usuário.");
     
-    const { organizationId, adminUid } = adminOrgData;
+    const { organizationId, userRole } = adminOrgData;
     const { userId, permissions } = input;
 
-    if (adminUid === userId) {
+    if (userRole !== 'admin') {
+        throw new Error("Apenas administradores podem alterar permissões.");
+    }
+    if (actor === userId) {
         throw new Error("Administradores não podem alterar as próprias permissões.");
     }
     
@@ -178,7 +182,7 @@ export const inviteUser = async (input: z.infer<typeof InviteUserSchema> & { act
     if (!adminOrgData) {
         throw new Error("A organização do usuário não está pronta.");
     }
-    const { organizationId, planId, userRole } = adminOrgData;
+    const { organizationId, organizationName, planId, userRole } = adminOrgData;
 
     if (userRole !== 'admin') {
         throw new Error("Apenas administradores podem convidar novos usuários.");
@@ -224,8 +228,9 @@ export const inviteUser = async (input: z.infer<typeof InviteUserSchema> & { act
 
     await adminAuth.setCustomUserClaims(userRecord.uid, { organizationId, role: 'member', planId });
     
-    // O Firebase enviará automaticamente um e-mail de verificação porque emailVerified é false.
-    // O usuário usará a senha temporária fornecida pelo administrador para fazer login após a verificação.
+    // Generate verification link and send email
+    const verificationLink = await adminAuth.generateEmailVerificationLink(email);
+    await sendInviteEmail(email, organizationName, verificationLink, password);
 
     return { success: true };
 };

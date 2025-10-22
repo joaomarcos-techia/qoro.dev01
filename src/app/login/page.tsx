@@ -4,9 +4,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, LogIn, AlertCircle, CheckCircle, Loader2, RefreshCw } from 'lucide-react';
-import { signIn, sendPasswordResetEmail } from '@/lib/auth';
+import { signIn, sendPasswordResetEmail, sendVerificationEmail, createUserAndSendVerification } from '@/lib/auth';
 import { Logo } from '@/components/ui/logo';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { onAuthStateChanged, User, getAuth } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { getAdminAndOrg } from '@/services/utils';
 
@@ -78,34 +78,39 @@ export default function LoginPage() {
     setShowResend(false);
     setResendSuccess(null);
     setIsLoading(true);
-
+  
     try {
       await signIn(email, password);
       router.push('/dashboard');
-
     } catch (err: any) {
+      setIsLoading(false);
       if (err.code === 'auth/email-not-verified') {
         setError('Seu e-mail ainda não foi verificado.');
         setShowResend(true);
-      } else if (err.code === 'auth/invalid-credential') {
-        setError('E-mail ou senha inválidos. Verifique seus dados ou crie uma nova conta se a anterior foi excluída.');
       } else {
         setError(err.message || 'Ocorreu um erro desconhecido. Tente novamente.');
       }
-      setIsLoading(false);
     }
   };
 
   const handleResendVerification = async () => {
     setError(null);
+    setResendSuccess(null);
     setIsLoading(true);
-    try {
-        await sendPasswordResetEmail(email);
-        setResendSuccess('Um novo e-mail de verificação/configuração de conta foi enviado. Verifique sua caixa de entrada.');
-        setShowResend(false);
-    } catch (err: any) {
-        setError(err.message);
+    
+    const user = auth.currentUser;
+    if (user) {
+        try {
+            await sendVerificationEmail(user);
+            setResendSuccess('Um novo e-mail de verificação foi enviado. Verifique sua caixa de entrada.');
+            setShowResend(false);
+        } catch (err: any) {
+            setError(err.message || 'Falha ao reenviar o e-mail de verificação.');
+        }
+    } else {
+        setError("Não foi possível encontrar um usuário. Tente fazer login novamente para acionar o erro.");
     }
+    
     setIsLoading(false);
   }
 
@@ -167,7 +172,8 @@ export default function LoginPage() {
               <div>
                 {error}
                 {showResend && (
-                    <button type="button" onClick={handleResendVerification} className="font-bold underline hover:text-white mt-1 block">
+                    <button type="button" onClick={handleResendVerification} className="font-bold underline hover:text-white mt-1 block disabled:opacity-50" disabled={isLoading}>
+                       {isLoading ? <Loader2 className="w-4 h-4 animate-spin inline-block mr-2" /> : null}
                         Reenviar e-mail de verificação
                     </button>
                 )}
