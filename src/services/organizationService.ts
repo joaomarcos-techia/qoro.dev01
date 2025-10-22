@@ -14,7 +14,6 @@ import {
 } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
-import { sendInviteEmail } from './emailService';
 
 export const createUserProfile = async (input: z.infer<typeof UserProfileCreationSchema>): Promise<{uid: string}> => {
     const { uid, name, organizationName, cnpj, contactEmail, contactPhone, email, planId, stripePriceId } = input;
@@ -182,7 +181,7 @@ export const inviteUser = async (input: z.infer<typeof InviteUserSchema> & { act
     if (!adminOrgData) {
         throw new Error("A organização do usuário não está pronta.");
     }
-    const { organizationId, organizationName, planId, userRole } = adminOrgData;
+    const { organizationId, planId, userRole } = adminOrgData;
 
     if (userRole !== 'admin') {
         throw new Error("Apenas administradores podem convidar novos usuários.");
@@ -197,13 +196,17 @@ export const inviteUser = async (input: z.infer<typeof InviteUserSchema> & { act
 
     try {
         await adminAuth.getUserByEmail(email);
+        // If the above does not throw, the user already exists.
         throw new Error("Este e-mail já está em uso por outro usuário na plataforma Qoro.");
     } catch (error: any) {
         if (error.code !== 'auth/user-not-found') {
+            // Re-throw if it's an error other than "user not found"
             throw error;
         }
+        // If user is not found, we can proceed.
     }
 
+    // Create user in Firebase Authentication
     const userRecord = await adminAuth.createUser({
         email,
         password,
@@ -212,6 +215,7 @@ export const inviteUser = async (input: z.infer<typeof InviteUserSchema> & { act
 
     const hasPulseAccess = planId === 'performance';
 
+    // Create user profile in Firestore
     await adminDb.collection('users').doc(userRecord.uid).set({
         email: email,
         organizationId: organizationId,
@@ -226,14 +230,16 @@ export const inviteUser = async (input: z.infer<typeof InviteUserSchema> & { act
         },
     });
 
+    // Set custom claims for role-based access control
     await adminAuth.setCustomUserClaims(userRecord.uid, { organizationId, role: 'member', planId });
     
-    // Generate verification link and send email
-    const verificationLink = await adminAuth.generateEmailVerificationLink(email);
-    await sendInviteEmail(email, organizationName, verificationLink, password);
+    // The Firebase system will automatically send a verification email
+    // upon the user's first login attempt if their email is not verified.
+    // No manual email sending is needed here.
 
     return { success: true };
 };
+
 
 export const deleteUser = async (userId: string, actor: string): Promise<{ success: boolean }> => {
     const adminOrgData = await getAdminAndOrg(actor);

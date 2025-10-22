@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Mail, Send, KeyRound, UserPlus, Building, AlertCircle, CheckCircle, ArrowLeft, User, Shield, Users, Loader2, ExternalLink, Trash2, Lock } from 'lucide-react';
 import { inviteUser, listUsers, updateUserPermissions, deleteUser } from '@/ai/flows/user-management';
-import { sendPasswordResetEmail, sendVerificationEmail } from '@/lib/auth';
+import { sendPasswordResetEmail } from '@/lib/auth';
 import { createBillingPortalSession } from '@/ai/flows/billing-flow';
 import { UserProfile, InviteUserSchema } from '@/ai/schemas';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
@@ -126,13 +126,13 @@ export default function SettingsPage() {
         clearFeedback('invite');
         try {
             await inviteUser({ email: inviteEmail, password: invitePassword, actor: currentUser.uid });
-            setFeedback({ type: 'success', message: `Convite enviado com sucesso para ${inviteEmail}! O usuário precisa verificar o e-mail para ativar a conta.`, context: 'invite' });
+            setFeedback({ type: 'success', message: `Usuário criado! Informe a senha ao membro e peça para que verifique seu e-mail ao logar.`, context: 'invite' });
             setInviteEmail('');
             setInvitePassword('');
             fetchUsers(); // Refresh user list
         } catch (error: any) {
             console.error(error);
-            setFeedback({ type: 'error', message: error.message || 'Falha ao enviar convite. Verifique os dados ou se o usuário já existe.', context: 'invite' });
+            setFeedback({ type: 'error', message: error.message || 'Falha ao criar usuário. Verifique os dados ou se o e-mail já existe.', context: 'invite' });
         } finally {
             setIsLoading(prev => ({ ...prev, invite: false }));
         }
@@ -188,7 +188,7 @@ export default function SettingsPage() {
                 )
             );
             setFeedback({ type: 'success', message: 'Permissões atualizadas com sucesso!', context: `permissions-${userId}` });
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to update permissions:", error);
             const friendlyMessage = error instanceof Error && error.message.includes("Administradores não podem alterar as próprias permissões.")
                 ? "Você não pode alterar suas próprias permissões."
@@ -196,6 +196,8 @@ export default function SettingsPage() {
             setFeedback({ type: 'error', message: friendlyMessage, context: `permissions-${userId}` });
         } finally {
             setIsLoading(prev => ({ ...prev, permissions: '' }));
+            // Auto-clear feedback message after 3 seconds
+            setTimeout(() => clearFeedback(`permissions-${userId}`), 3000);
         }
     };
 
@@ -301,7 +303,7 @@ export default function SettingsPage() {
                                 <div className="p-3 rounded-xl bg-primary text-black mr-6"><UserPlus className="w-6 h-6" /></div>
                                 <div className="flex-grow">
                                     <h3 className="text-xl font-bold text-foreground mb-1">Convidar novo usuário</h3>
-                                    <p className="text-muted-foreground mb-6">O membro convidado receberá um e-mail para verificar a conta. Você deve fornecer a ele a senha de acesso.</p>
+                                    <p className="text-muted-foreground mb-6">O membro será criado e você deve fornecer a ele a senha para acesso. O usuário será solicitado a verificar seu e-mail no primeiro login.</p>
                                     <form onSubmit={handleInviteUser} className="flex flex-col md:flex-row items-start md:items-center gap-4">
                                         <div className="relative flex-grow w-full md:w-auto">
                                             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -354,7 +356,7 @@ export default function SettingsPage() {
                                                 </div>
                                                 
                                                 {!isSelf && (
-                                                    <div className="flex items-center gap-4 relative">
+                                                    <div className="flex items-center gap-4 mt-4 md:mt-0 relative">
                                                         {Object.keys(appPermissionsMap).map(key => {
                                                             const perm = key as AppPermission;
                                                             const isPulsePermission = perm === 'qoroPulse';
