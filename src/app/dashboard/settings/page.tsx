@@ -117,11 +117,8 @@ export default function SettingsPage() {
 
     const handleInviteUser = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!currentUser || !isAdmin) return;
-        if(isUserLimitReached) {
-            setFeedback({ type: 'error', message: `Você atingiu o limite de ${FREE_PLAN_USER_LIMIT} usuários do plano gratuito. Faça upgrade para convidar mais.`, context: 'invite' });
-            return;
-        }
+        if (!currentUser || !isAdmin || isUserLimitReached) return;
+        
         setIsLoading(prev => ({ ...prev, invite: true }));
         clearFeedback('invite');
         try {
@@ -313,17 +310,21 @@ export default function SettingsPage() {
                                             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                                             <Input type="password" placeholder="Senha" value={invitePassword} onChange={(e) => {setInvitePassword(e.target.value); clearFeedback('invite');}} required disabled={isUserLimitReached || isLoading.invite} className="w-full pl-12 pr-4 py-3 bg-input rounded-xl border-border"/>
                                         </div>
-                                        <button type="submit" disabled={isLoading.invite || isUserLimitReached} className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 font-semibold disabled:opacity-75 w-full md:w-auto flex items-center justify-center">
-                                            {isLoading.invite ? <Loader2 className="w-5 h-5 animate-spin mr-2"/> : <Send className="w-5 h-5 mr-2" />}
-                                            Convidar
-                                        </button>
-                                    </form>
-                                     {isUserLimitReached && (
-                                        <div className="mt-4 p-4 rounded-lg flex items-center text-sm bg-yellow-800/20 border border-yellow-600/50 text-yellow-300">
-                                            <AlertCircle className="w-5 h-5 mr-3 flex-shrink-0" />
-                                            <span>Você atingiu o limite de {FREE_PLAN_USER_LIMIT} usuários do plano gratuito. <Link href="/#precos" className="font-bold underline hover:text-white">Faça upgrade</Link> para convidar mais.</span>
+                                        <div className="flex items-center gap-2">
+                                            <Button type="submit" disabled={isLoading.invite || isUserLimitReached} className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 font-semibold disabled:opacity-50 w-full md:w-auto flex items-center justify-center">
+                                                {isLoading.invite ? <Loader2 className="w-5 h-5 animate-spin mr-2"/> : <Send className="w-5 h-5 mr-2" />}
+                                                Convidar
+                                            </Button>
+                                            {isUserLimitReached && (
+                                                <div className="relative group">
+                                                    <Lock className="w-5 h-5 text-yellow-400 cursor-help" />
+                                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-3 py-1 bg-secondary text-sm rounded-lg border border-border opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        Upgrade para adicionar mais usuários.
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
-                                    )}
+                                    </form>
                                     {feedback && feedback.context === 'invite' && (
                                         <div className={`mt-4 p-4 rounded-lg flex items-center text-sm ${feedback.type === 'success' ? 'bg-green-800/20 text-green-300' : 'bg-red-800/20 text-red-300'}`}>
                                             {feedback.type === 'success' ? <CheckCircle className="w-5 h-5 mr-3" /> : <AlertCircle className="w-5 h-5 mr-3" />}
