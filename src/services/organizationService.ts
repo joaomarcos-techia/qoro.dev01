@@ -250,7 +250,20 @@ export const deleteUser = async (userId: string, actor: string): Promise<{ succe
         throw new Error("Usuário não encontrado nesta organização.");
     }
 
-    await adminAuth.deleteUser(userId);
+    // First, try to delete from Firebase Auth.
+    // Gracefully handle if user is already deleted from Auth.
+    try {
+        await adminAuth.deleteUser(userId);
+    } catch (error: any) {
+        if (error.code === 'auth/user-not-found') {
+            console.log(`User with UID ${userId} not found in Firebase Auth, likely already deleted. Proceeding to delete from Firestore.`);
+        } else {
+            // Re-throw other auth errors
+            throw error;
+        }
+    }
+    
+    // Always attempt to delete from Firestore.
     await userDocRef.delete();
 
     return { success: true };
