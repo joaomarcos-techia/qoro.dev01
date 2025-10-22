@@ -24,37 +24,46 @@ export const createTransaction = async (input: z.infer<typeof TransactionSchema>
     }
 
     const accountId = input.accountId;
-    if (!accountId) {
-        throw new Error("A conta financeira é obrigatória para criar uma transação.");
-    }
-
-    const accountRef = adminDb.collection('accounts').doc(accountId);
     const transactionRef = adminDb.collection('transactions').doc();
 
     try {
-        await adminDb.runTransaction(async (t) => {
-            const accountDoc = await t.get(accountRef);
-            if (!accountDoc.exists) {
-                throw new Error("A conta financeira especificada não foi encontrada.");
-            }
+        if (accountId) {
+            const accountRef = adminDb.collection('accounts').doc(accountId);
+            await adminDb.runTransaction(async (t) => {
+                const accountDoc = await t.get(accountRef);
+                if (!accountDoc.exists) {
+                    throw new Error("A conta financeira especificada não foi encontrada.");
+                }
 
-            const accountData = accountDoc.data()!;
-            if (accountData.companyId !== organizationId) {
-                throw new Error("A conta especificada não pertence a esta organização.");
-            }
+                const accountData = accountDoc.data()!;
+                if (accountData.companyId !== organizationId) {
+                    throw new Error("A conta especificada não pertence a esta organização.");
+                }
 
-            const currentBalance = accountData.balance || 0;
-            const transactionAmount = input.amount;
+                const currentBalance = accountData.balance || 0;
+                const transactionAmount = input.amount;
 
-            let newBalance;
-            if (input.type === 'income') {
-                newBalance = currentBalance + transactionAmount;
-            } else {
-                newBalance = currentBalance - transactionAmount;
-            }
+                let newBalance;
+                if (input.type === 'income') {
+                    newBalance = currentBalance + transactionAmount;
+                } else {
+                    newBalance = currentBalance - transactionAmount;
+                }
 
-            t.update(accountRef, { balance: newBalance });
+                t.update(accountRef, { balance: newBalance });
 
+                const newTransactionData = {
+                    ...input,
+                    date: input.date ? new Date(input.date) : new Date(),
+                    companyId: organizationId,
+                    createdBy: actorUid,
+                    createdAt: FieldValue.serverTimestamp(),
+                    updatedAt: FieldValue.serverTimestamp(),
+                };
+                t.set(transactionRef, newTransactionData);
+            });
+        } else {
+            // Create transaction without updating account balance
             const newTransactionData = {
                 ...input,
                 date: input.date ? new Date(input.date) : new Date(),
@@ -63,8 +72,8 @@ export const createTransaction = async (input: z.infer<typeof TransactionSchema>
                 createdAt: FieldValue.serverTimestamp(),
                 updatedAt: FieldValue.serverTimestamp(),
             };
-            t.set(transactionRef, newTransactionData);
-        });
+            await transactionRef.set(newTransactionData);
+        }
 
         return { id: transactionRef.id };
     } catch (error: any) {
@@ -143,13 +152,15 @@ export const deleteTransaction = async (transactionId: string, actorUid: string)
                 throw new Error("Acesso negado à transação.");
             }
 
-            const accountRef = adminDb.collection('accounts').doc(data.accountId);
-            const accountDoc = await t.get(accountRef);
-            if (accountDoc.exists) {
-                const accountData = accountDoc.data()!;
-                const currentBalance = accountData.balance;
-                const newBalance = data.type === 'income' ? currentBalance - data.amount : currentBalance + data.amount;
-                t.update(accountRef, { balance: newBalance });
+            if (data.accountId) {
+                const accountRef = adminDb.collection('accounts').doc(data.accountId);
+                const accountDoc = await t.get(accountRef);
+                if (accountDoc.exists) {
+                    const accountData = accountDoc.data()!;
+                    const currentBalance = accountData.balance;
+                    const newBalance = data.type === 'income' ? currentBalance - data.amount : currentBalance + data.amount;
+                    t.update(accountRef, { balance: newBalance });
+                }
             }
 
             t.delete(transactionRef);
@@ -293,3 +304,5 @@ export const bulkCreateTransactions = async (
         throw new Error(`Falha ao salvar as transações: ${error.message}`);
     }
 };
+
+    
