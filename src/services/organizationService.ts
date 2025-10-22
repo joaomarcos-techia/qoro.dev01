@@ -14,6 +14,7 @@ import {
 } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
+import { sendInviteEmail } from './emailService';
 
 
 export const createUserProfile = async (input: z.infer<typeof UserProfileCreationSchema>): Promise<{uid: string}> => {
@@ -226,17 +227,7 @@ export const inviteUser = async (email: string, actorUid: string): Promise<{ suc
         url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:9004'}/login`,
     });
 
-    // Correctly trigger the "Trigger Email" extension by adding a document to the 'mail' collection.
-    await adminDb.collection('mail').add({
-        to: email,
-        template: {
-            name: 'invite', // This template should be configured in the extension
-            data: {
-                organizationName: organizationName,
-                actionUrl: link, // The password reset link that acts as an invite link
-            },
-        },
-    });
+    await sendInviteEmail(email, organizationName, link);
 
     return { success: true };
 };
