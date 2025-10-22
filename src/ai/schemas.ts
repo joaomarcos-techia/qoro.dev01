@@ -42,6 +42,7 @@ const AppPermissionsSchema = BaseAppPermissionsSchema.optional();
 export const UserAccessInfoSchema = z.object({
     planId: z.enum(['free', 'growth', 'performance']),
     permissions: BaseAppPermissionsSchema,
+    role: z.enum(['admin', 'member']),
 });
 export type UserAccessInfo = z.infer<typeof UserAccessInfoSchema>;
 
@@ -414,5 +415,3 @@ export const QualificationLeadSchema = z.object({
   desiredOutcome: z.string().optional(),
 });
 export type QualificationLead = z.infer<typeof QualificationLeadSchema>;
-
-    

@@ -10,6 +10,8 @@
  * - updateOrganizationDetails - Updates details for the user's organization.
  * - getUserAccessInfo - Fetches user's plan and permissions.
  * - getUserProfile - Fetches a user's name and organization name.
+ * - inviteUser - Sends an invitation email to a new user.
+ * - deleteUser - Deletes a user from the organization.
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
@@ -26,6 +28,7 @@ import { getAdminAndOrg } from '@/services/utils';
 import type { UserProfile } from '@/ai/schemas';
 
 const ActorSchema = z.object({ actor: z.string() });
+const DeleteUserSchema = z.object({ userId: z.string(), actor: z.string() });
 
 const UserProfileOutputSchema = z.object({
     name: z.string(),
@@ -66,7 +69,7 @@ const getUserAccessInfoFlow = ai.defineFlow(
             return null; // Return null if user/org data is not ready
         }
         
-        const { planId, userData } = adminOrgData;
+        const { planId, userData, userRole } = adminOrgData;
 
         // Default permissions are for the 'free' plan
         let permissions = {
@@ -86,7 +89,8 @@ const getUserAccessInfoFlow = ai.defineFlow(
         
         return {
             planId,
-            permissions
+            permissions,
+            role: userRole,
         }
     }
 );
@@ -107,8 +111,25 @@ const getUserProfileFlow = ai.defineFlow(
     }
 );
 
+const inviteUserFlow = ai.defineFlow(
+    { name: 'inviteUserFlow', inputSchema: InviteUserSchema, outputSchema: z.object({ success: z.boolean() }) },
+    async (input) => orgService.inviteUser(input.email, input.actor)
+);
+
+const deleteUserFlow = ai.defineFlow(
+    { name: 'deleteUserFlow', inputSchema: DeleteUserSchema, outputSchema: z.object({ success: z.boolean() }) },
+    async (input) => orgService.deleteUser(input.userId, input.actor)
+);
+
 
 // Exported functions (client-callable wrappers)
+export async function inviteUser(input: z.infer<typeof InviteUserSchema>): Promise<{ success: boolean }> {
+    return inviteUserFlow(input);
+}
+
+export async function deleteUser(input: z.infer<typeof DeleteUserSchema>): Promise<{ success: boolean }> {
+    return deleteUserFlow(input);
+}
 
 export async function listUsers(input: z.infer<typeof ActorSchema>): Promise<UserProfile[]> {
     return listUsersFlow(input);

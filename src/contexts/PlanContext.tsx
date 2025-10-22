@@ -10,6 +10,7 @@ import { UserAccessInfo } from '@/ai/schemas';
 type PlanContextType = {
   planId: 'free' | 'growth' | 'performance' | null;
   permissions: UserAccessInfo['permissions'] | null;
+  role: 'admin' | 'member' | null;
   isLoading: boolean;
   error: string | null;
 };
@@ -17,6 +18,7 @@ type PlanContextType = {
 const PlanContext = createContext<PlanContextType>({
   planId: null,
   permissions: null,
+  role: null,
   isLoading: true,
   error: null,
 });
@@ -24,6 +26,7 @@ const PlanContext = createContext<PlanContextType>({
 export const PlanProvider = ({ children }: { children: React.ReactNode }) => {
   const [planId, setPlanId] = useState<'free' | 'growth' | 'performance' | null>(null);
   const [permissions, setPermissions] = useState<UserAccessInfo['permissions'] | null>(null);
+  const [role, setRole] = useState<'admin' | 'member' | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
@@ -37,6 +40,7 @@ export const PlanProvider = ({ children }: { children: React.ReactNode }) => {
         setIsLoading(false);
         setPlanId(null);
         setPermissions(null);
+        setRole(null);
         setError(null);
       }
     });
@@ -58,6 +62,7 @@ export const PlanProvider = ({ children }: { children: React.ReactNode }) => {
                 if (isMounted) {
                     setPlanId(accessInfo.planId);
                     setPermissions(accessInfo.permissions);
+                    setRole(accessInfo.role);
                     setError(null);
                     setIsLoading(false);
                 }
@@ -102,7 +107,7 @@ export const PlanProvider = ({ children }: { children: React.ReactNode }) => {
 
 
   return (
-    <PlanContext.Provider value={{ planId, permissions, isLoading, error }}>
+    <PlanContext.Provider value={{ planId, permissions, role, isLoading, error }}>
       {children}
     </PlanContext.Provider>
   );

@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -7,9 +8,6 @@ import {
   sendEmailVerification,
   User,
   signOut as firebaseSignOut,
-  updatePassword,
-  EmailAuthProvider,
-  reauthenticateWithCredential,
   sendPasswordResetEmail as firebaseSendPasswordResetEmail,
 } from 'firebase/auth';
 import { app, db } from './firebase';
@@ -87,40 +85,9 @@ export const signOut = async (): Promise<void> => {
 
 export const sendPasswordResetEmail = async (email: string): Promise<void> => {
     try {
-        // This function is reused for re-sending verification. 
-        // Firebase Auth handles this gracefully. If the user exists, it sends a reset email.
-        // For our flow, it serves to re-engage the user via email.
-        const user = auth.currentUser;
-        if (user && !user.emailVerified) {
-             await sendEmailVerification(user);
-        } else {
-             await firebaseSendPasswordResetEmail(auth, email);
-        }
+        await firebaseSendPasswordResetEmail(auth, email);
     } catch (error) {
-        console.error("Error sending user email:", error);
+        console.error("Error sending password reset email:", error);
         throw new Error("Não foi possível enviar o e-mail. Verifique o endereço e tente novamente.");
     }
 }
-
-
-export const changePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
-    const user = auth.currentUser;
-    if (!user || !user.email) {
-        throw new Error("Nenhum usuário autenticado encontrado.");
-    }
-
-    try {
-        const credential = EmailAuthProvider.credential(user.email, currentPassword);
-        // Re-authenticate the user to confirm their identity
-        await reauthenticateWithCredential(user, credential);
-        // If re-authentication is successful, update the password
-        await updatePassword(user, newPassword);
-    } catch (error) {
-        console.error("Error changing password:", error);
-        // Provide a more specific error for wrong password
-        if (error instanceof Error && (error as any).code === 'auth/wrong-password') {
-            throw new Error("A senha atual está incorreta. Tente novamente.");
-        }
-        throw new Error("Falha ao alterar a senha. Faça o login novamente por segurança e tente de novo.");
-    }
-};

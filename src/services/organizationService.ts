@@ -169,3 +169,83 @@ export const updateOrganizationDetails = async (details: z.infer<typeof UpdateOr
 
     return { success: true };
 };
+
+export const inviteUser = async (email: string, actorUid: string): Promise<{ success: boolean }> => {
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+
+    const { organizationId, organizationName, planId, userRole } = adminOrgData;
+    
+    if (userRole !== 'admin') {
+        throw new Error("Apenas administradores podem convidar novos usuários.");
+    }
+    
+    if (planId === 'free') {
+        const usersSnapshot = await adminDb.collection('users').where('organizationId', '==', organizationId).get();
+        if (usersSnapshot.size >= 2) {
+            throw new Error("Seu plano gratuito permite no máximo 2 usuários. Faça upgrade para convidar mais.");
+        }
+    }
+    
+    try {
+        await adminAuth.getUserByEmail(email);
+        throw new Error("Este e-mail já está em uso por outro usuário na plataforma Qoro.");
+    } catch (error: any) {
+        if (error.code !== 'auth/user-not-found') {
+            throw error; // Re-throw if it's not the 'user-not-found' error we expect
+        }
+    }
+
+    const invitationRef = adminDb.collection('invitations').doc();
+    await invitationRef.set({
+        email,
+        organizationId,
+        organizationName,
+        role: 'member',
+        status: 'pending',
+        createdAt: FieldValue.serverTimestamp()
+    });
+
+    const link = await adminAuth.generateSignInWithEmailLink(email, {
+        url: `${process.env.NEXT_PUBLIC_SITE_URL}/signup?invitationId=${invitationRef.id}`,
+    });
+
+    await adminDb.collection('mail').add({
+        to: email,
+        template: {
+            name: 'invite',
+            data: {
+                organizationName,
+                actionUrl: link
+            }
+        }
+    });
+
+    return { success: true };
+};
+
+export const deleteUser = async (userId: string, actor: string): Promise<{ success: boolean }> => {
+    const adminOrgData = await getAdminAndOrg(actor);
+    if (!adminOrgData) throw new Error("Aguardando sincronização do usuário.");
+
+    const { organizationId, userRole } = adminOrgData;
+    
+    if (userRole !== 'admin') {
+        throw new Error("Apenas administradores podem remover usuários.");
+    }
+    if (userId === actor) {
+        throw new Error("Você não pode remover a si mesmo.");
+    }
+    
+    const userDocRef = adminDb.collection('users').doc(userId);
+    const userDoc = await userDocRef.get();
+
+    if (!userDoc.exists || userDoc.data()?.organizationId !== organizationId) {
+        throw new Error("Usuário não encontrado nesta organização.");
+    }
+
+    await adminAuth.deleteUser(userId);
+    await userDocRef.delete();
+
+    return { success: true };
+};
