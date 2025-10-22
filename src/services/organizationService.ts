@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { FieldValue } from 'firebase-admin/firestore';
@@ -8,7 +9,8 @@ import {
     UpdateOrganizationDetailsSchema, 
     UserProfile,
     OrganizationProfileSchema,
-    UserProfileCreationSchema
+    UserProfileCreationSchema,
+    InviteUserSchema
 } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
@@ -65,7 +67,7 @@ export const createUserProfile = async (input: z.infer<typeof UserProfileCreatio
     } catch (error) {
       console.error("CRITICAL: Failed to create user profile and organization in Firestore transaction.", error);
       // If this fails, we have an auth user without a profile. This is a critical state.
-      // Consider adding monitoring or a cleanup process for such cases.
+      // Consider adding a monitoring or a cleanup process for such cases.
       throw new Error("Failed to finalize account setup.");
     }
 };
