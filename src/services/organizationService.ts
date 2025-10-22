@@ -192,30 +192,25 @@ export const inviteUser = async (email: string, actorUid: string): Promise<{ suc
 
     try {
         await adminAuth.getUserByEmail(email);
-        // If the above line doesn't throw, a user with this email already exists in the system.
         throw new Error("Este e-mail já está em uso por outro usuário na plataforma Qoro.");
     } catch (error: any) {
         if (error.code !== 'auth/user-not-found') {
-            // Re-throw if it's an error other than 'user-not-found'
             throw error;
         }
-        // If user is not found, we can proceed with the invitation.
     }
 
-    // Create the user in Firebase Auth without a password
     const userRecord = await adminAuth.createUser({
         email,
-        emailVerified: true, // We are sending an email, so we can consider it verified for this flow
+        emailVerified: true, 
     });
 
-    // Create user profile in Firestore
     await adminDb.collection('users').doc(userRecord.uid).set({
         email: email,
         organizationId: organizationId,
-        role: 'member', // All invited users are members by default
+        role: 'member',
         planId: planId,
         createdAt: FieldValue.serverTimestamp(),
-        permissions: { // Default permissions for a new member
+        permissions: { 
             qoroCrm: true,
             qoroPulse: planId === 'performance',
             qoroTask: true,
@@ -223,22 +218,19 @@ export const inviteUser = async (email: string, actorUid: string): Promise<{ suc
         },
     });
 
-    // Set custom claims
     await adminAuth.setCustomUserClaims(userRecord.uid, { organizationId, role: 'member', planId });
     
-    // Generate a password reset link, which will serve as the "set your password" link
     const link = await adminAuth.generatePasswordResetLink(email, {
-        url: `${process.env.NEXT_PUBLIC_SITE_URL}/login`, // Redirect to login after password reset
+        url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:9004'}/login`,
     });
 
-    // Trigger the custom email template
     await adminDb.collection('mail').add({
         to: email,
         template: {
-            name: 'invite', // You'll need an 'invite.hbs' template in your Mail collection setup
+            name: 'invite',
             data: {
                 organizationName: organizationName,
-                actionUrl: link, // This is the password reset link
+                actionUrl: link,
             },
         },
     });
@@ -266,8 +258,6 @@ export const deleteUser = async (userId: string, actor: string): Promise<{ succe
         throw new Error("Usuário não encontrado nesta organização.");
     }
 
-    // Deleting from Firebase Auth will trigger functions to clean up Firestore data if set up,
-    // but it's safer to delete from Firestore explicitly as well.
     await adminAuth.deleteUser(userId);
     await userDocRef.delete();
 

@@ -305,7 +305,7 @@ export default function SettingsPage() {
                                      {isUserLimitReached && (
                                         <div className="mt-4 p-4 rounded-lg flex items-center text-sm bg-yellow-800/20 border border-yellow-600/50 text-yellow-300">
                                             <AlertCircle className="w-5 h-5 mr-3 flex-shrink-0" />
-                                            <span>Você atingiu o limite de ${FREE_PLAN_USER_LIMIT} usuários do plano gratuito. <Link href="/#precos" className="font-bold underline hover:text-white">Faça upgrade</Link> para convidar mais.</span>
+                                            <span>Você atingiu o limite de {FREE_PLAN_USER_LIMIT} usuários do plano gratuito. <Link href="/#precos" className="font-bold underline hover:text-white">Faça upgrade</Link> para convidar mais.</span>
                                         </div>
                                     )}
                                     {feedback && feedback.context === 'invite' && (
