@@ -14,6 +14,7 @@ import {
 } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
+import { sendWelcomeEmail } from './emailService';
 
 export const createUserProfile = async (input: z.infer<typeof UserProfileCreationSchema>): Promise<{uid: string}> => {
     const { uid, name, organizationName, cnpj, contactEmail, contactPhone, email, planId, stripePriceId } = input;
@@ -181,29 +182,20 @@ export const inviteUser = async (input: z.infer<typeof InviteUserSchema> & { act
     if (!adminOrgData) {
         throw new Error("A organização do usuário não está pronta.");
     }
-    const { organizationId, planId, userRole } = adminOrgData;
+    const { organizationId, organizationName, planId, userRole, userData } = adminOrgData;
 
     if (userRole !== 'admin') {
         throw new Error("Apenas administradores podem convidar novos usuários.");
     }
-
-    if (planId === 'free') {
-        const usersSnapshot = await adminDb.collection('users').where('organizationId', '==', organizationId).get();
-        if (usersSnapshot.size >= 2) {
-            throw new Error(`Você atingiu o limite de 2 usuários do plano gratuito. Faça upgrade para convidar mais.`);
-        }
-    }
-
+    
+    // Check if the user already exists in Firebase Auth
     try {
         await adminAuth.getUserByEmail(email);
-        // If the above does not throw, the user already exists.
         throw new Error("Este e-mail já está em uso por outro usuário na plataforma Qoro.");
     } catch (error: any) {
         if (error.code !== 'auth/user-not-found') {
-            // Re-throw if it's an error other than "user not found"
             throw error;
         }
-        // If user is not found, we can proceed.
     }
 
     // Create user in Firebase Authentication
@@ -218,6 +210,7 @@ export const inviteUser = async (input: z.infer<typeof InviteUserSchema> & { act
     // Create user profile in Firestore
     await adminDb.collection('users').doc(userRecord.uid).set({
         email: email,
+        name: email, // Default name to email
         organizationId: organizationId,
         role: 'member',
         planId: planId,
@@ -233,9 +226,21 @@ export const inviteUser = async (input: z.infer<typeof InviteUserSchema> & { act
     // Set custom claims for role-based access control
     await adminAuth.setCustomUserClaims(userRecord.uid, { organizationId, role: 'member', planId });
     
-    // The Firebase system will automatically send a verification email
-    // upon the user's first login attempt if their email is not verified.
-    // No manual email sending is needed here.
+    // Generate verification link and send email
+    try {
+        const verificationLink = await adminAuth.generateEmailVerificationLink(email);
+        await sendWelcomeEmail({
+            email,
+            adminName: userData.name || userData.email,
+            organizationName,
+            password,
+            verificationLink
+        });
+    } catch (emailError) {
+        console.error("User created, but failed to send invitation email:", emailError);
+        // Don't throw an error to the user, as the user was created.
+        // Log it for monitoring. The user can still log in and will be prompted to verify.
+    }
 
     return { success: true };
 };
@@ -261,20 +266,16 @@ export const deleteUser = async (userId: string, actor: string): Promise<{ succe
         throw new Error("Usuário não encontrado nesta organização.");
     }
 
-    // First, try to delete from Firebase Auth.
-    // Gracefully handle if user is already deleted from Auth.
     try {
         await adminAuth.deleteUser(userId);
     } catch (error: any) {
         if (error.code === 'auth/user-not-found') {
             console.log(`User with UID ${userId} not found in Firebase Auth, likely already deleted. Proceeding to delete from Firestore.`);
         } else {
-            // Re-throw other auth errors
             throw error;
         }
     }
     
-    // Always attempt to delete from Firestore.
     await userDocRef.delete();
 
     return { success: true };
