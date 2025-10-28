@@ -1,8 +1,7 @@
-
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Mail, Send, KeyRound, UserPlus, Building, AlertCircle, CheckCircle, ArrowLeft, User, Shield, Users, Loader2, ExternalLink, Trash2, Lock } from 'lucide-react';
+import { Mail, Send, KeyRound, UserPlus, Building, AlertCircle, CheckCircle, ArrowLeft, User, Shield, Users, Loader2, ExternalLink, Trash2, Copy } from 'lucide-react';
 import { inviteUser, listUsers, updateUserPermissions, deleteUser } from '@/ai/flows/user-management';
 import { sendPasswordResetEmail } from '@/lib/auth';
 import { createBillingPortalSession } from '@/ai/flows/billing-flow';
@@ -47,7 +46,7 @@ export default function SettingsPage() {
     const [inviteEmail, setInviteEmail] = useState('');
     const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
     const [isLoading, setIsLoading] = useState({ invite: false, password: false, users: true, permissions: '', portal: false, deleteUser: '' });
-    const [feedback, setFeedback] = useState<{ type: 'error' | 'success', message: string, context: string } | null>(null);
+    const [feedback, setFeedback] = useState<{ type: 'error' | 'success', message: string, context: string, data?: any } | null>(null);
     const [users, setUsers] = useState<UserProfile[]>([]);
     const { planId, isLoading: isPlanLoading, role: userRole } = usePlan();
 
@@ -66,7 +65,6 @@ export default function SettingsPage() {
         setIsLoading(prev => ({ ...prev, users: true }));
         try {
             const userList = await listUsers({ actor: currentUser.uid });
-            // Ordena a lista para colocar o admin no topo
             userList.sort((a, b) => {
                 if (a.role === 'admin') return -1;
                 if (b.role === 'admin') return 1;
@@ -96,7 +94,7 @@ export default function SettingsPage() {
     
     const handleTabChange = (tab: string) => {
         setActiveTab(tab);
-        setFeedback(null); // Clear feedback when changing tabs
+        setFeedback(null); 
     };
 
     const handlePasswordReset = async () => {
@@ -120,13 +118,19 @@ export default function SettingsPage() {
         setIsLoading(prev => ({ ...prev, invite: true }));
         clearFeedback('invite');
         try {
-            await inviteUser({ email: inviteEmail, actor: currentUser.uid });
-            setFeedback({ type: 'success', message: `Usuário criado! Um e-mail de verificação e boas-vindas foi enviado para ${inviteEmail}.`, context: 'invite' });
+            const result = await inviteUser({ email: inviteEmail, actor: currentUser.uid });
+            const inviteLink = `${window.location.origin}/invite/${result.inviteId}`;
+            setFeedback({ 
+                type: 'success', 
+                message: `Link de convite gerado para ${inviteEmail}. Copie e envie para o novo membro.`, 
+                context: 'invite',
+                data: { link: inviteLink }
+            });
             setInviteEmail('');
-            fetchUsers(); // Refresh user list
+            // fetchUsers(); // Don't refresh here, user is not yet created
         } catch (error: any) {
             console.error(error);
-            setFeedback({ type: 'error', message: error.message || 'Falha ao convidar usuário.', context: 'invite' });
+            setFeedback({ type: 'error', message: error.message || 'Falha ao criar o convite.', context: 'invite' });
         } finally {
             setIsLoading(prev => ({ ...prev, invite: false }));
         }
@@ -161,39 +165,6 @@ export default function SettingsPage() {
              setIsLoading(prev => ({...prev, portal: false}));
         }
     };
-
-    const handlePermissionChange = async (userId: string, permission: AppPermission, isEnabled: boolean) => {
-        const targetUser = users.find(u => u.uid === userId);
-        if (!targetUser || !currentUser || !isAdmin) return;
-    
-        setIsLoading(prev => ({ ...prev, permissions: userId }));
-        clearFeedback(`permissions-${userId}`);
-    
-        const updatedPermissions = {
-            ...(targetUser.permissions || {}),
-            [permission]: isEnabled,
-        };
-    
-        try {
-            await updateUserPermissions({ userId, permissions: updatedPermissions as any, actor: currentUser.uid });
-            setUsers(prevUsers => 
-                prevUsers.map(u => 
-                    u.uid === userId ? { ...u, permissions: updatedPermissions } : u
-                )
-            );
-            setFeedback({ type: 'success', message: 'Permissões atualizadas com sucesso!', context: `permissions-${userId}` });
-        } catch (error: any) {
-            console.error("Failed to update permissions:", error);
-            const friendlyMessage = error instanceof Error && error.message.includes("Administradores não podem alterar as próprias permissões.")
-                ? "Você não pode alterar suas próprias permissões."
-                : 'Falha ao atualizar permissões.';
-            setFeedback({ type: 'error', message: friendlyMessage, context: `permissions-${userId}` });
-        } finally {
-            setIsLoading(prev => ({ ...prev, permissions: '' }));
-            setTimeout(() => clearFeedback(`permissions-${userId}`), 3000);
-        }
-    };
-
 
     return (
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -237,7 +208,6 @@ export default function SettingsPage() {
                 {activeTab === 'account' && (
                     <div className="bg-card p-8 rounded-2xl border border-border">
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                            {/* Account Info */}
                             <div>
                                 <div className="flex items-center mb-6">
                                     <div className="p-3 rounded-xl bg-primary text-black mr-4"><User className="w-6 h-6" /></div>
@@ -265,7 +235,6 @@ export default function SettingsPage() {
                                     )}
                                 </div>
                             </div>
-                            {/* Password Change */}
                             <div>
                                 <div className="flex items-center mb-6">
                                     <div className="p-3 rounded-xl bg-secondary text-primary mr-4"><KeyRound className="w-6 h-6" /></div>
@@ -296,31 +265,35 @@ export default function SettingsPage() {
                                 <div className="p-3 rounded-xl bg-primary text-black mr-6"><UserPlus className="w-6 h-6" /></div>
                                 <div className="flex-grow">
                                     <h3 className="text-xl font-bold text-foreground mb-1">Convidar novo usuário</h3>
-                                    <p className="text-muted-foreground mb-6">O usuário receberá um link por e-mail para finalizar seu cadastro e definir sua senha.</p>
+                                    <p className="text-muted-foreground mb-6">Gere um link de convite para um novo membro se juntar à sua organização.</p>
                                     <form onSubmit={handleInviteUser} className="flex flex-col md:flex-row items-start md:items-center gap-4">
                                         <div className="relative flex-grow w-full md:w-auto">
                                             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                                             <Input type="email" placeholder="E-mail do convidado" value={inviteEmail} onChange={(e) => {setInviteEmail(e.target.value); clearFeedback('invite');}} required disabled={isUserLimitReached || isLoading.invite} className="w-full pl-12 pr-4 py-3 bg-input rounded-xl border-border"/>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <Button type="submit" disabled={isLoading.invite || isUserLimitReached} className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 font-semibold disabled:opacity-50 w-full md:w-auto flex items-center justify-center">
-                                                {isLoading.invite ? <Loader2 className="w-5 h-5 animate-spin mr-2"/> : <Send className="w-5 h-5 mr-2" />}
-                                                Convidar
-                                            </Button>
-                                            {isUserLimitReached && (
-                                                <div className="relative group">
-                                                    <Lock className="w-5 h-5 text-yellow-400 cursor-help" />
-                                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-3 py-1 bg-secondary text-sm rounded-lg border border-border opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        Upgrade para adicionar mais usuários.
-                                                    </div>
+                                        <Button type="submit" disabled={isLoading.invite || isUserLimitReached} className="bg-primary text-primary-foreground px-6 py-3 rounded-xl hover:bg-primary/90 font-semibold disabled:opacity-50 w-full md:w-auto flex items-center justify-center">
+                                            {isLoading.invite ? <Loader2 className="w-5 h-5 animate-spin mr-2"/> : <Send className="w-5 h-5 mr-2" />}
+                                            Gerar convite
+                                        </Button>
+                                    </form>
+                                    {feedback && feedback.context === 'invite' && (
+                                        <div className={`mt-4 p-4 rounded-lg flex flex-col text-sm ${feedback.type === 'success' ? 'bg-green-800/20 text-green-300' : 'bg-red-800/20 text-red-300'}`}>
+                                            <div className="flex items-center font-semibold">
+                                                {feedback.type === 'success' ? <CheckCircle className="w-5 h-5 mr-3" /> : <AlertCircle className="w-5 h-5 mr-3" />}
+                                                <span>{feedback.message}</span>
+                                            </div>
+                                            {feedback.type === 'success' && feedback.data?.link && (
+                                                <div className="mt-3 flex items-center gap-2 pl-8">
+                                                    <Input readOnly value={feedback.data.link} className="bg-secondary text-xs" />
+                                                    <Button variant="ghost" size="icon" onClick={() => navigator.clipboard.writeText(feedback.data.link)}><Copy className="w-4 h-4"/></Button>
                                                 </div>
                                             )}
                                         </div>
-                                    </form>
-                                    {feedback && feedback.context === 'invite' && (
-                                        <div className={`mt-4 p-4 rounded-lg flex items-center text-sm ${feedback.type === 'success' ? 'bg-green-800/20 text-green-300' : 'bg-red-800/20 text-red-300'}`}>
-                                            {feedback.type === 'success' ? <CheckCircle className="w-5 h-5 mr-3" /> : <AlertCircle className="w-5 h-5 mr-3" />}
-                                            <span>{feedback.message}</span>
+                                    )}
+                                    {isUserLimitReached && !feedback && (
+                                        <div className="mt-4 p-3 rounded-lg flex items-center text-sm bg-yellow-800/20 border border-yellow-600/50 text-yellow-300">
+                                            <AlertCircle className="w-5 h-5 mr-3 flex-shrink-0"/>
+                                            <span>Você atingiu o limite de {FREE_PLAN_USER_LIMIT} usuários do plano gratuito. <Link href="/#precos" className='font-bold underline'>Faça upgrade</Link> para convidar mais.</span>
                                         </div>
                                     )}
                                 </div>
@@ -352,12 +325,12 @@ export default function SettingsPage() {
                                                     
                                                     {!isSelf && (
                                                         <div className="flex items-center gap-2">
-                                                              <AlertDialogTrigger asChild>
-                                                                  <Button variant="ghost" size="icon" className='text-muted-foreground hover:text-destructive rounded-xl' disabled={isLoading.deleteUser === user.uid}>
-                                                                      {isLoading.deleteUser === user.uid ? <Loader2 className='w-4 h-4 animate-spin'/> : <Trash2 className="w-4 h-4" />}
-                                                                  </Button>
-                                                              </AlertDialogTrigger>
-                                                          </div>
+                                                            <AlertDialogTrigger asChild>
+                                                                <Button variant="ghost" size="icon" className='text-muted-foreground hover:text-destructive rounded-xl' disabled={isLoading.deleteUser === user.uid}>
+                                                                    {isLoading.deleteUser === user.uid ? <Loader2 className='w-4 h-4 animate-spin'/> : <Trash2 className="w-4 h-4" />}
+                                                                </Button>
+                                                            </AlertDialogTrigger>
+                                                        </div>
                                                     )}
                                                 </div>
                                                 <AlertDialogContent>
@@ -387,5 +360,3 @@ export default function SettingsPage() {
         </div>
     );
 }
-
-    

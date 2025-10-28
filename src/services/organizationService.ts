@@ -1,5 +1,3 @@
-
-
 'use server';
 
 import { FieldValue } from 'firebase-admin/firestore';
@@ -14,12 +12,10 @@ import {
 } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
-import { sendWelcomeEmail } from './emailService';
 
 export const createUserProfile = async (input: z.infer<typeof UserProfileCreationSchema>): Promise<{uid: string}> => {
     const { uid, name, organizationName, cnpj, contactEmail, contactPhone, email, planId, stripePriceId } = input;
     
-    // Idempotency Check: if user already has an org, do nothing.
     const userDocRef = adminDb.collection('users').doc(uid);
     const userDoc = await userDocRef.get();
     
@@ -66,8 +62,6 @@ export const createUserProfile = async (input: z.infer<typeof UserProfileCreatio
 
     } catch (error) {
       console.error("CRITICAL: Failed to create user profile and organization in Firestore transaction.", error);
-      // If this fails, we have an auth user without a profile. This is a critical state.
-      // Consider adding a monitoring or a cleanup process for such cases.
       throw new Error("Failed to finalize account setup.");
     }
 };
@@ -99,32 +93,6 @@ export const listUsers = async (actor: string): Promise<UserProfile[]> => {
     });
     
     return users;
-};
-
-export const updateUserPermissions = async (input: z.infer<typeof UpdateUserPermissionsSchema>, actor: string): Promise<{ success: boolean }> => {
-    const adminOrgData = await getAdminAndOrg(actor);
-    if (!adminOrgData) throw new Error("Aguardando sincronização do usuário.");
-    
-    const { organizationId, userRole } = adminOrgData;
-    const { userId, permissions } = input;
-
-    if (userRole !== 'admin') {
-        throw new Error("Apenas administradores podem alterar permissões.");
-    }
-    if (actor === userId) {
-        throw new Error("Administradores não podem alterar as próprias permissões.");
-    }
-    
-    const targetUserRef = adminDb.collection('users').doc(userId);
-    const targetUserDoc = await targetUserRef.get();
-
-    if (!targetUserDoc.exists || targetUserDoc.data()?.organizationId !== organizationId) {
-        throw new Error("Usuário alvo não encontrado nesta organização.");
-    }
-
-    await targetUserRef.update({ permissions });
-
-    return { success: true };
 };
 
 export const getOrganizationDetails = async (actor: string): Promise<z.infer<typeof OrganizationProfileSchema> | null> => {
@@ -175,7 +143,7 @@ export const updateOrganizationDetails = async (details: z.infer<typeof UpdateOr
     return { success: true };
 };
 
-export const inviteUser = async (input: z.infer<typeof InviteUserSchema> & { actor: string }): Promise<{ success: boolean }> => {
+export const inviteUser = async (input: z.infer<typeof InviteUserSchema> & { actor: string }): Promise<{ inviteId: string }> => {
     const { email, actor } = input;
   
     const adminOrgData = await getAdminAndOrg(actor);
@@ -183,7 +151,6 @@ export const inviteUser = async (input: z.infer<typeof InviteUserSchema> & { act
       throw new Error("A organização do usuário não está pronta.");
     }
     const { organizationId, organizationName, planId, userRole } = adminOrgData;
-    const adminUser = await adminAuth.getUser(actor);
   
     if (userRole !== 'admin') {
       throw new Error("Apenas administradores podem convidar novos usuários.");
@@ -198,44 +165,19 @@ export const inviteUser = async (input: z.infer<typeof InviteUserSchema> & { act
       }
     }
   
-    const userRecord = await adminAuth.createUser({
-        email: email,
-        emailVerified: false,
-    });
-
-    const hasPulseAccess = planId === 'performance';
-    
-    await adminDb.collection('users').doc(userRecord.uid).set({
-        email: email,
-        organizationId: organizationId,
-        role: 'member',
-        planId: planId,
+    // Create an invite document instead of a user
+    const inviteRef = await adminDb.collection('invites').add({
+        email,
+        organizationId,
+        organizationName,
+        planId,
+        status: 'pending',
         createdAt: FieldValue.serverTimestamp(),
-        permissions: {
-            qoroCrm: true,
-            qoroPulse: hasPulseAccess,
-            qoroTask: true,
-            qoroFinance: true,
-        },
+        expiresAt: FieldValue.serverTimestamp(), // Firestore can't do future dates, but we can check on read
     });
 
-    await adminAuth.setCustomUserClaims(userRecord.uid, { organizationId, role: 'member', planId });
-    
-    try {
-        const verificationLink = await adminAuth.generateEmailVerificationLink(email);
-        await sendWelcomeEmail({
-            email,
-            adminName: adminUser.displayName || adminUser.email!,
-            organizationName,
-            verificationLink,
-        });
-    } catch(emailError) {
-        console.warn("AVISO: O usuário foi criado, mas o e-mail de convite não pôde ser enviado. Isso pode ocorrer se a extensão 'Trigger Email' não estiver configurada. Erro:", emailError);
-    }
-  
-    return { success: true };
-  };
-
+    return { inviteId: inviteRef.id };
+};
 
 export const deleteUser = async (userId: string, actor: string): Promise<{ success: boolean }> => {
     const adminOrgData = await getAdminAndOrg(actor);
@@ -270,4 +212,57 @@ export const deleteUser = async (userId: string, actor: string): Promise<{ succe
     await userDocRef.delete();
 
     return { success: true };
+};
+
+export const validateInvite = async (inviteId: string) => {
+    const inviteRef = adminDb.collection('invites').doc(inviteId);
+    const inviteDoc = await inviteRef.get();
+
+    if (!inviteDoc.exists || inviteDoc.data()?.status !== 'pending') {
+        throw new Error("Convite inválido ou já utilizado.");
+    }
+
+    // Optional: Check expiration
+    // const createdAt = inviteDoc.data()?.createdAt.toDate();
+    // if (Date.now() - createdAt.getTime() > 24 * 60 * 60 * 1000) { // 24 hours
+    //     await inviteRef.update({ status: 'expired' });
+    //     throw new Error("Este convite expirou.");
+    // }
+
+    return {
+        email: inviteDoc.data()?.email,
+        organizationName: inviteDoc.data()?.organizationName,
+    };
+};
+
+export const acceptInvite = async (inviteId: string, userData: { name: string, uid: string }) => {
+    const inviteRef = adminDb.collection('invites').doc(inviteId);
+    const inviteDoc = await inviteRef.get();
+
+    if (!inviteDoc.exists || inviteDoc.data()?.status !== 'pending') {
+        throw new Error("Convite inválido, expirado ou já utilizado.");
+    }
+
+    const { email, organizationId, planId } = inviteDoc.data()!;
+    const hasPulseAccess = planId === 'performance';
+    
+    await adminDb.collection('users').doc(userData.uid).set({
+        name: userData.name,
+        email: email,
+        organizationId: organizationId,
+        role: 'member',
+        planId: planId,
+        createdAt: FieldValue.serverTimestamp(),
+        permissions: {
+            qoroCrm: true,
+            qoroPulse: hasPulseAccess,
+            qoroTask: true,
+            qoroFinance: true,
+        },
+    });
+
+    await adminAuth.setCustomUserClaims(userData.uid, { organizationId, role: 'member', planId });
+    await inviteRef.update({ status: 'accepted', acceptedAt: FieldValue.serverTimestamp(), acceptedBy: userData.uid });
+
+    return { success: true, organizationId };
 };

@@ -1,11 +1,8 @@
-
-
 'use server';
 /**
  * @fileOverview User and organization management flows.
  * - signUp (deprecated, handled by webhook)
  * - listUsers - Lists all users within the caller's organization.
- * - updateUserPermissions - Updates the application permissions for a specific user.
  * - getOrganizationDetails - Fetches details for the user's organization.
  * - updateOrganizationDetails - Updates details for the user's organization.
  * - getUserAccessInfo - Fetches user's plan and permissions.
@@ -41,11 +38,6 @@ const listUsersFlow = ai.defineFlow(
     async ({ actor }) => orgService.listUsers(actor)
 );
 
-const updateUserPermissionsFlow = ai.defineFlow(
-    { name: 'updateUserPermissionsFlow', inputSchema: UpdateUserPermissionsSchema.extend(ActorSchema.shape), outputSchema: z.object({ success: z.boolean() }) },
-    async (input) => orgService.updateUserPermissions(input, input.actor)
-);
-
 const getOrganizationDetailsFlow = ai.defineFlow(
     { name: 'getOrganizationDetailsFlow', inputSchema: ActorSchema, outputSchema: OrganizationProfileSchema.nullable() },
     async ({ actor }) => {
@@ -54,7 +46,6 @@ const getOrganizationDetailsFlow = ai.defineFlow(
         return orgService.getOrganizationDetails(actor);
     }
 );
-
 
 const updateOrganizationDetailsFlow = ai.defineFlow(
     { name: 'updateOrganizationDetailsFlow', inputSchema: UpdateOrganizationDetailsSchema.extend(ActorSchema.shape), outputSchema: z.object({ success: z.boolean() }) },
@@ -71,26 +62,23 @@ const getUserAccessInfoFlow = ai.defineFlow(
         
         const { planId, userData, userRole } = adminOrgData;
 
-        // Default permissions are for the 'free' plan
-        let permissions = {
+        let permissions = userData.permissions || {
             qoroCrm: true,
             qoroPulse: false,
             qoroTask: true,
             qoroFinance: true,
         };
 
-        // Grant access to QoroPulse only for the 'performance' plan
         if (planId === 'performance') {
             permissions.qoroPulse = true;
         } else if (planId === 'growth') {
-            // Growth plan has access to everything BUT Pulse
             permissions.qoroPulse = false;
         }
         
         return {
             planId,
             permissions,
-            role: userRole,
+            role: userRole as 'admin' | 'member',
         }
     }
 );
@@ -112,7 +100,7 @@ const getUserProfileFlow = ai.defineFlow(
 );
 
 const inviteUserFlow = ai.defineFlow(
-    { name: 'inviteUserFlow', inputSchema: InviteUserSchema.extend(ActorSchema.shape), outputSchema: z.object({ success: z.boolean() }) },
+    { name: 'inviteUserFlow', inputSchema: InviteUserSchema.extend(ActorSchema.shape), outputSchema: z.object({ inviteId: z.string() }) },
     async (input) => orgService.inviteUser(input)
 );
 
@@ -121,9 +109,29 @@ const deleteUserFlow = ai.defineFlow(
     async (input) => orgService.deleteUser(input.userId, input.actor)
 );
 
+const ValidateInviteInput = z.object({ inviteId: z.string() });
+const ValidateInviteOutput = z.object({ email: z.string(), organizationName: z.string() });
+
+const validateInviteFlow = ai.defineFlow(
+    { name: 'validateInviteFlow', inputSchema: ValidateInviteInput, outputSchema: ValidateInviteOutput },
+    async ({ inviteId }) => orgService.validateInvite(inviteId)
+);
+
+const AcceptInviteInput = z.object({
+    inviteId: z.string(),
+    name: z.string(),
+    uid: z.string(),
+});
+const AcceptInviteOutput = z.object({ success: z.boolean() });
+
+const acceptInviteFlow = ai.defineFlow(
+    { name: 'acceptInviteFlow', inputSchema: AcceptInviteInput, outputSchema: AcceptInviteOutput },
+    async ({ inviteId, name, uid }) => orgService.acceptInvite(inviteId, { name, uid })
+);
+
 
 // Exported functions (client-callable wrappers)
-export async function inviteUser(input: z.infer<typeof InviteUserSchema> & z.infer<typeof ActorSchema>): Promise<{ success: boolean }> {
+export async function inviteUser(input: z.infer<typeof InviteUserSchema> & z.infer<typeof ActorSchema>): Promise<{ inviteId: string }> {
     return inviteUserFlow(input);
 }
 
@@ -133,10 +141,6 @@ export async function deleteUser(input: z.infer<typeof DeleteUserSchema>): Promi
 
 export async function listUsers(input: z.infer<typeof ActorSchema>): Promise<UserProfile[]> {
     return listUsersFlow(input);
-}
-
-export async function updateUserPermissions(input: z.infer<typeof UpdateUserPermissionsSchema> & z.infer<typeof ActorSchema>): Promise<{ success: boolean }> {
-    return updateUserPermissionsFlow(input);
 }
 
 export async function getOrganizationDetails(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof OrganizationProfileSchema> | null> {
@@ -153,4 +157,12 @@ export async function getUserAccessInfo(input: z.infer<typeof ActorSchema>): Pro
 
 export async function getUserProfile(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof UserProfileOutputSchema> | null> {
     return getUserProfileFlow(input);
+}
+
+export async function validateInvite(input: z.infer<typeof ValidateInviteInput>): Promise<z.infer<typeof ValidateInviteOutput>> {
+    return validateInviteFlow(input);
+}
+
+export async function acceptInvite(input: z.infer<typeof AcceptInviteInput>): Promise<z.infer<typeof AcceptInviteOutput>> {
+    return acceptInviteFlow(input);
 }
