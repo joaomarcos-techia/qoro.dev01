@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -8,6 +9,7 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { validateInvite, acceptInvite } from '@/ai/flows/user-management';
 import { Logo } from '@/components/ui/logo';
+import { createUserAndSendVerification } from '@/lib/auth';
 
 export default function AcceptInvitePage() {
   const router = useRouter();
@@ -63,9 +65,10 @@ export default function AcceptInvitePage() {
     setError(null);
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, inviteInfo.email, formData.password);
-      const user = userCredential.user;
+      // Step 1: Create user in Auth and send verification email from client
+      const user = await createUserAndSendVerification(inviteInfo.email, formData.password);
 
+      // Step 2: Call server action to create user profile in Firestore
       await acceptInvite({
         inviteId,
         name: formData.name,
@@ -73,9 +76,9 @@ export default function AcceptInvitePage() {
       });
 
       setSuccess(true);
-      setTimeout(() => router.push('/login'), 3000);
+      setTimeout(() => router.push('/login'), 5000); // Increased timeout for reading the message
 
-    } catch (err: any) {
+    } catch (err: any) => {
       console.error(err);
       setError(err.message || 'Ocorreu um erro ao finalizar o cadastro. Tente novamente.');
       setIsSubmitting(false);
@@ -116,7 +119,7 @@ export default function AcceptInvitePage() {
         <div className="w-full max-w-md mx-auto bg-card rounded-2xl border border-border p-8 md:p-12 text-center">
              <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-4" />
              <h2 className="text-2xl font-bold text-foreground mb-2">Conta Criada!</h2>
-             <p className="text-muted-foreground">Seja bem-vindo(a)! Você será redirecionado para a página de login em instantes.</p>
+             <p className="text-muted-foreground">Seja bem-vindo(a)! Um e-mail de verificação foi enviado. Por favor, verifique sua conta antes de fazer o login. Você será redirecionado para a página de login em instantes.</p>
         </div>
       </main>
     );
