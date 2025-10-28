@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
@@ -226,7 +227,7 @@ export default function SettingsPage() {
                                             <p className="text-lg font-bold text-primary">{planId ? planNames[planId] : 'Não identificado'}</p>
                                         )}
                                     </div>
-                                    {planId !== 'free' && (
+                                    {planId !== 'free' && isAdmin && (
                                         <Button type="button" variant="outline" onClick={redirectToCustomerPortal} disabled={isLoading.portal} className="w-full">
                                             {isLoading.portal && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                                             {isLoading.portal ? 'Acessando...' : 'Gerenciar Assinatura'}
