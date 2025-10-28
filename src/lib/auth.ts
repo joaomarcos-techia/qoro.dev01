@@ -56,10 +56,26 @@ export const signIn = async (email: string, password: string): Promise<User> => 
       const userDoc = await getDoc(doc(db, 'users', user.uid));
       if (userDoc.exists()) {
         const userData = userDoc.data();
+        const organizationId = userData.organizationId;
+
+        if (!organizationId) {
+             throw new Error('Dados da organização não encontrados. A sincronização da conta pode estar pendente.');
+        }
+
+        const orgDoc = await getDoc(doc(db, 'organizations', organizationId));
+        if (!orgDoc.exists()) {
+            await firebaseSignOut(auth);
+            throw new Error('A organização associada a esta conta não foi encontrada. Entre em contato com o suporte.');
+        }
+        
+        const orgData = orgDoc.data();
+        const planId = orgData.stripePriceId === process.env.NEXT_PUBLIC_STRIPE_PERFORMANCE_PLAN_PRICE_ID ? 'performance' :
+                       orgData.stripePriceId === process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID ? 'growth' : 'free';
+
         // If it's a paid plan and the subscription isn't active, block login
-        if (userData?.planId !== 'free' && userData?.stripeSubscriptionStatus !== 'active') {
+        if (planId !== 'free' && orgData.stripeSubscriptionStatus !== 'active') {
              await firebaseSignOut(auth);
-             throw new Error('Sua assinatura não está ativa. Por favor, conclua o pagamento ou entre em contato com o suporte.');
+             throw new Error('A assinatura da sua organização não está ativa. Por favor, peça ao administrador para verificar o pagamento.');
         }
       } else {
         // If user document doesn't exist, it's a sync issue. Let the polling on login page handle it.
@@ -70,7 +86,7 @@ export const signIn = async (email: string, password: string): Promise<User> => 
       return user;
     } catch (error: any) {
       console.error("Error signing in:", error);
-      if (error.code === 'auth/email-not-verified' || error.message.includes('Sua assinatura não está ativa') || error.message.includes('não foram sincronizados')) {
+      if (error.code === 'auth/email-not-verified' || error.message.includes('A assinatura') || error.message.includes('não foram sincronizados') || error.message.includes('Dados da organização')) {
           throw error;
       }
        if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
