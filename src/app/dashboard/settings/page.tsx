@@ -41,6 +41,7 @@ const planNames: Record<string, string> = {
 };
 
 const FREE_PLAN_USER_LIMIT = 2;
+const GROWTH_PLAN_USER_LIMIT = 5;
 
 export default function SettingsPage() {
     const [activeTab, setActiveTab] = useState('account');
@@ -51,8 +52,16 @@ export default function SettingsPage() {
     const [users, setUsers] = useState<UserProfile[]>([]);
     const { planId, isLoading: isPlanLoading, role: userRole } = usePlan();
 
-    const isUserLimitReached = planId === 'free' && users.length >= FREE_PLAN_USER_LIMIT;
     const isAdmin = userRole === 'admin';
+    const isFreePlan = planId === 'free';
+    const isGrowthPlan = planId === 'growth';
+    
+    let isUserLimitReached = false;
+    if (isFreePlan && users.length >= FREE_PLAN_USER_LIMIT) {
+        isUserLimitReached = true;
+    } else if (isGrowthPlan && users.length >= GROWTH_PLAN_USER_LIMIT) {
+        isUserLimitReached = true;
+    }
 
 
     const clearFeedback = (context: string) => {
@@ -72,9 +81,9 @@ export default function SettingsPage() {
                 return (a.name || a.email).localeCompare(b.name || b.email);
             });
             setUsers(userList);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to fetch users:", error);
-            setFeedback({ type: 'error', message: 'Não foi possível carregar a lista de usuários.', context: 'users' });
+            setFeedback({ type: 'error', message: error.message || 'Não foi possível carregar a lista de usuários.', context: 'users' });
         } finally {
             setIsLoading(prev => ({ ...prev, users: false }));
         }
@@ -114,10 +123,19 @@ export default function SettingsPage() {
 
     const handleInviteUser = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!currentUser || !isAdmin || isUserLimitReached) return;
+        if (!currentUser || !isAdmin) return;
+    
+        clearFeedback('invite');
+    
+        if (isUserLimitReached) {
+            const limit = isFreePlan ? FREE_PLAN_USER_LIMIT : GROWTH_PLAN_USER_LIMIT;
+            const planName = isFreePlan ? 'gratuito' : 'Growth';
+            setFeedback({ type: 'error', message: `Você atingiu o limite de ${limit} usuários do plano ${planName}. Faça upgrade para convidar mais.`, context: 'invite' });
+            return;
+        }
         
         setIsLoading(prev => ({ ...prev, invite: true }));
-        clearFeedback('invite');
+
         try {
             const result = await inviteUser({ email: inviteEmail, actor: currentUser.uid });
             const inviteLink = `${window.location.origin}/invite/${result.inviteId}`;
@@ -128,7 +146,6 @@ export default function SettingsPage() {
                 data: { link: inviteLink }
             });
             setInviteEmail('');
-            // fetchUsers(); // Don't refresh here, user is not yet created
         } catch (error: any) {
             console.error(error);
             setFeedback({ type: 'error', message: error.message || 'Falha ao criar o convite.', context: 'invite' });
@@ -289,12 +306,6 @@ export default function SettingsPage() {
                                                     <Button variant="ghost" size="icon" onClick={() => navigator.clipboard.writeText(feedback.data.link)}><Copy className="w-4 h-4"/></Button>
                                                 </div>
                                             )}
-                                        </div>
-                                    )}
-                                    {isUserLimitReached && !feedback && (
-                                        <div className="mt-4 p-3 rounded-lg flex items-center text-sm bg-yellow-800/20 border border-yellow-600/50 text-yellow-300">
-                                            <AlertCircle className="w-5 h-5 mr-3 flex-shrink-0"/>
-                                            <span>Você atingiu o limite de {FREE_PLAN_USER_LIMIT} usuários do plano gratuito. <Link href="/#precos" className='font-bold underline'>Faça upgrade</Link> para convidar mais.</span>
                                         </div>
                                     )}
                                 </div>

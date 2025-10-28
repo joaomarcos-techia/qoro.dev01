@@ -1,3 +1,4 @@
+
 'use server';
 
 import { FieldValue } from 'firebase-admin/firestore';
@@ -12,6 +13,9 @@ import {
 } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
+
+const FREE_PLAN_USER_LIMIT = 2;
+const GROWTH_PLAN_USER_LIMIT = 5;
 
 export const createUserProfile = async (input: z.infer<typeof UserProfileCreationSchema>): Promise<{uid: string}> => {
     const { uid, name, organizationName, cnpj, contactEmail, contactPhone, email, planId, stripePriceId } = input;
@@ -154,6 +158,16 @@ export const inviteUser = async (input: z.infer<typeof InviteUserSchema> & { act
   
     if (userRole !== 'admin') {
       throw new Error("Apenas administradores podem convidar novos usuários.");
+    }
+
+    const usersInOrg = await listUsers(actor);
+    const userCount = usersInOrg.length;
+
+    if (planId === 'free' && userCount >= FREE_PLAN_USER_LIMIT) {
+        throw new Error(`Limite de ${FREE_PLAN_USER_LIMIT} usuários atingido para o plano gratuito.`);
+    }
+    if (planId === 'growth' && userCount >= GROWTH_PLAN_USER_LIMIT) {
+        throw new Error(`Limite de ${GROWTH_PLAN_USER_LIMIT} usuários atingido para o plano Growth.`);
     }
   
     try {
