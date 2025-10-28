@@ -1,9 +1,8 @@
-
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Mail, Send, KeyRound, UserPlus, Building, AlertCircle, CheckCircle, ArrowLeft, User, Shield, Users, Loader2, ExternalLink, Trash2, Copy } from 'lucide-react';
-import { inviteUser, listUsers, updateUserPermissions, deleteUser } from '@/ai/flows/user-management';
+import { Mail, Send, KeyRound, UserPlus, Building, AlertCircle, CheckCircle, ArrowLeft, User, Shield, Users, Loader2, ExternalLink, Trash2, Copy, CreditCard } from 'lucide-react';
+import { inviteUser, listUsers, deleteUser } from '@/ai/flows/user-management';
 import { sendPasswordResetEmail } from '@/lib/auth';
 import { createBillingPortalSession } from '@/ai/flows/billing-flow';
 import { UserProfile, InviteUserSchema } from '@/ai/schemas';
@@ -53,13 +52,11 @@ export default function SettingsPage() {
     const { planId, isLoading: isPlanLoading, role: userRole } = usePlan();
 
     const isAdmin = userRole === 'admin';
-    const isFreePlan = planId === 'free';
-    const isGrowthPlan = planId === 'growth';
     
     let isUserLimitReached = false;
-    if (isFreePlan && users.length >= FREE_PLAN_USER_LIMIT) {
+    if (planId === 'free' && users.length >= FREE_PLAN_USER_LIMIT) {
         isUserLimitReached = true;
-    } else if (isGrowthPlan && users.length >= GROWTH_PLAN_USER_LIMIT) {
+    } else if (planId === 'growth' && users.length >= GROWTH_PLAN_USER_LIMIT) {
         isUserLimitReached = true;
     }
 
@@ -128,8 +125,8 @@ export default function SettingsPage() {
         clearFeedback('invite');
     
         if (isUserLimitReached) {
-            const limit = isFreePlan ? FREE_PLAN_USER_LIMIT : GROWTH_PLAN_USER_LIMIT;
-            const planName = isFreePlan ? 'gratuito' : 'Growth';
+            const limit = planId === 'free' ? FREE_PLAN_USER_LIMIT : GROWTH_PLAN_USER_LIMIT;
+            const planName = planId === 'free' ? 'gratuito' : 'Growth';
             setFeedback({ type: 'error', message: `Você atingiu o limite de ${limit} usuários do plano ${planName}. Faça upgrade para convidar mais.`, context: 'invite' });
             return;
         }
@@ -236,21 +233,23 @@ export default function SettingsPage() {
                                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                                         <Input type="email" value={currentUser?.email || 'Carregando...'} disabled className="w-full pl-12 pr-4 py-3 bg-secondary rounded-xl border-border cursor-not-allowed"/>
                                     </div>
-                                    <div className="bg-secondary rounded-xl p-4 border border-border">
-                                        <p className="text-sm text-muted-foreground mb-1">Seu plano atual:</p>
-                                        {isPlanLoading ? (
-                                            <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                                        ) : (
-                                            <p className="text-lg font-bold text-primary">{planId ? planNames[planId] : 'Não identificado'}</p>
+                                    <div className="bg-secondary rounded-xl p-4 border border-border space-y-3">
+                                        <div>
+                                            <p className="text-sm text-muted-foreground mb-1">Seu plano atual:</p>
+                                            {isPlanLoading ? (
+                                                <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                                            ) : (
+                                                <p className="text-lg font-bold text-primary">{planId ? planNames[planId] : 'Não identificado'}</p>
+                                            )}
+                                        </div>
+                                        {planId !== 'free' && isAdmin && (
+                                            <Button type="button" variant="outline" onClick={redirectToCustomerPortal} disabled={isLoading.portal} className="w-full">
+                                                {isLoading.portal && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                                                {isLoading.portal ? 'Acessando...' : 'Gerenciar Assinatura'}
+                                                {!isLoading.portal && <CreditCard className="ml-2 h-4 w-4" />}
+                                            </Button>
                                         )}
                                     </div>
-                                    {planId !== 'free' && isAdmin && (
-                                        <Button type="button" variant="outline" onClick={redirectToCustomerPortal} disabled={isLoading.portal} className="w-full">
-                                            {isLoading.portal && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-                                            {isLoading.portal ? 'Acessando...' : 'Gerenciar Assinatura'}
-                                            {!isLoading.portal && <ExternalLink className="ml-2 h-4 w-4" />}
-                                        </Button>
-                                    )}
                                 </div>
                             </div>
                             <div>
