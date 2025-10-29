@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -37,6 +37,7 @@ export function PermissionsForm({ user, actorUid, onPermissionsUpdated, planId }
     handleSubmit,
     control,
     reset,
+    setValue, // Adicionado `setValue`
     formState: { isDirty },
   } = useForm<z.infer<typeof AppPermissionsSchema>>({
     resolver: zodResolver(AppPermissionsSchema),
@@ -73,13 +74,19 @@ export function PermissionsForm({ user, actorUid, onPermissionsUpdated, planId }
           const isDisabled = key === 'qoroPulse' && isPulseLocked;
           return (
             <div key={key} className="flex items-center space-x-3">
-              <Checkbox
-                id={key}
-                disabled={isDisabled}
-                checked={control._getWatch(key)}
-                onCheckedChange={(checked) => {
-                  control.setValue(key, !!checked, { shouldDirty: true });
-                }}
+              <Controller
+                name={key}
+                control={control}
+                render={({ field }) => (
+                  <Checkbox
+                    id={key}
+                    disabled={isDisabled}
+                    checked={field.value}
+                    onCheckedChange={(checked) => {
+                      setValue(key, !!checked, { shouldDirty: true });
+                    }}
+                  />
+                )}
               />
               <Label
                 htmlFor={key}
