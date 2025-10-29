@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
@@ -32,13 +33,31 @@ export const PlanProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const refetch = useCallback(() => {
-    setRefreshTrigger(prev => prev + 1);
+  const fetchPlan = useCallback(async (user: FirebaseUser) => {
+    setIsLoading(true);
+    try {
+        // Force refresh the ID token to get the latest custom claims
+        await user.getIdToken(true);
+        
+        const accessInfo = await getUserAccessInfo({ actor: user.uid });
+        if (accessInfo) {
+            setPlanId(accessInfo.planId);
+            setPermissions(accessInfo.permissions);
+            setRole(accessInfo.role);
+            setError(null);
+        } else {
+           throw new Error("User data not ready");
+        }
+    } catch (err) {
+        console.error("Failed to fetch plan info:", err);
+        setError("USER_DATA_NOT_FOUND");
+    } finally {
+        setIsLoading(false);
+    }
   }, []);
 
-
+  // Effect to get current user
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
@@ -52,26 +71,8 @@ export const PlanProvider = ({ children }: { children: React.ReactNode }) => {
     });
     return () => unsubscribe();
   }, []);
-  
-  const fetchPlan = useCallback(async (user: FirebaseUser) => {
-    try {
-        const accessInfo = await getUserAccessInfo({ actor: user.uid });
-        if (accessInfo) {
-            setPlanId(accessInfo.planId);
-            setPermissions(accessInfo.permissions);
-            setRole(accessInfo.role);
-            setError(null);
-            setIsLoading(false);
-        } else {
-           throw new Error("User data not ready");
-        }
-    } catch (err) {
-        console.error("Failed to fetch plan info:", err);
-        setError("USER_DATA_NOT_FOUND");
-        setIsLoading(false);
-    }
-  }, []);
 
+  // Effect to listen for backend changes and refetch data
   useEffect(() => {
     if (!currentUser) {
         setIsLoading(false);
@@ -79,40 +80,33 @@ export const PlanProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     setIsLoading(true);
-
     const userDocRef = doc(db, 'users', currentUser.uid);
     
-    const unsubscribe = onSnapshot(userDocRef, async (docSnap) => {
+    // onSnapshot listens for any changes to the user's document
+    const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
+        console.log("Real-time update detected for user document.");
         if (docSnap.exists()) {
-            const data = docSnap.data();
-            console.log("Real-time update from user document:", data.planId);
-            
-            // Force refresh the ID token to get the latest custom claims
-            await currentUser.getIdToken(true);
-            
-            // Re-fetch the access info which relies on the new claims
-            const accessInfo = await getUserAccessInfo({ actor: currentUser.uid });
-            if (accessInfo) {
-                setPlanId(accessInfo.planId);
-                setPermissions(accessInfo.permissions);
-                setRole(accessInfo.role);
-                setError(null);
-            }
+            // When a change is detected (e.g., by the webhook), re-fetch the plan info.
+            // This ensures claims are refreshed and UI is updated.
+            fetchPlan(currentUser);
         } else {
-             console.log("User document does not exist yet, waiting...");
+             // This might happen during initial signup before the doc is created
+             console.log("User document does not exist yet, waiting for creation...");
         }
-        setIsLoading(false); // Set loading to false after first check
     }, (err) => {
         console.error("Error listening to user document:", err);
         setError("Não foi possível sincronizar os dados da sua conta.");
         setIsLoading(false);
     });
 
-    // Initial fetch for immediate feedback
-    fetchPlan(currentUser);
-
     return () => unsubscribe();
-}, [currentUser, fetchPlan]);
+  }, [currentUser, fetchPlan]);
+
+  const refetch = useCallback(() => {
+    if (currentUser) {
+      fetchPlan(currentUser);
+    }
+  }, [currentUser, fetchPlan]);
 
 
   return (
