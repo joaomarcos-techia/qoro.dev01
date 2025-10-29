@@ -47,6 +47,8 @@ export const PlanProvider = ({ children }: { children: React.ReactNode }) => {
             setRole(accessInfo.role);
             setError(null);
         } else {
+           // This indicates the user document is not yet created/synced.
+           // The onSnapshot listener will eventually catch it.
            throw new Error("User data not ready");
         }
     } catch (err) {
