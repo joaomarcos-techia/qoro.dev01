@@ -375,7 +375,7 @@ export default function SettingsPage() {
                                                     <div className="flex-grow mb-4 md:mb-0">
                                                         <div className="flex items-center gap-4">
                                                             <p className="font-bold text-foreground">{user.name || user.email}</p>
-                                                            {isAdminRow && <span className="text-xs font-bold px-2 py-1 bg-primary/20 text-primary rounded-full flex items-center"><Shield className="w-3 h-3 mr-1.5"/>Admin</span>}
+                                                            {isAdminRow && <span className="text-xs font-bold px-2 py-1 bg-primary/20 text-primary rounded-full flex items-center"><Shield className="w-3 h-3 mr-1.5"/>Administrador</span>}
                                                         </div>
                                                         <p className="text-sm text-muted-foreground">{user.email}</p>
                                                     </div>

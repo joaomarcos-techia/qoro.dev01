@@ -282,7 +282,7 @@ function DashboardContent() {
                 color="bg-crm-primary"
                 description="CRM com foco em gestão de funil de vendas e conversão para maximizar seus lucros."
                 isLocked={isCrmLocked}
-                lockedText="Acesso bloqueado pelo admin"
+                lockedText="Acesso bloqueado pelo administrador"
             />
              <AppCard 
                 href="/dashboard/pulse"
@@ -291,7 +291,7 @@ function DashboardContent() {
                 color="bg-pulse-primary"
                 description="O sistema nervoso central da sua operação, revelando insights para otimização automática e inteligente."
                 isLocked={isPulseLocked}
-                lockedText={planId !== 'performance' ? 'Disponível no plano Performance' : 'Acesso bloqueado pelo admin'}
+                lockedText={planId !== 'performance' ? 'Disponível no plano Performance' : 'Acesso bloqueado pelo administrador'}
             />
             <AppCard 
                 href="/dashboard/task/visao-geral"
@@ -300,7 +300,7 @@ function DashboardContent() {
                 color="bg-task-primary"
                 description="Plataforma leve e poderosa de gestão de tarefas e produtividade para manter sua equipe alinhada e focada."
                 isLocked={isTaskLocked}
-                lockedText="Acesso bloqueado pelo admin"
+                lockedText="Acesso bloqueado pelo administrador"
             />
             <AppCard 
                 href="/dashboard/finance/transacoes"
@@ -309,7 +309,7 @@ function DashboardContent() {
                 color="bg-finance-primary"
                 description="Controle financeiro completo para seu negócio, com dashboards claros e relatórios simplificados."
                 isLocked={isFinanceLocked}
-                lockedText="Acesso bloqueado pelo admin"
+                lockedText="Acesso bloqueado pelo administrador"
             />
         </div>
       </div>
