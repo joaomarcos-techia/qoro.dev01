@@ -23,7 +23,6 @@ const getLostFeaturesMessage = (fromPlan: string, toPlan: string): string | null
     const features: Record<string, string[]> = {
         performance: ['QoroPulse (IA)', 'Orçamentos', 'Conciliação Bancária', 'Gestão de Fornecedores'],
         growth: ['Produtos e Serviços', 'Quadro Kanban', 'Calendário de Tarefas', 'Contas a Pagar/Receber'],
-        free: ['Funcionalidades básicas com limites de registros']
     };
 
     if (fromPlan === 'performance' && toPlan === 'growth') {
@@ -35,6 +34,28 @@ const getLostFeaturesMessage = (fromPlan: string, toPlan: string): string | null
     }
     if (fromPlan === 'growth' && toPlan === 'free') {
         return `Você fez o downgrade para o plano Essencial. As seguintes funcionalidades não estão mais disponíveis: ${features.growth.join(', ')}. Além disso, foram aplicados limites de registros.`;
+    }
+
+    return null;
+}
+
+const getGainedFeaturesMessage = (fromPlan: string, toPlan: string): string | null => {
+    const features: Record<string, string[]> = {
+        performance: ['QoroPulse (IA)', 'Orçamentos', 'Conciliação Bancária', 'Gestão de Fornecedores'],
+        growth: ['Produtos e Serviços', 'Quadro Kanban', 'Calendário de Tarefas', 'Contas a Pagar/Receber'],
+    };
+
+    let gainedFeatures: string[] = [];
+    if (fromPlan === 'free' && toPlan === 'growth') {
+        gainedFeatures = features.growth;
+    } else if (fromPlan === 'free' && toPlan === 'performance') {
+        gainedFeatures = [...features.growth, ...features.performance];
+    } else if (fromPlan === 'growth' && toPlan === 'performance') {
+        gainedFeatures = features.performance;
+    }
+
+    if (gainedFeatures.length > 0) {
+        return `Parabéns pelo upgrade para o plano ${toPlan.charAt(0).toUpperCase() + toPlan.slice(1)}! Você desbloqueou: ${gainedFeatures.join(', ')}.`;
     }
 
     return null;
@@ -355,14 +376,20 @@ export const handleSubscriptionChange = async (subscriptionId: string, newPriceI
         newPlanId = 'growth';
     }
 
-    const downgradeMessage = getLostFeaturesMessage(oldPlanId, newPlanId);
+    const planLevels = { free: 0, growth: 1, performance: 2 };
+    let notificationMessage: string | null = null;
+    if (planLevels[newPlanId] < planLevels[oldPlanId]) {
+        notificationMessage = getLostFeaturesMessage(oldPlanId, newPlanId);
+    } else if (planLevels[newPlanId] > planLevels[oldPlanId]) {
+        notificationMessage = getGainedFeaturesMessage(oldPlanId, newPlanId);
+    }
 
     // Update organization document
     await orgDoc.ref.update({
         stripeSubscriptionStatus: newStatus,
         stripePriceId: newPriceId,
         planId: newPlanId,
-        lastSystemNotification: downgradeMessage || null,
+        lastSystemNotification: notificationMessage,
     });
 
     // Update all users in the organization

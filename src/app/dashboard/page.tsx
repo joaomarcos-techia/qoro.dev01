@@ -1,4 +1,5 @@
 
+
 'use client';
 import Link from 'next/link';
 import {
@@ -13,6 +14,7 @@ import {
   AlertTriangle,
   Lock,
   X,
+  Bell,
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
@@ -259,13 +261,16 @@ function DashboardContent() {
       className="app-content active max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
     >
         {systemNotification && (
-            <div className="bg-yellow-900/50 border border-yellow-700 text-yellow-300 p-4 rounded-xl mb-8">
+            <div className="bg-blue-900/50 border border-blue-700 text-blue-300 p-4 rounded-xl mb-8">
                 <div className="flex justify-between items-start">
-                    <div>
-                        <h4 className="font-bold">Aviso sobre seu plano</h4>
-                        <p className="text-sm mt-1">{systemNotification}</p>
+                    <div className="flex items-start">
+                        <Bell className="w-5 h-5 mr-4 mt-1 flex-shrink-0 text-blue-400"/>
+                        <div>
+                            <h4 className="font-bold">Notificação sobre seu plano</h4>
+                            <p className="text-sm mt-1">{systemNotification}</p>
+                        </div>
                     </div>
-                    <Button variant="ghost" size="icon" className="text-yellow-300 hover:bg-yellow-800/50" onClick={dismissNotification}>
+                    <Button variant="ghost" size="icon" className="text-blue-300 hover:bg-blue-800/50" onClick={dismissNotification}>
                         <X className="w-5 h-5"/>
                     </Button>
                 </div>
