@@ -19,6 +19,28 @@ import { adminAuth, adminDb } from '@/lib/firebase-admin';
 const FREE_PLAN_USER_LIMIT = 2;
 const GROWTH_PLAN_USER_LIMIT = 5;
 
+const getLostFeaturesMessage = (fromPlan: string, toPlan: string): string | null => {
+    const features: Record<string, string[]> = {
+        performance: ['QoroPulse (IA)', 'Orçamentos', 'Conciliação Bancária', 'Gestão de Fornecedores'],
+        growth: ['Produtos e Serviços', 'Quadro Kanban', 'Calendário de Tarefas', 'Contas a Pagar/Receber'],
+        free: ['Funcionalidades básicas com limites de registros']
+    };
+
+    if (fromPlan === 'performance' && toPlan === 'growth') {
+        return `Você fez o downgrade para o plano Growth. As seguintes funcionalidades não estão mais disponíveis: ${features.performance.join(', ')}.`;
+    }
+    if (fromPlan === 'performance' && toPlan === 'free') {
+        const lost = [...features.performance, ...features.growth];
+        return `Você fez o downgrade para o plano Essencial. As seguintes funcionalidades não estão mais disponíveis: ${lost.join(', ')}. Além disso, foram aplicados limites de registros.`;
+    }
+    if (fromPlan === 'growth' && toPlan === 'free') {
+        return `Você fez o downgrade para o plano Essencial. As seguintes funcionalidades não estão mais disponíveis: ${features.growth.join(', ')}. Além disso, foram aplicados limites de registros.`;
+    }
+
+    return null;
+}
+
+
 export const createUserProfile = async (input: z.infer<typeof UserProfileCreationSchema>): Promise<{uid: string}> => {
     const { uid, name, organizationName, cnpj, contactEmail, contactPhone, email, planId, stripePriceId } = input;
     
@@ -143,6 +165,9 @@ export const updateOrganizationDetails = async (details: z.infer<typeof UpdateOr
     if(details.cnpj) updateData.cnpj = details.cnpj;
     if(details.contactEmail) updateData.contactEmail = details.contactEmail;
     if(details.contactPhone) updateData.contactPhone = details.contactPhone;
+    if (Object.keys(updateData).length > 0) {
+        updateData.lastSystemNotification = null;
+    }
 
     await adminDb.collection('organizations').doc(organizationId).update(updateData);
 
@@ -320,6 +345,7 @@ export const handleSubscriptionChange = async (subscriptionId: string, newPriceI
     
     const orgDoc = orgQuery.docs[0];
     const organizationId = orgDoc.id;
+    const oldPlanId = orgDoc.data().planId;
 
     // Determine new planId from priceId
     let newPlanId: 'free' | 'growth' | 'performance' = 'free';
@@ -329,11 +355,14 @@ export const handleSubscriptionChange = async (subscriptionId: string, newPriceI
         newPlanId = 'growth';
     }
 
+    const downgradeMessage = getLostFeaturesMessage(oldPlanId, newPlanId);
+
     // Update organization document
     await orgDoc.ref.update({
         stripeSubscriptionStatus: newStatus,
         stripePriceId: newPriceId,
-        planId: newPlanId, // Also storing planId on org for easier querying
+        planId: newPlanId,
+        lastSystemNotification: downgradeMessage || null,
     });
 
     // Update all users in the organization

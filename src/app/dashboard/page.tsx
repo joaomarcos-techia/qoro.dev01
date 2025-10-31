@@ -12,6 +12,7 @@ import {
   ListTodo,
   AlertTriangle,
   Lock,
+  X,
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
@@ -24,6 +25,7 @@ import { useRouter } from 'next/navigation';
 import { usePlan } from '@/contexts/PlanContext';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
 
 
 interface DashboardMetrics {
@@ -146,11 +148,12 @@ const AppCard = ({
 
 
 function DashboardContent() {
-  const { planId, permissions, isLoading: isPlanLoading, error: planError } = usePlan();
+  const { planId, permissions, isLoading: isPlanLoading, error: planError, organizationId } = usePlan();
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [isLoadingMetrics, setIsLoadingMetrics] = useState(true);
   const [metricsError, setMetricsError] = useState<string | null>(null);
   const [metrics, setMetrics] = useState<DashboardMetrics>({ totalCustomers: 0, activeLeads: 0, pendingTasks: 0, totalBalance: 0 });
+  const [systemNotification, setSystemNotification] = useState<string | null>(null);
   const router = useRouter();
 
 
@@ -163,6 +166,20 @@ function DashboardContent() {
     });
     return () => unsubscribe();
   }, [router]);
+
+  useEffect(() => {
+    if (!organizationId) return;
+
+    const orgDocRef = doc(db, 'organizations', organizationId);
+    const unsubscribe = onSnapshot(orgDocRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setSystemNotification(data.lastSystemNotification || null);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [organizationId]);
 
 
   useEffect(() => {
@@ -200,6 +217,13 @@ function DashboardContent() {
     }
   }, [currentUser, isPlanLoading, planError]);
 
+  const dismissNotification = async () => {
+    if (!organizationId) return;
+    const orgDocRef = doc(db, 'organizations', organizationId);
+    await updateDoc(orgDocRef, { lastSystemNotification: null });
+    setSystemNotification(null);
+  }
+
   if (isPlanLoading || !currentUser) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -234,6 +258,20 @@ function DashboardContent() {
       id="dashboard-content"
       className="app-content active max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
     >
+        {systemNotification && (
+            <div className="bg-yellow-900/50 border border-yellow-700 text-yellow-300 p-4 rounded-xl mb-8">
+                <div className="flex justify-between items-start">
+                    <div>
+                        <h4 className="font-bold">Aviso sobre seu plano</h4>
+                        <p className="text-sm mt-1">{systemNotification}</p>
+                    </div>
+                    <Button variant="ghost" size="icon" className="text-yellow-300 hover:bg-yellow-800/50" onClick={dismissNotification}>
+                        <X className="w-5 h-5"/>
+                    </Button>
+                </div>
+            </div>
+        )}
+
       <div className="mb-10">
         <h2 className="text-3xl font-bold text-foreground mb-2">
           Bem-vindo à Qoro!
@@ -249,16 +287,16 @@ function DashboardContent() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <MetricCard title="Total de Clientes" value={String(metrics.totalCustomers)} icon={Users} isLoading={isLoadingMetrics} error={!!metricsError} colorClass='bg-crm-primary' isLocked={isCrmLocked} lockedText='Acesso bloqueado' />
                 <MetricCard title="Clientes no Funil" value={String(metrics.activeLeads)} icon={TrendingUp} isLoading={isLoadingMetrics} error={!!metricsError} colorClass='bg-crm-primary' isLocked={isCrmLocked} lockedText='Acesso bloqueado'/>
-                <MetricCard title="Tarefas Pendentes" value={String(metrics.pendingTasks)} icon={ListTodo} isLoading={isLoadingMetrics} error={!!metricsError} colorClass='bg-task-primary' isLocked={isTaskLocked} lockedText='Acesso bloqueado'/>
+                <MetricCard title="Tarefas Pendentes" value={String(metrics.pendingTasks)} icon={ListTodo} isLoading={isLoadingMetrics} error={!!metricsError} colorClass='bg-task-primary' isLocked={isTaskLocked} lockedText='Acesso bloqueado pelo administrador'/>
                 <MetricCard 
                     title="Saldo em Contas" 
                     value={formatCurrency(metrics.totalBalance)} 
                     icon={DollarSign} 
-                    isLoading={isLoadingMetrics} 
+                    isLoading={isLoadingMetrics} _
                     error={!!metricsError} 
                     colorClass='bg-finance-primary'
                     isLocked={isFinanceLocked}
-                    lockedText="Acesso bloqueado"
+                    lockedText="Acesso bloqueado pelo administrador"
                 />
             </div>
              {metricsError && (

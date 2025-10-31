@@ -15,6 +15,7 @@ type PlanContextType = {
   isLoading: boolean;
   error: string | null;
   refetch: () => void;
+  organizationId: string | null;
 };
 
 const PlanContext = createContext<PlanContextType>({
@@ -24,6 +25,7 @@ const PlanContext = createContext<PlanContextType>({
   isLoading: true,
   error: null,
   refetch: () => {},
+  organizationId: null,
 });
 
 export const PlanProvider = ({ children }: { children: React.ReactNode }) => {
@@ -33,6 +35,7 @@ export const PlanProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
 
   const fetchPlan = useCallback(async (user: FirebaseUser) => {
     setIsLoading(true);
@@ -69,6 +72,7 @@ export const PlanProvider = ({ children }: { children: React.ReactNode }) => {
         setPermissions(null);
         setRole(null);
         setError(null);
+        setOrganizationId(null);
       }
     });
     return () => unsubscribe();
@@ -88,6 +92,8 @@ export const PlanProvider = ({ children }: { children: React.ReactNode }) => {
     const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
         console.log("Real-time update detected for user document.");
         if (docSnap.exists()) {
+            const data = docSnap.data();
+            setOrganizationId(data.organizationId);
             // When a change is detected (e.g., by the webhook), re-fetch the plan info.
             // This ensures claims are refreshed and UI is updated.
             fetchPlan(currentUser);
@@ -112,7 +118,7 @@ export const PlanProvider = ({ children }: { children: React.ReactNode }) => {
 
 
   return (
-    <PlanContext.Provider value={{ planId, permissions, role, isLoading, error, refetch }}>
+    <PlanContext.Provider value={{ planId, permissions, role, isLoading, error, refetch, organizationId }}>
       {children}
     </PlanContext.Provider>
   );
