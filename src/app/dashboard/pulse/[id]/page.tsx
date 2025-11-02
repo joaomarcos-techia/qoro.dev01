@@ -50,22 +50,23 @@ export default function PulseConversationPage() {
     }
 
     const optimisticUserMessage: PulseMessage = { role: 'user', content: messageContent };
-
-    const messagesToSend = [...messages, optimisticUserMessage];
-    setMessages(messagesToSend);
+    
+    // Optimistic UI update with the user's message
+    const newMessages = [...messages, optimisticUserMessage];
+    setMessages(newMessages);
 
     const conversationIdToSend = currentConversationId === 'new' ? undefined : currentConversationId;
 
     try {
       const result = await askPulse({
-        messages: messagesToSend,
+        messages: newMessages, // Send the already updated list
         actor: currentUser.uid,
         conversationId: conversationIdToSend,
       });
 
       if (result?.response) {
-        // Substitui a mensagem otimista e a resposta real para ter uma fonte única da verdade
-        setMessages([...messages, optimisticUserMessage, result.response]);
+        // Just add the new response from the AI
+        setMessages(prev => [...prev, result.response]);
       } else {
         throw new Error('A IA não retornou uma resposta válida.');
       }
@@ -81,8 +82,8 @@ export default function PulseConversationPage() {
       console.error("Error in handleSendMessage:", err);
       const errorMessage = err.message || 'Falha ao gerar resposta da IA. Verifique sua conexão ou tente novamente mais tarde.';
       setError(errorMessage);
-      // Reverte a UI para o estado anterior em caso de erro
-      setMessages(prev => prev.slice(0, -1));
+      // Revert the optimistic update on error
+      setMessages(messages);
     } finally {
       setIsSending(false);
     }
