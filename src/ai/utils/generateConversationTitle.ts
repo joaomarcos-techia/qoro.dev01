@@ -1,4 +1,5 @@
 
+// src/utils/generateConversationTitle.ts
 'use server';
 
 import { ai } from '../genkit';
@@ -6,8 +7,7 @@ import { googleAI } from '@genkit-ai/google-genai';
 import { PulseMessage } from '../schemas';
 
 /**
- * Gera um título curto (máx. 4 palavras) para uma conversa
- * baseado no contexto das primeiras mensagens.
+ * Gera um título curto (máx. 2 palavras) baseado nas três primeiras mensagens do usuário.
  * @param messages Histórico inicial da conversa (PulseMessage[]).
  */
 export async function generateConversationTitle(messages: PulseMessage[]): Promise<string> {
@@ -17,17 +17,23 @@ export async function generateConversationTitle(messages: PulseMessage[]): Promi
     return fallbackTitle;
   }
 
-  // Constrói um contexto com as mensagens para a IA
-  const context = messages
-    .map(m => `${m.role === 'user' ? 'Usuário' : 'Assistente'}: ${m.content}`)
-    .join('\n');
+  // Filtra apenas mensagens do usuário
+  const userMessages = messages.filter(m => m.role === 'user').slice(0, 3);
+
+  if (userMessages.length === 0) {
+    return fallbackTitle;
+  }
+
+  // Constrói contexto a partir das 3 primeiras mensagens do usuário
+  const context = userMessages.map(m => `Usuário: ${m.content}`).join('\n');
 
   try {
     const aiPrompt = `
-Analise o diálogo a seguir e crie um título curto e objetivo com no máximo 4 palavras que resuma o tema central da conversa.
-Retorne apenas o título, sem aspas, pontuação final ou qualquer outra formatação.
+Analise o contexto das mensagens abaixo e crie um título conciso com no máximo 2 palavras
+que capture o tema central da conversa.
+Retorne apenas o título, sem aspas, pontuação ou formatação adicional.
 
-Diálogo:
+Mensagens:
 ---
 ${context}
 ---
@@ -37,16 +43,12 @@ Título:
     const result = await ai.generate({
       model: googleAI.model('gemini-2.5-flash'),
       prompt: aiPrompt,
-      config: { temperature: 0.1, maxOutputTokens: 15 },
+      config: { temperature: 0.1, maxOutputTokens: 10 },
     });
 
     let title = (result.text ?? '').trim();
-    
-    // Limpeza rigorosa do título
-    title = title.replace(/^["'“‘]|["'”’.,!?]+$/g, ''); // Remove aspas e pontuação final
-
-    // Garante no máximo 4 palavras
-    const words = title.split(/\s+/).filter(Boolean).slice(0, 4);
+    title = title.replace(/^["'“‘]|["'”’.,!?]+$/g, ''); // Limpa aspas e pontuação
+    const words = title.split(/\s+/).filter(Boolean).slice(0, 2); // Máx. 2 palavras
     title = words.join(' ');
 
     if (title) {
@@ -55,17 +57,10 @@ Título:
   } catch (error) {
     console.error('Erro ao gerar título com IA:', error);
   }
-  
-  // Fallback caso a IA falhe: pega as primeiras 4 palavras da primeira pergunta do usuário.
-  const userMessageContent = messages.find(m => m.role === 'user')?.content || '';
-  const usefulWords = userMessageContent
-    .trim()
-    .split(/\s+/)
-    .slice(0, 4);
 
-  if (usefulWords.length > 0) {
-    return usefulWords.join(' ');
-  }
+  // Fallback: primeiras 2 palavras da primeira mensagem do usuário
+  const userMessageContent = userMessages[0]?.content || '';
+  const fallbackWords = userMessageContent.trim().split(/\s+/).slice(0, 2);
 
-  return fallbackTitle;
+  return fallbackWords.length > 0 ? fallbackWords.join(' ') : fallbackTitle;
 }
