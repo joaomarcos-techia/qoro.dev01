@@ -145,9 +145,13 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
         
         let titleToUpdate = existingData.title;
 
-        // **A CORREÇÃO PRINCIPAL:** Gera o título na *terceira* mensagem do usuário,
-        // o que corresponde a 5 mensagens no total (U->A->U->A->U).
-        if ((existingData.title || '').toLowerCase() === 'nova conversa' && finalMessages.length === 5) {
+        // **CORREÇÃO DA LÓGICA DE GERAÇÃO DE TÍTULO**
+        // A geração do título agora é acionada na terceira mensagem do usuário
+        // (total de 5 mensagens: U -> A -> U -> A -> U) e é verificada a cada interação.
+        const isNewConversationTitle = (titleToUpdate || '').toLowerCase() === 'nova conversa';
+        const hasEnoughContext = finalMessages.filter(m => m.role === 'user').length >= 2;
+        
+        if (isNewConversationTitle && hasEnoughContext) {
           titleToUpdate = await generateConversationTitle(finalMessages);
         }
         finalTitle = titleToUpdate;
@@ -159,6 +163,7 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
         });
 
       } else {
+        // Lógica para criar uma nova conversa
         const titleForNewConvo = 'Nova conversa';
         finalTitle = titleForNewConvo;
         const newConversationData = {
@@ -189,3 +194,5 @@ export async function askPulse(
 ): Promise<z.infer<typeof AskPulseOutputSchema>> {
   return pulseFlow(input);
 }
+
+    
