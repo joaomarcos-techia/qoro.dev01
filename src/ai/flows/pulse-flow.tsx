@@ -116,44 +116,38 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
     } catch (err: any) {
       console.error('AI Generation Error in pulse-flow:', err);
       
-      // Verifica se a mensagem de erro contém o código de sobrecarga.
       const isOverloaded = err.message?.includes('503') && err.message?.toLowerCase().includes('overloaded');
 
       if (isOverloaded) {
           throw new Error('A IA está com alta demanda no momento. Por favor, tente novamente em alguns instantes.');
       }
 
-      // Lança um erro claro que será capturado pelo frontend.
       throw new Error(`Falha na API de IA: ${err.message || 'Erro desconhecido'}`);
     }
 
     const responseText = result.text ?? 'Desculpe, não consegui processar sua pergunta. Tente novamente.';
     const responseMessage: PulseMessage = { role: 'assistant', content: responseText };
     
-    // Adiciona a resposta da IA ao histórico final
     const finalMessages = [...messages, responseMessage];
 
-    // Lógica robusta de salvamento e atualização
     let conversationId = existingConvId;
     let finalTitle = 'Nova conversa';
 
     try {
-      if (conversationId) {
-        // --- Atualiza uma conversa existente ---
+      if (conversationId && conversationId !== 'new') {
         const conversationRef = adminDb.collection('pulse_conversations').doc(conversationId);
         const doc = await conversationRef.get();
-        
         const existingData = doc.data();
+        
         if (!doc.exists || !existingData) {
             throw new Error(`Conversa com ID ${conversationId} não encontrada.`);
         }
         
-        let titleToUpdate = existingData.title || 'Nova conversa';
+        let titleToUpdate = existingData.title;
 
-        // Lógica de geração de título na segunda interação do usuário
-        if (titleToUpdate.toLowerCase() === 'nova conversa' && existingData.messages?.length >= 1) {
-            const contextMessages = [...existingData.messages, messages[messages.length-1]];
-            titleToUpdate = await generateConversationTitle(contextMessages.slice(0, 2));
+        // Gera o título na segunda mensagem do usuário (terceira mensagem geral: user, assist, user)
+        if (titleToUpdate.toLowerCase() === 'nova conversa' && messages.filter(m => m.role === 'user').length === 2) {
+          titleToUpdate = await generateConversationTitle(finalMessages.slice(0, 3));
         }
         finalTitle = titleToUpdate;
 
@@ -162,9 +156,8 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
           title: finalTitle,
           updatedAt: FieldValue.serverTimestamp(),
         });
+
       } else {
-        // --- Cria uma nova conversa ---
-        // Na primeira interação, o título é sempre "Nova conversa" para evitar chamadas desnecessárias à IA.
         const newConversationData = {
           userId,
           title: 'Nova conversa', 
