@@ -131,7 +131,7 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
     const finalMessages = [...messages, responseMessage];
 
     let conversationId = existingConvId;
-    let finalTitle = 'Nova conversa';
+    let finalTitle = '';
 
     try {
       if (conversationId && conversationId !== 'new') {
@@ -145,8 +145,9 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
         
         let titleToUpdate = existingData.title;
 
-        // Gera o título na terceira mensagem do usuário (quinta mensagem geral)
-        if (titleToUpdate.toLowerCase() === 'nova conversa' && finalMessages.length === 5) {
+        // **A CORREÇÃO PRINCIPAL:** Gera o título na *terceira* mensagem do usuário,
+        // o que corresponde a 5 mensagens no total (U->A->U->A->U).
+        if ((existingData.title || '').toLowerCase() === 'nova conversa' && finalMessages.length === 5) {
           titleToUpdate = await generateConversationTitle(finalMessages);
         }
         finalTitle = titleToUpdate;
@@ -158,9 +159,11 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
         });
 
       } else {
+        const titleForNewConvo = 'Nova conversa';
+        finalTitle = titleForNewConvo;
         const newConversationData = {
           userId,
-          title: 'Nova conversa', 
+          title: titleForNewConvo, 
           messages: finalMessages.map(m => ({ ...m })),
           createdAt: FieldValue.serverTimestamp(),
           updatedAt: FieldValue.serverTimestamp(),
