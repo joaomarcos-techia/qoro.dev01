@@ -3,7 +3,7 @@
 
 import { useState, useRef, useEffect, FormEvent, useCallback, useTransition } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { BrainCircuit, Loader2, AlertCircle, User } from 'lucide-react';
+import { BrainCircuit, Loader2, AlertCircle, User, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { User as FirebaseUser, onAuthStateChanged } from 'firebase/auth';
@@ -154,93 +154,111 @@ export default function PulseConversationPage() {
                                                                                                                                                                                                                                                                                                                 }
                                                                                                                                                                                                                                                                                                                   };
 
-                                                                                                                                                                                                                                                                                                                    const renderMessages = () => {
-                                                                                                                                                                                                                                                                                                                        if (isLoadingHistory && currentConversationId !== 'new') {
-                                                                                                                                                                                                                                                                                                                              return (
-                                                                                                                                                                                                                                                                                                                                      <div className="flex-grow flex flex-col items-center justify-center">
-                                                                                                                                                                                                                                                                                                                                                <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
-                                                                                                                                                                                                                                                                                                                                                          <p className="text-muted-foreground">Carregando conversa...</p>
-                                                                                                                                                                                                                                                                                                                                                                  </div>
-                                                                                                                                                                                                                                                                                                                                                                        );
-                                                                                                                                                                                                                                                                                                                                                                            }
-
-                                                                                                                                                                                                                                                                                                                                                                                return messages.map((message, index) => (
-                                                                                                                                                                                                                                                                                                                                                                                      <div key={index} className={`flex items-start gap-4 mx-auto w-full ${message.role === 'user' ? 'justify-end' : ''}`}>
-                                                                                                                                                                                                                                                                                                                                                                                              {message.role !== 'user' && (
-                                                                                                                                                                                                                                                                                                                                                                                                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-pulse-primary text-black flex items-center justify-center">
-                                                                                                                                                                                                                                                                                                                                                                                                                    <BrainCircuit size={18} />
-                                                                                                                                                                                                                                                                                                                                                                                                                              </div>
-                                                                                                                                                                                                                                                                                                                                                                                                                                      )}
-                                                                                                                                                                                                                                                                                                                                                                                                                                              <div className={`max-w-2xl px-5 py-3 rounded-2xl ${message.role === 'user' ? 'bg-secondary text-primary-foreground' : 'bg-card text-foreground border'}`}>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                         {message.role === 'user' ? (
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                         <p className="whitespace-pre-wrap text-base leading-relaxed">{message.content}</p>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ) : (
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     <MarkdownRenderer content={message.content} />
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 )}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          </div>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  {message.role === 'user' && (
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-secondary text-muted-foreground flex items-center justify-center">
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        <User size={18} />
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  </div>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           )}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </div>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            ));
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              };
-
+    const renderContent = () => {
+        if (isLoadingHistory) {
             return (
-                <div className="flex flex-col h-full bg-background">
-                <div ref={scrollAreaRef} className="flex-grow flex flex-col items-center w-full px-4 overflow-y-auto relative">
-                  <div className="w-full max-w-4xl flex-grow flex flex-col justify-end">
-                    <div className="space-y-6 py-8">
-                        {renderMessages()}
-                        {isSending && !error && (
-                            <div className="flex items-start gap-4 mx-auto w-full">
-                                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-pulse-primary text-black flex items-center justify-center">
-                                <Loader2 className="animate-spin" size={18} />
-                                </div>
-                                <div className="max-w-2xl px-5 py-3 rounded-2xl bg-card text-foreground border">
-                                <p className="text-muted-foreground">QoroPulse está pensando...</p>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                  </div>
+                <div className="flex-grow flex flex-col items-center justify-center">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
+                    <p className="text-muted-foreground">Carregando conversa...</p>
                 </div>
-
-                <div className="w-full bg-gradient-to-t from-background via-background/90 to-transparent">
-                    <div className="w-full max-w-4xl mx-auto px-4 pt-4 pb-8">
-                        <form onSubmit={handleSendMessage} className="relative bg-card border border-border rounded-2xl shadow-2xl">
-                        <Textarea
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            onKeyDown={handleKeyDown}
-                            placeholder="Continue a conversa..."
-                            className="w-full pr-20 pl-4 py-4 bg-transparent rounded-2xl border-none focus:ring-0 text-base resize-none"
-                            rows={1}
-                            disabled={isSending || isLoadingHistory}
-                            maxLength={4000}
-                        />
-                        <Button
-                            type="submit"
-                            disabled={isSending || !input.trim() || isLoadingHistory}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 w-12 h-12 bg-pulse-primary text-primary-foreground rounded-2xl transition-all duration-300 hover:bg-pulse-primary/90 disabled:bg-secondary disabled:text-muted-foreground"
-                        >
-                            {isSending ? (
-                                <Loader2 className="w-6 h-6 animate-spin" />
-                            ) : (
-                                <ArrowUpIcon className="w-6 h-6" />
-                            )}
-                        </Button>
-                        </form>
-                        
-                        {error && (
-                            <div className="text-destructive text-sm mt-3 p-3 bg-destructive/10 border border-destructive/20 rounded-lg flex items-start">
-                                <AlertCircle className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" />
-                                <span>{error}</span>
-                            </div>
-                        )}
-                    </div>
-                </div>
-              </div>
             );
         }
+
+        if (messages.length === 0 && !isSending) {
+             return (
+                <div className="flex-grow flex flex-col items-center justify-center text-center">
+                    <div className="inline-block p-4 bg-pulse-primary/20 rounded-full mb-6 border border-pulse-primary/30">
+                        <Sparkles className="w-10 h-10 text-pulse-primary"/>
+                    </div>
+                    <h1 className="text-4xl font-bold text-foreground mb-4">
+                        Como posso te ajudar hoje?
+                    </h1>
+                    <p className="text-muted-foreground max-w-lg">
+                        Comece uma nova conversa. Você pode perguntar sobre vendas, finanças, tarefas ou qualquer insight sobre seu negócio.
+                    </p>
+                </div>
+            );
+        }
+
+        return (
+             <div className="w-full max-w-4xl flex-grow flex flex-col justify-end">
+                <div className="space-y-6 py-8">
+                    {messages.map((message, index) => (
+                        <div key={index} className={`flex items-start gap-4 mx-auto w-full ${message.role === 'user' ? 'justify-end' : ''}`}>
+                            {message.role !== 'user' && (
+                                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-pulse-primary text-black flex items-center justify-center">
+                                    <BrainCircuit size={18} />
+                                </div>
+                            )}
+                            <div className={`max-w-2xl px-5 py-3 rounded-2xl ${message.role === 'user' ? 'bg-secondary text-primary-foreground' : 'bg-card text-foreground border'}`}>
+                                {message.role === 'user' ? (
+                                    <p className="whitespace-pre-wrap text-base leading-relaxed">{message.content}</p>
+                                ) : (
+                                    <MarkdownRenderer content={message.content} />
+                                )}
+                            </div>
+                            {message.role === 'user' && (
+                                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-secondary text-muted-foreground flex items-center justify-center">
+                                    <User size={18} />
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                    {isSending && !error && (
+                        <div className="flex items-start gap-4 mx-auto w-full">
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-pulse-primary text-black flex items-center justify-center">
+                                <Loader2 className="animate-spin" size={18} />
+                            </div>
+                            <div className="max-w-2xl px-5 py-3 rounded-2xl bg-card text-foreground border">
+                                <p className="text-muted-foreground">QoroPulse está pensando...</p>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
+    return (
+        <div className="flex flex-col h-full bg-background">
+        <div ref={scrollAreaRef} className="flex-grow flex flex-col items-center w-full px-4 overflow-y-auto relative">
+            {renderContent()}
+        </div>
+
+        <div className="w-full bg-gradient-to-t from-background via-background/90 to-transparent">
+            <div className="w-full max-w-4xl mx-auto px-4 pt-4 pb-8">
+                <form onSubmit={handleSendMessage} className="relative bg-card border border-border rounded-2xl shadow-2xl">
+                <Textarea
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Continue a conversa..."
+                    className="w-full pr-20 pl-4 py-4 bg-transparent rounded-2xl border-none focus:ring-0 text-base resize-none"
+                    rows={1}
+                    disabled={isSending || isLoadingHistory}
+                    maxLength={4000}
+                />
+                <Button
+                    type="submit"
+                    disabled={isSending || !input.trim() || isLoadingHistory}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-12 h-12 bg-pulse-primary text-primary-foreground rounded-2xl transition-all duration-300 hover:bg-pulse-primary/90 disabled:bg-secondary disabled:text-muted-foreground"
+                >
+                    {isSending ? (
+                        <Loader2 className="w-6 h-6 animate-spin" />
+                    ) : (
+                        <ArrowUpIcon className="w-6 h-6" />
+                    )}
+                </Button>
+                </form>
+                
+                {error && (
+                    <div className="text-destructive text-sm mt-3 p-3 bg-destructive/10 border border-destructive/20 rounded-lg flex items-start">
+                        <AlertCircle className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" />
+                        <span>{error}</span>
+                    </div>
+                )}
+            </div>
+        </div>
+      </div>
+    );
+}
