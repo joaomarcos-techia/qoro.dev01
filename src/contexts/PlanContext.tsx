@@ -3,10 +3,10 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { auth, db } from '@/lib/firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { auth } from '@/lib/firebase';
 import { getUserAccessInfo } from '@/ai/flows/user-management';
 import { AppPermissions } from '@/ai/schemas';
+import { getAdminAndOrg } from '@/services/utils';
 
 type PlanContextType = {
   planId: 'free' | 'growth' | 'performance' | null;
@@ -39,19 +39,19 @@ export const PlanProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchPlan = useCallback(async (user: FirebaseUser) => {
     setIsLoading(true);
+    setError(null);
     try {
-        // Force refresh the ID token to get the latest custom claims
-        await user.getIdToken(true);
+        await user.getIdToken(true); // Garante que as custom claims estão atualizadas
         
         const accessInfo = await getUserAccessInfo({ actor: user.uid });
-        if (accessInfo) {
+        const adminOrgData = await getAdminAndOrg(user.uid);
+        
+        if (accessInfo && adminOrgData) {
             setPlanId(accessInfo.planId);
             setPermissions(accessInfo.permissions);
             setRole(accessInfo.role);
-            setError(null);
+            setOrganizationId(adminOrgData.organizationId);
         } else {
-           // This indicates the user document is not yet created/synced.
-           // The onSnapshot listener will eventually catch it.
            throw new Error("User data not ready");
         }
     } catch (err) {
@@ -62,11 +62,13 @@ export const PlanProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, []);
 
-  // Effect to get current user
+  // Effect to get current user and fetch initial data
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
-       if (!user) {
+      if (user) {
+        fetchPlan(user);
+      } else {
         setIsLoading(false);
         setPlanId(null);
         setPermissions(null);
@@ -76,39 +78,7 @@ export const PlanProvider = ({ children }: { children: React.ReactNode }) => {
       }
     });
     return () => unsubscribe();
-  }, []);
-
-  // Effect to listen for backend changes and refetch data
-  useEffect(() => {
-    if (!currentUser) {
-        setIsLoading(false);
-        return;
-    }
-
-    setIsLoading(true);
-    const userDocRef = doc(db, 'users', currentUser.uid);
-    
-    // onSnapshot listens for any changes to the user's document
-    const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
-        console.log("Real-time update detected for user document.");
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            setOrganizationId(data.organizationId);
-            // When a change is detected (e.g., by the webhook), re-fetch the plan info.
-            // This ensures claims are refreshed and UI is updated.
-            fetchPlan(currentUser);
-        } else {
-             // This might happen during initial signup before the doc is created
-             console.log("User document does not exist yet, waiting for creation...");
-        }
-    }, (err) => {
-        console.error("Error listening to user document:", err);
-        setError("Não foi possível sincronizar os dados da sua conta.");
-        setIsLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [currentUser, fetchPlan]);
+  }, [fetchPlan]);
 
   const refetch = useCallback(() => {
     if (currentUser) {
