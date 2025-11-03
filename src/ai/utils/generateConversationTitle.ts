@@ -1,3 +1,4 @@
+
 'use server';
 
 import { ai } from '../genkit';
@@ -14,42 +15,52 @@ export async function generateConversationTitle(messages: PulseMessage[]): Promi
     return fallbackTitle;
   }
 
-  // Pega até as 3 primeiras mensagens do usuário
+  // Garante que estamos pegando apenas mensagens do usuário e no máximo as 3 primeiras.
   const userMessages = messages.filter(m => m.role === 'user').slice(0, 3);
+
+  if (userMessages.length === 0) {
+    return fallbackTitle;
+  }
+
   const context = userMessages
     .map(m => `Usuário: ${m.content}`)
     .join('\n');
 
   try {
+    // Prompt mais direto e focado em sintetizar, não apenas extrair.
     const aiPrompt = `
-O diálogo abaixo é o início de uma conversa. Extraia o assunto principal em DUAS palavras para ser usado como título. 
-Retorne APENAS o título, sem pontuação, sem aspas, sem formatação.
+Analise o seguinte diálogo e resuma o tópico principal em exatamente duas palavras para ser usado como um título.
 
 Diálogo:
 ---
 ${context}
 ---
-Título:
+Título Conciso:
     `.trim();
 
     const result = await ai.generate({
       model: googleAI.model('gemini-2.5-flash'),
       prompt: aiPrompt,
-      config: { temperature: 0.2, maxOutputTokens: 10 },
+      config: { temperature: 0.1, maxOutputTokens: 10 },
     });
 
     let title = (result.text ?? '').trim();
-    title = title.replace(/^["'“‘]|["'”’.,!?]+$/g, '');
+    
+    // Limpeza rigorosa de pontuações, aspas e quebras de linha
+    title = title.replace(/^["'“‘]|["'”’.,!?\n\r]+$/g, '');
+    
+    // Garante que o título tenha no máximo 2 palavras
+    const words = title.split(/\s+/).filter(Boolean).slice(0, 2);
+    title = words.join(' ');
 
-    // Garante que são só duas palavras
-    title = title.split(/\s+/).slice(0, 2).join(' ');
-
-    if (title) return title;
+    if (title) {
+      return title;
+    }
   } catch (error) {
     console.error('Erro ao gerar título com IA:', error);
   }
 
-  // Fallback: 2 primeiras palavras da 1ª mensagem do usuário
+  // Fallback: 2 primeiras palavras da primeira mensagem do usuário
   const fallbackWords = userMessages[0]?.content?.trim().split(/\s+/).slice(0, 2) || [];
   return fallbackWords.length > 0 ? fallbackWords.join(' ') : fallbackTitle;
 }
