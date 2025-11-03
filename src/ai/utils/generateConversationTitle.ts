@@ -1,4 +1,3 @@
-
 'use server';
 
 import { ai } from '../genkit';
@@ -7,15 +6,13 @@ import { PulseMessage } from '../schemas';
 
 /**
  * Gera um título curto e contextual (3 palavras) baseado no diálogo inicial.
+ * Se a geração falhar, retorna a mensagem de erro como título para depuração.
  */
 export async function generateConversationTitle(messages: PulseMessage[]): Promise<string> {
-  const fallbackTitle = 'Nova conversa';
-
   if (!Array.isArray(messages) || messages.length === 0) {
-    return fallbackTitle;
+    return 'Contexto de mensagem insuficiente';
   }
 
-  // Formata as primeiras mensagens como um diálogo para dar contexto
   const context = messages
     .map(m => `${m.role === 'user' ? 'Usuário' : 'Assistente'}: ${m.content}`)
     .join('\n');
@@ -52,14 +49,17 @@ Título Conciso:
     // Limpeza final para remover aspas ou pontuações que a IA possa adicionar
     title = title.replace(/^["'“‘]|["'”’,.!?]+$/g, '');
 
-    // Capitaliza a primeira letra de cada palavra
-    if (title) {
+    // Se o título for válido, retorna capitalizado, senão retorna um erro indicativo.
+    if (title && title.split(' ').length > 1) {
         return title.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
     }
-  } catch (error) {
-    console.error('Erro ao gerar título com IA, usando fallback:', error);
-    return fallbackTitle;
-  }
+    
+    // Se a IA retornar algo inválido (ex: vazio ou uma única palavra), tratamos como um erro.
+    return "IA retornou título inválido";
 
-  return fallbackTitle;
+  } catch (error: any) {
+    console.error('Erro ao gerar título com IA, retornando erro como título:', error);
+    // Retorna a mensagem de erro exata como o título.
+    return error.message || 'Erro desconhecido na geração do título';
+  }
 }
