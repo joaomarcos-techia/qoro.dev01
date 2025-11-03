@@ -1,3 +1,4 @@
+
 'use server';
 
 import { ai } from '@/ai/genkit';
@@ -142,8 +143,12 @@ Seu propósito é traduzir conceitos complexos em recomendações claras, aplic�
         const shouldGenerateTitle = finalTitle.toLowerCase() === 'nova conversa' && userMessages.length >= 3;
 
         if (shouldGenerateTitle) {
-          const firstUserMessages = userMessages.slice(0, 3);
-          finalTitle = await generateConversationTitle(firstUserMessages);
+          const contextMessages = finalMessages.slice(0, 5); // Use a a conversa completa para dar contexto
+          const newTitle = await generateConversationTitle(contextMessages);
+          // Apenas atualiza o título se a IA retornar algo válido (mais de uma palavra)
+          if (newTitle && newTitle.split(' ').length > 1) {
+            finalTitle = newTitle;
+          }
         }
 
         await conversationRef.update({
