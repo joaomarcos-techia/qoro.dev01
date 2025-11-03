@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -43,30 +44,33 @@ const useMarkdownContent = (filePath: string) => {
         return response.text();
       })
       .then(text => {
+        // Safe and robust markdown-to-html conversion
         const parsedHtml = text
-          // Headers
-          .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold mt-6 mb-4 text-white">$1</h1>')
-          .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold mt-5 mb-3 text-gray-200">$1</h2>')
-          .replace(/^### (.*$)/gim, '<h3 class="text-lg font-semibold mt-4 mb-2 text-gray-300">$1</h3>')
-          // Bold
-          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-          .replace(/__(.*?)__/g, '<strong>$1</strong>')
-          // Italic
-          .replace(/\*(.*?)\*/g, '<em>$1</em>')
-          .replace(/_(.*?)_/g, '<em>$1</em>')
-          // Unordered List
-          .replace(/^\s*[\-\*]\s+(.*)/gm, (match, content) => `<li class="flex items-start"><span class="mr-2 mt-1.5 text-primary">&#8226;</span>${content}</li>`)
-          .replace(/((<li.*<\/li>\s*)+)/g, (match) => `<ul class="space-y-2 my-4">${match.trim()}</ul>`)
-          // Paragraphs
-          .split(/\n\s*\n/)
+          .split('\n\n')
           .map(paragraph => {
             const trimmed = paragraph.trim();
-            if (!trimmed) return '';
-            if (trimmed.startsWith('<h') || trimmed.startsWith('<ul')) return trimmed;
-            return `<p class="text-gray-400 leading-relaxed">${trimmed.replace(/\n/g, '<br />')}</p>`;
+            if (trimmed.startsWith('### ')) {
+              return `<h3 class="text-lg font-semibold mt-4 mb-2 text-gray-300">${trimmed.substring(4)}</h3>`;
+            }
+            if (trimmed.startsWith('## ')) {
+              return `<h2 class="text-xl font-bold mt-5 mb-3 text-gray-200">${trimmed.substring(3)}</h2>`;
+            }
+            if (trimmed.startsWith('# ')) {
+              return `<h1 class="text-2xl font-bold mt-6 mb-4 text-white">${trimmed.substring(2)}</h1>`;
+            }
+            if (trimmed.startsWith('* ')) {
+              const listItems = trimmed.split('\n').map(item => 
+                `<li class="flex items-start"><span class="mr-2 mt-1.5 text-primary">&#8226;</span><span>${item.substring(2)}</span></li>`
+              ).join('');
+              return `<ul class="space-y-2 my-4">${listItems}</ul>`;
+            }
+            if (trimmed) {
+              return `<p class="text-gray-400 leading-relaxed">${trimmed.replace(/\n/g, '<br />')}</p>`;
+            }
+            return '';
           })
           .join('');
-          
+
         setHtml(parsedHtml);
       })
       .catch(error => {
