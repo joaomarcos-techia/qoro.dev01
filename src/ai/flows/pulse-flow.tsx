@@ -87,7 +87,7 @@ A conversa está começando. Baseado na primeira mensagem do usuário, gere o "s
         config: { temperature: 0.5 },
         output: { format: 'json', schema: AiStructuredOutputSchema },
       });
-      aiOutput = result.output();
+      aiOutput = result.output;
 
       if (!aiOutput) {
         throw new Error("A IA não retornou uma saída estruturada válida.");
