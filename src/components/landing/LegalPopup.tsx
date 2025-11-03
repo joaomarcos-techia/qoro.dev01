@@ -1,7 +1,6 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -9,7 +8,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Loader2 } from 'lucide-react';
+import { PrivacyPolicyText } from './PrivacyPolicyText';
+import { TermsOfUseText } from './TermsOfUseText';
 
 interface LegalPopupProps {
   content: 'terms' | 'policy' | null;
@@ -20,94 +20,29 @@ const documents = {
   terms: {
     title: 'Termos e Condições de Uso',
     description: 'Leia nossos termos e condições de uso para entender seus direitos e obrigações.',
-    filePath: '/terms.md',
+    component: <TermsOfUseText />,
   },
   policy: {
     title: 'Política de Privacidade',
     description: 'Entenda como coletamos, usamos e protegemos seus dados pessoais.',
-    filePath: '/politica.md',
+    component: <PrivacyPolicyText />,
   },
-};
-
-const useMarkdownContent = (filePath: string) => {
-  const [html, setHtml] = useState('');
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!filePath) {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    fetch(filePath)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Falha ao carregar o documento.');
-        }
-        return response.text();
-      })
-      .then(text => {
-        const lines = text.split('\n');
-        let htmlContent = '';
-        let inList = false;
-
-        lines.forEach(line => {
-          const trimmedLine = line.trim();
-          
-          if (trimmedLine.startsWith('### ')) {
-            if (inList) { htmlContent += '</ul>'; inList = false; }
-            htmlContent += `<h3 class="text-lg font-semibold mt-6 mb-2 text-gray-200">${trimmedLine.substring(4)}</h3>`;
-          } else if (trimmedLine.startsWith('## ')) {
-            if (inList) { htmlContent += '</ul>'; inList = false; }
-            htmlContent += `<h2 class="text-xl font-bold mt-8 mb-4 text-gray-100 border-b border-border pb-2">${trimmedLine.substring(3)}</h2>`;
-          } else if (trimmedLine.startsWith('* ')) {
-            if (!inList) { htmlContent += '<ul class="space-y-2 my-4 list-disc pl-5">'; inList = true; }
-            htmlContent += `<li>${trimmedLine.substring(2)}</li>`;
-          } else if (trimmedLine === '') {
-            if (inList) { htmlContent += '</ul>'; inList = false; }
-          } else {
-            if (inList) { htmlContent += '</ul>'; inList = false; }
-            htmlContent += `<p class="text-gray-400 leading-relaxed my-4">${trimmedLine}</p>`;
-          }
-        });
-
-        if (inList) {
-          htmlContent += '</ul>';
-        }
-        
-        setHtml(htmlContent);
-      })
-      .catch(error => {
-        console.error("Error fetching markdown file:", error);
-        setHtml('<p class="text-destructive">Não foi possível carregar o documento.</p>');
-      })
-      .finally(() => setLoading(false));
-  }, [filePath]);
-
-  return { html, loading };
 };
 
 export function LegalPopup({ content, onOpenChange }: LegalPopupProps) {
   const docInfo = content ? documents[content] : null;
-  const { html, loading } = useMarkdownContent(docInfo?.filePath || '');
-  
+
   return (
     <Dialog open={!!content} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-3xl max-h-[80vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-foreground">{docInfo?.title || 'Carregando...'}</DialogTitle>
-           {docInfo?.description && (
-             <DialogDescription>{docInfo.description}</DialogDescription>
-           )}
-        </DialogHeader>
-        <div className="flex-grow overflow-y-auto pr-4 -mr-6">
-          {loading ? (
-            <div className="flex items-center justify-center h-48">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            </div>
-          ) : (
-            <article className="prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: html }} />
+          <DialogTitle className="text-2xl font-bold text-foreground">{docInfo?.title}</DialogTitle>
+          {docInfo?.description && (
+            <DialogDescription>{docInfo.description}</DialogDescription>
           )}
+        </DialogHeader>
+        <div className="flex-grow overflow-y-auto pr-4 -mr-6 prose prose-invert max-w-none">
+          {docInfo?.component}
         </div>
       </DialogContent>
     </Dialog>
