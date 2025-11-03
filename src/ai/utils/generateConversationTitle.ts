@@ -1,4 +1,3 @@
-
 'use server';
 
 import { ai } from '../genkit';
@@ -6,7 +5,7 @@ import { googleAI } from '@genkit-ai/google-genai';
 import { PulseMessage } from '../schemas';
 
 /**
- * Gera um título curto e contextual (2-4 palavras) baseado no diálogo inicial.
+ * Gera um título curto e contextual (3 palavras) baseado no diálogo inicial.
  * @param messages Histórico da conversa (PulseMessage[]).
  */
 export async function generateConversationTitle(messages: PulseMessage[]): Promise<string> {
@@ -16,28 +15,20 @@ export async function generateConversationTitle(messages: PulseMessage[]): Promi
     return fallbackTitle;
   }
 
-  // Pega as 5 primeiras mensagens para ter um bom contexto inicial de diálogo
-  const contextMessages = messages.slice(0, 5);
+  // Pega as 3 primeiras mensagens para ter um bom contexto inicial de diálogo
+  const contextMessages = messages.slice(0, 3);
   const context = contextMessages
     .map(m => `${m.role === 'user' ? 'Usuário' : 'Assistente'}: ${m.content}`)
     .join('\n');
 
   try {
     const aiPrompt = `
-Analise o diálogo abaixo e crie um título conciso com 2 a 4 palavras
-que capture o tema central da conversa.
-Retorne apenas o título, sem aspas, pontuação ou qualquer texto adicional.
-
-Diálogo:
----
-${context}
----
-Título:
+Analise as 3 primeiras mensagens e crie um título conciso com 3 palavras que capture o tema central. Retorne apenas o título.
     `.trim();
 
     const result = await ai.generate({
       model: googleAI.model('gemini-2.5-flash'),
-      prompt: aiPrompt,
+      prompt: `${aiPrompt}\n\nMensagens:\n---\n${context}\n---\nTítulo:`,
       config: { temperature: 0.2, maxOutputTokens: 12 },
     });
 
