@@ -1,43 +1,59 @@
 
+'use client';
+
 import React from 'react';
 
 export function TermsOfUseText() {
   return (
     <div className="space-y-4 text-gray-300">
-      <h2 className="text-xl font-bold text-white pt-4">1. Termos</h2>
       <p>
-        Ao acessar ao site Qoro, concorda em cumprir estes termos de serviço, todas as leis e regulamentos aplicáveis ​​e concorda que é responsável pelo cumprimento de todas as leis locais aplicáveis. Se você não concordar com algum desses termos, está proibido de usar ou acessar este site. Os materiais contidos neste site são protegidos pelas leis de direitos autorais e marcas comerciais aplicáveis.
+        <strong>Última atualização:</strong> 1º de agosto de 2024
+      </p>
+      <p>
+        Bem-vindo ao Qoro! Estes Termos de Uso ("Termos") governam seu acesso e uso de nossa plataforma. Ao se cadastrar ou usar nossos serviços, você concorda com estes Termos.
       </p>
       
-      <h2 className="text-xl font-bold text-white pt-4">2. Uso de Licença</h2>
-      <p>
-        É concedida permissão para baixar temporariamente uma cópia dos materiais (informações ou software) no site Qoro, apenas para visualização transitória pessoal e não comercial. Esta é a concessão de uma licença, не uma transferência de título e, sob esta licença, você não pode:
-      </p>
+      <h2 className="text-xl font-bold text-white pt-4">1. Contas de Usuário</h2>
       <ul className="list-disc pl-6 space-y-2">
-        <li>modificar ou copiar os materiais;</li>
-        <li>usar os materiais para qualquer finalidade comercial ou para exibição pública (comercial ou não comercial);</li>
-        <li>tentar descompilar ou fazer engenharia reversa de qualquer software contido no site Qoro;</li>
-        <li>remover quaisquer direitos autorais ou outras notações de propriedade dos materiais; ou</li>
-        <li>transferir os materiais para outra pessoa ou 'espelhe' os materiais em qualquer outro servidor.</li>
-      </ul>
-      <p>
-        Esta licença será automaticamente rescindida se você violar alguma dessas restrições e poderá ser rescindida por Qoro a qualquer momento. Ao encerrar a visualização desses materiais ou após o término desta licença, você deve apagar todos os materiais baixados em sua posse, seja em formato eletrónico ou impresso.
-      </p>
-
-      <h2 className="text-xl font-bold text-white pt-4">3. Isenção de responsabilidade</h2>
-      <ul className="list-disc pl-6 space-y-2">
-        <li>Os materiais no site da Qoro são fornecidos 'como estão'. A Qoro não oferece garantias, expressas ou implícitas, e, por este meio, isenta e nega todas as outras garantias, incluindo, sem limitação, garantias implícitas ou condições de comercialização, adequação a um fim específico ou não violação de propriedade intelectual ou outra violação de direitos.</li>
-        <li>Além disso, o Qoro não garante ou faz qualquer representação relativa à precisão, aos resultados prováveis ​​ou à confiabilidade do uso dos materiais em seu site ou de outra forma relacionado a esses materiais ou em sites vinculados a este site.</li>
+        <li><strong>Responsabilidade:</strong> Você é responsável por manter a segurança de sua conta e senha. O Qoro não pode e não será responsável por qualquer perda ou dano decorrente de sua falha em cumprir com esta obrigação de segurança.</li>
+        <li><strong>Uso Autorizado:</strong> Você é responsável por todas as atividades que ocorrem em sua conta e por garantir que o uso da plataforma por seus usuários convidados esteja em conformidade com estes Termos.</li>
       </ul>
 
-      <h2 className="text-xl font-bold text-white pt-4">4. Limitações</h2>
+      <h2 className="text-xl font-bold text-white pt-4">2. Assinaturas e Pagamentos</h2>
+      <ul className="list-disc pl-6 space-y-2">
+        <li><strong>Faturamento:</strong> Os planos pagos são cobrados mensalmente, de forma antecipada. A assinatura será renovada automaticamente, a menos que seja cancelada.</li>
+        <li><strong>Cancelamento:</strong> Você pode cancelar sua assinatura a qualquer momento através do portal de gerenciamento de assinaturas. O cancelamento entrará em vigor no final do ciclo de faturamento atual. Não há reembolso por períodos parciais.</li>
+        <li><strong>Alterações de Preço:</strong> Reservamo-nos o direito de alterar os preços dos planos. Notificaremos você com pelo menos 30 dias de antecedência sobre quaisquer alterações.</li>
+      </ul>
+
+      <h2 className="text-xl font-bold text-white pt-4">3. Uso Aceitável da Plataforma</h2>
+      <p>Você concorda em não usar o serviço para:</p>
+      <ul className="list-disc pl-6 space-y-2">
+        <li>Enviar spam ou mensagens não solicitadas.</li>
+        <li>Violar qualquer lei ou regulamento aplicável.</li>
+        <li>Armazenar ou transmitir material ilegal, fraudulento ou prejudicial.</li>
+        <li>Tentar obter acesso não autorizado à nossa plataforma ou sistemas relacionados.</li>
+      </ul>
+
+      <h2 className="text-xl font-bold text-white pt-4">4. Propriedade Intelectual</h2>
+      <ul className="list-disc pl-6 space-y-2">
+        <li><strong>Nossa Propriedade:</strong> A plataforma Qoro e todo o seu conteúdo (excluindo seus dados) são propriedade exclusiva do Qoro.</li>
+        <li><strong>Sua Propriedade:</strong> Você retém todos os direitos e a propriedade sobre os dados que insere na plataforma ("Seus Dados"). Você nos concede uma licença limitada para usar, processar e exibir Seus Dados exclusivamente para fins de fornecimento e melhoria dos nossos serviços.</li>
+      </ul>
+
+      <h2 className="text-xl font-bold text-white pt-4">5. Limitação de Responsabilidade</h2>
       <p>
-        Em nenhum caso o Qoro ou seus fornecedores serão responsáveis ​​por quaisquer danos (incluindo, sem limitação, danos por perda de dados ou lucro ou devido a interrupção dos negócios) decorrentes do uso ou da incapacidade de usar os materiais em Qoro, mesmo que Qoro ou um representante autorizado da Qoro tenha sido notificado oralmente ou por escrito da possibilidade de tais danos. Como algumas jurisdições не permitem limitações em garantias implícitas, ou limitações de responsabilidade por danos conseqüentes ou incidentais, essas limitações podem não se aplicar a você.
+        O Qoro é fornecido "como está". Em nenhuma circunstância seremos responsáveis por quaisquer danos diretos, indiretos, incidentais ou consequenciais resultantes do uso ou da incapacidade de usar nossos serviços.
       </p>
       
-      <h2 className="text-xl font-bold text-white pt-4">Modificações</h2>
+      <h2 className="text-xl font-bold text-white pt-4">6. Encerramento</h2>
       <p>
-        O Qoro pode revisar estes termos de serviço do site a qualquer momento, sem aviso prévio. Ao usar este site, você concorda em ficar vinculado à versão atual desses termos de serviço.
+        Podemos suspender ou encerrar sua conta se você violar estes Termos. Você pode encerrar sua conta a qualquer momento, cancelando sua assinatura e solicitando a exclusão dos dados.
+      </p>
+
+      <h2 className="text-xl font-bold text-white pt-4">7. Modificações nos Termos</h2>
+      <p>
+        Reservamo-nos o direito de modificar estes Termos a qualquer momento. Notificaremos você sobre mudanças significativas. O uso continuado da plataforma após as alterações constitui sua aceitação dos novos Termos.
       </p>
     </div>
   );
