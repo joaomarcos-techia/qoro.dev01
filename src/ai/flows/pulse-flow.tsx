@@ -36,9 +36,8 @@ const pulseFlow = ai.defineFlow(
     const userMessages = messages.filter(m => m.role === 'user');
     const isNewConversation = !existingConvId || existingConvId === 'new';
     
-    // Condição para determinar se a IA deve gerar um título.
-    // Isso acontece em uma nova conversa assim que houver pelo menos uma mensagem do usuário.
-    const shouldGenerateTitle = isNewConversation && userMessages.length > 0;
+    // Condição para gerar título: apenas em conversas novas e na segunda mensagem do usuário.
+    const shouldGenerateTitle = isNewConversation && userMessages.length === 2;
 
     const systemPrompt = `
 <OBJETIVO>
@@ -48,13 +47,8 @@ Você é QoroPulse, um agente de IA especialista em gestão empresarial. Sua mis
 <INSTRUCOES_DE_SAIDA>
 Sua resposta DEVE ser um objeto JSON contendo duas chaves: "suggestedTitle" and "response".
 1.  "response": Esta chave conterá sua resposta completa e formatada em Markdown para o usuário, seguindo as diretrizes de estilo e conteúdo.
-2.  "suggestedTitle": Esta chave conterá um título curto e conciso de 2 a 3 palavras que resume o tópico principal da conversa até agora. Este título deve ser direto e informativo (ex: "Aumentar Vendas B2B", "Melhorar Fluxo de Caixa", "Engajamento da Equipe").
+2.  "suggestedTitle": ${shouldGenerateTitle ? 'Baseado no diálogo até agora, gere um título curto e conciso de 2 a 3 palavras que resuma o tópico principal. Este título deve ser direto e informativo (ex: "Aumentar Vendas B2B", "Melhorar Fluxo de Caixa", "Engajamento da Equipe").' : 'Retorne uma string vazia ("").'}
 
-${shouldGenerateTitle ? `
-<TAREFA_TITULO>
-A conversa está começando. Baseado na primeira mensagem do usuário, gere o "suggestedTitle".
-</TAREFA_TITULO>
-` : ''}
 </INSTRUCOES_DE_SAIDA>
 
 <ESTILO_E_CONTEUDO_DA_RESPOSTA>
@@ -102,7 +96,7 @@ A conversa está começando. Baseado na primeira mensagem do usuário, gere o "s
     const finalMessages = [...messages, responseMessage];
 
     let conversationId = existingConvId;
-    let finalTitle = aiOutput.suggestedTitle || "Nova conversa";
+    let finalTitle = "Nova conversa";
 
     try {
       if (conversationId && conversationId !== 'new') {
@@ -113,8 +107,11 @@ A conversa está começando. Baseado na primeira mensagem do usuário, gere o "s
         }
         
         const existingData = docSnap.data()!;
-        // Se o título existente for "Nova conversa", atualiza com o sugerido. Caso contrário, mantém o antigo.
-        const titleToSave = existingData.title === 'Nova conversa' ? finalTitle : existingData.title;
+        
+        // Se o título existente for "Nova conversa" e a IA sugeriu um novo, atualiza. Senão, mantém o antigo.
+        const titleToSave = existingData.title === 'Nova conversa' && aiOutput.suggestedTitle
+            ? aiOutput.suggestedTitle 
+            : existingData.title;
 
         await conversationRef.update({
           messages: finalMessages.map(m => ({ ...m })),
@@ -126,7 +123,7 @@ A conversa está começando. Baseado na primeira mensagem do usuário, gere o "s
       } else {
         const newConversationData = {
           userId,
-          title: finalTitle, // Salva o título gerado já na criação
+          title: finalTitle, // Salva "Nova conversa" na criação
           messages: finalMessages.map(m => ({ ...m })),
           createdAt: FieldValue.serverTimestamp(),
           updatedAt: FieldValue.serverTimestamp(),
