@@ -9,6 +9,9 @@ import { createCheckoutSession } from '@/ai/flows/billing-flow';
 import { createUserAndSendVerification } from '@/lib/auth';
 import { Logo } from '@/components/ui/logo';
 import { createUserProfile } from '@/services/organizationService';
+import { LegalPopup } from '@/components/landing/LegalPopup';
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
 
 
 export default function SignUpForm() {
@@ -29,6 +32,9 @@ export default function SignUpForm() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [popupContent, setPopupContent] = useState<'terms' | 'policy' | null>(null);
+
 
   const formatCNPJ = (value: string) => {
     if (!value) return "";
@@ -126,6 +132,8 @@ export default function SignUpForm() {
   };
 
   return (
+    <>
+    <LegalPopup content={popupContent} onOpenChange={(isOpen) => !isOpen && setPopupContent(null)} />
     <main className="flex items-center justify-center min-h-screen bg-black p-4">
       <div className="w-full max-w-3xl mx-auto bg-card rounded-2xl border border-border p-8 md:p-12">
         <div className="text-center mb-8">
@@ -200,6 +208,21 @@ export default function SignUpForm() {
                 </div>
             </div>
 
+            <div className="flex items-center space-x-2">
+                <Checkbox id="terms" checked={agreedToTerms} onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)} />
+                <Label htmlFor="terms" className="text-sm text-muted-foreground">
+                    Concordo com os{' '}
+                    <button type="button" onClick={() => setPopupContent('terms')} className="text-primary hover:underline font-semibold">
+                    Termos de Uso
+                    </button>{' '}
+                    e a{' '}
+                    <button type="button" onClick={() => setPopupContent('policy')} className="text-primary hover:underline font-semibold">
+                    Política de Privacidade
+                    </button>
+                    .
+                </Label>
+            </div>
+
             {error && (
               <div className="bg-destructive/20 border-l-4 border-destructive text-destructive-foreground p-4 rounded-lg flex items-center">
                 <AlertCircle className="w-5 h-5 mr-3" />
@@ -210,8 +233,8 @@ export default function SignUpForm() {
             <div className="pt-2">
                 <button
                 type="submit"
-                disabled={isLoading}
-                className="w-full bg-primary text-primary-foreground py-3 rounded-xl hover:bg-primary/90 transition-all duration-200 border border-transparent hover:border-primary/50 flex items-center justify-center font-semibold disabled:opacity-75 disabled:cursor-not-allowed"
+                disabled={isLoading || !agreedToTerms}
+                className="w-full bg-primary text-primary-foreground py-3 rounded-xl hover:bg-primary/90 transition-all duration-200 border border-transparent hover:border-primary/50 flex items-center justify-center font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                 {isLoading && <Loader2 className="animate-spin mr-2 h-5 w-5" />}
                 {isLoading ? 'Criando conta...' : 'Criar conta e Continuar'}
@@ -220,15 +243,17 @@ export default function SignUpForm() {
           </form>
         )}
          <div className="text-center mt-8">
-            <Link href="/login">
-              <span className="font-medium text-primary hover:underline">
-                Faça o login
-              </span>
-            </Link>
+            <p className="text-sm text-muted-foreground">
+              Já tem uma conta?{' '}
+              <Link href="/login">
+                <span className="font-medium text-primary hover:underline">
+                  Faça o login
+                </span>
+              </Link>
+            </p>
         </div>
       </div>
     </main>
+    </>
   );
 }
-
-    
