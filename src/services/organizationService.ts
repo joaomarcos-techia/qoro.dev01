@@ -356,6 +356,19 @@ export const updateUserPermissions = async (input: z.infer<typeof UpdateUserPerm
     return { success: true };
 };
 
+type PlanId = 'free' | 'growth' | 'performance';
+
+const planLevels: Record<PlanId, number> = { 
+    free: 0, 
+    growth: 1, 
+    performance: 2 
+};
+
+const isValidPlanId = (id: any): id is PlanId => {
+    return id in planLevels;
+};
+
+
 export const handleSubscriptionChange = async (subscriptionId: string, newPriceId: string, newStatus: string) => {
     const orgQuery = await adminDb.collection('organizations').where('stripeSubscriptionId', '==', subscriptionId).limit(1).get();
     
@@ -369,20 +382,22 @@ export const handleSubscriptionChange = async (subscriptionId: string, newPriceI
     const oldPlanId = orgDoc.data().planId;
 
     // Determine new planId from priceId
-    let newPlanId: 'free' | 'growth' | 'performance' = 'free';
+    let newPlanId: PlanId = 'free';
     if (newPriceId === process.env.NEXT_PUBLIC_STRIPE_PERFORMANCE_PLAN_PRICE_ID) {
         newPlanId = 'performance';
     } else if (newPriceId === process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID) {
         newPlanId = 'growth';
     }
 
-    const planLevels = { free: 0, growth: 1, performance: 2 };
     let notificationMessage: string | null = null;
-    if (planLevels[newPlanId] < planLevels[oldPlanId]) {
-        notificationMessage = getLostFeaturesMessage(oldPlanId, newPlanId);
-    } else if (planLevels[newPlanId] > planLevels[oldPlanId]) {
-        notificationMessage = getGainedFeaturesMessage(oldPlanId, newPlanId);
+    if (isValidPlanId(newPlanId) && isValidPlanId(oldPlanId)) {
+        if (planLevels[newPlanId] < planLevels[oldPlanId]) {
+            notificationMessage = getLostFeaturesMessage(oldPlanId, newPlanId);
+        } else if (planLevels[newPlanId] > planLevels[oldPlanId]) {
+            notificationMessage = getGainedFeaturesMessage(oldPlanId, newPlanId);
+        }
     }
+
 
     // Update organization document
     await orgDoc.ref.update({
