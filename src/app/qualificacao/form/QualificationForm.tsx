@@ -180,8 +180,8 @@ export default function QualificationForm() {
                 onValueChange={(value) => handleInputChange(currentQuestion.key as string, value)}
                 className="grid grid-cols-1 gap-3"
               >
-                {currentQuestion.options.map((option) => (
-                  <Label key={option} className={cn(
+                {currentQuestion.options.map((option: any) => (
+                  <Label key={typeof option === 'string' ? option : option.category} className={cn(
                     "flex items-center justify-start p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 h-full",
                     answers[currentQuestion.key as string] === option
                       ? 'bg-primary/10 border-primary'
