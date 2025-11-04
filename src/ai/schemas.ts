@@ -336,7 +336,7 @@ export const TransactionSchema = z.object({
     accountId: z.string().optional(),
     date: z.union([z.date(), z.string()]).optional(),
     category: z.string().optional(),
-    status: z.enum(['pending', 'paid', 'cancelled']).default('paid').optional(),
+    status: z.enum(['pending', 'paid', 'cancelled']).default('paid'),
     paymentMethod: z.enum(['cash', 'credit_card', 'debit_card', 'pix', 'bank_transfer', 'boleto']).optional(),
     tags: z.array(z.string()).optional(),
     customerId: z.string().optional(),

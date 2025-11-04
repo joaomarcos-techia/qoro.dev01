@@ -64,7 +64,7 @@ const formatCurrency = (value: number) => {
     }).format(value);
 };
 
-const statusMap: Record<TransactionProfile['status'], { text: string; color: string }> = {
+const statusMap: Record<NonNullable<TransactionProfile['status']>, { text: string; color: string }> = {
     pending: { text: 'Pendente', color: 'bg-yellow-500/20 text-yellow-300' },
     paid: { text: 'Pago', color: 'bg-green-500/20 text-green-300' },
     cancelled: { text: 'Cancelada', color: 'bg-gray-500/20 text-gray-300' },
