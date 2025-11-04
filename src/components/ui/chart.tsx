@@ -24,19 +24,36 @@ import {
   Scatter,
   ScatterChart as ScatterChartPrimitive,
   Tooltip as RechartsTooltip,
+  type TooltipProps,
   XAxis,
   YAxis,
 } from "recharts"
+import type {
+  NameType,
+  ValueType,
+} from "recharts/types/component/DefaultTooltipContent"
 
 import { cn } from "@/lib/utils"
 
 // #region Chart Container
 const ChartContainer = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<typeof ResponsiveContainer>
->(({ ...props }, ref) => (
-  // @ts-expect-error - ref is not a valid prop
-  <ResponsiveContainer ref={ref} {...props} />
+  React.ComponentProps<"div"> & {
+    config: any // Replace with a more specific type if you have one
+    children: React.ComponentProps<typeof ResponsiveContainer>["children"]
+  }
+>(({ config, children, className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "flex aspect-video w-full items-center justify-center",
+      className
+    )}
+    {...props}
+  >
+    <ChartStyle colors={Object.values(config).map((item: any) => item.color)} />
+    <ResponsiveContainer>{children}</ResponsiveContainer>
+  </div>
 ))
 ChartContainer.displayName = "ChartContainer"
 // #endregion
@@ -46,10 +63,12 @@ const ChartTooltip = RechartsTooltip
 
 const ChartTooltipContent = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<typeof RechartsTooltip.Content>
->(({ className, style, ...props }, ref) => {
-  // We explicitly ignore the rest of the props passed by Recharts
-  // to prevent them from being passed to the DOM and causing warnings.
+  TooltipProps<ValueType, NameType>
+>(({ active, payload, className, ...props }, ref) => {
+  if (!active || !payload || payload.length === 0) {
+    return null
+  }
+
   return (
     <div
       ref={ref}
@@ -57,32 +76,13 @@ const ChartTooltipContent = React.forwardRef<
         "z-50 overflow-hidden rounded-lg border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-sm animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
         className
       )}
-      style={style}
+      {...props}
     >
       {/* You can optionally render payload data here if needed, or leave it empty */}
     </div>
   )
 })
 ChartTooltipContent.displayName = "ChartTooltipContent"
-// #endregion
-
-// #region Chart Legend
-const ChartLegend = RechartsTooltip
-
-const ChartLegendContent = React.forwardRef<
-  HTMLDivElement,
-  React.ComponentProps<typeof RechartsTooltip.Content>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "flex items-center !bg-transparent p-0 text-sm [&>li]:pl-1",
-      className
-    )}
-    {...props}
-  />
-))
-ChartLegendContent.displayName = "ChartLegendContent"
 // #endregion
 
 // #region Chart Style
@@ -119,7 +119,7 @@ const BarChart = BarChartPrimitive
 const BarChartYAxis = YAxis
 const BarChartXAxis = XAxis
 const BarChartTooltip = ChartTooltip
-const BarChartLegend = ChartLegend
+const BarChartLegend = RechartsTooltip
 const BarChartGrid = CartesianGrid
 const BarChartContent = ChartContainer
 const BarChartStyle = ChartStyle
@@ -131,17 +131,21 @@ const BarChartBar = React.forwardRef<
   React.ComponentProps<typeof Bar> & {
     radius?: number | [number, number, number, number]
   }
->(({ radius = 4, ...props }, ref) => (
-  // @ts-expect-error - ref is not a valid prop
-  <Bar
-    ref={ref}
-    shape={
-      // @ts-expect-error - radius is a valid prop
-      <Rectangle radius={radius} />
-    }
-    {...props}
-  />
-))
+>(({ radius = 4, ...props }, ref) => {
+  const forwardedRef = React.useRef<any>(null)
+  
+  React.useImperativeHandle(ref, () => forwardedRef.current)
+
+  return (
+    <Bar
+      ref={forwardedRef}
+      shape={
+        <Rectangle radius={radius} />
+      }
+      {...props}
+    />
+  )
+})
 BarChartBar.displayName = "BarChartBar"
 
 const BarChartLabel = Label
@@ -150,19 +154,25 @@ const BarChartLabelList = LabelList
 
 // #region Line Chart
 const LineChart = LineChartPrimitive
+
 const LineChartLine = React.forwardRef<
   React.ComponentRef<typeof Line>,
   React.ComponentProps<typeof Line>
->((props, ref) => (
-  // @ts-expect-error - ref is not a valid prop
-  <Line ref={ref} {...props} />
-))
+>((props, ref) => {
+  const forwardedRef = React.useRef<any>(null)
+  
+  React.useImperativeHandle(ref, () => forwardedRef.current)
+
+  return (
+    <Line ref={forwardedRef} {...props} />
+  )
+})
 LineChartLine.displayName = "LineChartLine"
 
 const LineChartYAxis = YAxis
 const LineChartXAxis = XAxis
 const LineChartTooltip = ChartTooltip
-const LineChartLegend = ChartLegend
+const LineChartLegend = RechartsTooltip
 const LineChartGrid = CartesianGrid
 const LineChartContent = ChartContainer
 const LineChartStyle = ChartStyle
@@ -173,42 +183,58 @@ const LineChartBrush = Bar
 // #region Pie Chart
 const PieChart = PieChartPrimitive
 const PieChartTooltip = ChartTooltip
-const PieChartLegend = ChartLegend
+const PieChartLegend = RechartsTooltip
 const PieChartContent = ChartContainer
 const PieChartStyle = ChartStyle
 
 const PieChartPie = React.forwardRef<
   React.ComponentRef<typeof Pie>,
   React.ComponentProps<typeof Pie>
->((props, ref) => (
-  // @ts-expect-error - ref is not a valid prop
-  <Pie ref={ref} {...props} />
-))
+>((props, ref) => {
+  const forwardedRef = React.useRef<any>(null)
+  
+  React.useImperativeHandle(ref, () => forwardedRef.current)
+
+  return (
+    <Pie ref={forwardedRef} {...props} />
+  )
+})
 PieChartPie.displayName = "PieChartPie"
 
 const PieChartCell = React.forwardRef<
   React.ComponentRef<typeof Cell>,
   React.ComponentProps<typeof Cell>
->((props, ref) => (
-  // @ts-expect-error - ref is not a valid prop
-  <Cell ref={ref} {...props} />
-))
+>((props, ref) => {
+  const forwardedRef = React.useRef<any>(null)
+  
+  React.useImperativeHandle(ref, () => forwardedRef.current)
+
+  return (
+    <Cell ref={forwardedRef} {...props} />
+  )
+})
 PieChartCell.displayName = "PieChartCell"
 // #endregion
 
 // #region Radial Chart
 const RadialChart = RadialBarChartPrimitive
+
 const RadialChartBar = React.forwardRef<
   React.ComponentRef<typeof RadialBar>,
   React.ComponentProps<typeof RadialBar>
->((props, ref) => (
-  // @ts-expect-error - ref is not a valid prop
-  <RadialBar ref={ref} {...props} />
-))
+>((props, ref) => {
+  const forwardedRef = React.useRef<any>(null)
+  
+  React.useImperativeHandle(ref, () => forwardedRef.current)
+
+  return (
+    <RadialBar ref={forwardedRef} {...props} />
+  )
+})
 RadialChartBar.displayName = "RadialChartBar"
 
 const RadialChartTooltip = ChartTooltip
-const RadialChartLegend = ChartLegend
+const RadialChartLegend = RechartsTooltip
 const RadialChartContent = ChartContainer
 const RadialChartStyle = ChartStyle
 const RadialChartGrid = PolarGrid
@@ -218,19 +244,25 @@ const RadialChartRadiusAxis = PolarRadiusAxis
 
 // #region Scatter Chart
 const ScatterChart = ScatterChartPrimitive
+
 const ScatterChartScatter = React.forwardRef<
   React.ComponentRef<typeof Scatter>,
   React.ComponentProps<typeof Scatter>
->((props, ref) => (
-  // @ts-expect-error - ref is not a valid prop
-  <Scatter ref={ref} {...props} />
-))
+>((props, ref) => {
+  const forwardedRef = React.useRef<any>(null)
+  
+  React.useImperativeHandle(ref, () => forwardedRef.current)
+
+  return (
+    <Scatter ref={forwardedRef} {...props} />
+  )
+})
 ScatterChartScatter.displayName = "ScatterChartScatter"
 
 const ScatterChartYAxis = YAxis
 const ScatterChartXAxis = XAxis
 const ScatterChartTooltip = ChartTooltip
-const ScatterChartLegend = ChartLegend
+const ScatterChartLegend = RechartsTooltip
 const ScatterChartGrid = CartesianGrid
 const ScatterChartContent = ChartContainer
 const ScatterChartStyle = ChartStyle
@@ -243,8 +275,6 @@ export {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
   ChartStyle,
   // Bar Chart
   BarChart,
