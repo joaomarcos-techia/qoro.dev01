@@ -39,7 +39,7 @@ import { cn } from "@/lib/utils"
 const ChartContainer = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div"> & {
-    config: any // Replace with a more specific type if you have one
+    config: any 
     children: React.ComponentProps<typeof ResponsiveContainer>["children"]
   }
 >(({ config, children, className, ...props }, ref) => (
@@ -63,8 +63,8 @@ const ChartTooltip = RechartsTooltip
 
 const ChartTooltipContent = React.forwardRef<
   HTMLDivElement,
-  TooltipProps<ValueType, NameType>
->(({ active, payload, className, ...props }, ref) => {
+  TooltipProps<ValueType, NameType> & React.HTMLAttributes<HTMLDivElement>
+>(({ active, payload, className, label, ...props }, ref) => {
   if (!active || !payload || payload.length === 0) {
     return null
   }
@@ -78,7 +78,27 @@ const ChartTooltipContent = React.forwardRef<
       )}
       {...props}
     >
-      {/* You can optionally render payload data here if needed, or leave it empty */}
+      <div className="font-medium">{label}</div>
+      {payload.map((item, index) => (
+        <div key={index} className="flex items-center gap-2">
+          {item.color && (
+            <div
+              className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
+              style={{
+                backgroundColor: item.color,
+              }}
+            />
+          )}
+          {item.value ? (
+            <div className="flex flex-1 justify-between gap-2">
+              <div className="text-muted-foreground">{item.name}</div>
+              <div className="font-medium">
+                {item.value}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ))}
     </div>
   )
 })
@@ -125,50 +145,14 @@ const BarChartContent = ChartContainer
 const BarChartStyle = ChartStyle
 const BarChartReferenceLine = ReferenceLine
 const BarChartBrush = Bar
-
-const BarChartBar = React.forwardRef<
-  React.ComponentRef<typeof Bar>,
-  React.ComponentProps<typeof Bar> & {
-    radius?: number | [number, number, number, number]
-  }
->(({ radius = 4, ...props }, ref) => {
-  const forwardedRef = React.useRef<any>(null)
-  
-  React.useImperativeHandle(ref, () => forwardedRef.current)
-
-  return (
-    <Bar
-      ref={forwardedRef}
-      shape={
-        <Rectangle radius={radius} />
-      }
-      {...props}
-    />
-  )
-})
-BarChartBar.displayName = "BarChartBar"
-
+const BarChartBar = Bar
 const BarChartLabel = Label
 const BarChartLabelList = LabelList
 // #endregion
 
 // #region Line Chart
 const LineChart = LineChartPrimitive
-
-const LineChartLine = React.forwardRef<
-  React.ComponentRef<typeof Line>,
-  React.ComponentProps<typeof Line>
->((props, ref) => {
-  const forwardedRef = React.useRef<any>(null)
-  
-  React.useImperativeHandle(ref, () => forwardedRef.current)
-
-  return (
-    <Line ref={forwardedRef} {...props} />
-  )
-})
-LineChartLine.displayName = "LineChartLine"
-
+const LineChartLine = Line
 const LineChartYAxis = YAxis
 const LineChartXAxis = XAxis
 const LineChartTooltip = ChartTooltip
@@ -186,53 +170,13 @@ const PieChartTooltip = ChartTooltip
 const PieChartLegend = RechartsTooltip
 const PieChartContent = ChartContainer
 const PieChartStyle = ChartStyle
-
-const PieChartPie = React.forwardRef<
-  React.ComponentRef<typeof Pie>,
-  React.ComponentProps<typeof Pie>
->((props, ref) => {
-  const forwardedRef = React.useRef<any>(null)
-  
-  React.useImperativeHandle(ref, () => forwardedRef.current)
-
-  return (
-    <Pie ref={forwardedRef} {...props} />
-  )
-})
-PieChartPie.displayName = "PieChartPie"
-
-const PieChartCell = React.forwardRef<
-  React.ComponentRef<typeof Cell>,
-  React.ComponentProps<typeof Cell>
->((props, ref) => {
-  const forwardedRef = React.useRef<any>(null)
-  
-  React.useImperativeHandle(ref, () => forwardedRef.current)
-
-  return (
-    <Cell ref={forwardedRef} {...props} />
-  )
-})
-PieChartCell.displayName = "PieChartCell"
+const PieChartPie = Pie
+const PieChartCell = Cell
 // #endregion
 
 // #region Radial Chart
 const RadialChart = RadialBarChartPrimitive
-
-const RadialChartBar = React.forwardRef<
-  React.ComponentRef<typeof RadialBar>,
-  React.ComponentProps<typeof RadialBar>
->((props, ref) => {
-  const forwardedRef = React.useRef<any>(null)
-  
-  React.useImperativeHandle(ref, () => forwardedRef.current)
-
-  return (
-    <RadialBar ref={forwardedRef} {...props} />
-  )
-})
-RadialChartBar.displayName = "RadialChartBar"
-
+const RadialChartBar = RadialBar
 const RadialChartTooltip = ChartTooltip
 const RadialChartLegend = RechartsTooltip
 const RadialChartContent = ChartContainer
@@ -244,21 +188,7 @@ const RadialChartRadiusAxis = PolarRadiusAxis
 
 // #region Scatter Chart
 const ScatterChart = ScatterChartPrimitive
-
-const ScatterChartScatter = React.forwardRef<
-  React.ComponentRef<typeof Scatter>,
-  React.ComponentProps<typeof Scatter>
->((props, ref) => {
-  const forwardedRef = React.useRef<any>(null)
-  
-  React.useImperativeHandle(ref, () => forwardedRef.current)
-
-  return (
-    <Scatter ref={forwardedRef} {...props} />
-  )
-})
-ScatterChartScatter.displayName = "ScatterChartScatter"
-
+const ScatterChartScatter = Scatter
 const ScatterChartYAxis = YAxis
 const ScatterChartXAxis = XAxis
 const ScatterChartTooltip = ChartTooltip
