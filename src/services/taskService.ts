@@ -103,7 +103,7 @@ export const updateTask = async (
         }
     }
 
-    const { id, comments, ...updateData } = input;
+    const { id, comments, __commentOnlyUpdate, ...updateData } = input;
     const existingComments = (Array.isArray(data.comments) ? data.comments : []).map(c => ({
         ...c,
         createdAt: toISOStringSafe(c.createdAt)

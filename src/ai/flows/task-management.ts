@@ -89,7 +89,7 @@ const deleteTaskFlow = ai.defineFlow(
 const updateTaskFlow = ai.defineFlow(
     {
         name: 'updateTaskFlow',
-        inputSchema: UpdateTaskSchema.extend(ActorSchema.shape),
+        inputSchema: UpdateTaskSchema.extend(ActorSchema.shape).extend({ __commentOnlyUpdate: z.boolean().optional() }),
         outputSchema: z.object({ id: z.string() })
     },
     async (input) => taskService.updateTask(input.id, input, input.actor)
@@ -117,6 +117,6 @@ export async function deleteTask(input: z.infer<typeof DeleteTaskInputSchema>): 
     return deleteTaskFlow(input);
 }
 
-export async function updateTask(input: z.infer<typeof UpdateTaskSchema> & z.infer<typeof ActorSchema>): Promise<{ id: string; }> {
+export async function updateTask(input: z.infer<typeof UpdateTaskSchema> & z.infer<typeof ActorSchema> & { __commentOnlyUpdate?: boolean }): Promise<{ id: string; }> {
     return updateTaskFlow(input);
 }
