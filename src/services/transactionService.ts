@@ -249,7 +249,7 @@ export const listTransactions = async (
 
         return {
             ...parsedData,
-            date: parsedData.date.toISOString(),
+            date: parsedData.date?.toISOString() ?? new Date().toISOString(),
         };
     });
     
