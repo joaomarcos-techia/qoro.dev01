@@ -174,13 +174,13 @@ export default function QualificationForm() {
           </div>
 
           <div className="min-h-[300px]">
-            {currentQuestion.type === 'radio' && (
+            {currentQuestion.type === 'radio' && Array.isArray(currentQuestion.options) && (
               <RadioGroup
                 value={answers[currentQuestion.key] || ''}
                 onValueChange={(value) => handleInputChange(currentQuestion.key as string, value)}
                 className="grid grid-cols-1 gap-3"
               >
-                {currentQuestion.options?.map((option) => (
+                {currentQuestion.options.map((option) => (
                   <Label key={option} className={cn(
                     "flex items-center justify-start p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 h-full",
                     answers[currentQuestion.key as string] === option
@@ -206,14 +206,14 @@ export default function QualificationForm() {
               />
             )}
 
-            {currentQuestion.type === 'checkbox' && (
+            {currentQuestion.type === 'checkbox' && Array.isArray(currentQuestion.options) && (
               <div className="space-y-6">
-                {currentQuestion.options?.map(({ category, items }) => (
-                  <div key={category}>
-                    <h3 className="font-semibold text-lg sm:text-xl mb-3">{category}</h3>
+                {currentQuestion.options.map((option: any) => (
+                  <div key={option.category}>
+                    <h3 className="font-semibold text-lg sm:text-xl mb-3">{option.category}</h3>
                     <div className="space-y-3">
-                      {items.map((item) => {
-                        const isChecked = answers[currentQuestion.key]?.[category]?.includes(item) || false;
+                      {option.items.map((item: string) => {
+                        const isChecked = answers[currentQuestion.key]?.[option.category]?.includes(item) || false;
                         return (
                           <Label key={item} className={cn("flex items-center justify-start p-4 border-2 rounded-xl cursor-pointer transition-all duration-200",
                             isChecked ? 'bg-primary/10 border-primary' : 'border-border hover:border-primary/50'
@@ -221,7 +221,7 @@ export default function QualificationForm() {
                             <Checkbox
                               id={item}
                               checked={isChecked}
-                              onCheckedChange={(checked) => handleCheckboxChange(category, item, !!checked)}
+                              onCheckedChange={(checked) => handleCheckboxChange(option.category, item, !!checked)}
                               className="sr-only"
                             />
                             <div className={cn("w-6 h-6 rounded-md border-2 flex-shrink-0 mr-4 flex items-center justify-center", isChecked ? 'border-primary bg-primary' : 'border-border')}>
