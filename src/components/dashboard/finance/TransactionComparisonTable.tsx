@@ -1,15 +1,15 @@
-
 'use client';
 import * as React from 'react';
 import { useState, useMemo, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { TransactionProfile, ReconciliationProfile } from '@/ai/schemas';
+import { TransactionProfile, ReconciliationProfile, TransactionSchema } from '@/ai/schemas';
 import { CheckCircle, Loader2, GitMerge, PlusCircle, ServerCrash } from 'lucide-react';
 import { format, parseISO, differenceInDays } from 'date-fns';
-import { bulkCreateTransactions } from '@/ai/flows/finance-management';
+import { bulkCreateTransactions, updateTransaction } from '@/ai/flows/finance-management';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import { updateReconciliationStatus } from '@/services/reconciliationService';
 
 
 export interface OfxTransaction {
@@ -98,11 +98,12 @@ export function TransactionComparisonTable({ reconciliation, ofxTransactions, sy
     setIsBulkCreating(true);
     setError(null);
     try {
-      const transactionsToCreate = unmatchedOfx.map(ofx => ({
+      const transactionsToCreate: (Omit<z.infer<typeof TransactionSchema>, 'date'> & { date: Date })[] = unmatchedOfx.map(ofx => ({
           description: ofx.description,
           amount: Math.abs(ofx.amount),
           date: new Date(ofx.date),
           type: ofx.type,
+          status: 'paid' as const, 
       }));
       
       await bulkCreateTransactions({
@@ -111,6 +112,7 @@ export function TransactionComparisonTable({ reconciliation, ofxTransactions, sy
           actor: currentUser.uid,
       });
 
+      await updateReconciliationStatus({ id: reconciliation.id, actor: currentUser.uid, status: 'reconciled' });
       onRefresh();
 
     } catch(err: any) {
