@@ -96,9 +96,9 @@ export function TransactionTable({ refreshKey, onAction }: TransactionTableProps
     try {
         await deleteTransaction({ transactionId, actor: currentUser.uid });
         onAction(); // Use the callback from props
-    } catch(err) {
+    } catch(err: any) {
         console.error("Failed to delete transaction:", err);
-        // Display error to user
+        setError(err.message || 'Falha ao excluir a transação.');
     }
   };
   
@@ -228,9 +228,9 @@ export function TransactionTable({ refreshKey, onAction }: TransactionTableProps
       try {
         const transactions = await listTransactions({ actor: currentUser.uid });
         setData(transactions);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Failed to fetch transactions:', err);
-        setError('Não foi possível carregar as transações.');
+        setError(err.message || 'Não foi possível carregar as transações.');
       } finally {
         setIsLoading(false);
       }

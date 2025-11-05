@@ -84,6 +84,17 @@ export function QuoteTable() {
     setIsEditModalOpen(true);
   };
   
+  const handleDeleteAction = async (quote: QuoteProfile) => {
+    if (!currentUser) return;
+    try {
+        await deleteQuote({ quoteId: quote.id, actor: currentUser.uid });
+        triggerRefresh();
+    } catch(err: any) {
+        console.error("Failed to delete quote:", err);
+        setError(err.message || "Não foi possível excluir o orçamento.");
+    }
+  };
+
   const handleMarkAsLostAction = async (quote: QuoteProfile) => {
     if (!currentUser) return;
     const originalData = [...data];
@@ -222,12 +233,10 @@ export function QuoteTable() {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 {isActionable && (
-                  <AlertDialogTrigger asChild>
-                    <DropdownMenuItem className="text-yellow-500 focus:text-yellow-400 focus:bg-yellow-500/10 rounded-xl cursor-pointer">
+                    <DropdownMenuItem onClick={() => handleMarkAsLostAction(quote)} className="text-yellow-500 focus:text-yellow-400 focus:bg-yellow-500/10 rounded-xl cursor-pointer">
                       <XCircle className="mr-2 h-4 w-4" />
                       Marcar como Perdido
                     </DropdownMenuItem>
-                  </AlertDialogTrigger>
                 )}
                  <AlertDialogTrigger asChild>
                     <DropdownMenuItem className="text-red-500 focus:bg-destructive/20 focus:text-red-400 rounded-xl cursor-pointer">
@@ -239,18 +248,15 @@ export function QuoteTable() {
             </DropdownMenu>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Atenção!</AlertDialogTitle>
+                <AlertDialogTitle>Excluir orçamento?</AlertDialogTitle>
                 <AlertDialogDescription>
-                    Você pode marcar este orçamento como perdido, o que irá atualizar o status do cliente, ou excluí-lo permanentemente. O que deseja fazer?
+                    Esta ação não pode ser desfeita. O orçamento <span className='font-bold'>{quote.number}</span> será permanentemente excluído.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                 <AlertDialogAction onClick={() => deleteQuote(quote.id)} className="bg-destructive hover:bg-destructive/90">
-                    Excluir Permanentemente
-                </AlertDialogAction>
-                <AlertDialogAction onClick={() => handleMarkAsLostAction(quote)} className="bg-yellow-600 hover:bg-yellow-700">
-                    Marcar como Perdido
+                <AlertDialogAction onClick={() => handleDeleteAction(quote)} className="bg-destructive hover:bg-destructive/90">
+                    Sim, excluir
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

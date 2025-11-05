@@ -71,11 +71,13 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
   } = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
+      customerId: '',
       items: [],
       subtotal: 0,
       total: 0,
       discount: 0,
       status: 'draft',
+      notes: '',
     },
   });
 
