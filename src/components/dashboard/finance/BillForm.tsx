@@ -51,6 +51,7 @@ export function BillForm({ onAction, bill }: BillFormProps) {
     defaultValues: {
       accountId: '', 
       entityId: '',
+      entityType: 'supplier',
       paymentMethod: 'pix',
       type: 'payable',
       status: 'pending',

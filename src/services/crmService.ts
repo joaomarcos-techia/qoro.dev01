@@ -497,22 +497,23 @@ export const markQuoteAsWon = async (quoteId: string, accountId: string | undefi
     if (!billsQuery.empty) {
         const billDoc = billsQuery.docs[0];
         billId = billDoc.id;
-        // Correctly prepare data for billService.updateBill
         const billData = billDoc.data();
+        
+        // CORRECTION: Ensure undefined fields are converted to null
         const updatePayload: z.infer<typeof UpdateBillSchema> = {
             id: billId,
             description: billData.description,
             amount: billData.amount,
             type: billData.type,
-            dueDate: billData.dueDate.toDate(), // Convert Timestamp to Date
+            dueDate: billData.dueDate.toDate(), 
             status: 'paid', // Mark as paid to trigger transaction creation
             accountId: accountId,
-            entityId: billData.entityId,
-            entityType: billData.entityType,
-            notes: billData.notes,
-            category: billData.category,
-            paymentMethod: billData.paymentMethod,
-            tags: billData.tags
+            entityId: billData.entityId ?? null,
+            entityType: billData.entityType ?? null,
+            notes: billData.notes ?? null,
+            category: billData.category ?? null,
+            paymentMethod: billData.paymentMethod ?? null,
+            tags: billData.tags ?? null,
         };
         await billService.updateBill(updatePayload, actorUid);
     } else {
