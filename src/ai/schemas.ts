@@ -183,7 +183,6 @@ export const QuoteSchema = z.object({
     total: z.number(),
     validUntil: z.union([z.string(), z.date()]),
     notes: z.string().optional(),
-    status: z.enum(['pending', 'won', 'lost']).default('pending'),
 });
 
 export const UpdateQuoteSchema = QuoteSchema.extend({
@@ -410,3 +409,5 @@ export type ReconciliationProfile = z.infer<typeof ReconciliationProfileSchema>;
 
 
   
+
+    
