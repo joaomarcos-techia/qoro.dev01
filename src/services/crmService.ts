@@ -352,23 +352,6 @@ export const createQuote = async (input: z.infer<typeof QuoteSchema>, actorUid: 
     };
     const quoteRef = await adminDb.collection('quotes').add(newQuoteData);
 
-    // If sent, update customer status and create a pending bill
-    if (input.status === 'sent') {
-        await updateCustomerStatus(input.customerId, 'proposal', actorUid);
-        
-        const billData: z.infer<typeof BillSchema> = {
-            description: `A receber - Orçamento #${quoteNumber}`,
-            amount: input.total,
-            type: 'receivable',
-            dueDate: new Date(input.validUntil),
-            status: 'pending',
-            entityType: 'customer',
-            entityId: input.customerId,
-            tags: [`quote-${quoteRef.id}`],
-        };
-        await billService.createBill(billData, actorUid);
-    }
-
     return { id: quoteRef.id, number: quoteNumber };
 };
 
@@ -430,7 +413,6 @@ export const updateQuote = async (quoteId: string, input: z.infer<typeof UpdateQ
     if (!quoteDoc.exists || quoteDoc.data()?.companyId !== organizationId) {
         throw new Error('Orçamento não encontrado ou acesso negado.');
     }
-    const oldStatus = quoteDoc.data()?.status;
     
     const { id, ...updateData } = input;
     
@@ -438,23 +420,6 @@ export const updateQuote = async (quoteId: string, input: z.infer<typeof UpdateQ
         ...updateData,
         updatedAt: FieldValue.serverTimestamp(),
     });
-
-    // If status changed to sent, create the pending bill
-    if (updateData.status === 'sent' && oldStatus !== 'sent') {
-         await updateCustomerStatus(input.customerId, 'proposal', actorUid);
-        const billData: z.infer<typeof BillSchema> = {
-            description: `A receber - Orçamento #${quoteDoc.data()?.number}`,
-            amount: input.total,
-            type: 'receivable',
-            dueDate: new Date(input.validUntil),
-            status: 'pending',
-            entityType: 'customer',
-            entityId: input.customerId,
-            tags: [`quote-${quoteRef.id}`],
-        };
-        await billService.createBill(billData, actorUid);
-    }
-
 
     return { id: quoteId, number: quoteDoc.data()?.number };
 };
@@ -486,61 +451,26 @@ export const markQuoteAsWon = async (quoteId: string, accountId: string | undefi
     
     const quoteData = quoteDoc.data()!;
 
-    // Find the associated Bill and update it to 'paid'
-    const billsQuery = await adminDb.collection('bills')
-        .where('companyId', '==', adminOrgData.organizationId)
-        .where('tags', 'array-contains', `quote-${quoteId}`)
-        .limit(1)
-        .get();
-        
-    let billId = '';
-    if (!billsQuery.empty) {
-        const billDoc = billsQuery.docs[0];
-        billId = billDoc.id;
-        // This triggers the transaction creation in billService
-        await billService.updateBill({
-            id: billId,
-            status: 'paid',
-            accountId: accountId,
-            dueDate: billDoc.data().dueDate.toDate(), // Pass date correctly
-            // Pass other required fields from original bill
-            description: billDoc.data().description,
-            amount: billDoc.data().amount,
-            type: billDoc.data().type,
-            notes: billDoc.data().notes, // Pass notes and other optional fields
-            category: billDoc.data().category,
-            paymentMethod: billDoc.data().paymentMethod,
-            tags: billDoc.data().tags,
-            entityId: billDoc.data().entityId,
-            entityType: billDoc.data().entityType,
-        }, actorUid);
-    } else {
-        // Fallback: if no bill was created, create one directly as 'paid'
-        const billData: z.infer<typeof BillSchema> = {
-            description: `Recebimento referente ao orçamento #${quoteData.number}`,
-            amount: quoteData.total,
-            type: 'receivable',
-            dueDate: quoteData.validUntil.toDate(), 
-            status: 'paid', // Mark as paid to create the transaction
-            entityType: 'customer',
-            entityId: quoteData.customerId,
-            accountId: accountId,
-            tags: [`quote-won-${quoteId}`],
-        };
-        const newBill = await billService.createBill(billData, actorUid);
-        billId = newBill.id;
-    }
+    // Create a bill receivable
+    const billData: z.infer<typeof BillSchema> = {
+        description: `Recebimento - Orçamento #${quoteData.number}`,
+        amount: quoteData.total,
+        type: 'receivable',
+        dueDate: new Date(), 
+        status: 'paid', // Mark as paid to trigger transaction creation
+        entityType: 'customer',
+        entityId: quoteData.customerId,
+        accountId: accountId,
+        tags: [`quote-${quoteId}`],
+    };
+
+    const newBill = await billService.createBill(billData, actorUid);
 
     // Update the customer status to 'won'
     await updateCustomerStatus(quoteData.customerId, 'won', actorUid);
 
-    // Update the quote status to 'won'
-    await quoteRef.update({
-        status: 'won',
-        updatedAt: FieldValue.serverTimestamp(),
-    });
-
-    return { billId };
+    // We no longer manage quote status, so we just return.
+    return { billId: newBill.id };
 };
 
 export const markQuoteAsLost = async (quoteId: string, actorUid: string) => {
@@ -555,27 +485,11 @@ export const markQuoteAsLost = async (quoteId: string, actorUid: string) => {
     
     const quoteData = quoteDoc.data()!;
 
-    // Find and delete the associated Bill
-    const billsQuery = await adminDb.collection('bills')
-        .where('companyId', '==', adminOrgData.organizationId)
-        .where('tags', 'array-contains', `quote-${quoteId}`)
-        .limit(1)
-        .get();
-        
-    if (!billsQuery.empty) {
-        const billDoc = billsQuery.docs[0];
-        await billService.deleteBill(billDoc.id, actorUid);
-    }
-
     // Update customer status to 'lost'
     await updateCustomerStatus(quoteData.customerId, 'lost', actorUid);
 
-    // Update quote status to 'lost'
-    await quoteRef.update({
-        status: 'lost',
-        updatedAt: FieldValue.serverTimestamp(),
-    });
+    // Delete the quote document itself
+    await quoteRef.delete();
 
     return { success: true };
 };
-
