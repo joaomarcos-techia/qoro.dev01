@@ -438,7 +438,7 @@ export const deleteQuote = async (quoteId: string, actorUid: string) => {
     return { id: quoteId, success: true };
 };
 
-export const markQuoteAsWon = async (quoteId: string, actorUid: string) => {
+export const markQuoteAsWon = async (quoteId: string, accountId: string | undefined, actorUid: string) => {
     const adminOrgData = await getAdminAndOrg(actorUid);
     if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
 
@@ -459,6 +459,7 @@ export const markQuoteAsWon = async (quoteId: string, actorUid: string) => {
         status: 'pending',
         entityType: 'customer',
         entityId: quoteData.customerId,
+        accountId: accountId,
         tags: [`quote-won-${quoteId}`],
     };
     

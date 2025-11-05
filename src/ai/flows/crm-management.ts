@@ -59,6 +59,7 @@ const DeleteQuoteInputSchema = z.object({
 
 const MarkQuoteAsWonInputSchema = z.object({
     quoteId: z.string(),
+    accountId: z.string().optional(),
 }).extend(ActorSchema.shape);
 
 
@@ -219,7 +220,7 @@ const markQuoteAsWonFlow = ai.defineFlow(
         inputSchema: MarkQuoteAsWonInputSchema,
         outputSchema: z.object({ billId: z.string() })
     },
-    async (input) => crmService.markQuoteAsWon(input.quoteId, input.actor)
+    async (input) => crmService.markQuoteAsWon(input.quoteId, input.accountId, input.actor)
 );
 
 const updateCustomerStatusFlow = ai.defineFlow(

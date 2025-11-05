@@ -15,7 +15,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { QuoteProfile, AccountProfile } from '@/ai/schemas';
-import { listAccounts, markQuoteAsWon } from '@/ai/flows/finance-management';
+import { listAccounts } from '@/ai/flows/finance-management';
+import { markQuoteAsWon } from '@/ai/flows/crm-management';
 
 interface MarkAsWonDialogProps {
   isOpen: boolean;

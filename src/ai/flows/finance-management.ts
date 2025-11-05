@@ -16,7 +16,6 @@
  * - updateBill - Updates a bill.
  * - deleteBill - Deletes a bill.
  * - bulkCreateTransactions - Creates multiple transactions at once.
- * - markQuoteAsWon - Converts a quote into a bill (account receivable).
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
@@ -74,12 +73,6 @@ const DashboardMetricsOutputSchema = z.object({
 const BulkCreateTransactionsInputSchema = z.object({
     transactions: z.array(TransactionSchema),
     accountId: z.string(),
-    actor: z.string(),
-});
-
-const MarkQuoteAsWonInputSchema = z.object({
-    quoteId: z.string(),
-    accountId: z.string().optional(),
     actor: z.string(),
 });
 
@@ -215,14 +208,6 @@ const bulkCreateTransactionsFlow = ai.defineFlow(
     }
 );
 
-const markQuoteAsWonFlow = ai.defineFlow(
-    {
-        name: 'markQuoteAsWonFlow',
-        inputSchema: MarkQuoteAsWonInputSchema,
-        outputSchema: z.object({ billId: z.string() })
-    },
-    async (input) => financeService.markQuoteAsWon(input)
-);
 
 // Exported functions (client-callable wrappers)
 export async function createAccount(input: z.infer<typeof AccountSchema> & z.infer<typeof ActorSchema>): Promise<{ id: string; }> {
@@ -279,8 +264,4 @@ export async function deleteBill(input: z.infer<typeof DeleteBillInputSchema>): 
 
 export async function bulkCreateTransactions(input: z.infer<typeof BulkCreateTransactionsInputSchema>): Promise<{ count: number; }> {
     return bulkCreateTransactionsFlow(input);
-}
-
-export async function markQuoteAsWon(input: z.infer<typeof MarkQuoteAsWonInputSchema>): Promise<{ billId: string }> {
-    return markQuoteAsWonFlow(input);
 }
