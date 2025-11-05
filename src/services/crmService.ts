@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { FieldValue } from 'firebase-admin/firestore';
@@ -366,7 +365,8 @@ export const createQuote = async (input: z.infer<typeof QuoteSchema>, actorUid: 
         entityType: 'customer',
         notes: `Referente ao orçamento ${quoteNumber}.`,
         tags: [`quote-${quoteRef.id}`],
-        paymentMethod: 'pix', // Default payment method
+        paymentMethod: 'pix',
+        category: input.category,
     };
     await billService.createBill(billData, actorUid);
     // --- End Automation ---
@@ -495,10 +495,10 @@ export const markQuoteAsWon = async (quoteId: string, accountId: string | undefi
         status: 'paid' as const,
         entityId: billData.entityId,
         entityType: billData.entityType,
-        notes: billData.notes + `\n(Orçamento #${quoteData.number} ganho)`,
+        notes: (billData.notes || '') + `\n(Orçamento #${quoteData.number} ganho)`,
         accountId: accountId ?? billData.accountId ?? undefined,
-        category: billData.category,
-        paymentMethod: billData.paymentMethod,
+        category: billData.category ?? undefined,
+        paymentMethod: billData.paymentMethod ?? undefined,
         tags: billData.tags
     };
 
@@ -511,12 +511,14 @@ export const markQuoteAsWon = async (quoteId: string, accountId: string | undefi
     return { billId: billDoc.id };
 };
 
-export const markQuoteAsLost = async (input: {quoteId: string, actor: string}) => {
-    const adminOrgData = await getAdminAndOrg(input.actor);
-    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
+export const markQuoteAsLost = async (quoteId: string, actorUid: string) => {
+    const adminOrgData = await getAdminAndOrg(actorUid);
+    if (!adminOrgData) {
+        throw new Error("User must be authenticated to perform this action.");
+    }
     const { organizationId } = adminOrgData;
 
-    const quoteRef = adminDb.collection('quotes').doc(input.quoteId);
+    const quoteRef = adminDb.collection('quotes').doc(quoteId);
     const quoteDoc = await quoteRef.get();
     if (!quoteDoc.exists || quoteDoc.data()?.companyId !== organizationId) {
         throw new Error("Orçamento não encontrado ou acesso negado.");
@@ -524,16 +526,17 @@ export const markQuoteAsLost = async (input: {quoteId: string, actor: string}) =
     
     const quoteData = quoteDoc.data()!;
 
+    // Delete the associated bill if it's still pending
     const billsSnapshot = await adminDb.collection('bills')
         .where('companyId', '==', organizationId)
-        .where('tags', 'array-contains', `quote-${input.quoteId}`)
+        .where('tags', 'array-contains', `quote-${quoteId}`)
         .where('status', '==', 'pending')
         .limit(1)
         .get();
     
     if (!billsSnapshot.empty) {
         const billDoc = billsSnapshot.docs[0];
-        await billService.deleteBill(billDoc.id, input.actor);
+        await billService.deleteBill(billDoc.id, actorUid);
     }
     
     await updateCustomerStatus(quoteData.customerId, 'lost', actorUid);
@@ -542,5 +545,3 @@ export const markQuoteAsLost = async (input: {quoteId: string, actor: string}) =
 
     return { success: true };
 };
-
-```
