@@ -336,8 +336,8 @@ export const createQuote = async (input: z.infer<typeof QuoteSchema>, actorUid: 
     if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
     const { organizationId, planId } = adminOrgData;
 
-    if (planId === 'free') {
-        throw new Error("A criação de orçamentos não está disponível no plano gratuito.");
+    if (planId !== 'performance') {
+        throw new Error("A criação de orçamentos está disponível apenas no plano Performance.");
     }
     
     const quoteNumber = `QT-${Date.now().toString().slice(-6)}`;

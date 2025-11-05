@@ -295,7 +295,7 @@ export async function updateService(input: z.infer<typeof UpdateServiceSchema> &
     return updateServiceFlow(input);
 }
 
-export async function deleteService(input: z.infer<typeof DeleteServiceInputSchema>): Promise<{ id: string, success: boolean }> {
+export async function deleteService(input: z.infer<typeof DeleteServiceInputSchema>): Promise<{ id: string; success: boolean }> {
     return deleteServiceFlow(input);
 }
 

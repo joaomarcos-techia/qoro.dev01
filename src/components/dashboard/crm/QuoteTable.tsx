@@ -104,9 +104,9 @@ export function QuoteTable() {
     try {
         await convertQuoteToTransaction({ quoteId, actor: currentUser.uid });
         triggerRefresh();
-    } catch (err) {
+    } catch (err: any) {
         console.error("Failed to mark quote as won", err);
-        setError("Não foi possível converter o orçamento em transação.");
+        setError(err.message || "Não foi possível converter o orçamento em transação.");
     }
   }
   

@@ -11,7 +11,8 @@ interface DocumentPDFProps {
 
 export const DocumentPDF = React.forwardRef<HTMLDivElement, DocumentPDFProps>(({ document }, ref) => {
     const formatCurrency = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-    const formatDate = (date: string | Date) => {
+    const formatDate = (date: string | Date | null) => {
+        if (!date) return '-';
         const dateObj = typeof date === 'string' ? new Date(date) : date;
         return new Intl.DateTimeFormat('pt-BR').format(dateObj);
     }
