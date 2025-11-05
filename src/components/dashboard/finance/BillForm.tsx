@@ -107,6 +107,7 @@ export function BillForm({ onAction, bill }: BillFormProps) {
             accountId: bill.accountId || '',
             category: bill.category || '',
             notes: bill.notes || '',
+            paymentMethod: bill.paymentMethod || 'pix'
         });
     } else {
         reset({
