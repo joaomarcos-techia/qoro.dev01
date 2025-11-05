@@ -51,6 +51,10 @@ export function BillForm({ onAction, bill }: BillFormProps) {
     resolver: zodResolver(FormSchema),
     defaultValues: {
       accountId: '', // Initialize to prevent uncontrolled -> controlled warning
+      entityId: '',
+      paymentMethod: 'pix',
+      type: 'payable',
+      status: 'pending',
     }
   });
 
@@ -94,7 +98,7 @@ export function BillForm({ onAction, bill }: BillFormProps) {
 
   useEffect(() => {
     if (bill) {
-        reset({ ...bill, dueDate: parseISO(bill.dueDate as unknown as string) });
+        reset({ ...bill, dueDate: parseISO(bill.dueDate as unknown as string), accountId: bill.accountId || '' });
     } else {
         reset({
             type: 'payable',
@@ -113,7 +117,7 @@ export function BillForm({ onAction, bill }: BillFormProps) {
   }, [bill, reset, accounts]);
   
   useEffect(() => {
-      setValue('entityId', undefined);
+      setValue('entityId', '');
       setValue('entityType', billType === 'payable' ? 'supplier' : 'customer');
   }, [billType, setValue]);
 
