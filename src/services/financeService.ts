@@ -4,12 +4,10 @@
 
 import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
-import { AccountSchema, AccountProfileSchema, UpdateAccountSchema, BillSchema } from '@/ai/schemas';
+import { AccountSchema, AccountProfileSchema, UpdateAccountSchema } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
 import { adminDb } from '@/lib/firebase-admin';
 import { startOfMonth, endOfMonth } from 'date-fns';
-import * as billService from './billService';
-
 
 export const createAccount = async (input: z.infer<typeof AccountSchema>, actorUid: string) => {
     const adminOrgData = await getAdminAndOrg(actorUid);
@@ -142,39 +140,4 @@ export const getFinanceDashboardMetrics = async (actorUid: string, dateRange?: {
     };
 };
 
-export const markQuoteAsWon = async (input: {quoteId: string, accountId?: string, actor: string}) => {
-    const { quoteId, accountId, actor } = input;
-    const adminOrgData = await getAdminAndOrg(actor);
-    if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
-
-    const quoteRef = adminDb.collection('quotes').doc(quoteId);
-    const quoteDoc = await quoteRef.get();
-    if (!quoteDoc.exists || quoteDoc.data()?.companyId !== adminOrgData.organizationId) {
-        throw new Error("Orçamento não encontrado ou acesso negado.");
-    }
-    
-    const quoteData = quoteDoc.data()!;
-
-    // Create a Bill (Account Receivable)
-    const billData: z.infer<typeof BillSchema> = {
-        description: `Recebimento referente ao orçamento #${quoteData.number}`,
-        amount: quoteData.total,
-        type: 'receivable',
-        dueDate: quoteData.validUntil || new Date(), // Use validUntil as due date
-        status: 'pending',
-        entityType: 'customer',
-        entityId: quoteData.customerId,
-        accountId: accountId,
-        tags: [`quote-won-${quoteId}`],
-    };
-    
-    const billResult = await billService.createBill(billData, actor);
-
-    // Update the quote status to 'won'
-    await quoteRef.update({
-        status: 'won',
-        updatedAt: FieldValue.serverTimestamp(),
-    });
-
-    return { billId: billResult.id };
-};
+  

@@ -351,6 +351,24 @@ export const createQuote = async (input: z.infer<typeof QuoteSchema>, actorUid: 
         updatedAt: FieldValue.serverTimestamp(),
     };
     const quoteRef = await adminDb.collection('quotes').add(newQuoteData);
+
+    // If sent, update customer status and create a pending bill
+    if (input.status === 'sent') {
+        await updateCustomerStatus(input.customerId, 'proposal', actorUid);
+        
+        const billData: z.infer<typeof BillSchema> = {
+            description: `A receber - Orçamento #${quoteNumber}`,
+            amount: input.total,
+            type: 'receivable',
+            dueDate: new Date(input.validUntil),
+            status: 'pending',
+            entityType: 'customer',
+            entityId: input.customerId,
+            tags: [`quote-${quoteRef.id}`],
+        };
+        await billService.createBill(billData, actorUid);
+    }
+
     return { id: quoteRef.id, number: quoteNumber };
 };
 
@@ -412,13 +430,31 @@ export const updateQuote = async (quoteId: string, input: z.infer<typeof UpdateQ
     if (!quoteDoc.exists || quoteDoc.data()?.companyId !== organizationId) {
         throw new Error('Orçamento não encontrado ou acesso negado.');
     }
-
+    const oldStatus = quoteDoc.data()?.status;
+    
     const { id, ...updateData } = input;
-
+    
     await quoteRef.update({
         ...updateData,
         updatedAt: FieldValue.serverTimestamp(),
     });
+
+    // If status changed to sent, create the pending bill
+    if (updateData.status === 'sent' && oldStatus !== 'sent') {
+         await updateCustomerStatus(input.customerId, 'proposal', actorUid);
+        const billData: z.infer<typeof BillSchema> = {
+            description: `A receber - Orçamento #${quoteDoc.data()?.number}`,
+            amount: input.total,
+            type: 'receivable',
+            dueDate: new Date(input.validUntil),
+            status: 'pending',
+            entityType: 'customer',
+            entityId: input.customerId,
+            tags: [`quote-${quoteRef.id}`],
+        };
+        await billService.createBill(billData, actorUid);
+    }
+
 
     return { id: quoteId, number: quoteDoc.data()?.number };
 };
@@ -450,20 +486,42 @@ export const markQuoteAsWon = async (quoteId: string, accountId: string | undefi
     
     const quoteData = quoteDoc.data()!;
 
-    // Create a Bill (Account Receivable)
-    const billData: z.infer<typeof BillSchema> = {
-        description: `Recebimento referente ao orçamento #${quoteData.number}`,
-        amount: quoteData.total,
-        type: 'receivable',
-        dueDate: quoteData.validUntil || new Date(), // Use validUntil as due date
-        status: 'paid', // Mark as paid (won) directly in finance
-        entityType: 'customer',
-        entityId: quoteData.customerId,
-        accountId: accountId,
-        tags: [`quote-won-${quoteId}`],
-    };
-    
-    const billResult = await billService.createBill(billData, actorUid);
+    // Find the associated Bill and update it to 'paid'
+    const billsQuery = await adminDb.collection('bills')
+        .where('companyId', '==', adminOrgData.organizationId)
+        .where('tags', 'array-contains', `quote-${quoteId}`)
+        .limit(1)
+        .get();
+        
+    let billId = '';
+    if (!billsQuery.empty) {
+        const billDoc = billsQuery.docs[0];
+        billId = billDoc.id;
+        await billService.updateBill({
+            ...(billDoc.data() as z.infer<typeof BillSchema>),
+            id: billId,
+            status: 'paid', // This will trigger transaction creation
+            accountId: accountId,
+        }, actorUid);
+    } else {
+        // Fallback: if no bill was created, create one directly as 'paid'
+        const billData: z.infer<typeof BillSchema> = {
+            description: `Recebimento referente ao orçamento #${quoteData.number}`,
+            amount: quoteData.total,
+            type: 'receivable',
+            dueDate: quoteData.validUntil || new Date(),
+            status: 'paid', // Mark as paid to create the transaction
+            entityType: 'customer',
+            entityId: quoteData.customerId,
+            accountId: accountId,
+            tags: [`quote-won-${quoteId}`],
+        };
+        const newBill = await billService.createBill(billData, actorUid);
+        billId = newBill.id;
+    }
+
+    // Update the customer status to 'won'
+    await updateCustomerStatus(quoteData.customerId, 'won', actorUid);
 
     // Update the quote status to 'won'
     await quoteRef.update({
@@ -471,5 +529,8 @@ export const markQuoteAsWon = async (quoteId: string, accountId: string | undefi
         updatedAt: FieldValue.serverTimestamp(),
     });
 
-    return { billId: billResult.id };
+    return { billId };
 };
+
+
+  

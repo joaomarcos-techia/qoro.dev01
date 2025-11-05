@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -75,8 +76,9 @@ export function BillTable({ onEdit, onRefresh, refreshKey }: BillTableProps) {
   const handleMarkAsPaid = async (bill: BillProfile) => {
     if (!currentUser) return;
     try {
+        // Here we just update the status, the backend will create the transaction
         await updateBill({ ...bill, dueDate: bill.dueDate, status: 'paid', actor: currentUser.uid });
-        onRefresh();
+        onRefresh(); // Refresh the list, the paid bill will disappear
     } catch (err: any) {
         console.error("Failed to mark as paid:", err);
         setError(err.message || "Não foi possível marcar como pago.");
@@ -167,8 +169,10 @@ export function BillTable({ onEdit, onRefresh, refreshKey }: BillTableProps) {
       setIsLoading(true);
       setError(null);
       try {
-        const bills = await listBills({ actor: currentUser.uid });
-        setData(bills);
+        const allBills = await listBills({ actor: currentUser.uid });
+        // Only show pending or overdue bills
+        const pendingBills = allBills.filter(bill => bill.status === 'pending' || bill.status === 'overdue');
+        setData(pendingBills);
       } catch (err: any) {
         console.error('Failed to fetch bills:', err);
         setError(err.message || 'Não foi possível carregar as contas.');
@@ -198,7 +202,7 @@ export function BillTable({ onEdit, onRefresh, refreshKey }: BillTableProps) {
     return <div className="text-red-500 text-center min-h-[400px]">{error}</div>;
   }
   if (data.length === 0) {
-    return <div className="flex flex-col items-center justify-center text-center min-h-[400px]"><Receipt className="w-16 h-16 text-muted-foreground/30 mb-4" /><h3 className="text-xl font-bold text-foreground">Nenhuma pendência encontrada</h3><p className="text-muted-foreground mt-2">Comece adicionando uma conta a pagar ou a receber.</p></div>;
+    return <div className="flex flex-col items-center justify-center text-center min-h-[400px]"><Receipt className="w-16 h-16 text-muted-foreground/30 mb-4" /><h3 className="text-xl font-bold text-foreground">Nenhuma pendência encontrada</h3><p className="text-muted-foreground mt-2">Você está em dia! Contas pagas aparecem na tela de transações.</p></div>;
   }
 
   return (
@@ -223,3 +227,6 @@ export function BillTable({ onEdit, onRefresh, refreshKey }: BillTableProps) {
     </div>
   );
 }
+
+
+  
