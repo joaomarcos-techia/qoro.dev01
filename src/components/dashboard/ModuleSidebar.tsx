@@ -67,7 +67,7 @@ function SidebarContent({ navGroup, navItems, onLinkClick }: ModuleSidebarProps 
       <nav className="flex-grow p-4 overflow-y-auto">
         <ul>
           {navItems.map((item) => {
-            const isActive = pathname.startsWith(item.href);
+            const isActive = pathname === item.href;
             const allowed = isAllowed(item);
 
             if (isLoading) {
