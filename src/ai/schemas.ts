@@ -199,6 +199,54 @@ export const QuoteProfileSchema = QuoteSchema.extend({
 });
 export type QuoteProfile = z.infer<typeof QuoteProfileSchema>;
 
+export const QualificationLeadSchema = z.object({
+  companySize: z.string().optional(),
+  inefficientProcesses: z.string().optional(),
+  currentTools: z.string().optional(),
+  urgency: z.string().optional(),
+  interestedServices: z.record(z.array(z.string())).optional(),
+  investmentRange: z.string().optional(),
+  desiredOutcome: z.string().optional(),
+  fullName: z.string().optional(),
+  role: z.string().optional(),
+  email: z.string().optional(),
+});
+
+export const PulseMessageSchema = z.object({
+  role: z.enum(["user", "assistant", "model", "tool"]),
+  content: z.string(),
+});
+export type PulseMessage = z.infer<typeof PulseMessageSchema>;
+
+export const ConversationSchema = z.object({
+    id: z.string(),
+    title: z.string(),
+    updatedAt: z.string(),
+    messages: z.array(PulseMessageSchema),
+});
+export type Conversation = z.infer<typeof ConversationSchema>;
+
+export const ConversationProfileSchema = z.object({
+    id: z.string(),
+    title: z.string(),
+    updatedAt: z.string(),
+});
+export type ConversationProfile = z.infer<typeof ConversationProfileSchema>;
+
+export const AskPulseInputSchema = z.object({
+    actor: z.string(),
+    messages: z.array(PulseMessageSchema),
+    conversationId: z.string().optional(),
+});
+export type AskPulseInput = z.infer<typeof AskPulseInputSchema>;
+
+export const AskPulseOutputSchema = z.object({
+    response: PulseMessageSchema,
+    conversationId: z.string(),
+    title: z.string(),
+});
+export type AskPulseOutput = z.infer<typeof AskPulseOutputSchema>;
+
 
 export const SupplierSchema = z.object({
     name: z.string().min(1, 'O nome é obrigatório.'),
@@ -269,4 +317,91 @@ export const TaskProfileSchema = TaskSchema.extend({
     responsibleUserName: z.string().optional(),
     completedAt: z.string().optional().nullable(),
 });
-export type TaskProfile = z
+export type TaskProfile = z.infer<typeof TaskProfileSchema>;
+
+// Schemas for Finance
+export const AccountSchema = z.object({
+  name: z.string().min(1, 'O nome da conta é obrigatório.'),
+  type: z.enum(['checking', 'savings', 'credit_card', 'cash']),
+  bank: z.string().optional(),
+  balance: z.coerce.number(),
+  isActive: z.boolean().default(true),
+});
+
+export const UpdateAccountSchema = AccountSchema.extend({
+    id: z.string(),
+});
+
+export const AccountProfileSchema = AccountSchema.extend({
+    id: z.string(),
+    createdAt: z.string(),
+});
+export type AccountProfile = z.infer<typeof AccountProfileSchema>;
+
+export const TransactionSchema = z.object({
+    description: z.string().min(1, 'A descrição é obrigatória.'),
+    amount: z.coerce.number().positive('O valor deve ser um número positivo.'),
+    type: z.enum(['income', 'expense']),
+    date: z.union([z.date(), z.string(), z.null()]).optional(),
+    accountId: z.string().optional(),
+    customerId: z.string().optional(),
+    category: z.string().optional(),
+    status: z.enum(['pending', 'paid', 'cancelled']).default('paid'),
+    paymentMethod: z.enum(['pix', 'credit_card', 'debit_card', 'bank_transfer', 'boleto', 'cash']).optional(),
+    tags: z.array(z.string()).optional(),
+});
+export type Transaction = z.infer<typeof TransactionSchema>;
+
+export const UpdateTransactionSchema = TransactionSchema.extend({
+    id: z.string(),
+});
+
+export const TransactionProfileSchema = TransactionSchema.extend({
+    id: z.string(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    accountName: z.string().optional(),
+    customerName: z.string().optional(),
+});
+export type TransactionProfile = z.infer<typeof TransactionProfileSchema>;
+
+
+export const BillSchema = z.object({
+    description: z.string().min(1, 'A descrição é obrigatória.'),
+    amount: z.coerce.number().positive('O valor deve ser positivo.'),
+    type: z.enum(['payable', 'receivable']),
+    dueDate: z.union([z.date(), z.string()]),
+    status: z.enum(['pending', 'paid', 'overdue']),
+    entityId: z.string().optional(),
+    entityType: z.enum(['customer', 'supplier']).optional(),
+    notes: z.string().optional(),
+    accountId: z.string().optional(),
+    category: z.string().optional(),
+    paymentMethod: z.enum(['pix', 'credit_card', 'debit_card', 'bank_transfer', 'boleto', 'cash']).optional(),
+    tags: z.array(z.string()).optional(),
+});
+
+export const UpdateBillSchema = BillSchema.extend({
+    id: z.string(),
+});
+
+export const BillProfileSchema = BillSchema.extend({
+    id: z.string(),
+    createdAt: z.string(),
+    entityName: z.string().optional(),
+});
+export type BillProfile = z.infer<typeof BillProfileSchema>;
+
+export const ReconciliationSchema = z.object({
+    fileName: z.string(),
+    ofxContent: z.string(),
+    accountId: z.string(),
+    status: z.enum(['pending', 'reconciled']).optional().default('pending'),
+});
+
+export const ReconciliationProfileSchema = ReconciliationSchema.extend({
+    id: z.string(),
+    createdAt: z.string(),
+    accountName: z.string().optional(),
+});
+export type ReconciliationProfile = z.infer<typeof ReconciliationProfileSchema>;
