@@ -18,8 +18,18 @@ export const createBill = async (input: z.infer<typeof BillSchema>, actorUid: st
     const { organizationId } = adminOrgData;
 
     const newBillData = {
-        ...input,
+        description: input.description,
+        amount: input.amount,
+        type: input.type,
         dueDate: new Date(input.dueDate),
+        status: input.status,
+        entityId: input.entityId,
+        entityType: input.entityType,
+        notes: input.notes ?? null,
+        accountId: input.accountId ?? null,
+        category: input.category ?? null,
+        paymentMethod: input.paymentMethod,
+        tags: input.tags ?? [],
         companyId: organizationId,
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
@@ -125,11 +135,25 @@ export const updateBill = async (input: z.infer<typeof UpdateBillSchema>, actorU
     const oldData = doc.data()!;
     const oldStatus = oldData.status;
 
-    await billRef.update({
-        ...updateData,
+    // Sanitize the update payload
+    const sanitizedUpdateData = {
+        description: updateData.description,
+        amount: updateData.amount,
+        type: updateData.type,
         dueDate: new Date(updateData.dueDate),
+        status: updateData.status,
+        entityId: updateData.entityId ?? null,
+        entityType: updateData.entityType ?? null,
+        notes: updateData.notes ?? null,
+        accountId: updateData.accountId ?? null,
+        category: updateData.category ?? null,
+        paymentMethod: updateData.paymentMethod ?? null,
+        tags: updateData.tags ?? [],
         updatedAt: FieldValue.serverTimestamp(),
-    });
+    };
+
+
+    await billRef.update(sanitizedUpdateData);
 
     // If the status is changing to 'paid' and it wasn't paid before, create a transaction.
     if (updateData.status === 'paid' && oldStatus !== 'paid') {

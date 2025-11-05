@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -55,6 +56,8 @@ export function BillForm({ onAction, bill }: BillFormProps) {
       paymentMethod: 'pix',
       type: 'payable',
       status: 'pending',
+      category: '',
+      notes: '',
     }
   });
 
@@ -98,7 +101,13 @@ export function BillForm({ onAction, bill }: BillFormProps) {
 
   useEffect(() => {
     if (bill) {
-        reset({ ...bill, dueDate: parseISO(bill.dueDate as unknown as string), accountId: bill.accountId || '' });
+        reset({ 
+            ...bill, 
+            dueDate: parseISO(bill.dueDate as unknown as string), 
+            accountId: bill.accountId || '',
+            category: bill.category || '',
+            notes: bill.notes || '',
+        });
     } else {
         reset({
             type: 'payable',
