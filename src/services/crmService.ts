@@ -366,9 +366,9 @@ export const createQuote = async (input: z.infer<typeof QuoteSchema>, actorUid: 
         entityType: 'customer',
         notes: `Referente ao orçamento ${quoteNumber}.`,
         tags: [`quote-${quoteRef.id}`],
-        paymentMethod: input.paymentMethod ?? 'pix',
-        category: input.category ?? null,
-        accountId: input.accountId ?? null,
+        paymentMethod: 'pix',
+        category: null,
+        accountId: null,
     };
     await billService.createBill(billData, actorUid);
     // --- End Automation ---

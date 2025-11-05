@@ -147,7 +147,7 @@ export const updateBill = async (input: z.infer<typeof UpdateBillSchema>, actorU
         notes: updateData.notes ?? null,
         accountId: updateData.accountId ?? null,
         category: updateData.category ?? null,
-        paymentMethod: updateData.paymentMethod ?? null,
+        paymentMethod: updateData.paymentMethod ?? 'pix',
         tags: updateData.tags ?? [],
         updatedAt: FieldValue.serverTimestamp(),
     };
