@@ -89,15 +89,12 @@ export function QuoteTable() {
 
   const handleMarkAsLostAction = async (quote: QuoteProfile) => {
     if (!currentUser) return;
-    const originalData = [...data];
-    setData(prev => prev.filter(q => q.id !== quote.id));
     try {
       await markQuoteAsLost({ quoteId: quote.id, actor: currentUser.uid });
       triggerRefresh();
     } catch(err: any) {
         console.error("Failed to mark quote as lost:", err);
         setError(err.message || "Não foi possível marcar como perdido.");
-        setData(originalData);
     }
   };
 
@@ -170,6 +167,20 @@ export function QuoteTable() {
       cell: ({ row }) => formatCurrency(row.getValue('total')),
     },
     {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => {
+        const status = row.original.status;
+        if (status === 'won') {
+          return <span className="flex items-center text-green-400 font-semibold"><CheckCircle className="w-4 h-4 mr-2"/> Ganho</span>;
+        }
+        if (status === 'lost') {
+            return <span className="flex items-center text-red-400 font-semibold"><XCircle className="w-4 h-4 mr-2"/> Perdido</span>;
+        }
+        return <span className="text-muted-foreground">Pendente</span>;
+      },
+    },
+    {
       accessorKey: 'validUntil',
       header: 'Válido até',
       cell: ({ row }) => {
@@ -184,6 +195,7 @@ export function QuoteTable() {
       id: 'actions',
       cell: ({ row }) => {
         const quote = row.original;
+        const isPending = quote.status === 'pending';
         
         return (
           <AlertDialog>
@@ -196,15 +208,19 @@ export function QuoteTable() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="rounded-2xl">
                 <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => handleOpenWonDialog(quote)} className="rounded-xl cursor-pointer text-green-400 focus:text-green-300">
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Marcar como Ganho
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleMarkAsLostAction(quote)} className="text-yellow-500 focus:text-yellow-400 focus:bg-yellow-500/10 rounded-xl cursor-pointer">
-                  <XCircle className="mr-2 h-4 w-4" />
-                  Marcar como Perdido
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
+                {isPending && (
+                  <>
+                    <DropdownMenuItem onClick={() => handleOpenWonDialog(quote)} className="rounded-xl cursor-pointer text-green-400 focus:text-green-300">
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                      Marcar como Ganho
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleMarkAsLostAction(quote)} className="text-yellow-500 focus:text-yellow-400 focus:bg-yellow-500/10 rounded-xl cursor-pointer">
+                      <XCircle className="mr-2 h-4 w-4" />
+                      Marcar como Perdido
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
                 <DropdownMenuItem onClick={() => handlePdfAction(quote, 'view')} className="rounded-xl cursor-pointer">
                   <Eye className="mr-2 h-4 w-4" />
                   Visualizar
@@ -229,7 +245,7 @@ export function QuoteTable() {
               <AlertDialogHeader>
                 <AlertDialogTitle>Excluir orçamento?</AlertDialogTitle>
                 <AlertDialogDescription>
-                    Esta ação não pode ser desfeita. O orçamento <span className='font-bold'>{quote.number}</span> será permanentemente excluído.
+                    Esta ação não pode ser desfeita. O orçamento <span className='font-bold'>{quote.number}</span> será permanentemente excluído, mas isso não afetará o status do cliente no funil ou transações já criadas.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>

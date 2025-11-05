@@ -349,11 +349,12 @@ export const createQuote = async (input: z.infer<typeof QuoteSchema>, actorUid: 
         companyId: organizationId,
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
+        status: 'pending',
     };
     const quoteRef = await adminDb.collection('quotes').add(newQuoteData);
 
-    // --- Automação ---
-    await updateCustomerStatus(input.customerId, 'proposal', actorUid);
+    // --- Automation ---
+    await updateCustomerStatus(input.customerId, 'negotiation', actorUid);
 
     const billData: z.infer<typeof BillSchema> = {
         description: `Orçamento #${quoteNumber}`,
@@ -367,8 +368,7 @@ export const createQuote = async (input: z.infer<typeof QuoteSchema>, actorUid: 
         tags: [`quote-${quoteRef.id}`],
     };
     await billService.createBill(billData, actorUid);
-    // --- Fim da Automação ---
-
+    // --- End Automation ---
 
     return { id: quoteRef.id, number: quoteNumber };
 };
@@ -483,7 +483,7 @@ export const markQuoteAsWon = async (quoteId: string, accountId: string | undefi
     }
     
     const billDoc = billsSnapshot.docs[0];
-    const billData = billDoc.data();
+    const billData = billDoc.data()!;
 
     // Update the bill to "paid", which will trigger transaction creation
     const billUpdatePayload: z.infer<typeof UpdateBillSchema> = {
@@ -491,7 +491,7 @@ export const markQuoteAsWon = async (quoteId: string, accountId: string | undefi
         description: billData.description,
         amount: billData.amount,
         type: billData.type,
-        dueDate: billData.dueDate.toDate(), // Ensure it's a Date object
+        dueDate: billData.dueDate.toDate(), 
         status: 'paid' as const,
         entityId: billData.entityId,
         entityType: billData.entityType,
@@ -506,7 +506,7 @@ export const markQuoteAsWon = async (quoteId: string, accountId: string | undefi
 
     await updateCustomerStatus(quoteData.customerId, 'won', actorUid);
 
-    await quoteRef.delete();
+    await quoteRef.update({ status: 'won', updatedAt: FieldValue.serverTimestamp() });
 
     return { billId: billDoc.id };
 };
@@ -525,7 +525,6 @@ export const markQuoteAsLost = async (input: { quoteId: string, actor: string })
     
     const quoteData = quoteDoc.data()!;
 
-    // Find and delete the associated pending bill
     const billsSnapshot = await adminDb.collection('bills')
         .where('companyId', '==', organizationId)
         .where('tags', 'array-contains', `quote-${quoteId}`)
@@ -534,14 +533,13 @@ export const markQuoteAsLost = async (input: { quoteId: string, actor: string })
         .get();
     
     if (!billsSnapshot.empty) {
-        await billsSnapshot.docs[0].ref.delete();
+        const billDoc = billsSnapshot.docs[0];
+        await billService.deleteBill(billDoc.id, actor);
     }
-
-    // Update customer status to 'lost'
+    
     await updateCustomerStatus(quoteData.customerId, 'lost', actor);
-
-    // Delete the quote document itself
-    await quoteRef.delete();
+    
+    await quoteRef.update({ status: 'lost', updatedAt: FieldValue.serverTimestamp() });
 
     return { success: true };
 };

@@ -1,4 +1,5 @@
 
+
 import { z } from 'zod';
 
 // Schemas for User and Organization Management
@@ -182,6 +183,7 @@ export const QuoteSchema = z.object({
     total: z.number(),
     validUntil: z.union([z.string(), z.date()]),
     notes: z.string().optional(),
+    status: z.enum(['pending', 'won', 'lost']).default('pending'),
 });
 
 export const UpdateQuoteSchema = QuoteSchema.extend({
