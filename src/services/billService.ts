@@ -183,3 +183,5 @@ export const deleteBill = async (billId: string, actorUid: string) => {
     await billRef.delete();
     return { id: billId, success: true };
 };
+
+    

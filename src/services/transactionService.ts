@@ -26,6 +26,9 @@ export const createTransaction = async (input: z.infer<typeof TransactionSchema>
     const accountId = input.accountId;
     const transactionRef = adminDb.collection('transactions').doc();
 
+    // Remove undefined values before sending to Firestore
+    const cleanInput = JSON.parse(JSON.stringify(input));
+
     try {
         if (accountId) {
             const accountRef = adminDb.collection('accounts').doc(accountId);
@@ -41,10 +44,10 @@ export const createTransaction = async (input: z.infer<typeof TransactionSchema>
                 }
 
                 const currentBalance = accountData.balance || 0;
-                const transactionAmount = input.amount;
+                const transactionAmount = cleanInput.amount;
 
                 let newBalance;
-                if (input.type === 'income') {
+                if (cleanInput.type === 'income') {
                     newBalance = currentBalance + transactionAmount;
                 } else {
                     newBalance = currentBalance - transactionAmount;
@@ -53,8 +56,8 @@ export const createTransaction = async (input: z.infer<typeof TransactionSchema>
                 t.update(accountRef, { balance: newBalance });
 
                 const newTransactionData = {
-                    ...input,
-                    date: input.date ? new Date(input.date) : new Date(),
+                    ...cleanInput,
+                    date: cleanInput.date ? new Date(cleanInput.date) : new Date(),
                     companyId: organizationId,
                     createdBy: actorUid,
                     createdAt: FieldValue.serverTimestamp(),
@@ -65,8 +68,8 @@ export const createTransaction = async (input: z.infer<typeof TransactionSchema>
         } else {
             // Create transaction without updating account balance
             const newTransactionData = {
-                ...input,
-                date: input.date ? new Date(input.date) : new Date(),
+                ...cleanInput,
+                date: cleanInput.date ? new Date(cleanInput.date) : new Date(),
                 companyId: organizationId,
                 createdBy: actorUid,
                 createdAt: FieldValue.serverTimestamp(),
@@ -312,5 +315,7 @@ export const bulkCreateTransactions = async (
         throw new Error(`Falha ao salvar as transações: ${error.message}`);
     }
 };
+
+    
 
     
