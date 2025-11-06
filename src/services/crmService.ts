@@ -364,7 +364,7 @@ export const createQuote = async (input: z.infer<typeof QuoteSchema>, actorUid: 
         status: 'pending',
         entityId: input.customerId,
         entityType: 'customer',
-        notes: `Referente ao orçamento ${quoteNumber}.`,
+        notes: `Referente ao orçamento ${quoteNumber}.` ?? null,
         tags: [`quote-${quoteRef.id}`],
         paymentMethod: 'pix',
         category: null,
@@ -547,3 +547,4 @@ export const markQuoteAsLost = async (quoteId: string, actorUid: string) => {
 
     return { success: true };
 };
+
