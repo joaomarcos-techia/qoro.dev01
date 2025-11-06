@@ -7,7 +7,7 @@ import { LucideIcon, ChevronLeft, Loader2, Lock, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePlan } from '@/contexts/PlanContext';
 import { AppPermissions } from '@/ai/schemas';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 
 export interface NavItem {
