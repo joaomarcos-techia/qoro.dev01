@@ -50,9 +50,10 @@ export default function ClientesPage() {
     
     if (!currentUser) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[400px]">
+            <div className="flex flex-col items-center justify-center min-h-[400px] bg-card border border-destructive/50 rounded-2xl">
                 <ServerCrash className="w-12 h-12 text-destructive" />
-                <p className="mt-4 text-destructive-foreground">Usuário não autenticado. Por favor, faça login novamente.</p>
+                <p className="mt-4 text-destructive-foreground font-semibold">Usuário não autenticado.</p>
+                <p className="text-sm text-muted-foreground mt-1">Por favor, faça login novamente para visualizar os clientes.</p>
             </div>
         );
     }

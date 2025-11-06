@@ -91,9 +91,9 @@ export function OrganizationForm() {
             };
             await updateOrganizationDetails({ ...submissionData, actor: currentUser.uid });
             setFeedback({ type: 'success', message: 'Dados da organização atualizados com sucesso!' });
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            setFeedback({ type: 'error', message: 'Falha ao atualizar os dados. Tente novamente.' });
+            setFeedback({ type: 'error', message: error.message || 'Falha ao atualizar os dados. Tente novamente.' });
         } finally {
             setIsLoading(prev => ({ ...prev, form: false }));
         }

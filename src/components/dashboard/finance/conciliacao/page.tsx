@@ -98,9 +98,9 @@ export default function ConciliacaoPage() {
             accountId: selectedAccountId,
           });
           router.push(`/dashboard/finance/conciliacao/${result.id}`);
-        } catch (err) {
+        } catch (err: any) {
           console.error("Error creating reconciliation:", err);
-          setError("Falha ao salvar o extrato. Tente novamente.");
+          setError(err.message || "Falha ao salvar o extrato. Tente novamente.");
           setIsUploading(false);
         }
       };
@@ -274,18 +274,18 @@ export default function ConciliacaoPage() {
             </DialogFooter>
         </DialogContent>
       </Dialog>
-      <div className="flex justify-between items-start mb-8 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
         <div>
-          <h1 className="text-4xl font-bold text-foreground">Conciliação Bancária</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground">Conciliação bancária</h1>
+          <p className="text-muted-foreground mt-1">
             Compare suas transações com o extrato bancário para garantir que tudo esteja correto.
           </p>
         </div>
-        <div className="flex items-end gap-4 flex-shrink-0">
-            <div className='space-y-2'>
-                <Label htmlFor="account-select">Conta para Conciliação</Label>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-4 w-full md:w-auto">
+            <div className='space-y-2 flex-grow'>
+                <Label htmlFor="account-select">Conta para conciliação</Label>
                 <Select value={selectedAccountId} onValueChange={setSelectedAccountId} disabled={accounts.length === 0}>
-                    <SelectTrigger id="account-select" className="w-[250px] rounded-xl">
+                    <SelectTrigger id="account-select" className="w-full sm:w-[250px] rounded-xl">
                         <SelectValue placeholder="Selecione uma conta" />
                     </SelectTrigger>
                     <SelectContent>
@@ -313,12 +313,12 @@ export default function ConciliacaoPage() {
             ) : (
                 <Upload className="mr-2 w-5 h-5" />
             )}
-            {isUploading ? 'Enviando...' : 'Importar Extrato (OFX)'}
+            {isUploading ? 'Enviando...' : 'Importar extrato (OFX)'}
             </Button>
         </div>
       </div>
 
-      <div className="bg-card p-6 rounded-2xl border-border">
+      <div className="bg-card p-4 sm:p-6 rounded-2xl border-border">
         {renderContent()}
       </div>
     </div>

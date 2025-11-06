@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { ModuleSidebar } from '@/components/dashboard/ModuleSidebar';
 import type { NavItem, NavGroup } from '@/components/dashboard/ModuleSidebar';
+import { usePathname } from 'next/navigation';
 
 const crmNavGroup: NavGroup = {
   group: 'QoroCRM',
@@ -27,10 +28,13 @@ const crmNavItems: NavItem[] = [
 ];
 
 export default function CrmLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isFunilPage = pathname === '/dashboard/crm/funil';
+
   return (
     <div className="flex h-full">
       <ModuleSidebar navGroup={crmNavGroup} navItems={crmNavItems} />
-      <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+      <main className={`flex-1 p-4 md:p-8 ${isFunilPage ? 'overflow-y-hidden' : 'overflow-y-auto'}`}>
         {children}
       </main>
     </div>

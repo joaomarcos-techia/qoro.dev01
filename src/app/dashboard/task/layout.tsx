@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { ModuleSidebar } from '@/components/dashboard/ModuleSidebar';
 import type { NavItem, NavGroup } from '@/components/dashboard/ModuleSidebar';
+import { usePathname } from 'next/navigation';
 
 const taskNavGroup: NavGroup = {
     group: 'QoroTask', 
@@ -26,10 +27,13 @@ const taskNavItems: NavItem[] = [
 ];
 
 export default function TaskLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isTarefasPage = pathname === '/dashboard/task/tarefas';
+
   return (
     <div className="flex h-full">
       <ModuleSidebar navGroup={taskNavGroup} navItems={taskNavItems} />
-      <main className="flex-1 p-4 md:p-8 overflow-y-auto h-full">
+      <main className={`flex-1 p-4 md:p-8 ${isTarefasPage ? 'overflow-y-hidden' : 'overflow-y-auto'}`}>
         {children}
       </main>
     </div>

@@ -270,7 +270,7 @@ function DashboardContent() {
                             <p className="text-sm mt-1">{systemNotification}</p>
                         </div>
                     </div>
-                    <Button variant="ghost" size="icon" className="text-blue-300 hover:bg-blue-800/50" onClick={dismissNotification}>
+                    <Button variant="ghost" size="icon" className="text-blue-300 hover:bg-blue-800/50 rounded-full" onClick={dismissNotification}>
                         <X className="w-5 h-5"/>
                     </Button>
                 </div>

@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { GitCompareArrows, Upload, FileText, Loader2, ServerCrash, MoreHorizontal, Edit, Trash2, Eye, Landmark } from 'lucide-react';
+import { GitCompareArrows, Upload, FileText, Loader2, ServerCrash, MoreHorizontal, Edit, Trash2, Eye, Landmark, BadgeCheck, BadgeAlert } from 'lucide-react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { listReconciliations, createReconciliation, deleteReconciliation, updateReconciliation } from '@/ai/flows/reconciliation-flow';
@@ -98,9 +98,9 @@ export default function ConciliacaoPage() {
             accountId: selectedAccountId,
           });
           router.push(`/dashboard/finance/conciliacao/${result.id}`);
-        } catch (err) {
+        } catch (err: any) {
           console.error("Error creating reconciliation:", err);
-          setError("Falha ao salvar o extrato. Tente novamente.");
+          setError(err.message || "Falha ao salvar o extrato. Tente novamente.");
           setIsUploading(false);
         }
       };
@@ -155,7 +155,7 @@ export default function ConciliacaoPage() {
       return (
         <div className="flex flex-col items-center justify-center min-h-[400px] bg-destructive/10 p-8 rounded-xl border border-destructive">
           <ServerCrash className="w-16 h-16 text-destructive mb-4" />
-          <h3 className="text-xl font-bold text-destructive-foreground">Ocorreu um erro</h3>
+          <h3 className="text-xl font-bold text-destructive-foreground">Ocorreu um Erro</h3>
           <p className="text-muted-foreground mt-2">{error}</p>
         </div>
       );
@@ -180,6 +180,7 @@ export default function ConciliacaoPage() {
                 <TableRow className="hover:bg-transparent rounded-lg">
                     <TableHead>Arquivo</TableHead>
                     <TableHead>Conta bancária</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead>Data de envio</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -197,6 +198,17 @@ export default function ConciliacaoPage() {
                             {rec.accountName || 'Não especificada'}
                         </div>
                     </TableCell>
+                    <TableCell>
+                    {rec.status === 'reconciled' ? (
+                        <span className="flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-300 w-fit">
+                            <BadgeCheck className="w-4 h-4 mr-2"/> Conciliado
+                        </span>
+                    ) : (
+                        <span className="flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-yellow-500/20 text-yellow-300 w-fit">
+                            <BadgeAlert className="w-4 h-4 mr-2"/> Pendente
+                        </span>
+                    )}
+                  </TableCell>
                     <TableCell>{format(new Date(rec.createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</TableCell>
                     <TableCell className="text-right">
                         <AlertDialog>
@@ -248,11 +260,11 @@ export default function ConciliacaoPage() {
   }
 
   return (
-    <div>
+    <div className="h-full flex flex-col">
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="rounded-xl">
             <DialogHeader>
-                <DialogTitle>Renomear arquivo</DialogTitle>
+                <DialogTitle>Renomear Arquivo</DialogTitle>
                 <DialogDescription>
                     Altere o nome de identificação para esta conciliação.
                 </DialogDescription>
@@ -264,55 +276,57 @@ export default function ConciliacaoPage() {
             </DialogFooter>
         </DialogContent>
       </Dialog>
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground">Conciliação bancária</h1>
-          <p className="text-muted-foreground mt-1">
-            Compare suas transações com o extrato bancário para garantir que tudo esteja correto.
-          </p>
-        </div>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-4 w-full md:w-auto">
-            <div className='space-y-2 flex-grow'>
-                <Label htmlFor="account-select">Conta para conciliação</Label>
-                <Select value={selectedAccountId} onValueChange={setSelectedAccountId} disabled={accounts.length === 0}>
-                    <SelectTrigger id="account-select" className="w-full sm:w-[250px] rounded-xl">
-                        <SelectValue placeholder="Selecione uma conta" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {accounts.length > 0 ? accounts.map(acc => (
-                            <SelectItem key={acc.id} value={acc.id} className="rounded-lg">{acc.name}</SelectItem>
-                        )) : <div className="p-4 text-sm text-muted-foreground">Nenhuma conta cadastrada.</div>}
-                    </SelectContent>
-                </Select>
+      <div className="flex-shrink-0">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
+            <div>
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground">Conciliação bancária</h1>
+            <p className="text-muted-foreground mt-1">
+                Compare suas transações com o extrato bancário para garantir que tudo esteja correto.
+            </p>
             </div>
-            <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                className="hidden"
-                accept=".ofx, .OFX"
-                disabled={isUploading}
-            />
-            <Button
-                onClick={handleFileImportClick}
-                disabled={isUploading || !selectedAccountId}
-                className="bg-finance-primary text-black px-4 h-10 rounded-xl hover:bg-finance-primary/90 transition-all duration-300 border border-transparent hover:border-finance-primary/50 flex items-center justify-center font-semibold"
-            >
-            {isUploading ? (
-                <Loader2 className="mr-2 w-5 h-5 animate-spin" />
-            ) : (
-                <Upload className="mr-2 w-5 h-5" />
-            )}
-            {isUploading ? 'Enviando...' : 'Importar extrato (OFX)'}
-            </Button>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-4 w-full md:w-auto">
+                <div className='space-y-2 flex-grow'>
+                    <Label htmlFor="account-select">Conta para conciliação</Label>
+                    <Select value={selectedAccountId} onValueChange={setSelectedAccountId} disabled={accounts.length === 0}>
+                        <SelectTrigger id="account-select" className="w-full sm:w-[250px] rounded-xl">
+                            <SelectValue placeholder="Selecione uma conta" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {accounts.length > 0 ? accounts.map(acc => (
+                                <SelectItem key={acc.id} value={acc.id} className="rounded-lg">{acc.name}</SelectItem>
+                            )) : <div className="p-4 text-sm text-muted-foreground">Nenhuma conta cadastrada.</div>}
+                        </SelectContent>
+                    </Select>
+                </div>
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    className="hidden"
+                    accept=".ofx, .OFX"
+                    disabled={isUploading}
+                />
+                <Button
+                    onClick={handleFileImportClick}
+                    disabled={isUploading || !selectedAccountId}
+                    className="bg-finance-primary text-black px-4 h-10 rounded-xl hover:bg-finance-primary/90 transition-all duration-300 border border-transparent hover:border-finance-primary/50 flex items-center justify-center font-semibold"
+                >
+                {isUploading ? (
+                    <Loader2 className="mr-2 w-5 h-5 animate-spin" />
+                ) : (
+                    <Upload className="mr-2 w-5 h-5" />
+                )}
+                {isUploading ? 'Enviando...' : 'Importar extrato (OFX)'}
+                </Button>
+            </div>
         </div>
       </div>
 
-      <div className="bg-card p-4 sm:p-6 rounded-2xl border-border">
-        {renderContent()}
+      <div className="bg-card p-4 sm:p-6 rounded-2xl border-border flex-grow overflow-hidden flex flex-col">
+        <div className="overflow-y-auto flex-grow">
+            {renderContent()}
+        </div>
       </div>
     </div>
   );
 }
-
-    

@@ -32,9 +32,9 @@ export default function PulseConversationPage() {
   const initialMessageSentRef = useRef(false);
 
   const ArrowUpIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" {...props}>
-        <path d="M12 23V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M5 10l7-7 7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" {...props}>
+        <path d="M12 20V4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M5 11l7-7 7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 
@@ -242,7 +242,7 @@ export default function PulseConversationPage() {
                 <Button
                     type="submit"
                     disabled={isSending || !input.trim() || isLoadingHistory}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-12 h-12 bg-pulse-primary text-primary-foreground rounded-2xl transition-all duration-300 hover:bg-pulse-primary/90 disabled:bg-secondary disabled:text-muted-foreground"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-12 h-12 bg-pulse-primary text-primary-foreground rounded-xl transition-all duration-300 hover:bg-pulse-primary/90 disabled:bg-secondary disabled:text-muted-foreground"
                 >
                     {isSending ? (
                         <Loader2 className="w-6 h-6 animate-spin" />

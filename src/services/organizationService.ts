@@ -25,15 +25,21 @@ const getLostFeaturesMessage = (fromPlan: string, toPlan: string): string | null
         growth: ['Produtos e Serviços', 'Quadro Kanban', 'Calendário de Tarefas', 'Contas a Pagar/Receber'],
     };
 
+    let lostFeatures: string[] = [];
     if (fromPlan === 'performance' && toPlan === 'growth') {
-        return `Você fez o downgrade para o plano Growth. As seguintes funcionalidades não estão mais disponíveis: ${features.performance.join(', ')}.`;
+        lostFeatures = features.performance;
+    } else if (fromPlan === 'performance' && toPlan === 'free') {
+        lostFeatures = [...features.performance, ...features.growth];
+    } else if (fromPlan === 'growth' && toPlan === 'free') {
+        lostFeatures = features.growth;
     }
-    if (fromPlan === 'performance' && toPlan === 'free') {
-        const lost = [...features.performance, ...features.growth];
-        return `Você fez o downgrade para o plano Essencial. As seguintes funcionalidades não estão mais disponíveis: ${lost.join(', ')}. Além disso, foram aplicados limites de registros.`;
-    }
-    if (fromPlan === 'growth' && toPlan === 'free') {
-        return `Você fez o downgrade para o plano Essencial. As seguintes funcionalidades não estão mais disponíveis: ${features.growth.join(', ')}. Além disso, foram aplicados limites de registros.`;
+
+    if (lostFeatures.length > 0) {
+        let message = `Você fez o downgrade para o plano ${toPlan.charAt(0).toUpperCase() + toPlan.slice(1)}. As seguintes funcionalidades não estão mais disponíveis: ${lostFeatures.join(', ')}.`;
+        if (toPlan === 'free') {
+            message += " Além disso, foram aplicados limites de registros.";
+        }
+        return message;
     }
 
     return null;
@@ -186,9 +192,6 @@ export const updateOrganizationDetails = async (details: z.infer<typeof UpdateOr
     if(details.cnpj) updateData.cnpj = details.cnpj;
     if(details.contactEmail) updateData.contactEmail = details.contactEmail;
     if(details.contactPhone) updateData.contactPhone = details.contactPhone;
-    if (Object.keys(updateData).length > 0) {
-        updateData.lastSystemNotification = null;
-    }
 
     await adminDb.collection('organizations').doc(organizationId).update(updateData);
 
@@ -379,21 +382,24 @@ export const handleSubscriptionChange = async (subscriptionId: string, newPriceI
     
     const orgDoc = orgQuery.docs[0];
     const organizationId = orgDoc.id;
-    const oldPlanId = orgDoc.data().planId;
+    const oldPlanId = orgDoc.data().planId as PlanId;
 
     // Determine new planId from priceId
     let newPlanId: PlanId = 'free';
-    if (newPriceId === process.env.NEXT_PUBLIC_STRIPE_PERFORMANCE_PLAN_PRICE_ID) {
-        newPlanId = 'performance';
-    } else if (newPriceId === process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID) {
-        newPlanId = 'growth';
+    if (newStatus !== 'canceled' && newStatus !== 'unpaid') {
+        if (newPriceId === process.env.NEXT_PUBLIC_STRIPE_PERFORMANCE_PLAN_PRICE_ID) {
+            newPlanId = 'performance';
+        } else if (newPriceId === process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID) {
+            newPlanId = 'growth';
+        }
     }
 
+
     let notificationMessage: string | null = null;
-    if (isValidPlanId(newPlanId) && isValidPlanId(oldPlanId)) {
+    if (isValidPlanId(newPlanId) && isValidPlanId(oldPlanId) && newPlanId !== oldPlanId) {
         if (planLevels[newPlanId] < planLevels[oldPlanId]) {
             notificationMessage = getLostFeaturesMessage(oldPlanId, newPlanId);
-        } else if (planLevels[newPlanId] > planLevels[oldPlanId]) {
+        } else {
             notificationMessage = getGainedFeaturesMessage(oldPlanId, newPlanId);
         }
     }

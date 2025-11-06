@@ -67,7 +67,7 @@ function SidebarContent({ navGroup, navItems, onLinkClick }: ModuleSidebarProps 
       <nav className="flex-grow p-4 overflow-y-auto">
         <ul>
           {navItems.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive = pathname.startsWith(item.href);
             const allowed = isAllowed(item);
 
             if (isLoading) {
@@ -120,12 +120,17 @@ function SidebarContent({ navGroup, navItems, onLinkClick }: ModuleSidebarProps 
 
 export function ModuleSidebar({ navGroup, navItems }: ModuleSidebarProps) {
     const [isMobileOpen, setIsMobileOpen] = useState(false);
+    const pathname = usePathname();
+
+    useEffect(() => {
+        setIsMobileOpen(false);
+    }, [pathname]);
 
     return (
         <>
             {/* Botão para abrir em mobile */}
-            <div className="md:hidden p-2 absolute top-2 left-2 z-10">
-                <Button variant="ghost" size="icon" onClick={() => setIsMobileOpen(true)}>
+            <div className="md:hidden p-4 fixed top-16 left-0 z-30">
+                <Button variant="ghost" size="icon" onClick={() => setIsMobileOpen(true)} className="bg-card/50 backdrop-blur-md border border-border">
                     <Menu className="w-6 h-6"/>
                 </Button>
             </div>

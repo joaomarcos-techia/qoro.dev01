@@ -7,9 +7,9 @@ import { TasksProvider } from '@/contexts/TasksContext';
 
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-black text-foreground">
+    <div className="min-h-screen bg-background text-foreground">
       <Header />
-      <div className="h-[calc(100vh-65px)]">
+      <div className="h-[calc(100vh-64px)]">
         {children}
       </div>
     </div>

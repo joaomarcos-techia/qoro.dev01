@@ -11,6 +11,8 @@ import {
 } from 'lucide-react';
 import { ModuleSidebar } from '@/components/dashboard/ModuleSidebar';
 import type { NavItem, NavGroup } from '@/components/dashboard/ModuleSidebar';
+import { usePathname } from 'next/navigation';
+
 
 const financeNavGroup: NavGroup = {
     group: 'QoroFinance', 
@@ -29,10 +31,13 @@ const financeNavItems: NavItem[] = [
 
 
 export default function FinanceLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isConciliacaoPage = pathname.includes('/dashboard/finance/conciliacao');
+  
   return (
     <div className="flex h-full">
         <ModuleSidebar navGroup={financeNavGroup} navItems={financeNavItems} />
-        <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+        <main className={`flex-1 p-4 md:p-8 ${isConciliacaoPage ? 'overflow-y-hidden' : 'overflow-y-auto'}`}>
             {children}
         </main>
     </div>

@@ -31,18 +31,23 @@ export async function POST(req: Request) {
   }
 
   // --- Main Logic ---
+  if (!relevantEvents.has(event.type)) {
+    console.log(`⚙️ Evento irrelevante: ${event.type}. Ignorando.`);
+    return NextResponse.json({ received: true });
+  }
+  
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         
-        if (session.mode !== 'subscription') {
-            console.log('⚙️ Evento de checkout não relacionado a assinatura. Ignorando.');
+        if (session.mode !== 'subscription' || !session.subscription) {
+            console.log('⚙️ Evento de checkout não relacionado a assinatura ou sem ID de assinatura. Ignorando.');
             return NextResponse.json({ received: true });
         }
 
         const { firebaseUID, organizationName, userName, cnpj, contactEmail, contactPhone } = session.metadata || {};
-        const subscriptionId = session.subscription;
+        const subscriptionId = session.subscription as string;
         
         if (!firebaseUID || !organizationName || !userName || !subscriptionId) {
           console.error('CRITICAL: Metadados essenciais (firebaseUID, organizationName, userName) ou subscriptionId não encontrados na sessão de checkout:', session.id);
@@ -50,7 +55,7 @@ export async function POST(req: Request) {
           return NextResponse.json({ error: 'Metadados essenciais não encontrados na sessão de checkout.' }, { status: 400 });
         }
 
-        const subscription = await stripe.subscriptions.retrieve(subscriptionId as string);
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
 
         await createUserProfile({
           uid: firebaseUID,
@@ -60,7 +65,7 @@ export async function POST(req: Request) {
           cnpj: cnpj,
           contactEmail: contactEmail,
           contactPhone: contactPhone,
-          planId: subscription.items.data[0].price.id === process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID ? 'growth' : 'performance',
+          planId: subscription.items.data[0].price.id === process.env.NEXT_PUBLIC_STRIPE_PERFORMANCE_PLAN_PRICE_ID ? 'performance' : (subscription.items.data[0].price.id === process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID ? 'growth' : 'free'),
           stripePriceId: subscription.items.data[0].price.id,
           stripeCustomerId: subscription.customer as string,
           stripeSubscriptionId: subscription.id,
@@ -93,6 +98,7 @@ export async function POST(req: Request) {
       }
 
       default:
+        // This case is already handled by the initial check, but kept for safety.
         console.warn(`🤷‍♀️ Evento não tratado: ${event.type}`);
     }
 

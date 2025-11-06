@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import {
@@ -62,7 +63,7 @@ export const signIn = async (email: string, password: string): Promise<User> => 
       if (error.code === 'auth/email-not-verified') {
           throw error;
       }
-       if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+       if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-email') {
         const customError = new Error('E-mail ou senha inválidos. Verifique seus dados ou crie uma nova conta se a anterior foi excluída.');
         (customError as any).code = 'auth/invalid-credential';
         throw customError;
