@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Link from 'next/link';
@@ -67,7 +68,8 @@ function SidebarContent({ navGroup, navItems, onLinkClick }: ModuleSidebarProps 
       <nav className="flex-grow p-4 overflow-y-auto">
         <ul>
           {navItems.map((item) => {
-            const isActive = pathname.startsWith(item.href);
+            const isConciliacaoDetail = item.href === '/dashboard/finance/conciliacao' && pathname.startsWith('/dashboard/finance/conciliacao/');
+            const isActive = isConciliacaoDetail || pathname === item.href;
             const allowed = isAllowed(item);
 
             if (isLoading) {
