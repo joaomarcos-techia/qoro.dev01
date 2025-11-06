@@ -357,18 +357,18 @@ export const createQuote = async (input: z.infer<typeof QuoteSchema>, actorUid: 
     await updateCustomerStatus(input.customerId, 'proposal', actorUid);
 
     const billData: z.infer<typeof BillSchema> = {
-        description: `Orçamento #${quoteNumber}`,
+        description: `Referente ao Orçamento #${quoteNumber}`,
         amount: input.total,
         type: 'receivable',
         dueDate: new Date(input.validUntil as string | Date),
         status: 'pending',
         entityId: input.customerId,
         entityType: 'customer',
-        notes: `Referente ao orçamento ${quoteNumber}.` ?? null,
+        notes: `Gerado a partir do orçamento ${quoteNumber}.` ?? null,
         tags: [`quote-${quoteRef.id}`],
         paymentMethod: 'pix',
-        category: null,
-        accountId: null,
+        category: 'Vendas',
+        accountId: input.items.length > 0 ? (input.items[0] as any).accountId : null, // Fallback
     };
     await billService.createBill(billData, actorUid);
     // --- End Automation ---
@@ -547,5 +547,6 @@ export const markQuoteAsLost = async (quoteId: string, actorUid: string) => {
 
     return { success: true };
 };
+
 
 
