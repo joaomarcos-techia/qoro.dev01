@@ -1,11 +1,5 @@
-# Allow all user-agents to crawl the site
+# https://www.robotstxt.org/robotstxt.html
 User-agent: *
 Allow: /
 
-# Disallow crawling of specific private routes
-Disallow: /dashboard/
-Disallow: /login/
-Disallow: /signup/
-
-# Specify the sitemap location
 Sitemap: https://qoro.com.br/sitemap.xml
