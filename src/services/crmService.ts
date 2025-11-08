@@ -341,8 +341,8 @@ export const createQuote = async (input: z.infer<typeof QuoteSchema>, actorUid: 
         throw new Error("A criação de orçamentos está disponível apenas no plano Performance.");
     }
 
+    // --- Step 1: Create the Quote ---
     const quoteNumber = `QT-${Date.now().toString().slice(-6)}`;
-
     const newQuoteData = {
         ...input,
         number: quoteNumber,
@@ -353,25 +353,31 @@ export const createQuote = async (input: z.infer<typeof QuoteSchema>, actorUid: 
     };
     const quoteRef = await adminDb.collection('quotes').add(newQuoteData);
 
-    // --- Automation ---
-    await updateCustomerStatus(input.customerId, 'proposal', actorUid);
+    // --- Step 2: Automations after successful quote creation ---
+    try {
+        await updateCustomerStatus(input.customerId, 'proposal', actorUid);
 
-    const billData: z.infer<typeof BillSchema> = {
-        description: `Referente ao Orçamento #${quoteNumber}`,
-        amount: input.total,
-        type: 'receivable',
-        dueDate: new Date(input.validUntil as string | Date).toISOString(), // Ensure ISO string
-        status: 'pending',
-        entityId: input.customerId,
-        entityType: 'customer',
-        notes: `Gerado a partir do orçamento ${quoteNumber}.`,
-        tags: [`quote-${quoteRef.id}`],
-        paymentMethod: 'pix',
-        category: 'Vendas',
-        accountId: null,
-    };
-    await billService.createBill(billData, actorUid);
-    // --- End Automation ---
+        const billData: z.infer<typeof BillSchema> = {
+            description: `Referente ao Orçamento #${quoteNumber}`,
+            amount: input.total,
+            type: 'receivable',
+            dueDate: new Date(input.validUntil as string | Date),
+            status: 'pending',
+            entityId: input.customerId,
+            entityType: 'customer',
+            notes: `Gerado a partir do orçamento ${quoteNumber}.`,
+            tags: [`quote-${quoteRef.id}`],
+            paymentMethod: 'pix',
+            category: 'Vendas',
+            accountId: null,
+        };
+        await billService.createBill(billData, actorUid);
+
+    } catch (automationError: any) {
+        console.error(`Automation failed for quote ${quoteRef.id}:`, automationError);
+        // Log the error but don't fail the entire operation, as the quote was created.
+        // Consider adding a retry mechanism or a notification system for failed automations.
+    }
 
     return { id: quoteRef.id, number: quoteNumber };
 };
@@ -547,6 +553,7 @@ export const markQuoteAsLost = async (quoteId: string, actorUid: string) => {
 
     return { success: true };
 };
+
 
 
 

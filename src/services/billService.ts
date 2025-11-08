@@ -23,8 +23,11 @@ export const createBill = async (input: z.infer<typeof BillSchema>, actorUid: st
         dueDate = input.dueDate;
     } else if (typeof input.dueDate === 'string') {
         dueDate = new Date(input.dueDate);
+        if (isNaN(dueDate.getTime())) {
+             throw new Error("Invalid dueDate string format");
+        }
     } else {
-        throw new Error("Invalid dueDate format");
+        throw new Error("dueDate is required and must be a Date or a valid date string");
     }
 
     const newBillData = {
