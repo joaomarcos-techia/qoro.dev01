@@ -360,7 +360,7 @@ export const createQuote = async (input: z.infer<typeof QuoteSchema>, actorUid: 
         description: `Referente ao Orçamento #${quoteNumber}`,
         amount: input.total,
         type: 'receivable',
-        dueDate: new Date(input.validUntil as string | Date),
+        dueDate: new Date(input.validUntil as string | Date).toISOString(), // Ensure ISO string
         status: 'pending',
         entityId: input.customerId,
         entityType: 'customer',
@@ -547,6 +547,7 @@ export const markQuoteAsLost = async (quoteId: string, actorUid: string) => {
 
     return { success: true };
 };
+
 
 
 

@@ -1,4 +1,5 @@
 
+
 'use server';
 /**
  * @fileOverview Service for managing bills (accounts payable/receivable) in Firestore.
@@ -16,11 +17,21 @@ export const createBill = async (input: z.infer<typeof BillSchema>, actorUid: st
     if (!adminOrgData) throw new Error("A organização do usuário não está pronta.");
     const { organizationId } = adminOrgData;
 
+    // Robust date handling
+    let dueDate: Date;
+    if (input.dueDate instanceof Date) {
+        dueDate = input.dueDate;
+    } else if (typeof input.dueDate === 'string') {
+        dueDate = new Date(input.dueDate);
+    } else {
+        throw new Error("Invalid dueDate format");
+    }
+
     const newBillData = {
         description: input.description,
         amount: input.amount,
         type: input.type,
-        dueDate: new Date(input.dueDate),
+        dueDate: dueDate,
         status: input.status,
         entityId: input.entityId ?? null,
         entityType: input.entityType ?? null,
