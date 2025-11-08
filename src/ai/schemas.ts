@@ -194,6 +194,7 @@ export const QuoteProfileSchema = QuoteSchema.extend({
     id: z.string(),
     number: z.string(), 
     status: z.enum(['pending', 'won', 'lost']),
+    accountId: z.string().optional(), // Make accountId optional for backward compatibility
     createdAt: z.string(),
     updatedAt: z.string(),
     customerName: z.string().optional(),

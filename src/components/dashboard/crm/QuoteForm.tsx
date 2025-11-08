@@ -126,7 +126,7 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
   useEffect(() => {
     if (quote) {
       const validUntilDate = quote.validUntil ? parseISO(quote.validUntil.toString()) : new Date();
-      reset({ ...quote, validUntil: validUntilDate });
+      reset({ ...quote, validUntil: validUntilDate, accountId: quote.accountId || '' });
     } else {
       reset({
         customerId: '',
@@ -340,7 +340,7 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
                 name="accountId"
                 control={control}
                 render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value || ''}>
                         <SelectTrigger className="w-full">
                             <SelectValue placeholder="Selecione uma conta" />
                         </SelectTrigger>

@@ -357,17 +357,30 @@ export const createQuote = async (input: z.infer<typeof QuoteSchema>, actorUid: 
     try {
         await updateCustomerStatus(input.customerId, 'proposal', actorUid);
 
+        // Ensure dueDate is a valid string or Date object
+        let dueDate: Date | string;
+        if (input.validUntil instanceof Date) {
+            dueDate = input.validUntil.toISOString();
+        } else if (typeof input.validUntil === 'string') {
+            dueDate = input.validUntil;
+        } else {
+            // Fallback if validUntil is somehow invalid, though Zod should prevent this.
+            const fallbackDate = new Date();
+            fallbackDate.setDate(fallbackDate.getDate() + 30); // e.g., 30 days from now
+            dueDate = fallbackDate.toISOString();
+        }
+
         const billData: z.infer<typeof BillSchema> = {
             description: `Referente ao Orçamento #${quoteNumber}`,
             amount: input.total,
             type: 'receivable',
-            dueDate: new Date(input.validUntil as string | Date),
+            dueDate: dueDate,
             status: 'pending',
             entityId: input.customerId,
             entityType: 'customer',
             notes: `Gerado a partir do orçamento ${quoteNumber}.`,
             tags: [`quote-${quoteRef.id}`],
-            accountId: input.accountId ?? null, // Use the accountId from the form
+            accountId: input.accountId,
             paymentMethod: 'pix',
             category: 'Vendas',
         };
@@ -407,7 +420,8 @@ export const listQuotes = async (actorUid: string): Promise<QuoteProfile[]> => {
         });
     }
 
-    const quotes: QuoteProfile[] = quotesSnapshot.docs.map(doc => {
+    const quotes: QuoteProfile[] = [];
+    for (const doc of quotesSnapshot.docs) {
         const data = doc.data();
         const customerInfo = customers[data.customerId] || {};
         
@@ -424,9 +438,16 @@ export const listQuotes = async (actorUid: string): Promise<QuoteProfile[]> => {
             customerName: customerInfo.name,
             organizationName
         };
-        
-        return QuoteProfileSchema.parse(parsedData);
-    });
+
+        // Use safeParse to avoid throwing an error on a single failed validation
+        const result = QuoteProfileSchema.safeParse(parsedData);
+        if (result.success) {
+            quotes.push(result.data);
+        } else {
+            console.warn(`Failed to parse quote ${doc.id}:`, result.error.flatten());
+            // Optionally, push a partially valid object or skip it
+        }
+    }
 
     return quotes;
 };
@@ -553,6 +574,7 @@ export const markQuoteAsLost = async (quoteId: string, actorUid: string) => {
 
     return { success: true };
 };
+
 
 
 
