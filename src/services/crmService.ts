@@ -320,6 +320,7 @@ export const createQuote = async (input: z.infer<typeof QuoteSchema>, actorUid: 
 
     const quoteNumber = `QT-${Date.now().toString().slice(-6)}`;
     
+    // 1. Create the quote first
     const newQuoteData = {
         ...input,
         validUntil: new Date(input.validUntil),
@@ -329,9 +330,9 @@ export const createQuote = async (input: z.infer<typeof QuoteSchema>, actorUid: 
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
     };
-    
     const quoteRef = await adminDb.collection('quotes').add(newQuoteData);
 
+    // 2. Then, create the associated bill and update the customer
     try {
         await updateCustomerStatus(input.customerId, 'proposal', actorUid);
 
@@ -354,6 +355,7 @@ export const createQuote = async (input: z.infer<typeof QuoteSchema>, actorUid: 
 
     } catch (automationError: any) {
         console.error(`Automation failed for quote ${quoteRef.id}:`, automationError);
+        // Do not re-throw, as the quote was created successfully. Log for monitoring.
     }
 
     return { id: quoteRef.id, number: quoteNumber };
@@ -448,21 +450,21 @@ export const deleteQuote = async (quoteId: string, actor: string) => {
 
     const quoteData = doc.data()!;
 
-    if (quoteData.status === 'won') {
-        throw new Error("Não é possível excluir um orçamento que já foi ganho, pois uma transação financeira foi gerada. Altere o status da transação se necessário.");
-    }
+    // If the quote is NOT 'won', find and delete the associated pending bill.
+    if (quoteData.status !== 'won') {
+        const billsSnapshot = await adminDb.collection('bills')
+            .where('companyId', '==', organizationId)
+            .where('tags', 'array-contains', `quote-${quoteId}`)
+            .where('status', '==', 'pending')
+            .limit(1)
+            .get();
 
-    const billsSnapshot = await adminDb.collection('bills')
-        .where('companyId', '==', organizationId)
-        .where('tags', 'array-contains', `quote-${quoteId}`)
-        .where('status', '==', 'pending')
-        .limit(1)
-        .get();
-
-    if (!billsSnapshot.empty) {
-        const billDoc = billsSnapshot.docs[0];
-        await billService.deleteBill(billDoc.id, actor);
+        if (!billsSnapshot.empty) {
+            const billDoc = billsSnapshot.docs[0];
+            await billService.deleteBill(billDoc.id, actor);
+        }
     }
+    // If the quote IS 'won', we just delete the quote, leaving the financial transaction intact.
     
     await quoteRef.delete();
 
