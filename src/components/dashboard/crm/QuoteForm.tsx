@@ -195,6 +195,7 @@ export function QuoteForm({ onQuoteAction, quote }: QuoteFormProps) {
         ...formValues,
         id: quote?.id || 'new',
         number: newNumber || quote?.number || '',
+        status: quote?.status || 'pending',
         createdAt: quote?.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         customerName: customer?.name || 'Cliente não encontrado',
