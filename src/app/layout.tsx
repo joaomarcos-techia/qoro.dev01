@@ -70,7 +70,9 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className={`${inter.variable}`}>
       <head>
-        {/* A importação de fontes agora é gerenciada pelo next/font */}
+        <link rel="icon" href="https://firebasestorage.googleapis.com/v0/b/qoro-iy1gs.firebasestorage.app/o/logofinal-removebg-preview.png?alt=media&token=a0fdbe4b-fe43-4694-ab94-de692b3a5367" type="image/png" />
+        <link rel="shortcut icon" href="https://firebasestorage.googleapis.com/v0/b/qoro-iy1gs.firebasestorage.app/o/logofinal-removebg-preview.png?alt=media&token=a0fdbe4b-fe43-4694-ab94-de692b3a5367" type="image/png" />
+        <link rel="apple-touch-icon" href="https://firebasestorage.googleapis.com/v0/b/qoro-iy1gs.firebasestorage.app/o/logofinal-removebg-preview.png?alt=media&token=a0fdbe4b-fe43-4694-ab94-de692b3a5367" />
       </head>
       <body className="font-sans antialiased">{children}</body>
     </html>
