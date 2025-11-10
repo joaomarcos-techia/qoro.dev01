@@ -265,70 +265,74 @@ export default function SettingsPage() {
 
             <div>
                 {activeTab === 'account' && (
-                    <div className="bg-card p-6 md:p-8 rounded-2xl border border-border">
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-                            <div>
-                                <div className="flex items-center mb-6">
-                                    <div className="p-3 rounded-xl bg-primary text-black mr-4"><User className="w-6 h-6" /></div>
-                                    <h3 className="text-xl font-bold text-foreground">Minha Conta</h3>
+                    <div className="space-y-8">
+                        <div className="bg-card p-6 md:p-8 rounded-2xl border border-border">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+                                <div>
+                                    <div className="flex items-center mb-6">
+                                        <div className="p-3 rounded-xl bg-primary text-black mr-4"><User className="w-6 h-6" /></div>
+                                        <h3 className="text-xl font-bold text-foreground">Minha Conta</h3>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <div className="relative">
+                                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                                            <Input type="email" value={currentUser?.email || 'Carregando...'} disabled className="w-full pl-12 pr-4 py-3 bg-secondary rounded-xl border-border cursor-not-allowed"/>
+                                        </div>
+                                        <div className="bg-secondary rounded-xl p-4 border border-border space-y-3">
+                                            <div>
+                                                <p className="text-sm text-muted-foreground mb-1">Seu plano atual:</p>
+                                                {isPlanLoading ? (
+                                                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                                                ) : (
+                                                    <p className="text-lg font-bold text-primary">{planId ? planNames[planId] : 'Não identificado'}</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                        {planId !== 'free' && isAdmin && (
+                                            <div className="pt-2">
+                                                <Button type="button" variant="outline" onClick={redirectToCustomerPortal} disabled={isLoading.portal} className="w-full">
+                                                    {isLoading.portal && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                                                    {isLoading.portal ? 'Acessando...' : 'Gerenciar Assinatura'}
+                                                    {!isLoading.portal && <CreditCard className="ml-2 h-4 w-4" />}
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                                <div className="space-y-4">
-                                    <div className="relative">
-                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                                        <Input type="email" value={currentUser?.email || 'Carregando...'} disabled className="w-full pl-12 pr-4 py-3 bg-secondary rounded-xl border-border cursor-not-allowed"/>
+                                <div>
+                                    <div className="flex items-center mb-6">
+                                        <div className="p-3 rounded-xl bg-secondary text-primary mr-4"><KeyRound className="w-6 h-6" /></div>
+                                        <h3 className="text-xl font-bold text-foreground">Segurança</h3>
                                     </div>
-                                    <div className="bg-secondary rounded-xl p-4 border border-border space-y-3">
-                                        <div>
-                                            <p className="text-sm text-muted-foreground mb-1">Seu plano atual:</p>
-                                            {isPlanLoading ? (
-                                                <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                                            ) : (
-                                                <p className="text-lg font-bold text-primary">{planId ? planNames[planId] : 'Não identificado'}</p>
-                                            )}
-                                        </div>
+                                    <div className='bg-secondary p-6 rounded-xl border border-border mb-6'>
+                                        <h4 className="text-md font-semibold text-foreground mb-2">Alterar senha</h4>
+                                        <p className="text-muted-foreground text-sm mb-4">Um link para redefinição de senha será enviado para o seu e-mail de login.</p>
+                                        {feedback && feedback.context === 'password' && (
+                                            <div className={`mb-4 p-3 rounded-lg flex items-center text-sm ${feedback.type === 'success' ? 'bg-green-800/20 text-green-300' : 'bg-red-800/20 text-red-300'}`}>
+                                                {feedback.type === 'success' ? <CheckCircle className="w-5 h-5 mr-3" /> : <AlertCircle className="w-5 h-5 mr-3" />}
+                                                <span>{feedback.message}</span>
+                                            </div>
+                                        )}
+                                        <Button onClick={handlePasswordReset} disabled={isLoading.password} className="w-full bg-primary text-primary-foreground">
+                                            {isLoading.password && <Loader2 className="w-4 h-4 mr-2 animate-spin"/>}
+                                            {isLoading.password ? 'Enviando...' : 'Enviar e-mail para redefinir senha'}
+                                        </Button>
                                     </div>
-                                    {planId !== 'free' && isAdmin && (
-                                        <div className="pt-2">
-                                            <Button type="button" variant="outline" onClick={redirectToCustomerPortal} disabled={isLoading.portal} className="w-full">
-                                                {isLoading.portal && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-                                                {isLoading.portal ? 'Acessando...' : 'Gerenciar Assinatura'}
-                                                {!isLoading.portal && <CreditCard className="ml-2 h-4 w-4" />}
-                                            </Button>
-                                        </div>
-                                    )}
                                 </div>
                             </div>
-                            <div>
-                                <div className="flex items-center mb-6">
-                                    <div className="p-3 rounded-xl bg-secondary text-primary mr-4"><KeyRound className="w-6 h-6" /></div>
-                                    <h3 className="text-xl font-bold text-foreground">Segurança</h3>
-                                </div>
-                                <div className='bg-secondary p-6 rounded-xl border border-border mb-6'>
-                                    <h4 className="text-md font-semibold text-foreground mb-2">Alterar senha</h4>
-                                    <p className="text-muted-foreground text-sm mb-4">Um link para redefinição de senha será enviado para o seu e-mail de login.</p>
-                                    {feedback && feedback.context === 'password' && (
-                                        <div className={`mb-4 p-3 rounded-lg flex items-center text-sm ${feedback.type === 'success' ? 'bg-green-800/20 text-green-300' : 'bg-red-800/20 text-red-300'}`}>
-                                            {feedback.type === 'success' ? <CheckCircle className="w-5 h-5 mr-3" /> : <AlertCircle className="w-5 h-5 mr-3" />}
-                                            <span>{feedback.message}</span>
-                                        </div>
-                                    )}
-                                    <Button onClick={handlePasswordReset} disabled={isLoading.password} className="w-full bg-primary text-primary-foreground">
-                                        {isLoading.password && <Loader2 className="w-4 h-4 mr-2 animate-spin"/>}
-                                        {isLoading.password ? 'Enviando...' : 'Enviar e-mail para redefinir senha'}
-                                    </Button>
-                                </div>
-                                <div className="flex items-center mb-6 mt-12">
-                                    <div className="p-3 rounded-xl bg-secondary text-primary mr-4"><MessageSquare className="w-6 h-6" /></div>
-                                    <h3 className="text-xl font-bold text-foreground">Suporte e Atendimento</h3>
-                                </div>
-                                <div className='bg-secondary p-6 rounded-xl border border-border'>
-                                    <p className="text-muted-foreground text-sm mb-4">
-                                        Para erros, dúvidas ou solicitações, entre em contato exclusivamente pelo WhatsApp.
-                                        <br/>
-                                        <span className="font-bold text-foreground">Não atendemos ligações neste número.</span>
-                                    </p>
-                                    <p className="text-xl font-bold text-primary mt-4 tracking-wider">(88) 99682-2198</p>
-                                </div>
+                        </div>
+                        <div className="bg-card p-6 md:p-8 rounded-2xl border border-border">
+                            <div className="flex items-center mb-6">
+                                <div className="p-3 rounded-xl bg-secondary text-primary mr-4"><MessageSquare className="w-6 h-6" /></div>
+                                <h3 className="text-xl font-bold text-foreground">Suporte e Atendimento</h3>
+                            </div>
+                            <div className='bg-secondary p-6 rounded-xl border border-border'>
+                                <p className="text-muted-foreground text-sm mb-4">
+                                    Para erros, dúvidas ou solicitações, entre em contato exclusivamente pelo WhatsApp.
+                                    <br/>
+                                    <span className="font-bold text-foreground">Não atendemos ligações neste número.</span>
+                                </p>
+                                <p className="text-xl font-bold text-primary mt-4 tracking-wider">(88) 99682-2198</p>
                             </div>
                         </div>
                     </div>
@@ -435,5 +439,3 @@ export default function SettingsPage() {
         </div>
     );
 }
-
-    
