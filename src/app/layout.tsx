@@ -1,4 +1,3 @@
-
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Inter } from 'next/font/google';
@@ -38,7 +37,7 @@ export const metadata: Metadata = {
     siteName: 'Qoro',
     images: [
       {
-        url: 'https://firebasestorage.googleapis.com/v0/b/qoro-iy1gs.firebasestorage.app/o/logo_q_gradient.png?alt=media&token=b04f7f23-9095-46cd-9e32-5b91b93190f8', // Deve ser um URL absoluto
+        url: 'https://firebasestorage.googleapis.com/v0/b/qoro-iy1gs.firebasestorage.app/o/logofinal-removebg-preview.png?alt=media&token=a0fdbe4b-fe43-4694-ab94-de692b3a5367', // Deve ser um URL absoluto
         width: 1200,
         height: 630,
         alt: 'Logo da Qoro',
@@ -49,9 +48,9 @@ export const metadata: Metadata = {
   },
   manifest: '/manifest.json',
   icons: {
-    icon: 'https://firebasestorage.googleapis.com/v0/b/qoro-iy1gs.firebasestorage.app/o/logo_q_gradient.png?alt=media&token=b04f7f23-9095-46cd-9e32-5b91b93190f8',
-    shortcut: 'https://firebasestorage.googleapis.com/v0/b/qoro-iy1gs.firebasestorage.app/o/logo_q_gradient.png?alt=media&token=b04f7f23-9095-46cd-9e32-5b91b93190f8',
-    apple: 'https://firebasestorage.googleapis.com/v0/b/qoro-iy1gs.firebasestorage.app/o/logo_q_gradient.png?alt=media&token=b04f7f23-9095-46cd-9e32-5b91b93190f8',
+    icon: 'https://firebasestorage.googleapis.com/v0/b/qoro-iy1gs.firebasestorage.app/o/logofinal-removebg-preview.png?alt=media&token=a0fdbe4b-fe43-4694-ab94-de692b3a5367',
+    shortcut: 'https://firebasestorage.googleapis.com/v0/b/qoro-iy1gs.firebasestorage.app/o/logofinal-removebg-preview.png?alt=media&token=a0fdbe4b-fe43-4694-ab94-de692b3a5367',
+    apple: 'https://firebasestorage.googleapis.com/v0/b/qoro-iy1gs.firebasestorage.app/o/logofinal-removebg-preview.png?alt=media&token=a0fdbe4b-fe43-4694-ab94-de692b3a5367',
   }
 };
 
