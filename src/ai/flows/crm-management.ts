@@ -224,7 +224,7 @@ const markQuoteAsWonFlow = ai.defineFlow(
     {
         name: 'markQuoteAsWonFlow',
         inputSchema: MarkQuoteAsWonInputSchema,
-        outputSchema: z.object({ billId: z.string() })
+        outputSchema: z.object({ billId: z.string().nullable() })
     },
     async (input) => crmService.markQuoteAsWon(input.quoteId, input.accountId, input.actor)
 );
@@ -331,7 +331,7 @@ export async function deleteQuote(input: z.infer<typeof DeleteQuoteInputSchema>)
     return deleteQuoteFlow(input);
 }
 
-export async function markQuoteAsWon(input: z.infer<typeof MarkQuoteAsWonInputSchema>): Promise<{ billId: string }> {
+export async function markQuoteAsWon(input: z.infer<typeof MarkQuoteAsWonInputSchema>): Promise<{ billId: string | null }> {
     return markQuoteAsWonFlow(input);
 }
 
