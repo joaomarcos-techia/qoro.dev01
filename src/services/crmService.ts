@@ -320,7 +320,6 @@ export const createQuote = async (input: z.infer<typeof QuoteSchema>, actorUid: 
 
     const quoteNumber = `QT-${Date.now().toString().slice(-6)}`;
     
-    // 1. Create the quote first
     const newQuoteData = {
         ...input,
         validUntil: new Date(input.validUntil),
@@ -331,8 +330,7 @@ export const createQuote = async (input: z.infer<typeof QuoteSchema>, actorUid: 
         updatedAt: FieldValue.serverTimestamp(),
     };
     const quoteRef = await adminDb.collection('quotes').add(newQuoteData);
-
-    // 2. Then, create the associated bill and update the customer
+    
     try {
         await updateCustomerStatus(input.customerId, 'proposal', actorUid);
 
@@ -355,7 +353,6 @@ export const createQuote = async (input: z.infer<typeof QuoteSchema>, actorUid: 
 
     } catch (automationError: any) {
         console.error(`Automation failed for quote ${quoteRef.id}:`, automationError);
-        // Do not re-throw, as the quote was created successfully. Log for monitoring.
     }
 
     return { id: quoteRef.id, number: quoteNumber };
@@ -450,21 +447,21 @@ export const deleteQuote = async (quoteId: string, actor: string) => {
 
     const quoteData = doc.data()!;
 
-    // If the quote is NOT 'won', find and delete the associated pending bill.
-    if (quoteData.status !== 'won') {
-        const billsSnapshot = await adminDb.collection('bills')
-            .where('companyId', '==', organizationId)
-            .where('tags', 'array-contains', `quote-${quoteId}`)
-            .where('status', '==', 'pending')
-            .limit(1)
-            .get();
-
-        if (!billsSnapshot.empty) {
-            const billDoc = billsSnapshot.docs[0];
-            await billService.deleteBill(billDoc.id, actor);
-        }
+    if (quoteData.status === 'won') {
+        await quoteRef.delete();
+        return { id: quoteId, success: true };
     }
-    // If the quote IS 'won', we just delete the quote, leaving the financial transaction intact.
+
+    const billsSnapshot = await adminDb.collection('bills')
+        .where('companyId', '==', organizationId)
+        .where('tags', 'array-contains', `quote-${quoteId}`)
+        .limit(1)
+        .get();
+
+    if (!billsSnapshot.empty) {
+        const billDoc = billsSnapshot.docs[0];
+        await billService.deleteBill(billDoc.id, actor);
+    }
     
     await quoteRef.delete();
 
@@ -483,8 +480,11 @@ export const markQuoteAsWon = async (quoteId: string, accountId: string | undefi
     }
     
     const quoteData = quoteDoc.data()!;
+    if (quoteData.status === 'won') {
+        console.log(`Quote ${quoteId} is already marked as won. Skipping.`);
+        return { billId: null };
+    }
 
-    // Find the associated pending bill
     const billsSnapshot = await adminDb.collection('bills')
         .where('companyId', '==', adminOrgData.organizationId)
         .where('tags', 'array-contains', `quote-${quoteId}`)
@@ -492,11 +492,12 @@ export const markQuoteAsWon = async (quoteId: string, accountId: string | undefi
         .limit(1)
         .get();
 
+    let billIdToReturn: string | null = null;
     if (!billsSnapshot.empty) {
         const billDoc = billsSnapshot.docs[0];
+        billIdToReturn = billDoc.id;
         const billData = billDoc.data()!;
 
-        // Update the bill to "paid", which will trigger transaction creation
         const billUpdatePayload: z.infer<typeof UpdateBillSchema> = {
             id: billDoc.id,
             description: billData.description,
@@ -514,16 +515,15 @@ export const markQuoteAsWon = async (quoteId: string, accountId: string | undefi
         };
         await billService.updateBill(billUpdatePayload, actorUid);
     } else {
-        // If no pending bill is found, it might have been paid directly. We still proceed to update the quote/customer.
         console.log(`[SYNC-INFO] No pending bill found for quote ${quoteId} to mark as paid. It may have already been processed. Updating CRM status.`);
     }
 
     await updateCustomerStatus(quoteData.customerId, 'won', actorUid);
-
     await quoteRef.update({ status: 'won', updatedAt: FieldValue.serverTimestamp() });
 
-    return { billId: billsSnapshot.empty ? null : billsSnapshot.docs[0].id };
+    return { billId: billIdToReturn };
 };
+
 
 export const markQuoteAsLost = async (quoteId: string, actorUid: string) => {
     const adminOrgData = await getAdminAndOrg(actorUid);
