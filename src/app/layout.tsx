@@ -1,10 +1,12 @@
+
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Inter } from 'next/font/google';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
-const iconUrl = 'https://firebasestorage.googleapis.com/v0/b/qoro-iy1gs.firebasestorage.app/o/logofinal-removebg-preview.png?alt=media&token=1f0aea30-e316-4cc5-99f3-f124234faf08';
+// URL da imagem de alta resolução para Open Graph
+const ogImageUrl = '/android-chrome-512x512.png';
 
 export const metadata: Metadata = {
   title: {
@@ -33,8 +35,28 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   icons: {
-    icon: iconUrl,
-    apple: iconUrl,
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+    other: [
+      {
+        rel: 'icon',
+        url: '/android-chrome-192x192.png',
+        sizes: '192x192',
+        type: 'image/png',
+      },
+      {
+        rel: 'icon',
+        url: '/android-chrome-512x512.png',
+        sizes: '512x512',
+        type: 'image/png',
+      },
+    ],
   },
   openGraph: {
     title: 'Qoro | Plataforma de Gestão Empresarial Integrada com CRM, Finanças e IA',
@@ -43,9 +65,9 @@ export const metadata: Metadata = {
     siteName: 'Qoro',
     images: [
       {
-        url: iconUrl,
-        width: 1200,
-        height: 630,
+        url: ogImageUrl,
+        width: 512,
+        height: 512,
         alt: 'Logo da Qoro',
       },
     ],
