@@ -1,12 +1,11 @@
-
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Inter } from 'next/font/google';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
-// URL da imagem de alta resolução para Open Graph
-const ogImageUrl = '/android-chrome-512x512.png';
+// URL da imagem do Firebase
+const iconUrl = 'https://firebasestorage.googleapis.com/v0/b/qoro-iy1gs.firebasestorage.app/o/logofinal-removebg-preview.png?alt=media&token=a0fdbe4b-fe43-4694-ab94-de692b3a5367';
 
 export const metadata: Metadata = {
   title: {
@@ -36,23 +35,22 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: 'any' },
-      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: iconUrl, sizes: '32x32', type: 'image/png' },
+      { url: iconUrl, sizes: '16x16', type: 'image/png' },
     ],
     apple: [
-      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+      { url: iconUrl, sizes: '180x180', type: 'image/png' },
     ],
     other: [
       {
         rel: 'icon',
-        url: '/android-chrome-192x192.png',
+        url: iconUrl,
         sizes: '192x192',
         type: 'image/png',
       },
       {
         rel: 'icon',
-        url: '/android-chrome-512x512.png',
+        url: iconUrl,
         sizes: '512x512',
         type: 'image/png',
       },
@@ -65,9 +63,9 @@ export const metadata: Metadata = {
     siteName: 'Qoro',
     images: [
       {
-        url: ogImageUrl,
-        width: 512,
-        height: 512,
+        url: iconUrl,
+        width: 1200,
+        height: 630,
         alt: 'Logo da Qoro',
       },
     ],
