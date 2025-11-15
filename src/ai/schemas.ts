@@ -31,7 +31,7 @@ export const InviteUserSchema = z.object({
 
 export const AppPermissionsSchema = z.object({
     qoroCrm: z.boolean().default(true),
-    qoroPulse: z.boolean().default(true),
+    qoroPulse: z.boolean().default(false),
     qoroTask: z.boolean().default(true),
     qoroFinance: z.boolean().default(true),
 });
@@ -346,7 +346,7 @@ export const TransactionSchema = z.object({
     description: z.string().min(1, 'A descrição é obrigatória.'),
     amount: z.coerce.number().positive('O valor deve ser um número positivo.'),
     type: z.enum(['income', 'expense']),
-    date: z.union([z.date(), z.string(), z.null()]).optional(),
+    date: z.union([z.date(), z.string()]).optional(),
     accountId: z.string().optional(),
     customerId: z.string().optional(),
     category: z.string().optional(),

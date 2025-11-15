@@ -292,9 +292,15 @@ export const bulkCreateTransactions = async (
                     newBalance -= transactionAmount;
                 }
 
+                // Garante que a data seja um objeto Date do Firestore
+                const transactionDate = new Date(transaction.date as string | Date);
+                if (isNaN(transactionDate.getTime())) {
+                    throw new Error(`Data inválida fornecida para a transação: ${transaction.description}`);
+                }
+
                 const newTransactionData = {
                     ...transaction,
-                    date: new Date(transaction.date as string | Date),
+                    date: transactionDate,
                     status: 'paid',
                     accountId,
                     companyId: organizationId,
