@@ -33,7 +33,7 @@ export const AppPermissionsSchema = z.object({
     qoroCrm: z.boolean().default(true),
     qoroPulse: z.boolean().default(true),
     qoroTask: z.boolean().default(true),
-    qoroFinance: zboolean().default(true),
+    qoroFinance: z.boolean().default(true),
 });
 export type AppPermissions = z.infer<typeof AppPermissionsSchema>;
 
@@ -346,7 +346,7 @@ export const TransactionSchema = z.object({
     description: z.string().min(1, 'A descrição é obrigatória.'),
     amount: z.coerce.number().positive('O valor deve ser um número positivo.'),
     type: z.enum(['income', 'expense']),
-    date: z.union([z.date(), z.string()]).optional().nullable(),
+    date: z.union([z.date(), z.string(), z.null()]).optional(),
     accountId: z.string().optional(),
     customerId: z.string().optional(),
     category: z.string().optional(),
@@ -412,5 +412,7 @@ export type ReconciliationProfile = z.infer<typeof ReconciliationProfileSchema>;
 
 
   
+
+    
 
     
