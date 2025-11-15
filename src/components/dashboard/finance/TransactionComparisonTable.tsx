@@ -1,3 +1,4 @@
+
 'use client';
 import * as React from 'react';
 import { useState, useMemo, useEffect } from 'react';
@@ -103,7 +104,7 @@ export function TransactionComparisonTable({ reconciliation, ofxTransactions, sy
         const transactionsToCreate: z.infer<typeof TransactionSchema>[] = unmatchedOfx.map(ofx => ({
           description: ofx.description,
           amount: Math.abs(ofx.amount),
-          date: new Date(ofx.date),
+          date: new Date(ofx.date).toISOString().split('T')[0], // Formato YYYY-MM-DD
           type: ofx.amount > 0 ? 'income' : 'expense',
           status: 'paid' as const,
       }));
