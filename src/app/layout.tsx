@@ -5,7 +5,7 @@ import { Inter } from 'next/font/google';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 // URL da imagem do Firebase
-const iconUrl = 'https://firebasestorage.googleapis.com/v0/b/qoro-iy1gs.firebasestorage.app/o/logofinal-removebg-preview.png?alt=media&token=1f0aea30-e316-4cc5-99f3-f124234faf08';
+const iconUrl = '/favicon.';
 
 export const metadata: Metadata = {
   title: {
