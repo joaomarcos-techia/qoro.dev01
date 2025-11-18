@@ -1,24 +1,24 @@
 
 'use client';
 
-import { Eye, BrainCircuit, Rocket, ShieldCheck, DollarSign, ListChecks } from 'lucide-react';
+import { Users, Activity, CheckSquare, Rocket, ShieldCheck, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const features = [
   {
-    icon: Eye,
+    icon: Users,
     title: 'QoroCRM',
     description: 'Gestão de funil de vendas, cadastro de clientes e criação de orçamentos para maximizar seus lucros.',
     colorClass: 'bg-crm-primary',
   },
   {
-    icon: BrainCircuit,
+    icon: Activity,
     title: 'QoroPulse',
     description: 'Sua IA especialista em gestão, que analisa seus dados para fornecer insights e sugestões estratégicas.',
     colorClass: 'bg-pulse-primary',
   },
   {
-    icon: ListChecks,
+    icon: CheckSquare,
     title: 'QoroTask',
     description: 'Plataforma de gestão de tarefas com quadros Kanban e calendário para alinhar sua equipe e aumentar a produtividade.',
     colorClass: 'bg-task-primary',
