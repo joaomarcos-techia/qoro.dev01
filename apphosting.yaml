@@ -39,10 +39,10 @@ env:
   
   # Variáveis do Stripe (Públicas)
   - variable: NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID
-    value: "price_1PbC2FKnoRE6MSOluwBtf3oV"
+    value: "price_1Rzr2FKnoRE6MSOlBbtvn4cb"
     availability: [BUILD, RUNTIME]
   - variable: NEXT_PUBLIC_STRIPE_PERFORMANCE_PLAN_PRICE_ID
-    value: "price_1PbC2qKnoRE6MSOlnlE69U9V"
+    value: "price_1Rzr2jKnoRE6MSOl1yBSMsjy"
     availability: [BUILD, RUNTIME]
 
   # Variáveis do Stripe (Secretas)
