@@ -1,5 +1,3 @@
-
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -23,6 +21,11 @@ const nextConfig = {
         pathname: '/**',
       }
     ],
+  },
+  experimental: {
+    turbo: {
+      root: process.cwd(),
+    },
   },
 };
 
