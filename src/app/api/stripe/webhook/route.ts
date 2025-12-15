@@ -70,7 +70,6 @@ export async function POST(req: Request) {
           stripeCustomerId: subscription.customer as string,
           stripeSubscriptionId: subscription.id,
           stripeSubscriptionStatus: subscription.status,
-          password: '', // Password is managed by Firebase Auth on the client
         });
         
         console.log(`✅ Perfil de usuário e organização criados com sucesso para UID: ${firebaseUID} via checkout.session.completed.`);
