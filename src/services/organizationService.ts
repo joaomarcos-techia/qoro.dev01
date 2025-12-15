@@ -15,7 +15,6 @@ import {
 } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
-import { sendWelcomeEmail } from './emailService';
 
 const FREE_PLAN_USER_LIMIT = 2;
 const GROWTH_PLAN_USER_LIMIT = 5;
@@ -206,7 +205,7 @@ export const inviteUser = async (input: z.infer<typeof InviteUserSchema> & { act
     if (!adminOrgData) {
       throw new Error("A organização do usuário não está pronta.");
     }
-    const { organizationId, organizationName, planId, userRole, userData } = adminOrgData;
+    const { organizationId, organizationName, planId, userRole } = adminOrgData;
   
     if (userRole !== 'admin') {
       throw new Error("Apenas administradores podem convidar novos usuários.");
@@ -238,15 +237,6 @@ export const inviteUser = async (input: z.infer<typeof InviteUserSchema> & { act
         planId,
         status: 'pending',
         createdAt: FieldValue.serverTimestamp(),
-    });
-
-    const verificationLink = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:9004'}/invite/${inviteRef.id}`;
-    
-    await sendWelcomeEmail({
-        email,
-        adminName: userData.name || 'O administrador',
-        organizationName: organizationName,
-        verificationLink: verificationLink,
     });
 
     return { inviteId: inviteRef.id };
