@@ -7,7 +7,7 @@ export const SignUpSchema = z.object({
     name: z.string().min(1, 'O nome é obrigatório.'),
     organizationName: z.string().min(1, 'O nome da organização é obrigatório.'),
     email: z.string().email(),
-    password: z.string().min(6),
+    // Password is handled on the client, not in server-side schemas for creation
     cnpj: z.string().min(1, "O CNPJ é obrigatório."),
     contactEmail: z.union([z.string().email({ message: "E-mail de contato inválido." }), z.literal('')]).optional(),
     contactPhone: z.union([z.string(), z.literal('')]).optional(),
@@ -416,4 +416,5 @@ export type ReconciliationProfile = z.infer<typeof ReconciliationProfileSchema>;
     
 
     
+
 
