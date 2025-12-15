@@ -15,6 +15,7 @@ import {
 } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
+import { sendWelcomeEmail } from './emailService';
 
 const FREE_PLAN_USER_LIMIT = 2;
 const GROWTH_PLAN_USER_LIMIT = 5;
@@ -205,7 +206,7 @@ export const inviteUser = async (input: z.infer<typeof InviteUserSchema> & { act
     if (!adminOrgData) {
       throw new Error("A organização do usuário não está pronta.");
     }
-    const { organizationId, organizationName, planId, userRole } = adminOrgData;
+    const { organizationId, organizationName, planId, userRole, userData } = adminOrgData;
   
     if (userRole !== 'admin') {
       throw new Error("Apenas administradores podem convidar novos usuários.");
@@ -230,7 +231,6 @@ export const inviteUser = async (input: z.infer<typeof InviteUserSchema> & { act
       }
     }
   
-    // Create an invite document instead of a user
     const inviteRef = await adminDb.collection('invites').add({
         email,
         organizationId,
@@ -238,7 +238,15 @@ export const inviteUser = async (input: z.infer<typeof InviteUserSchema> & { act
         planId,
         status: 'pending',
         createdAt: FieldValue.serverTimestamp(),
-        expiresAt: FieldValue.serverTimestamp(), // Firestore can't do future dates, but we can check on read
+    });
+
+    const verificationLink = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:9004'}/invite/${inviteRef.id}`;
+    
+    await sendWelcomeEmail({
+        email,
+        adminName: userData.name || 'O administrador',
+        organizationName: organizationName,
+        verificationLink: verificationLink,
     });
 
     return { inviteId: inviteRef.id };
@@ -286,13 +294,6 @@ export const validateInvite = async (inviteId: string) => {
     if (!inviteDoc.exists || inviteDoc.data()?.status !== 'pending') {
         throw new Error("Convite inválido ou já utilizado.");
     }
-
-    // Optional: Check expiration
-    // const createdAt = inviteDoc.data()?.createdAt.toDate();
-    // if (Date.now() - createdAt.getTime() > 24 * 60 * 60 * 1000) { // 24 hours
-    //     await inviteRef.update({ status: 'expired' });
-    //     throw new Error("Este convite expirou.");
-    // }
 
     return {
         email: inviteDoc.data()?.email,
