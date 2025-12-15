@@ -4,11 +4,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Mail, Lock, AlertCircle, CheckCircle, User, Building, Loader2 } from 'lucide-react';
-import { auth } from '@/lib/firebase';
+import { Mail, Lock, AlertCircle, CheckCircle, User, Loader2 } from 'lucide-react';
 import { validateInvite, acceptInvite } from '@/ai/flows/user-management';
 import { Logo } from '@/components/ui/logo';
-import { createUserAndSendVerification } from '@/lib/auth';
+import { createUserWithEmailAndPassword, getAuth } from 'firebase/auth';
+import { app } from '@/lib/firebase';
+
+const auth = getAuth(app);
 
 export default function AcceptInvitePage() {
   const router = useRouter();
@@ -64,10 +66,11 @@ export default function AcceptInvitePage() {
     setError(null);
 
     try {
-      // Step 1: Create user in Auth and send verification email from client
-      const user = await createUserAndSendVerification(inviteInfo.email, formData.password);
+      // Step 1: Create user in Firebase Auth on the client side
+      const userCredential = await createUserWithEmailAndPassword(auth, inviteInfo.email, formData.password);
+      const user = userCredential.user;
 
-      // Step 2: Call server action to create user profile in Firestore
+      // Step 2: Call server action to create Firestore documents and finalize acceptance
       await acceptInvite({
         inviteId,
         name: formData.name,
@@ -75,11 +78,15 @@ export default function AcceptInvitePage() {
       });
 
       setSuccess(true);
-      setTimeout(() => router.push('/login'), 5000); // Increased timeout for reading the message
+      setTimeout(() => router.push('/login'), 5000); 
 
     } catch (err: any) {
       console.error(err);
-      setError(err.message || 'Ocorreu um erro ao finalizar o cadastro. Tente novamente.');
+      let errorMessage = 'Ocorreu um erro ao finalizar o cadastro. Tente novamente.';
+      if (err.code === 'auth/email-already-in-use') {
+          errorMessage = 'Este e-mail já está em uso por outra conta.';
+      }
+      setError(errorMessage);
       setIsSubmitting(false);
     }
   };

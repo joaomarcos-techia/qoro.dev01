@@ -14,24 +14,6 @@ import { app } from './firebase';
 
 const auth = getAuth(app);
 
-// New function to handle user creation and email verification on the client-side
-export const createUserAndSendVerification = async (email: string, password: string): Promise<User> => {
-    try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-        await sendEmailVerification(user);
-        return user;
-    } catch (error: any) {
-        if (error.code === 'auth/email-already-in-use') {
-            throw new Error('Este e-mail já está em uso.');
-        }
-        if (error.code === 'auth/weak-password') {
-            throw new Error('A senha é muito fraca. Ela deve ter pelo menos 6 caracteres.');
-        }
-        throw new Error('Ocorreu um erro ao criar o usuário. Tente novamente.');
-    }
-};
-
 export const sendVerificationEmail = async (user: User): Promise<void> => {
     try {
         await sendEmailVerification(user);
@@ -51,9 +33,6 @@ export const signIn = async (email: string, password: string): Promise<User> => 
         (notVerifiedError as any).code = 'auth/email-not-verified';
         throw notVerifiedError;
       }
-      
-      // A verificação da assinatura e dos dados da organização agora é tratada de forma resiliente
-      // pelo PlanContext após o login, para evitar problemas de sincronização.
       
       return user;
 

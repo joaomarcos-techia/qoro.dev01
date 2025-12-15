@@ -6,13 +6,15 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, AlertCircle, CheckCircle, User, Building, FileText, Phone, Loader2, CreditCard } from 'lucide-react';
 import { createCheckoutSession } from '@/ai/flows/billing-flow';
-import { createUserAndSendVerification } from '@/lib/auth';
-import { Logo } from '@/components/ui/logo';
 import { createUserProfile } from '@/services/organizationService';
+import { Logo } from '@/components/ui/logo';
 import { LegalPopup } from '@/components/landing/LegalPopup';
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
+import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { app } from '@/lib/firebase';
 
+const auth = getAuth(app);
 
 export default function SignUpForm() {
   const router = useRouter();
@@ -84,8 +86,9 @@ export default function SignUpForm() {
     }
 
     try {
-      // Step 1: Create the user in Firebase Auth and send verification email
-      const user = await createUserAndSendVerification(formData.email, formData.password);
+      // Step 1: Create the user in Firebase Auth on the client side
+      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+      const user = userCredential.user;
 
       // Step 2: Handle plan logic
       if (plan === 'growth' || plan === 'performance') {
@@ -97,7 +100,6 @@ export default function SignUpForm() {
             throw new Error('ID do plano de preços não configurado para o checkout.');
         }
         
-        // The user profile will be created by the webhook after successful payment
         const { sessionId } = await createCheckoutSession({
             priceId: priceId,
             actor: user.uid,
@@ -112,19 +114,21 @@ export default function SignUpForm() {
         setSuccessMessage('Credenciais criadas! O próximo passo é concluir o pagamento.');
 
       } else { // Free Plan
-        // For the free plan, create the organization and user profile directly
         await createUserProfile({
           ...formData,
           uid: user.uid,
           planId: 'free',
           stripePriceId: 'free',
         });
-        // Show success message and prompt to go to login
-        setSuccessMessage('Conta criada! Verifique seu e-mail para ativar sua conta e depois faça o login.');
+        setSuccessMessage('Conta criada! Um e-mail de verificação foi enviado. Ative sua conta e faça o login.');
       }
 
     } catch (err: any) {
-      setError(err.message || 'Ocorreu um erro ao criar a conta. Tente novamente.');
+      let errorMessage = 'Ocorreu um erro ao criar a conta. Tente novamente.';
+      if (err.code === 'auth/email-already-in-use') {
+          errorMessage = 'Este e-mail já está em uso por outra conta.';
+      }
+      setError(errorMessage);
       console.error(err);
     } finally {
       setIsLoading(false);
