@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, AlertCircle, CheckCircle, User, Building, FileText, Phone, Loader2, CreditCard, Send } from 'lucide-react';
 import { createCheckoutSession } from '@/ai/flows/billing-flow';
-import { createUserProfile } from '@/ai/flows/user-management';
+import { createUserProfileFlowWrapper as createUserProfile } from '@/ai/flows/user-management';
 import { Logo } from '@/components/ui/logo';
 import { LegalPopup } from '@/components/landing/LegalPopup';
 import { Checkbox } from "@/components/ui/checkbox"
