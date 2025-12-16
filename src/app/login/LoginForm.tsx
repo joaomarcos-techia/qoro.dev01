@@ -7,8 +7,8 @@ import Link from 'next/link';
 import { Mail, Lock, LogIn, AlertCircle, CheckCircle, Loader2, RefreshCw } from 'lucide-react';
 import { signInAndCheckVerification, resendVerification, sendPasswordReset } from '@/lib/authService';
 import { Logo } from '@/components/ui/logo';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { getAuth, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { app } from '@/lib/firebase';
 import { getAdminAndOrg } from '@/services/utils';
 
 export default function LoginForm() {
@@ -37,6 +37,8 @@ export default function LoginForm() {
       let attempts = 0;
       const maxAttempts = 15;
       let timeoutId: NodeJS.Timeout;
+      
+      const auth = getAuth(app);
   
       const unsubscribe = onAuthStateChanged(auth, (user) => {
         if (user) {
