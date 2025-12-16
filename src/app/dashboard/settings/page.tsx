@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Mail, Send, KeyRound, UserPlus, Building, AlertCircle, CheckCircle, ArrowLeft, User, Shield, Users, Loader2, ExternalLink, Trash2, Copy, CreditCard, SlidersHorizontal, MessageSquare } from 'lucide-react';
 import { inviteUser, listUsers, deleteUser, updateUserPermissions } from '@/ai/flows/user-management';
-import { sendPasswordResetEmail } from '@/lib/auth';
+import { sendPasswordReset } from '@/lib/authService';
 import { createBillingPortalSession } from '@/ai/flows/billing-flow';
 import { UserProfile, InviteUserSchema, AppPermissions } from '@/ai/schemas';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
@@ -123,7 +123,7 @@ export default function SettingsPage() {
         setIsLoading(prev => ({ ...prev, password: true }));
         clearFeedback('password');
         try {
-            await sendPasswordResetEmail(currentUser.email);
+            await sendPasswordReset(currentUser.email);
             setFeedback({ type: 'success', message: 'E-mail para redefinição de senha enviado com sucesso!', context: 'password' });
         } catch (error: any) {
             setFeedback({ type: 'error', message: error.message, context: 'password' });
@@ -439,3 +439,5 @@ export default function SettingsPage() {
         </div>
     );
 }
+
+    
