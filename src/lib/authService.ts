@@ -19,14 +19,6 @@ import {
 
 import { auth } from '@/lib/firebase';
 
-const actionCodeSettings = (): ActionCodeSettings => {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:9004';
-  return {
-    url: `${siteUrl}/login?verified=true`,
-    handleCodeInApp: false,
-  };
-};
-
 export const signUpAndVerify = async (email: string, password: string): Promise<User> => {
   console.log('[AuthService] Iniciando signUpAndVerify para:', email);
   try {
@@ -35,7 +27,8 @@ export const signUpAndVerify = async (email: string, password: string): Promise<
     console.log('[AuthService] Usuário criado com sucesso, UID:', user.uid);
 
     try {
-      await sendEmailVerification(user, actionCodeSettings());
+      // Simplificado: Usa o fluxo padrão do Firebase, que é mais robusto.
+      await sendEmailVerification(user);
       console.log('[AuthService] E-mail de verificação solicitado com sucesso para:', email);
     } catch (verificationError) {
       console.error('❌ [AuthService] ERRO CRÍTICO ao enviar e-mail de verificação:', verificationError);
@@ -83,7 +76,8 @@ export const signInAndCheckVerification = async (email: string, password: string
 export const resendVerification = async (user: User): Promise<void> => {
   console.log('[AuthService] Solicitando reenvio de verificação para:', user.email);
   try {
-    await sendEmailVerification(user, actionCodeSettings());
+    // Simplificado: Usa o fluxo padrão do Firebase.
+    await sendEmailVerification(user);
     console.log('[AuthService] Reenvio de e-mail de verificação solicitado com sucesso.');
   } catch (error: any) {
     console.error('❌ [AuthService] ERRO ao reenviar e-mail de verificação:', error);
