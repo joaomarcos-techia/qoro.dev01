@@ -165,57 +165,10 @@ export const inviteUser = async (input: z.infer<typeof InviteUserSchema> & { act
       organizationName: adminOrgData.organizationName,
       status: 'pending',
       createdAt: FieldValue.serverTimestamp(),
-      expiresAt: FieldValue.serverTimestamp(new Timestamp(Date.now() / 1000 + 7 * 24 * 60 * 60, 0)),
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Expires in 7 days
     });
   
     return { inviteId: inviteRef.id };
-};
-  
-export const validateInvite = async (inviteId: string) => {
-    const inviteRef = adminDb.collection('invites').doc(inviteId);
-    const doc = await inviteRef.get();
-  
-    if (!doc.exists || doc.data()?.status !== 'pending' || doc.data()?.expiresAt.toDate() < new Date()) {
-      throw new Error("Convite inválido, expirado ou já utilizado.");
-    }
-    const data = doc.data()!;
-    return { email: data.email, organizationName: data.organizationName };
-};
-  
-export const acceptInvite = async (inviteId: string, { name, uid }: { name: string; uid: string }) => {
-    const inviteRef = adminDb.collection('invites').doc(inviteId);
-    return adminDb.runTransaction(async (transaction) => {
-      const inviteDoc = await transaction.get(inviteRef);
-      if (!inviteDoc.exists || inviteDoc.data()?.status !== 'pending') {
-        throw new Error("Convite inválido ou já aceito.");
-      }
-      const inviteData = inviteDoc.data()!;
-      const orgDoc = await transaction.get(adminDb.collection('organizations').doc(inviteData.organizationId));
-      if (!orgDoc.exists) {
-        throw new Error("Organização associada ao convite não encontrada.");
-      }
-      const planId = orgDoc.data()!.planId || 'free';
-  
-      const userRef = adminDb.collection('users').doc(uid);
-      transaction.set(userRef, {
-        name,
-        email: inviteData.email,
-        organizationId: inviteData.organizationId,
-        role: 'member',
-        createdAt: FieldValue.serverTimestamp(),
-        planId: planId,
-        permissions: {
-          qoroCrm: true,
-          qoroPulse: planId === 'performance',
-          qoroTask: true,
-          qoroFinance: true,
-        },
-      });
-  
-      transaction.update(inviteRef, { status: 'accepted', acceptedBy: uid, acceptedAt: FieldValue.serverTimestamp() });
-      await adminAuth.setCustomUserClaims(uid, { organizationId: inviteData.organizationId, role: 'member', planId });
-      return { success: true };
-    });
 };
   
 export const deleteUser = async (userId: string, actorUid: string) => {
@@ -258,7 +211,7 @@ export const updateUserPermissions = async (input: z.infer<typeof UpdateUserPerm
 export const handleSubscriptionChange = async (subscriptionId: string, newPriceId: string, status: string) => {
     const orgSnapshot = await adminDb.collection('organizations').where('stripeSubscriptionId', '==', subscriptionId).limit(1).get();
     if (orgSnapshot.empty) {
-      console.error(`Webhook: Nenhuma organização encontrada para a subscription ID: ${subscriptionId}`);
+      console.error(`Webhook: Nenhuma organização encontrada para a subscription ID: ${'${subscriptionId}'}`);
       return;
     }
   
@@ -267,7 +220,7 @@ export const handleSubscriptionChange = async (subscriptionId: string, newPriceI
     
     let lastSystemNotification = null;
     if (status === 'active' && orgDoc.data().planId !== newPlanId) {
-        lastSystemNotification = `Seu plano foi alterado para ${newPlanId}.`;
+        lastSystemNotification = `Seu plano foi alterado para ${'${newPlanId}'}.`;
     } else if (status === 'canceled' || status === 'unpaid') {
         lastSystemNotification = "Houve um problema com sua assinatura. Seu plano foi alterado para o gratuito.";
     }
@@ -288,7 +241,7 @@ export const handleSubscriptionChange = async (subscriptionId: string, newPriceI
     });
   
     await batch.commit();
-    console.log(`Plano da organização ${orgDoc.id} e seus usuários atualizado para ${newPlanId}.`);
+    console.log(`Plano da organização ${'${orgDoc.id}'} e seus usuários atualizado para ${'${newPlanId}'}.`);
 };
 
 // --- Genkit Flows ---
@@ -378,26 +331,6 @@ const deleteUserFlow = ai.defineFlow(
     async (input) => deleteUser(input.userId, input.actor)
 );
 
-const ValidateInviteInput = z.object({ inviteId: z.string() });
-const ValidateInviteOutput = z.object({ email: z.string(), organizationName: z.string() });
-
-const validateInviteFlow = ai.defineFlow(
-    { name: 'validateInviteFlow', inputSchema: ValidateInviteInput, outputSchema: ValidateInviteOutput },
-    async ({ inviteId }) => validateInvite(inviteId)
-);
-
-const AcceptInviteInput = z.object({
-    inviteId: z.string(),
-    name: z.string(),
-    uid: z.string(),
-});
-const AcceptInviteOutput = z.object({ success: z.boolean() });
-
-const acceptInviteFlow = ai.defineFlow(
-    { name: 'acceptInviteFlow', inputSchema: AcceptInviteInput, outputSchema: AcceptInviteOutput },
-    async ({ inviteId, name, uid }) => acceptInvite(inviteId, { name, uid })
-);
-
 const updateUserPermissionsFlow = ai.defineFlow(
     { name: 'updateUserPermissionsFlow', inputSchema: UpdateUserPermissionsSchema.extend(ActorSchema.shape), outputSchema: z.object({ success: z.boolean() }) },
     async (input) => updateUserPermissions(input)
@@ -435,14 +368,6 @@ export async function getUserAccessInfoFlowWrapper(input: z.infer<typeof ActorSc
 
 export async function getUserProfileFlowWrapper(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof UserProfileOutputSchema> | null> {
     return getUserProfileFlow(input);
-}
-
-export async function validateInviteFlowWrapper(input: z.infer<typeof ValidateInviteInput>): Promise<z.infer<typeof ValidateInviteOutput>> {
-    return validateInviteFlow(input);
-}
-
-export async function acceptInviteFlowWrapper(input: z.infer<typeof AcceptInviteInput>): Promise<z.infer<typeof AcceptInviteOutput>> {
-    return acceptInviteFlow(input);
 }
 
 export async function updateUserPermissionsFlowWrapper(input: z.infer<typeof UpdateUserPermissionsSchema> & z.infer<typeof ActorSchema>): Promise<{ success: boolean }> {
