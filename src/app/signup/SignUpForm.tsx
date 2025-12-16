@@ -70,6 +70,20 @@ export default function SignUpForm() {
     }
   };
 
+  const handleResend = async () => {
+    if (!userForResend) return;
+    setIsResending(true);
+    setResendFeedback(null);
+    try {
+        await resendVerification(userForResend);
+        setResendFeedback("Um novo e-mail de verificação foi enviado com sucesso!");
+    } catch (error: any) {
+        setResendFeedback(`Erro ao reenviar: ${error.message}`);
+    } finally {
+        setIsResending(false);
+    }
+  }
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -136,25 +150,11 @@ export default function SignUpForm() {
 
     } catch (err: any) {
       console.error('❌ [SignUpForm] ERRO no handleSignUp:', err);
-      setError(err.message || 'Ocorreu um erro desconhecido. Verifique o console para mais detalhes.');
+      setError(err.message || 'Ocorreu um erro inesperado. Verifique o console para mais detalhes.');
     } finally {
       setIsLoading(false);
     }
   };
-
-  const handleResend = async () => {
-    if (!userForResend) return;
-    setIsResending(true);
-    setResendFeedback(null);
-    try {
-        await resendVerification(userForResend);
-        setResendFeedback("Um novo e-mail de verificação foi enviado com sucesso!");
-    } catch (error: any) {
-        setResendFeedback(`Erro ao reenviar: ${error.message}`);
-    } finally {
-        setIsResending(false);
-    }
-  }
 
   return (
     <>
@@ -186,7 +186,7 @@ export default function SignUpForm() {
             )}
              <div className="mt-6 pt-4 border-t border-green-500/20 text-center">
                 <p className="text-xs text-muted-foreground mb-3">Não recebeu o e-mail de verificação? Verifique sua caixa de Spam ou peça um novo envio.</p>
-                <Button variant="outline" size="sm" onClick={handleResend} disabled={isResending || !userForResend}>
+                <Button variant="outline" size="sm" onClick={handleResend} disabled={isResending || !userForResend} className="w-full sm:w-auto">
                     {isResending ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Send className="mr-2 h-4 w-4"/>}
                     {isResending ? 'Reenviando...' : 'Reenviar E-mail de Verificação'}
                 </Button>
