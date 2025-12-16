@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -11,7 +10,7 @@ import { Logo } from '@/components/ui/logo';
 import { LegalPopup } from '@/components/landing/LegalPopup';
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
-import { signUpAndVerify } from '@/lib/authService'; // Alterado para o novo serviço
+import { signUpAndVerify } from '@/lib/authService';
 
 export default function SignUpForm() {
   const router = useRouter();
@@ -87,10 +86,13 @@ export default function SignUpForm() {
 
     try {
       // Etapa 1: Criar usuário no Firebase Auth e enviar e-mail de verificação (via authService)
+      console.log('[SignUpForm] Chamando signUpAndVerify...');
       const user = await signUpAndVerify(formData.email, formData.password);
+      console.log('[SignUpForm] signUpAndVerify concluído com sucesso.');
 
       // Etapa 2: Lógica de planos (Stripe ou criação de perfil gratuito)
       if (plan === 'growth' || plan === 'performance') {
+        console.log(`[SignUpForm] Iniciando fluxo para plano pago: ${plan}`);
         const priceId = plan === 'growth' 
             ? process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID
             : process.env.NEXT_PUBLIC_STRIPE_PERFORMANCE_PLAN_PRICE_ID;
@@ -101,7 +103,7 @@ export default function SignUpForm() {
         
         const { sessionId } = await createCheckoutSession({
             priceId: priceId,
-            actor: user.uid, // Usa o UID do usuário recém-criado
+            actor: user.uid,
             name: formData.name,
             organizationName: formData.organizationName,
             cnpj: formData.cnpj.replace(/\D/g, ''),
@@ -113,7 +115,7 @@ export default function SignUpForm() {
         setSuccessMessage('Conta criada! Um e-mail de verificação foi enviado. Conclua o pagamento para finalizar.');
 
       } else { // Plano Gratuito
-        // A criação do perfil no Firestore ainda é necessária.
+        console.log('[SignUpForm] Iniciando fluxo para plano gratuito.');
         await createUserProfile({
           ...formData,
           uid: user.uid,
@@ -124,7 +126,8 @@ export default function SignUpForm() {
       }
 
     } catch (err: any) {
-      setError(err.message || 'Ocorreu um erro desconhecido.');
+      console.error('❌ [SignUpForm] ERRO no handleSignUp:', err);
+      setError(err.message || 'Ocorreu um erro desconhecido. Verifique o console para mais detalhes.');
     } finally {
       setIsLoading(false);
     }

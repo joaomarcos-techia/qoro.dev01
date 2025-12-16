@@ -62,22 +62,23 @@ export default function AcceptInvitePage() {
     setError(null);
 
     try {
-      // A função signUpAndVerify já cria o usuário e envia o e-mail de verificação.
+      console.log('[AcceptInvite] Chamando signUpAndVerify...');
       const user = await signUpAndVerify(inviteInfo.email, formData.password);
+      console.log('[AcceptInvite] signUpAndVerify concluído. Chamando acceptInvite...');
       
-      // A função `acceptInvite` agora só precisa associar o UID ao convite e criar o perfil no Firestore.
       await acceptInvite({
         inviteId,
         name: formData.name,
         uid: user.uid,
       });
+      console.log('[AcceptInvite] acceptInvite concluído com sucesso.');
 
       setSuccess(true);
       setTimeout(() => router.push('/login'), 5000); 
 
     } catch (err: any) {
-      console.error(err);
-      let errorMessage = 'Ocorreu um erro ao finalizar o cadastro. Tente novamente.';
+      console.error('❌ [AcceptInvite] ERRO no handleAccept:', err);
+      let errorMessage = 'Ocorreu um erro ao finalizar o cadastro. Verifique o console.';
       if (err.code === 'auth/email-already-in-use') {
           errorMessage = 'Este e-mail já está em uso por outra conta.';
       }

@@ -1,13 +1,13 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, LogIn, AlertCircle, CheckCircle, Loader2, RefreshCw } from 'lucide-react';
-import { signInAndCheckVerification, resendVerification, sendPasswordReset } from '@/lib/authService';
+import { signInAndCheckVerification, resendVerification } from '@/lib/authService';
 import { Logo } from '@/components/ui/logo';
-import { getAuth, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { getAuth } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 import { getAdminAndOrg } from '@/services/utils';
 
@@ -32,8 +32,8 @@ export default function LoginForm() {
 
   useEffect(() => {
     if (isSyncing) {
-      let pollInterval = 2000; // Começa com 2 segundos
-      const maxInterval = 10000; // Máximo de 10 segundos
+      let pollInterval = 2000;
+      const maxInterval = 10000;
       let attempts = 0;
       const maxAttempts = 15;
       let timeoutId: NodeJS.Timeout;
@@ -107,15 +107,18 @@ export default function LoginForm() {
     setIsLoading(true);
   
     try {
+      console.log('[LoginForm] Chamando signInAndCheckVerification...');
       await signInAndCheckVerification(email, password);
+      console.log('[LoginForm] signInAndCheckVerification concluído. Redirecionando...');
       router.push('/dashboard');
     } catch (err: any) {
+      console.error('❌ [LoginForm] ERRO no handleLogin:', err);
       if (err.code === 'auth/email-not-verified') {
         setError(err.message);
-        setUserForResend(err.user); // Pega o objeto 'user' do erro customizado
+        setUserForResend(err.user);
         setShowResend(true);
       } else {
-        setError(err.message || 'Ocorreu um erro desconhecido.');
+        setError(err.message || 'Ocorreu um erro desconhecido. Verifique o console.');
       }
     } finally {
         setIsLoading(false);
@@ -132,10 +135,12 @@ export default function LoginForm() {
     setIsResending(true);
     
     try {
+        console.log('[LoginForm] Chamando resendVerification...');
         await resendVerification(userForResend);
         setResendSuccess('Um novo e-mail de verificação foi enviado. Verifique sua caixa de entrada e spam.');
         setShowResend(false);
     } catch (err: any) {
+        console.error('❌ [LoginForm] ERRO no handleResendVerification:', err);
         setError(err.message || 'Falha ao reenviar o e-mail de verificação.');
     } finally {
         setIsResending(false);
