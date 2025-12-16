@@ -2,7 +2,6 @@
 'use server';
 /**
  * @fileOverview User and organization management flows.
- * - signUp (deprecated, handled by webhook)
  * - listUsers - Lists all users within the caller's organization.
  * - getOrganizationDetails - Fetches details for the user's organization.
  * - updateOrganizationDetails - Updates details for the user's organization.

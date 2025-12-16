@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -6,10 +7,11 @@ import Link from 'next/link';
 import { Mail, Lock, LogIn, AlertCircle, CheckCircle, Loader2, RefreshCw } from 'lucide-react';
 import { signInAndCheckVerification, resendVerification } from '@/lib/authService';
 import { Logo } from '@/components/ui/logo';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { getAuth } from 'firebase/auth';
+import { onAuthStateChanged, User as FirebaseUser, getAuth } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 import { getAdminAndOrg } from '@/services/utils';
+
+const auth = getAuth(app);
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
@@ -61,7 +63,7 @@ export default function LoginForm() {
                 return;
               }
               
-              console.log(`⏳ Attempt ${attempts}/${maxAttempts}, next poll in ${pollInterval}ms...`);
+              console.log(`⏳ Attempt ${'${attempts}'}/${'${maxAttempts}'}, next poll in ${'${pollInterval}'}ms...`);
               
               if (attempts < maxAttempts) {
                 timeoutId = setTimeout(poll, pollInterval);
