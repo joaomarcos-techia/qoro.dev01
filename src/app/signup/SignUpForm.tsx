@@ -1,12 +1,12 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, AlertCircle, CheckCircle, User, Building, FileText, Phone, Loader2, CreditCard, Send } from 'lucide-react';
 import { createCheckoutSession } from '@/ai/flows/billing-flow';
-import { createUserProfileFlowWrapper as createUserProfile } from '@/ai/flows/user-management';
+import { createUserProfile } from '@/ai/flows/user-management';
 import { Logo } from '@/components/ui/logo';
 import { LegalPopup } from '@/components/landing/LegalPopup';
 import { Checkbox } from "@/components/ui/checkbox"
@@ -127,6 +127,9 @@ export default function SignUpForm() {
           uid: user.uid,
           planId: 'free',
           stripePriceId: 'free',
+          stripeCustomerId: '',
+          stripeSubscriptionId: '',
+          stripeSubscriptionStatus: ''
         });
         setSuccessMessage('Conta criada! Um e-mail de verificação foi enviado. Verifique sua caixa de entrada e spam para ativar sua conta antes de fazer o login.');
       }
@@ -181,9 +184,9 @@ export default function SignUpForm() {
                     Ir para Login
                 </Link>
             )}
-             <div className="mt-6 pt-4 border-t border-green-500/20 text-left">
+             <div className="mt-6 pt-4 border-t border-green-500/20 text-center">
                 <p className="text-xs text-muted-foreground mb-3">Não recebeu o e-mail de verificação? Verifique sua caixa de Spam ou peça um novo envio.</p>
-                <Button variant="outline" size="sm" onClick={handleResend} disabled={isResending || !userForResend} className="w-full sm:w-auto">
+                <Button variant="outline" size="sm" onClick={handleResend} disabled={isResending || !userForResend}>
                     {isResending ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Send className="mr-2 h-4 w-4"/>}
                     {isResending ? 'Reenviando...' : 'Reenviar E-mail de Verificação'}
                 </Button>
