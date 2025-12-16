@@ -113,9 +113,6 @@ export const createUserProfile = async (input: z.infer<typeof UserProfileCreatio
       
       await adminAuth.setCustomUserClaims(uid, { organizationId: orgRef.id, role: 'admin', planId: planId });
       
-      // O envio do e-mail de verificação agora é feito no cliente.
-      // Nenhuma ação de e-mail é necessária aqui.
-
       return { uid };
 
     } catch (error) {
@@ -305,7 +302,6 @@ export const acceptInvite = async (inviteId: string, userData: { name: string, u
     const { email, organizationId, planId } = inviteDoc.data()!;
     const hasPulseAccess = planId === 'performance';
     
-    // O usuário já foi criado no cliente. Esta função agora apenas cria o perfil no Firestore.
     await adminDb.collection('users').doc(userData.uid).set({
         name: userData.name,
         email: email,
@@ -324,7 +320,6 @@ export const acceptInvite = async (inviteId: string, userData: { name: string, u
     await adminAuth.setCustomUserClaims(userData.uid, { organizationId, role: 'member', planId });
     await inviteRef.update({ status: 'accepted', acceptedAt: FieldValue.serverTimestamp(), acceptedBy: userData.uid });
     
-    // O envio do e-mail de verificação já foi feito no cliente.
     return { success: true, organizationId };
 };
 

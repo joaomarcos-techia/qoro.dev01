@@ -2,6 +2,7 @@
 'use server';
 /**
  * @fileOverview User and organization management flows.
+ * - createUserProfile - Creates user and organization documents in Firestore.
  * - listUsers - Lists all users within the caller's organization.
  * - getOrganizationDetails - Fetches details for the user's organization.
  * - updateOrganizationDetails - Updates details for the user's organization.
@@ -20,7 +21,7 @@ import {
     OrganizationProfileSchema, 
     UserProfileSchema,
     UserAccessInfoSchema,
-    AppPermissions,
+    UserProfileCreationSchema,
 } from '@/ai/schemas';
 import * as orgService from '@/services/organizationService';
 import { getAdminAndOrg } from '@/services/utils';
@@ -33,6 +34,15 @@ const UserProfileOutputSchema = z.object({
     organizationName: z.string(),
     planId: z.string(),
 });
+
+const createUserProfileFlow = ai.defineFlow(
+    {
+        name: 'createUserProfileFlow',
+        inputSchema: UserProfileCreationSchema,
+        outputSchema: z.object({ uid: z.string() })
+    },
+    async (input) => orgService.createUserProfile(input)
+);
 
 const listUsersFlow = ai.defineFlow(
     { name: 'listUsersFlow', inputSchema: ActorSchema, outputSchema: z.array(UserProfileSchema) },
@@ -137,6 +147,10 @@ const updateUserPermissionsFlow = ai.defineFlow(
 
 
 // Exported functions (client-callable wrappers)
+export async function createUserProfile(input: z.infer<typeof UserProfileCreationSchema>): Promise<{ uid: string }> {
+    return createUserProfileFlow(input);
+}
+
 export async function inviteUser(input: z.infer<typeof InviteUserSchema> & z.infer<typeof ActorSchema>): Promise<{ inviteId: string }> {
     return inviteUserFlow(input);
 }
