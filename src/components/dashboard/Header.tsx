@@ -2,7 +2,7 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ChevronDown, LogOut, RefreshCw, Settings, User } from 'lucide-react';
-import { signOut } from '@/lib/auth';
+import { signOut } from '@/lib/authService';
 import { useRouter } from 'next/navigation';
 import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
