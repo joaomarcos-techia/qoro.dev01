@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -5,13 +6,14 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, AlertCircle, CheckCircle, User, Building, FileText, Phone, Loader2, CreditCard, Send } from 'lucide-react';
 import { createCheckoutSession } from '@/ai/flows/billing-flow';
-import { createUserProfile } from '@/ai/flows/user-management';
+import { createUserProfileFlowWrapper as createUserProfile } from '@/ai/flows/user-management';
 import { Logo } from '@/components/ui/logo';
 import { LegalPopup } from '@/components/landing/LegalPopup';
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { signUpAndVerify, resendVerification } from '@/lib/authService';
 import { User as FirebaseUser } from 'firebase/auth';
+import { Button } from '@/components/ui/button';
 
 export default function SignUpForm() {
   const router = useRouter();
@@ -96,7 +98,7 @@ export default function SignUpForm() {
       setUserForResend(user); 
 
       if (plan === 'growth' || plan === 'performance') {
-        console.log(`[SignUpForm] Iniciando fluxo para plano pago: ${'${plan}'}`);
+        console.log(`[SignUpForm] Iniciando fluxo para plano pago: ${plan}`);
         const priceId = plan === 'growth' 
             ? process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID
             : process.env.NEXT_PUBLIC_STRIPE_PERFORMANCE_PLAN_PRICE_ID;
@@ -145,7 +147,7 @@ export default function SignUpForm() {
         await resendVerification(userForResend);
         setResendFeedback("Um novo e-mail de verificação foi enviado com sucesso!");
     } catch (error: any) {
-        setResendFeedback(`Erro ao reenviar: ${'${error.message}'}`);
+        setResendFeedback(`Erro ao reenviar: ${error.message}`);
     } finally {
         setIsResending(false);
     }
