@@ -1,13 +1,15 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, LogIn, AlertCircle, CheckCircle, Loader2, RefreshCw } from 'lucide-react';
-import { signIn, sendVerificationEmail } from '@/lib/auth';
+import { signIn } from '@/lib/auth';
+import { resendVerificationEmail } from '@/ai/flows/user-management';
 import { Logo } from '@/components/ui/logo';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { getAdminAndOrg } from '@/services/utils';
 
@@ -18,10 +20,13 @@ export default function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [showResend, setShowResend] = useState(false);
   const [resendSuccess, setResendSuccess] = useState<string | null>(null);
+  const [resendError, setResendError] = useState<string | null>(null);
+  const [currentUserForResend, setCurrentUserForResend] = useState<FirebaseUser | null>(null);
 
   const router = useRouter();
   const searchParams = useSearchParams();
   const isPaymentSuccess = searchParams.get('payment_success') === 'true';
+  const isVerified = searchParams.get('verified') === 'true';
   const [isSyncing, setIsSyncing] = useState(isPaymentSuccess);
 
 
@@ -78,14 +83,23 @@ export default function LoginForm() {
     setError(null);
     setShowResend(false);
     setResendSuccess(null);
+    setResendError(null);
     setIsLoading(true);
   
     try {
-      await signIn(email, password);
+      const user = await signIn(email, password);
+      if (!user.emailVerified) {
+        setCurrentUserForResend(user);
+        setError('Seu e-mail ainda não foi verificado.');
+        setShowResend(true);
+        setIsLoading(false);
+        return;
+      }
       router.push('/dashboard');
     } catch (err: any) {
       setIsLoading(false);
-      if (err.code === 'auth/email-not-verified') {
+       if (err.code === 'auth/email-not-verified') {
+        // This case is handled above, but as a fallback
         setError('Seu e-mail ainda não foi verificado.');
         setShowResend(true);
       } else {
@@ -95,23 +109,21 @@ export default function LoginForm() {
   };
 
   const handleResendVerification = async () => {
+    if (!currentUserForResend) {
+        setResendError('Não foi possível identificar o usuário para o reenvio. Por favor, tente fazer login novamente.');
+        return;
+    }
     setError(null);
     setResendSuccess(null);
+    setResendError(null);
     setIsLoading(true);
     
     try {
-        const user = auth.currentUser;
-        if (user) {
-            await sendVerificationEmail(user);
-            setResendSuccess('Um novo e-mail de verificação foi enviado. Verifique sua caixa de entrada.');
-            setShowResend(false);
-        } else {
-            // Este caso pode acontecer se a sessão do usuário expirou enquanto ele estava na página.
-            // Recarregar a página forçaria o usuário a fazer login novamente, revelando o usuário atual.
-            throw new Error("Sua sessão pode ter expirado. Por favor, faça login novamente para reenviar a verificação.");
-        }
+        await resendVerificationEmail({ actor: currentUserForResend.uid });
+        setResendSuccess('Um novo e-mail de verificação foi enviado. Verifique sua caixa de entrada e spam.');
+        setShowResend(false);
     } catch (err: any) {
-        setError(err.message || 'Falha ao reenviar o e-mail de verificação.');
+        setResendError(err.message || 'Falha ao reenviar o e-mail de verificação.');
     }
     
     setIsLoading(false);
@@ -144,6 +156,13 @@ export default function LoginForm() {
           </Link>
           <p className="text-muted-foreground">Bem-vindo de volta! Faça login para continuar.</p>
         </div>
+        
+        {isVerified && (
+             <div className="mb-4 bg-green-800/20 border-l-4 border-green-500 text-green-300 p-4 rounded-lg flex items-center text-sm">
+              <CheckCircle className="w-5 h-5 mr-3" />
+              <span>E-mail verificado com sucesso! Você já pode fazer o login.</span>
+            </div>
+          )}
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div className="relative">
@@ -189,6 +208,13 @@ export default function LoginForm() {
               <CheckCircle className="w-5 h-5 mr-3" />
               <span>{resendSuccess}</span>
             </div>
+          )}
+
+          {resendError && (
+             <div className="bg-destructive/20 border-l-4 border-destructive text-destructive-foreground p-4 rounded-lg flex items-center text-sm">
+                <AlertCircle className="w-5 h-5 mr-3" />
+                <span>{resendError}</span>
+             </div>
           )}
 
 

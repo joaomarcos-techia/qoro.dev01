@@ -10,6 +10,7 @@
  * - inviteUser - Sends an invitation email to a new user.
  * - deleteUser - Deletes a user from the organization.
  * - updateUserPermissions - Updates a user's module permissions.
+ * - resendVerificationEmail - Triggers a new verification email for the current user.
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
@@ -23,6 +24,7 @@ import {
     AppPermissionsSchema,
 } from '@/ai/schemas';
 import * as orgService from '@/services/organizationService';
+import { sendVerificationEmail } from '@/services/emailService';
 import { getAdminAndOrg } from '@/services/utils';
 import type { UserProfile } from '@/ai/schemas';
 
@@ -136,6 +138,22 @@ const updateUserPermissionsFlow = ai.defineFlow(
     async (input) => orgService.updateUserPermissions(input)
 );
 
+const resendVerificationEmailFlow = ai.defineFlow(
+    {
+      name: 'resendVerificationEmailFlow',
+      inputSchema: ActorSchema,
+      outputSchema: z.object({ success: z.boolean() }),
+    },
+    async ({ actor }) => {
+      const adminOrgData = await getAdminAndOrg(actor);
+      if (!adminOrgData) {
+        throw new Error('Usuário não encontrado.');
+      }
+      await sendVerificationEmail(actor, adminOrgData.userData.name);
+      return { success: true };
+    }
+);
+
 
 // Exported functions (client-callable wrappers)
 export async function inviteUser(input: z.infer<typeof InviteUserSchema> & z.infer<typeof ActorSchema>): Promise<{ inviteId: string }> {
@@ -176,4 +194,8 @@ export async function acceptInvite(input: z.infer<typeof AcceptInviteInput>): Pr
 
 export async function updateUserPermissions(input: z.infer<typeof UpdateUserPermissionsSchema> & z.infer<typeof ActorSchema>): Promise<{ success: boolean }> {
     return updateUserPermissionsFlow(input);
+}
+
+export async function resendVerificationEmail(input: z.infer<typeof ActorSchema>): Promise<{ success: boolean }> {
+    return resendVerificationEmailFlow(input);
 }

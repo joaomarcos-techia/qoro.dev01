@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { FieldValue } from 'firebase-admin/firestore';
@@ -14,6 +15,7 @@ import {
 } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
+import { sendVerificationEmail } from './emailService';
 
 const FREE_PLAN_USER_LIMIT = 2;
 const GROWTH_PLAN_USER_LIMIT = 5;
@@ -111,6 +113,9 @@ export const createUserProfile = async (input: z.infer<typeof UserProfileCreatio
       }, { merge: true });
       
       await adminAuth.setCustomUserClaims(uid, { organizationId: orgRef.id, role: 'admin', planId: planId });
+      
+      // Send verification email in the background. Don't block the user creation.
+      sendVerificationEmail(uid, name).catch(err => console.error(err));
 
       return { uid };
 
@@ -318,6 +323,9 @@ export const acceptInvite = async (inviteId: string, userData: { name: string, u
 
     await adminAuth.setCustomUserClaims(userData.uid, { organizationId, role: 'member', planId });
     await inviteRef.update({ status: 'accepted', acceptedAt: FieldValue.serverTimestamp(), acceptedBy: userData.uid });
+
+    // Send verification email in the background. Don't block the user creation.
+    sendVerificationEmail(userData.uid, userData.name).catch(err => console.error(err));
 
     return { success: true, organizationId };
 };
