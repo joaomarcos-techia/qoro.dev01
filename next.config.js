@@ -23,7 +23,6 @@ const nextConfig = {
     ],
   },
   experimental: {
-    serverActions: true,
     webVitalsAttribution: ['CLS', 'LCP'],
   }
 };

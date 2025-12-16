@@ -2,7 +2,7 @@
 // src/app/api/stripe/webhook/route.ts
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
-import { createUserProfile, handleSubscriptionChange } from '@/services/organizationService';
+import { createUserProfile, handleSubscriptionChange } from '@/ai/flows/user-management';
 import type Stripe from 'stripe';
 import { adminDb } from '@/lib/firebase-admin';
 
