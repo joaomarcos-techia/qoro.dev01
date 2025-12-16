@@ -21,6 +21,8 @@ export default function LoginForm() {
   const [isResending, setIsResending] = useState(false);
   const [userForResend, setUserForResend] = useState<FirebaseUser | null>(null);
   
+  const [syncProgress, setSyncProgress] = useState(0);
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const isPaymentSuccess = searchParams.get('payment_success') === 'true';
@@ -30,45 +32,69 @@ export default function LoginForm() {
 
   useEffect(() => {
     if (isSyncing) {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // Inicia a sondagem para verificar se o perfil do usuário foi criado no banco de dados.
-                const interval = setInterval(async () => {
-                    try {
-                        const profileData = await getAdminAndOrg(user.uid);
-                        if (profileData) {
-                            console.log("✅ Profile found! Redirecting to dashboard.");
-                            clearInterval(interval);
-                            await user.getIdToken(true);
-                            router.push('/dashboard');
-                        } else {
-                            console.log("⏳ Profile not found yet, polling...");
-                        }
-                    } catch (e) {
-                         console.error("Error polling for user profile:", e);
-                    }
-                }, 3000); 
-
-                const timeout = setTimeout(() => {
-                    clearInterval(interval);
-                    if (isSyncing) {
-                        setError("A sincronização está demorando mais que o esperado. Tente fazer login manualmente em alguns instantes.");
-                        setIsSyncing(false);
-                    }
-                }, 45000); 
-
-                return () => {
-                    clearInterval(interval)
-                    clearTimeout(timeout);
-                }; 
+      let pollInterval = 2000; // Começa com 2 segundos
+      const maxInterval = 10000; // Máximo de 10 segundos
+      let attempts = 0;
+      const maxAttempts = 15;
+      let timeoutId: NodeJS.Timeout;
+  
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        if (user) {
+          const poll = async () => {
+            attempts++;
+            setSyncProgress(Math.min((attempts / maxAttempts) * 100, 90));
+  
+            try {
+              const profileData = await getAdminAndOrg(user.uid);
+              
+              if (profileData) {
+                console.log("✅ Profile found! Redirecting to dashboard.");
+                setSyncProgress(100);
+                await user.getIdToken(true);
+                
+                setTimeout(() => {
+                  router.push('/dashboard');
+                }, 500);
+                
+                return;
+              }
+              
+              console.log(`⏳ Attempt ${attempts}/${maxAttempts}, next poll in ${pollInterval}ms...`);
+              
+              if (attempts < maxAttempts) {
+                timeoutId = setTimeout(poll, pollInterval);
+                pollInterval = Math.min(pollInterval * 1.5, maxInterval);
+              } else {
+                setError(
+                  "A sincronização está demorando mais que o esperado. " +
+                  "Sua conta foi criada com sucesso. Tente fazer login manualmente em alguns instantes."
+                );
+                setIsSyncing(false);
+              }
+              
+            } catch (e) {
+              console.error("Error polling for user profile:", e);
+              
+              if (attempts < maxAttempts) {
+                timeoutId = setTimeout(poll, pollInterval);
+                pollInterval = Math.min(pollInterval * 1.5, maxInterval);
+              } else {
+                setError("Erro ao verificar seu perfil. Tente fazer login manualmente.");
+                setIsSyncing(false);
+              }
             }
-        });
-        return () => {
-            if(unsubscribe) unsubscribe();
-        };
+          };
+  
+          poll();
+        }
+      });
+  
+      return () => {
+        if (unsubscribe) unsubscribe();
+        if (timeoutId) clearTimeout(timeoutId);
+      };
     }
   }, [isSyncing, router]);
-
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

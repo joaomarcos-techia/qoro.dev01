@@ -1,4 +1,3 @@
-
 'use client';
 
 /**
@@ -7,6 +6,7 @@
  */
 
 import {
+  getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   sendEmailVerification,
@@ -16,7 +16,10 @@ import {
   User,
 } from 'firebase/auth';
 
-import { auth } from '@/lib/firebase';
+import { app } from '@/lib/firebase';
+
+// Obtenha a instância de autenticação aqui, dentro do escopo do cliente.
+const auth = getAuth(app);
 
 /**
  * Configurações para os links de ação de e-mail (verificação, redefinição de senha).
@@ -89,8 +92,20 @@ export const signInAndCheckVerification = async (
  * Reenvia o e-mail de verificação para o usuário fornecido.
  */
 export const resendVerification = async (user: User): Promise<void> => {
+    // Rate limiting para reenvio de email
+    const RESEND_COOLDOWN = 60000; // 1 minuto
+    let lastResendTime = 0;
+    const now = Date.now();
+  
+    // Verifica cooldown
+    if (now - lastResendTime < RESEND_COOLDOWN) {
+        const remainingSeconds = Math.ceil((RESEND_COOLDOWN - (now - lastResendTime)) / 1000);
+        throw new Error(`Aguarde ${remainingSeconds} segundos antes de reenviar.`);
+    }
+
   try {
     await sendEmailVerification(user, actionCodeSettings());
+    lastResendTime = now;
   } catch (error: any) {
     console.error('Erro ao reenviar e-mail de verificação:', error);
     throw new Error('Falha ao reenviar o e-mail. Tente fazer login novamente.');

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -8,7 +7,6 @@ import { Mail, Lock, AlertCircle, CheckCircle, User, Loader2 } from 'lucide-reac
 import { validateInvite, acceptInvite } from '@/ai/flows/user-management';
 import { Logo } from '@/components/ui/logo';
 import { signUpAndVerify } from '@/lib/authService';
-import { sendEmailVerification, User as FirebaseUser } from 'firebase/auth';
 
 export default function AcceptInvitePage() {
   const router = useRouter();
