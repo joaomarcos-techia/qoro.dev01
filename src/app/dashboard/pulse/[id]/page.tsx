@@ -6,12 +6,14 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { BrainCircuit, Loader2, AlertCircle, User, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { User as FirebaseUser, onAuthStateChanged } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { User as FirebaseUser, onAuthStateChanged, getAuth } from 'firebase/auth';
+import { app } from '@/lib/firebase';
 import { askPulse } from '@/ai/flows/pulse-flow';
 import { getConversation } from '@/services/pulseService';
 import type { PulseMessage } from '@/ai/schemas';
 import { MarkdownRenderer } from '@/components/utils/MarkdownRenderer';
+
+const auth = getAuth(app);
 
 export default function PulseConversationPage() {
   const [messages, setMessages] = useState<PulseMessage[]>([]);

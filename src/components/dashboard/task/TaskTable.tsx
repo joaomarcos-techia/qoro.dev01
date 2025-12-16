@@ -47,9 +47,11 @@ import type { TaskProfile, UserProfile } from '@/ai/schemas';
 import { format, parseISO, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { deleteTask } from '@/ai/flows/task-management';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { getAuth, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { app } from '@/lib/firebase';
 import { Progress } from '@/components/ui/progress';
+
+const auth = getAuth(app);
 
 const priorityMap: Record<TaskProfile['priority'], { text: string; color: string }> = {
     low: { text: 'Baixa', color: 'bg-green-500/20 text-green-300' },

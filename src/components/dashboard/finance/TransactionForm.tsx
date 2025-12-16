@@ -15,12 +15,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { createTransaction, listAccounts, updateTransaction } from '@/ai/flows/finance-management';
 import { listCustomers } from '@/ai/flows/crm-management';
 import { TransactionSchema, AccountProfile, CustomerProfile, TransactionProfile } from '@/ai/schemas';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { onAuthStateChanged, User as FirebaseUser, getAuth } from 'firebase/auth';
+import { app } from '@/lib/firebase';
 import { Loader2, AlertCircle, CalendarIcon, Search, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import { usePlan } from '@/contexts/PlanContext';
+
+const auth = getAuth(app);
 
 type TransactionFormProps = {
   onAction: () => void;

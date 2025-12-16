@@ -52,10 +52,11 @@ import { Input } from '@/components/ui/input';
 import { MoreHorizontal, ArrowUpDown, Search, Loader2, Landmark, Edit, Trash2 } from 'lucide-react';
 import { listAccounts, deleteAccount } from '@/ai/flows/finance-management';
 import type { AccountProfile } from '@/ai/schemas';
-import { auth } from '@/lib/firebase';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { app } from '@/lib/firebase';
 import { AccountForm } from './AccountForm';
 
+const auth = getAuth(app);
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {

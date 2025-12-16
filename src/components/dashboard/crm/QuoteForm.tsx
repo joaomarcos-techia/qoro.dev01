@@ -14,8 +14,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { createQuote, listCustomers, listProducts, listServices, updateQuote, getOrganizationDetails } from '@/ai/flows/crm-management';
 import { listAccounts } from '@/ai/flows/finance-management';
 import { QuoteSchema, CustomerProfile, ProductProfile, QuoteProfile, UpdateQuoteSchema, OrganizationProfile, ServiceProfile, AccountProfile } from '@/ai/schemas';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { onAuthStateChanged, User as FirebaseUser, getAuth } from 'firebase/auth';
+import { app } from '@/lib/firebase';
 import { Loader2, AlertCircle, CalendarIcon, PlusCircle, Trash2, Package, Wrench, Download, Eye, Percent, Landmark } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
@@ -24,6 +24,8 @@ import { DocumentPDF } from './QuotePDF';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+const auth = getAuth(app);
 
 type QuoteFormProps = {
   onQuoteAction: () => void;

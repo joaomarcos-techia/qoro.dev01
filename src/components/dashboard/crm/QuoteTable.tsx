@@ -34,8 +34,8 @@ import { Input } from '@/components/ui/input';
 import { MoreHorizontal, ArrowUpDown, Search, Loader2, FileText, Download, Eye, Edit, Trash2, CheckCircle, XCircle } from 'lucide-react';
 import { listQuotes, deleteQuote, markQuoteAsLost } from '@/ai/flows/crm-management';
 import type { QuoteProfile } from '@/ai/schemas';
-import { auth } from '@/lib/firebase';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { app } from '@/lib/firebase';
 import { format, parseISO, isValid } from 'date-fns';
 import { DocumentPDF } from './QuotePDF';
 import jsPDF from 'jspdf';
@@ -43,6 +43,7 @@ import html2canvas from 'html2canvas';
 import { QuoteForm } from './QuoteForm';
 import { MarkAsWonDialog } from './MarkAsWonDialog';
 
+const auth = getAuth(app);
 
 const formatCurrency = (value: number | null | undefined) => {
     if (value === null || value === undefined) return '-';

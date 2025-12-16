@@ -8,11 +8,13 @@ import { TransactionComparisonTable, OfxTransaction } from '@/components/dashboa
 import { TransactionProfile, ReconciliationProfile } from '@/ai/schemas';
 import { listTransactions } from '@/ai/flows/finance-management';
 import { getReconciliation } from '@/ai/flows/reconciliation-flow';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { onAuthStateChanged, User, getAuth } from 'firebase/auth';
+import { app } from '@/lib/firebase';
 import { useParams, useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+
+const auth = getAuth(app);
 
 // Simple OFX parser
 const parseOfx = (ofxContent: string): OfxTransaction[] => {

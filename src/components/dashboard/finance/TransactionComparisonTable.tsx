@@ -8,12 +8,13 @@ import { TransactionProfile, ReconciliationProfile, TransactionSchema } from '@/
 import { CheckCircle, Loader2, GitMerge, PlusCircle, ServerCrash } from 'lucide-react';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { bulkCreateTransactions, updateTransaction } from '@/ai/flows/finance-management';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { onAuthStateChanged, User, getAuth } from 'firebase/auth';
+import { app } from '@/lib/firebase';
 import { updateReconciliationStatus } from '@/services/reconciliationService';
 import { z } from 'zod';
 
 
+const auth = getAuth(app);
 
 export interface OfxTransaction {
   date: string;

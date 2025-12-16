@@ -45,8 +45,10 @@ import { Input } from '@/components/ui/input';
 import { MoreHorizontal, ArrowUpDown, Search, Loader2, Wrench, Edit, Trash2 } from 'lucide-react';
 import { listServices, deleteService } from '@/ai/flows/crm-management';
 import type { ServiceProfile } from '@/ai/schemas';
-import { auth } from '@/lib/firebase';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { app } from '@/lib/firebase';
+
+const auth = getAuth(app);
 
 const formatCurrency = (value: number | null | undefined, pricingModel: 'fixed' | 'per_hour' | undefined) => {
     if (value === null || value === undefined) return '-';

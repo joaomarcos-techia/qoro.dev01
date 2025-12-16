@@ -5,8 +5,8 @@ import { useState, useEffect, useTransition, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { PlusCircle, MessageSquare, Loader2, Activity, ChevronLeft, Trash2 } from 'lucide-react';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { onAuthStateChanged, User as FirebaseUser, getAuth } from 'firebase/auth';
+import { app } from '@/lib/firebase';
 import { listConversations, deleteConversation } from '@/services/pulseService';
 import type { ConversationProfile } from '@/ai/schemas';
 import { cn } from '@/lib/utils';
@@ -21,6 +21,8 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
   } from "@/components/ui/alert-dialog"
+
+const auth = getAuth(app);
 
 interface PulseSidebarProps {
   isMobile?: boolean;

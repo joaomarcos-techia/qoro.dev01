@@ -11,8 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { createCustomer, updateCustomer } from '@/ai/flows/crm-management';
 import { CustomerSchema, CustomerProfile } from '@/ai/schemas';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { onAuthStateChanged, User as FirebaseUser, getAuth } from 'firebase/auth';
+import { app } from '@/lib/firebase';
 import { Loader2, AlertCircle, Info } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -20,6 +20,8 @@ import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import { usePlan } from '@/contexts/PlanContext';
 import { formatCPF, formatPhone, formatCNPJ } from '@/lib/utils';
+
+const auth = getAuth(app);
 
 type CustomerFormProps = {
   onCustomerAction: () => void;

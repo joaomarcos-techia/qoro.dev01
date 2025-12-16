@@ -52,10 +52,12 @@ import { Input } from '@/components/ui/input';
 import { MoreHorizontal, ArrowUpDown, Search, Loader2, ArrowLeftRight, TrendingUp, TrendingDown, Edit, Trash2 } from 'lucide-react';
 import { listTransactions, deleteTransaction } from '@/ai/flows/finance-management';
 import type { TransactionProfile } from '@/ai/schemas';
-import { auth } from '@/lib/firebase';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { app } from '@/lib/firebase';
 import { format, parseISO } from 'date-fns';
 import { TransactionForm } from './TransactionForm';
+
+const auth = getAuth(app);
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {

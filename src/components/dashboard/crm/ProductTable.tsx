@@ -45,8 +45,10 @@ import { Input } from '@/components/ui/input';
 import { MoreHorizontal, ArrowUpDown, Search, Loader2, ShoppingCart, Edit, Trash2, Copy } from 'lucide-react';
 import { listProducts, deleteProduct } from '@/ai/flows/crm-management';
 import type { ProductProfile } from '@/ai/schemas';
-import { auth } from '@/lib/firebase';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { app } from '@/lib/firebase';
+
+const auth = getAuth(app);
 
 const formatCurrency = (value: number | null | undefined) => {
     if (value === null || value === undefined) return '-';

@@ -50,12 +50,13 @@ import { Input } from '@/components/ui/input';
 import { MoreHorizontal, ArrowUpDown, Users, Search, Loader2, Trash2, Edit, Copy, Archive } from 'lucide-react';
 import { listCustomers, deleteCustomer, updateCustomerStatus } from '@/ai/flows/crm-management';
 import type { CustomerProfile } from '@/ai/schemas';
-import { auth } from '@/lib/firebase';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { app } from '@/lib/firebase';
 import { CustomerForm } from './CustomerForm';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 
+const auth = getAuth(app);
 
 const formatCPF = (value: string) => {
     if (!value) return "-";

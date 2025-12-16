@@ -28,9 +28,11 @@ import { Input } from '@/components/ui/input';
 import { MoreHorizontal, ArrowUpDown, Search, Loader2, Receipt, TrendingUp, TrendingDown, Edit, Trash2, CheckCircle } from 'lucide-react';
 import { listBills, deleteBill, updateBill } from '@/ai/flows/finance-management';
 import type { BillProfile } from '@/ai/schemas';
-import { auth } from '@/lib/firebase';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { app } from '@/lib/firebase';
 import { format, parseISO } from 'date-fns';
+
+const auth = getAuth(app);
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);

@@ -45,8 +45,10 @@ import { Input } from '@/components/ui/input';
 import { MoreHorizontal, ArrowUpDown, Search, Loader2, Truck, Trash2, Edit } from 'lucide-react';
 import { listSuppliers, deleteSupplier } from '@/ai/flows/supplier-management';
 import type { SupplierProfile } from '@/ai/schemas';
-import { auth } from '@/lib/firebase';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { app } from '@/lib/firebase';
+
+const auth = getAuth(app);
 
 interface SupplierTableProps {
     onEdit: (supplier: SupplierProfile) => void;

@@ -16,8 +16,8 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { GitCompareArrows, Upload, FileText, Loader2, ServerCrash, MoreHorizontal, Edit, Trash2, Eye, Landmark, BadgeCheck, BadgeAlert } from 'lucide-react';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { onAuthStateChanged, User, getAuth } from 'firebase/auth';
+import { app } from '@/lib/firebase';
 import { listReconciliations, createReconciliation, deleteReconciliation, updateReconciliation } from '@/ai/flows/reconciliation-flow';
 import { listAccounts } from '@/ai/flows/finance-management';
 import { ReconciliationProfile, AccountProfile } from '@/ai/schemas';
@@ -27,6 +27,8 @@ import { useRouter, usePathname } from 'next/navigation';
 import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
+
+const auth = getAuth(app);
 
 export default function ConciliacaoPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
