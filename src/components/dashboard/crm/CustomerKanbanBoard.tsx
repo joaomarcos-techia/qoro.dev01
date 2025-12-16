@@ -25,7 +25,7 @@ export function CustomerKanbanBoard({ columns, onMoveCustomer }: CustomerKanbanB
         <div className="flex flex-col items-center justify-center text-center h-full bg-card/50 rounded-2xl p-8 border border-border">
             <LayoutGrid className="w-16 h-16 text-muted-foreground/30 mb-4" />
             <h3 className="text-xl font-bold text-foreground">Nenhum cliente no funil</h3>
-            <p className="text-muted-foreground mt-2">Crie novos clientes para gerenciá-los aqui.</p>
+            <p className="text-muted-foreground mt-2">Clientes arquivados ou com status "Ganho/Perdido" não aparecem aqui. Crie novos clientes para gerenciá-los no funil.</p>
         </div>
     )
   }

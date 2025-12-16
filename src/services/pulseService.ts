@@ -138,12 +138,8 @@ export async function listConversations(input: {
       });
       if (profile.success) {
           profiles.push(profile.data);
-      } else {
-          console.warn(`Could not parse conversation profile for doc ${doc.id}:`, profile.error);
       }
   });
 
   return profiles;
 }
-
-    

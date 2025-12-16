@@ -26,7 +26,6 @@ export const getAdminAndOrg = async (actorUid: string): Promise<AdminOrgResult> 
     const userDoc = await userDocRef.get();
     
     if (!userDoc.exists) {
-        console.warn(`User document not found for UID: ${actorUid}. Might be pending webhook processing.`);
         return null;
     }
     
@@ -35,7 +34,6 @@ export const getAdminAndOrg = async (actorUid: string): Promise<AdminOrgResult> 
     const userRole = userData.role || 'member'; 
     
     if (!companyId) {
-        console.warn(`OrganizationId not found for user UID: ${actorUid}. Might be pending webhook processing.`);
         return null;
     }
     

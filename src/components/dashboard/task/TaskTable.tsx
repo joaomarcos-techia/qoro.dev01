@@ -94,7 +94,7 @@ export function TaskTable({ tasks, users, isLoading, error, onRefresh, onEdit }:
         await deleteTask({ taskId, actor: currentUser.uid });
         onRefresh();
     } catch(err) {
-        console.error("Failed to delete task:", err);
+        // Erro é tratado no contexto, mas podemos logar aqui se necessário
     }
   };
 

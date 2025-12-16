@@ -104,7 +104,6 @@ export function AccountTable() {
         await deleteAccount({ accountId, actor: currentUser.uid });
         triggerRefresh();
     } catch(err: any) {
-        console.error("Failed to delete account:", err);
         setError(err.message || "Não foi possível excluir a conta.");
     }
   };
@@ -212,7 +211,6 @@ export function AccountTable() {
         const accounts = await listAccounts({ actor: currentUser.uid });
         setData(accounts);
       } catch (err) {
-        console.error('Failed to fetch accounts:', err);
         setError('Não foi possível carregar as contas financeiras.');
       } finally {
         setIsLoading(false);

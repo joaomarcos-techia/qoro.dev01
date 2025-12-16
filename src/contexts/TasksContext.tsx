@@ -65,7 +65,6 @@ export const TasksProvider = ({ children }: { children: React.ReactNode }) => {
         const result = await listTasks({ actor: currentUser.uid });
         setTasks(result);
       } catch (err: any) {
-        console.error('❌ Erro ao carregar tarefas no contexto:', err);
         setError(err.message || 'Erro no servidor. Tente novamente em alguns minutos.');
         setTasks([]);
       } finally {

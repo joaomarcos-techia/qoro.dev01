@@ -15,6 +15,5 @@ export const createQualificationLead = async (input: Record<string, any>) => {
     };
 
     const leadRef = await adminDb.collection('qualification_leads').add(newLeadData);
-    console.log(`Lead de qualificação criado com o ID: ${leadRef.id}`);
     return { id: leadRef.id };
 };

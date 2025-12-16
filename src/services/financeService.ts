@@ -25,7 +25,6 @@ export const createAccount = async (input: z.infer<typeof AccountSchema>, actorU
         const accountRef = await adminDb.collection('accounts').add(newAccountData);
         return { id: accountRef.id };
     } catch (error: any) {
-        console.error("Erro ao criar conta no Firestore:", error, error.stack);
         throw new Error("Falha ao salvar a conta no banco de dados. Tente novamente mais tarde.");
     }
 };
@@ -58,7 +57,6 @@ export const listAccounts = async (actorUid: string): Promise<z.infer<typeof Acc
         
         return accounts;
     } catch (error) {
-        console.error("Erro ao buscar contas:", error);
         throw new Error("Não foi possível carregar as contas financeiras devido a um erro no servidor.");
     }
 };
@@ -139,5 +137,3 @@ export const getFinanceDashboardMetrics = async (actorUid: string, dateRange?: {
         netProfit,
     };
 };
-
-  

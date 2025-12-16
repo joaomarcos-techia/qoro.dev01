@@ -14,12 +14,10 @@ import {
 import { TaskForm } from '@/components/dashboard/task/TaskForm';
 import { TaskTable } from '@/components/dashboard/task/TaskTable';
 import { TaskProfile, UserProfile } from '@/ai/schemas';
-import { onAuthStateChanged, User as FirebaseUser, getAuth } from 'firebase/auth';
-import { app } from '@/lib/firebase';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 import { useTasks } from '@/contexts/TasksContext';
 import { listUsers } from '@/ai/flows/user-management';
-
-const auth = getAuth(app);
 
 export default function ListaPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,7 +39,7 @@ export default function ListaPage() {
         setIsLoadingUsers(true);
         listUsers({ actor: currentUser.uid })
           .then(setUsers)
-          .catch((err) => console.error("Failed to load users", err))
+          .catch((err) => { /* erro silencioso */ })
           .finally(() => setIsLoadingUsers(false));
     }
   }, [currentUser]);

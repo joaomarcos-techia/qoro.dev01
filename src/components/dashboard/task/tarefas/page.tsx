@@ -4,8 +4,8 @@
 import { useState, useEffect, useMemo, useTransition, useCallback } from 'react';
 import { Loader2, ServerCrash, CheckCircle, AlertCircle, PlusCircle } from 'lucide-react';
 import { TaskKanbanBoard } from '@/components/dashboard/task/TaskKanbanBoard';
-import { onAuthStateChanged, User, getAuth } from 'firebase/auth';
-import { app } from '@/lib/firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 import { updateTaskStatus, deleteTask, updateTask } from '@/ai/flows/task-management';
 import { listUsers } from '@/ai/flows/user-management';
 import { TaskProfile, UserProfile, Subtask } from '@/ai/schemas';
@@ -13,8 +13,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { TaskForm } from '@/components/dashboard/task/TaskForm';
 import { Button } from '@/components/ui/button';
 import { useTasks } from '@/contexts/TasksContext';
-
-const auth = getAuth(app);
 
 export default function ProgressoPage() {
   const { tasks, loading, error, refreshTasks, updateTaskInState } = useTasks();
@@ -40,7 +38,7 @@ export default function ProgressoPage() {
         setIsLoadingUsers(true);
         listUsers({ actor: currentUser.uid })
           .then(setUsers)
-          .catch((err) => console.error("Failed to load users", err))
+          .catch((err) => { /* Erro silencioso */ })
           .finally(() => setIsLoadingUsers(false));
     } else {
         setIsLoadingUsers(false);
@@ -98,7 +96,6 @@ export default function ProgressoPage() {
                 showTemporaryFeedback("Tarefa concluída!");
             }
         } catch (err) {
-            console.error("Failed to move task", err);
             // Revert on failure
             updateTaskInState(originalTasks.find(t => t.id === taskId)!); 
             showTemporaryFeedback("Erro ao mover a tarefa.", "error");
@@ -128,7 +125,6 @@ export default function ProgressoPage() {
                   comments: taskToUpdate.comments || []
               });
           } catch(err) {
-              console.error("Failed to update subtask", err);
               updateTaskInState(originalTask); // Revert
               showTemporaryFeedback("Erro ao atualizar o checklist.", "error");
           }
@@ -144,7 +140,6 @@ export default function ProgressoPage() {
             refreshTasks();
             showTemporaryFeedback("Tarefa excluída com sucesso.");
         } catch (err) {
-            console.error("Failed to delete task", err);
             showTemporaryFeedback("Erro ao excluir a tarefa.", "error");
         }
     });

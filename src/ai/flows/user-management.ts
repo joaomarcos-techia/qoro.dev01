@@ -211,7 +211,6 @@ export const updateUserPermissions = async (input: z.infer<typeof UpdateUserPerm
 export const handleSubscriptionChange = async (subscriptionId: string, newPriceId: string, status: string) => {
     const orgSnapshot = await adminDb.collection('organizations').where('stripeSubscriptionId', '==', subscriptionId).limit(1).get();
     if (orgSnapshot.empty) {
-      console.error(`Webhook: Nenhuma organização encontrada para a subscription ID: ${'${subscriptionId}'}`);
       return;
     }
   
@@ -241,7 +240,6 @@ export const handleSubscriptionChange = async (subscriptionId: string, newPriceI
     });
   
     await batch.commit();
-    console.log(`Plano da organização ${'${orgDoc.id}'} e seus usuários atualizado para ${'${newPlanId}'}.`);
 };
 
 // --- Genkit Flows ---

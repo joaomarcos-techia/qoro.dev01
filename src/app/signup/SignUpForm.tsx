@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, AlertCircle, CheckCircle, User, Building, FileText, Phone, Loader2, CreditCard, Send } from 'lucide-react';
 import { createCheckoutSession } from '@/ai/flows/billing-flow';
-import { createUserProfileFlowWrapper as createUserProfile } from '@/ai/flows/user-management';
+import { createUserProfile } from '@/ai/flows/user-management';
 import { Logo } from '@/components/ui/logo';
 import { LegalPopup } from '@/components/landing/LegalPopup';
 import { Checkbox } from "@/components/ui/checkbox"
@@ -106,13 +106,10 @@ export default function SignUpForm() {
     setIsLoading(true);
 
     try {
-      console.log('[SignUpForm] Chamando signUpAndVerify...');
       const user = await signUpAndVerify(formData.email, formData.password);
-      console.log('[SignUpForm] signUpAndVerify concluído com sucesso.');
       setUserForResend(user); 
 
       if (plan === 'growth' || plan === 'performance') {
-        console.log(`[SignUpForm] Iniciando fluxo para plano pago: ${plan}`);
         const priceId = plan === 'growth' 
             ? process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID
             : process.env.NEXT_PUBLIC_STRIPE_PERFORMANCE_PLAN_PRICE_ID;
@@ -135,21 +132,14 @@ export default function SignUpForm() {
         setSuccessMessage('Conta criada! Um e-mail de verificação foi enviado. Verifique sua caixa de entrada e Spam. Após a verificação, conclua o pagamento para finalizar.');
 
       } else {
-        console.log('[SignUpForm] Iniciando fluxo para plano gratuito.');
         await createUserProfile({
           ...formData,
           uid: user.uid,
-          planId: 'free',
-          stripePriceId: 'free',
-          stripeCustomerId: '',
-          stripeSubscriptionId: '',
-          stripeSubscriptionStatus: ''
         });
         setSuccessMessage('Conta criada! Um e-mail de verificação foi enviado. Verifique sua caixa de entrada e spam para ativar sua conta antes de fazer o login.');
       }
 
     } catch (err: any) {
-      console.error('❌ [SignUpForm] ERRO no handleSignUp:', err);
       setError(err.message || 'Ocorreu um erro inesperado. Verifique o console para mais detalhes.');
     } finally {
       setIsLoading(false);

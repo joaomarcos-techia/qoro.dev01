@@ -85,7 +85,6 @@ export function ProductTable({ onEdit, onRefresh }: ProductTableProps) {
         await deleteProduct({ productId, actor: currentUser.uid });
         onRefresh();
     } catch(err: any) {
-        console.error("Failed to delete product:", err);
         setError(err.message || "Não foi possível excluir o item.");
     }
   };
@@ -181,7 +180,6 @@ export function ProductTable({ onEdit, onRefresh }: ProductTableProps) {
         const products = await listProducts({ actor: currentUser.uid });
         setData(products);
       } catch (err) {
-        console.error('Failed to fetch products:', err);
         setError('Não foi possível carregar os produtos.');
       } finally {
         setIsLoading(false);

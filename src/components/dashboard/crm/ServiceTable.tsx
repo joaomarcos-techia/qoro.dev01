@@ -86,7 +86,6 @@ export function ServiceTable({ onEdit, onRefresh }: ServiceTableProps) {
         await deleteService({ serviceId, actor: currentUser.uid });
         onRefresh();
     } catch(err: any) {
-        console.error("Failed to delete service:", err);
         setError(err.message || "Não foi possível excluir o serviço.");
     }
   };
@@ -178,7 +177,6 @@ export function ServiceTable({ onEdit, onRefresh }: ServiceTableProps) {
         const services = await listServices({ actor: currentUser.uid });
         setData(services);
       } catch (err) {
-        console.error('Failed to fetch services:', err);
         setError('Não foi possível carregar os serviços.');
       } finally {
         setIsLoading(false);

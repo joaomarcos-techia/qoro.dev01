@@ -92,7 +92,6 @@ export function SupplierTable({ onEdit, onRefresh }: SupplierTableProps) {
       const suppliers = await listSuppliers({ actor: currentUser.uid });
       setData(suppliers);
     } catch (err) {
-      console.error('Failed to fetch suppliers:', err);
       setError('Não foi possível carregar os fornecedores.');
     } finally {
       setIsLoading(false);
@@ -118,8 +117,7 @@ export function SupplierTable({ onEdit, onRefresh }: SupplierTableProps) {
     try {
         await deleteSupplier({ supplierId, actor: currentUser.uid });
         onRefresh();
-    } catch (err) {
-        console.error("Failed to delete supplier:", err);
+    } catch (err: any) {
         setError("Não foi possível excluir o fornecedor.");
     } finally {
         setIsDeleting(false);

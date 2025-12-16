@@ -17,7 +17,6 @@ export async function POST(req: Request) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
   if (!sig || !webhookSecret) {
-    console.error('❌ Webhook secret não configurado.');
     return NextResponse.json({ error: 'Missing webhook secret' }, { status: 400 });
   }
 
@@ -26,13 +25,11 @@ export async function POST(req: Request) {
     const rawBody = await req.text(); // Use text() to verify signature, then parse
     event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
   } catch (err: any) {
-    console.error('⚠️ Erro ao validar webhook:', err.message);
     return NextResponse.json({ error: `Webhook error: ${err.message}` }, { status: 400 });
   }
 
   // --- Main Logic ---
   if (!relevantEvents.has(event.type)) {
-    console.log(`⚙️ Evento irrelevante: ${event.type}. Ignorando.`);
     return NextResponse.json({ received: true });
   }
   
@@ -42,7 +39,6 @@ export async function POST(req: Request) {
         const session = event.data.object as Stripe.Checkout.Session;
         
         if (session.mode !== 'subscription' || !session.subscription) {
-            console.log('⚙️ Evento de checkout não relacionado a assinatura ou sem ID de assinatura. Ignorando.');
             return NextResponse.json({ received: true });
         }
 
@@ -50,8 +46,6 @@ export async function POST(req: Request) {
         const subscriptionId = session.subscription as string;
         
         if (!firebaseUID || !organizationName || !userName || !subscriptionId) {
-          console.error('CRITICAL: Metadados essenciais (firebaseUID, organizationName, userName) ou subscriptionId não encontrados na sessão de checkout:', session.id);
-          // Don't throw, just return an error to Stripe to potentially retry
           return NextResponse.json({ error: 'Metadados essenciais não encontrados na sessão de checkout.' }, { status: 400 });
         }
 
@@ -72,7 +66,6 @@ export async function POST(req: Request) {
           stripeSubscriptionStatus: subscription.status,
         });
         
-        console.log(`✅ Perfil de usuário e organização criados com sucesso para UID: ${firebaseUID} via checkout.session.completed.`);
         break;
       }
 
@@ -98,11 +91,10 @@ export async function POST(req: Request) {
 
       default:
         // This case is already handled by the initial check, but kept for safety.
-        console.warn(`🤷‍♀️ Evento não tratado: ${event.type}`);
+        break;
     }
 
   } catch (err: any) {
-    console.error('🔥 Erro no handler do webhook:', err.message, err.stack);
     return NextResponse.json({ error: `Webhook handler failed: ${err.message}` }, { status: 500 });
   }
 

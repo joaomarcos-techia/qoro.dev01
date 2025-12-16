@@ -59,10 +59,8 @@ const qualificationFlow = ai.defineFlow(
         };
 
         await qualificationService.createQualificationLead(dataToSave);
-        console.log("✅ Lead de qualificação salvo com sucesso em segundo plano.");
       } catch (error: any) {
-        // Log do erro no servidor para monitoramento, sem impactar o usuário.
-        console.error("❌ Erro ao salvar lead de qualificação em segundo plano:", error);
+        // Erro silencioso no servidor
       }
     };
     

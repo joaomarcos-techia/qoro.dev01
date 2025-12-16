@@ -48,7 +48,6 @@ export default function LoginForm() {
               const profileData = await getAdminAndOrg(user.uid);
               
               if (profileData) {
-                console.log("✅ Profile found! Redirecting to dashboard.");
                 setSyncProgress(100);
                 await user.getIdToken(true);
                 
@@ -58,8 +57,6 @@ export default function LoginForm() {
                 
                 return;
               }
-              
-              console.log(`⏳ Attempt ${'${attempts}'}/${'${maxAttempts}'}, next poll in ${'${pollInterval}'}ms...`);
               
               if (attempts < maxAttempts) {
                 timeoutId = setTimeout(poll, pollInterval);
@@ -73,8 +70,6 @@ export default function LoginForm() {
               }
               
             } catch (e) {
-              console.error("Error polling for user profile:", e);
-              
               if (attempts < maxAttempts) {
                 timeoutId = setTimeout(poll, pollInterval);
                 pollInterval = Math.min(pollInterval * 1.5, maxInterval);
@@ -105,18 +100,15 @@ export default function LoginForm() {
     setIsLoading(true);
   
     try {
-      console.log('[LoginForm] Chamando signInAndCheckVerification...');
       await signInAndCheckVerification(email, password);
-      console.log('[LoginForm] signInAndCheckVerification concluído. Redirecionando...');
       router.push('/dashboard');
     } catch (err: any) {
-      console.error('❌ [LoginForm] ERRO no handleLogin:', err);
       if (err.code === 'auth/email-not-verified') {
         setError(err.message);
         setUserForResend(err.user);
         setShowResend(true);
       } else {
-        setError(err.message || 'Ocorreu um erro desconhecido. Verifique o console.');
+        setError(err.message || 'Ocorreu um erro desconhecido.');
       }
     } finally {
         setIsLoading(false);
@@ -133,12 +125,10 @@ export default function LoginForm() {
     setIsResending(true);
     
     try {
-        console.log('[LoginForm] Chamando resendVerification...');
         await resendVerification(userForResend);
         setResendSuccess('Um novo e-mail de verificação foi enviado. Verifique sua caixa de entrada e spam.');
         setShowResend(false);
     } catch (err: any) {
-        console.error('❌ [LoginForm] ERRO no handleResendVerification:', err);
         setError(err.message || 'Falha ao reenviar o e-mail de verificação.');
     } finally {
         setIsResending(false);

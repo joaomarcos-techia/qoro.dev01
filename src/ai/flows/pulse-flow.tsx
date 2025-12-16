@@ -87,7 +87,6 @@ Sua resposta DEVE ser um objeto JSON contendo duas chaves: "suggestedTitle" and 
       }
 
     } catch (err: any) {
-      console.error('AI Generation Error in pulse-flow:', err);
       throw new Error(`Falha ao gerar resposta da IA: ${err.message || 'Erro desconhecido'}`);
     }
 
@@ -131,7 +130,6 @@ Sua resposta DEVE ser um objeto JSON contendo duas chaves: "suggestedTitle" and 
         conversationId = addedRef.id;
       }
     } catch (dbError) {
-      console.error("Firestore Error in pulse-flow:", dbError);
       throw new Error("Falha ao salvar a conversa no banco de dados.");
     }
     

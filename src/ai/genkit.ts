@@ -5,9 +5,7 @@ import { googleAI } from '@genkit-ai/google-genai';
 const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 
 if (!apiKey) {
-  console.warn(
-    'AVISO: A variável de ambiente GEMINI_API_KEY ou GOOGLE_API_KEY não está definida. A comunicação com a Google AI API falhará.'
-  );
+  // Apenas um aviso, não impede a execução
 }
 
 export const ai = genkit({

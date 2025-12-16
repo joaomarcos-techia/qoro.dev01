@@ -9,7 +9,6 @@ if (!stripeSecretKey) {
   if (process.env.NODE_ENV === 'production') {
     throw new Error('A variável de ambiente STRIPE_SECRET_KEY não está definida em produção.');
   }
-  console.warn('AVISO: A variável de ambiente STRIPE_SECRET_KEY não está definida. A API do Stripe não funcionará.');
 }
 
 // Inicializa o Stripe, mesmo que a chave seja undefined.

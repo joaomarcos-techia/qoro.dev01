@@ -47,7 +47,6 @@ export function PulseSidebar({ isMobile, onLinkClick }: PulseSidebarProps) {
           setConversations(data);
         })
         .catch((err) => {
-          console.error("Error loading conversations:", err);
           setError("Não foi possível carregar o histórico.");
         })
         .finally(() => {
@@ -93,7 +92,6 @@ export function PulseSidebar({ isMobile, onLinkClick }: PulseSidebarProps) {
         router.push('/dashboard/pulse');
       }
     } catch (err) {
-      console.error("Failed to delete conversation", err);
       // Revert UI change on failure
       fetchConversations(); 
       setError("Falha ao excluir conversa.");

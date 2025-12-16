@@ -120,7 +120,6 @@ export function CustomerTable({ onCountChange }: CustomerTableProps) {
         await deleteCustomer({ customerId, actor: currentUser.uid });
         triggerRefresh();
     } catch(err: any) {
-        console.error("Failed to delete customer:", err);
         setError(err.message || "Não foi possível excluir o cliente.");
     }
   };
@@ -131,7 +130,6 @@ export function CustomerTable({ onCountChange }: CustomerTableProps) {
         await updateCustomerStatus({ customerId: customer.id, status: 'archived', actor: currentUser.uid });
         triggerRefresh();
     } catch(err: any) {
-        console.error("Failed to archive customer:", err);
         setError(err.message || "Não foi possível arquivar o cliente.");
     }
   }
@@ -304,7 +302,6 @@ export function CustomerTable({ onCountChange }: CustomerTableProps) {
         setData(customers);
         onCountChange(customers.length);
       } catch (err) {
-        console.error('Failed to fetch customers:', err);
         setError('Não foi possível carregar os clientes. Tente novamente mais tarde.');
       } finally {
         setIsLoading(false);

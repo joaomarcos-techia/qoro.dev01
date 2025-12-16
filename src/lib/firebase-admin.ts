@@ -13,7 +13,6 @@ if (!getApps().length) {
   } else {
     // Lógica para ambiente local (requer que as variáveis estejam no .env)
     if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_CLIENT_EMAIL || !process.env.FIREBASE_PRIVATE_KEY) {
-      console.warn("Variáveis de ambiente do Firebase Admin não encontradas. O backend pode não funcionar localmente.");
       app = initializeApp(); // Tenta inicializar sem credenciais, pode funcionar em alguns emuladores.
     } else {
       const privateKey = process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n").replace(/"/g, "");

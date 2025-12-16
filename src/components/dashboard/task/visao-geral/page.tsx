@@ -1,8 +1,8 @@
 
 'use client';
 import { useState, useEffect } from 'react';
-import { onAuthStateChanged, User, getAuth } from 'firebase/auth';
-import { app } from '@/lib/firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 import { getOverviewMetrics } from '@/ai/flows/task-management';
 import { TaskProfile, UserProfile } from '@/ai/schemas';
 import { ListTodo, Check, Clock, AlertOctagon, Loader2, ServerCrash, Edit, Flag, Calendar as CalendarIcon, User as UserIcon } from 'lucide-react';
@@ -17,8 +17,6 @@ import {
   } from '@/components/ui/dialog';
 import { TaskForm } from '@/components/dashboard/task/TaskForm';
 import { listUsers } from '@/ai/flows/user-management';
-
-const auth = getAuth(app);
 
 interface OverviewMetrics {
   totalTasks: number;
@@ -89,7 +87,6 @@ export default function VisaoGeralPage() {
         setMetrics(metricsData);
         setUsers(usersData);
     } catch (err: any) {
-        console.error("Erro ao buscar métricas:", err);
         setError(err.message || 'Não foi possível carregar os dados.');
     } finally {
         setIsLoading(false);

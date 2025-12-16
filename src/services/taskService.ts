@@ -25,11 +25,9 @@ const toISOStringSafe = (date: any): string | null => {
                 return parsedDate.toISOString();
             }
         } catch (e) {
-            console.error(`Could not parse date string: ${date}`, e);
             return null;
         }
     }
-    console.warn(`Unsupported date type for conversion: ${typeof date}`);
     return null;
 };
 
@@ -66,7 +64,6 @@ export const createTask = async (
     const taskRef = await adminDb.collection('tasks').add(newTaskData);
     return { id: taskRef.id };
   } catch (error) {
-    console.error('🚨 Erro em createTask:', error);
     if (error instanceof Error) {
         throw error;
     }
@@ -119,7 +116,6 @@ export const updateTask = async (
     await taskRef.update(payload);
     return { id: taskId };
   } catch (error) {
-    console.error('🚨 Erro em updateTask:', error);
     throw new Error('Falha ao atualizar a tarefa.');
   }
 };
@@ -128,7 +124,6 @@ export const listTasks = async (
   actorUid: string
 ): Promise<z.infer<typeof TaskProfileSchema>[]> => {
   if (!actorUid) {
-      console.error('🔥 Erro crítico em listTasks: actorUid não foi fornecido.');
       throw new Error('Identificação do usuário é necessária para listar tarefas.');
   }
   try {
@@ -185,13 +180,12 @@ export const listTasks = async (
             validTasks.push(validatedTask);
 
         } catch (err) {
-            console.error(`❌ Erro ao processar a tarefa ${doc.id}:`, err);
+            // silent error
         }
     });
 
     return validTasks;
   } catch (error) {
-    console.error('🔥 Erro crítico em listTasks:', error);
     throw new Error('Falha ao carregar tarefas do servidor.');
   }
 };
@@ -228,7 +222,6 @@ export const updateTaskStatus = async (
     await taskRef.update(updatePayload);
     return { id: taskId, status };
   } catch (error) {
-    console.error('🚨 Erro em updateTaskStatus:', error);
     throw new Error('Falha ao atualizar status da tarefa.');
   }
 };
@@ -253,7 +246,6 @@ export const deleteTask = async (
     await taskRef.delete();
     return { id: taskId, success: true };
   } catch (error) {
-    console.error('🚨 Erro em deleteTask:', error);
     throw new Error('Falha ao excluir a tarefa.');
   }
 };
@@ -290,7 +282,6 @@ export const getTaskDashboardMetrics = async (actorUid: string) => {
             tasksByPriority
         };
     } catch (error) {
-        console.error('🚨 Erro em getTaskDashboardMetrics (Tasks):', error);
         throw new Error('Falha ao carregar métricas de tarefas.');
     }
 };
@@ -320,7 +311,6 @@ export const getOverviewMetrics = async (actorUid: string) => {
         };
 
     } catch (error) {
-        console.error('🚨 Erro em getOverviewMetrics (Tasks):', error);
         throw new Error('Falha ao carregar a visão geral de tarefas.');
     }
 };
