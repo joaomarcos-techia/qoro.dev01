@@ -1,13 +1,12 @@
+
 'use client';
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { listTasks } from '@/ai/flows/task-management';
-import { onAuthStateChanged, User as FirebaseUser, getAuth } from 'firebase/auth';
-import { app } from '@/lib/firebase';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 import { TaskProfile } from '@/ai/schemas';
 import { usePlan } from './PlanContext';
-
-const auth = getAuth(app);
 
 interface TasksContextType {
   tasks: TaskProfile[];

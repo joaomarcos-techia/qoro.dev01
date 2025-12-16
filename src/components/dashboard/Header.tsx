@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { ChevronDown, LogOut, RefreshCw, Settings, User } from 'lucide-react';
 import { signOut } from '@/lib/authService';
 import { useRouter } from 'next/navigation';
-import { onAuthStateChanged, type User as FirebaseUser, getAuth } from 'firebase/auth';
-import { app } from '@/lib/firebase';
+import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 import { getUserProfile } from '@/ai/flows/user-management';
 import Link from 'next/link';
 import { Logo } from '@/components/ui/logo';
@@ -15,8 +15,6 @@ interface UserProfile {
   name: string;
   organizationName: string;
 }
-
-const auth = getAuth(app);
 
 export function Header() {
   const router = useRouter();

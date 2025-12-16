@@ -16,8 +16,8 @@ import {
   Bell,
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
-import { onAuthStateChanged, User as FirebaseUser, getAuth } from 'firebase/auth';
-import { app, db } from '@/lib/firebase';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { auth, db } from '@/lib/firebase';
 import { getCrmDashboardMetrics } from '@/ai/flows/crm-management';
 import { getFinanceDashboardMetrics } from '@/ai/flows/finance-management';
 import { getOverviewMetrics } from '@/ai/flows/task-management';
@@ -27,8 +27,6 @@ import { usePlan } from '@/contexts/PlanContext';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
-
-const auth = getAuth(app);
 
 interface DashboardMetrics {
     totalCustomers: number;

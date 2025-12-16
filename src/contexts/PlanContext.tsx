@@ -1,13 +1,12 @@
+
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { onAuthStateChanged, User as FirebaseUser, getAuth } from 'firebase/auth';
-import { app } from '@/lib/firebase';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 import { getUserAccessInfo } from '@/ai/flows/user-management';
 import { AppPermissions } from '@/ai/schemas';
 import { getAdminAndOrg } from '@/services/utils';
-
-const auth = getAuth(app);
 
 type PlanContextType = {
   planId: 'free' | 'growth' | 'performance' | null;

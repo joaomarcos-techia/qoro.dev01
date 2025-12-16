@@ -8,7 +8,6 @@
  */
 
 import {
-  getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   sendEmailVerification,
@@ -18,10 +17,7 @@ import {
   User,
 } from 'firebase/auth';
 
-import { app } from '@/lib/firebase';
-
-// A instância de autenticação é criada AQUI, no lado do cliente.
-const auth = getAuth(app);
+import { auth } from '@/lib/firebase';
 
 const actionCodeSettings = (): ActionCodeSettings => {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:9004';

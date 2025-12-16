@@ -7,11 +7,9 @@ import Link from 'next/link';
 import { Mail, Lock, LogIn, AlertCircle, CheckCircle, Loader2, RefreshCw } from 'lucide-react';
 import { signInAndCheckVerification, resendVerification } from '@/lib/authService';
 import { Logo } from '@/components/ui/logo';
-import { onAuthStateChanged, User as FirebaseUser, getAuth } from 'firebase/auth';
-import { app } from '@/lib/firebase';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 import { getAdminAndOrg } from '@/services/utils';
-
-const auth = getAuth(app);
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
@@ -40,8 +38,6 @@ export default function LoginForm() {
       const maxAttempts = 15;
       let timeoutId: NodeJS.Timeout;
       
-      const auth = getAuth(app);
-  
       const unsubscribe = onAuthStateChanged(auth, (user) => {
         if (user) {
           const poll = async () => {
