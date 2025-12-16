@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -154,7 +153,7 @@ export default function SignUpForm() {
             <p className="text-sm font-semibold mb-6">{successMessage}</p>
             
             {checkoutUrl ? (
-                <a href={checkoutUrl} target="_blank" rel="noopener noreferrer" className="w-full bg-primary text-primary-foreground py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 border border-transparent hover:border-primary/50 flex items-center justify-center font-semibold">
+                <a href={checkoutUrl} target="_self" rel="noopener noreferrer" className="w-full bg-primary text-primary-foreground py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 border border-transparent hover:border-primary/50 flex items-center justify-center font-semibold">
                     <CreditCard className="mr-2 h-5 w-5" />
                     Ir para o Pagamento
                 </a>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -71,6 +70,7 @@ export default function AcceptInvitePage() {
       const user = userCredential.user;
 
       // Step 2: Call server action to create Firestore documents and finalize acceptance
+      // This will now also trigger the welcome/verification email via the backend extension
       await acceptInvite({
         inviteId,
         name: formData.name,
