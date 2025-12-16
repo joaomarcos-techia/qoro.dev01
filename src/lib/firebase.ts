@@ -1,7 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from 'firebase/auth';
-import { initializeFirestore } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -25,10 +25,8 @@ if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
-// Initialize Firestore with the setting to ignore undefined properties.
-const db = initializeFirestore(app, {
-  ignoreUndefinedProperties: true,
-});
+// Correctly initialize Firestore
+const db = getFirestore(app);
 
 
 export { app, auth, db };
