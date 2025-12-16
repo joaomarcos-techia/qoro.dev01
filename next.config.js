@@ -22,11 +22,8 @@ const nextConfig = {
       }
     ],
   },
-  env: {
-    NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID: process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID,
-    NEXT_PUBLIC_STRIPE_PERFORMANCE_PLAN_PRICE_ID: process.env.NEXT_PUBLIC_STRIPE_PERFORMANCE_PLAN_PRICE_ID,
-  },
   experimental: {
+    serverActions: true,
     webVitalsAttribution: ['CLS', 'LCP'],
   }
 };

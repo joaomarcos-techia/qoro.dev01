@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -97,7 +96,7 @@ export default function SignUpForm() {
       setUserForResend(user); 
 
       if (plan === 'growth' || plan === 'performance') {
-        console.log(`[SignUpForm] Iniciando fluxo para plano pago: ${plan}`);
+        console.log(`[SignUpForm] Iniciando fluxo para plano pago: ${'${plan}'}`);
         const priceId = plan === 'growth' 
             ? process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID
             : process.env.NEXT_PUBLIC_STRIPE_PERFORMANCE_PLAN_PRICE_ID;
@@ -146,7 +145,7 @@ export default function SignUpForm() {
         await resendVerification(userForResend);
         setResendFeedback("Um novo e-mail de verificação foi enviado com sucesso!");
     } catch (error: any) {
-        setResendFeedback(`Erro ao reenviar: ${error.message}`);
+        setResendFeedback(`Erro ao reenviar: ${'${error.message}'}`);
     } finally {
         setIsResending(false);
     }
