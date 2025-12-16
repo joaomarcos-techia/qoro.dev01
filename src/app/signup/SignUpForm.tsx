@@ -3,14 +3,15 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Mail, Lock, AlertCircle, CheckCircle, User, Building, FileText, Phone, Loader2, CreditCard } from 'lucide-react';
+import { Mail, Lock, AlertCircle, CheckCircle, User, Building, FileText, Phone, Loader2, CreditCard, Send } from 'lucide-react';
 import { createCheckoutSession } from '@/ai/flows/billing-flow';
 import { createUserProfile } from '@/services/organizationService';
 import { Logo } from '@/components/ui/logo';
 import { LegalPopup } from '@/components/landing/LegalPopup';
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
-import { signUpAndVerify } from '@/lib/authService';
+import { signUpAndVerify, resendVerification } from '@/lib/authService';
+import { User as FirebaseUser } from 'firebase/auth';
 
 export default function SignUpForm() {
   const router = useRouter();
@@ -32,6 +33,10 @@ export default function SignUpForm() {
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [popupContent, setPopupContent] = useState<'terms' | 'policy' | null>(null);
+  
+  const [userForResend, setUserForResend] = useState<FirebaseUser | null>(null);
+  const [isResending, setIsResending] = useState(false);
+  const [resendFeedback, setResendFeedback] = useState<string | null>(null);
 
 
   const formatCNPJ = (value: string) => {
@@ -85,12 +90,11 @@ export default function SignUpForm() {
     setIsLoading(true);
 
     try {
-      // Etapa 1: Criar usuário no Firebase Auth e enviar e-mail de verificação (via authService)
       console.log('[SignUpForm] Chamando signUpAndVerify...');
       const user = await signUpAndVerify(formData.email, formData.password);
       console.log('[SignUpForm] signUpAndVerify concluído com sucesso.');
+      setUserForResend(user); 
 
-      // Etapa 2: Lógica de planos (Stripe ou criação de perfil gratuito)
       if (plan === 'growth' || plan === 'performance') {
         console.log(`[SignUpForm] Iniciando fluxo para plano pago: ${plan}`);
         const priceId = plan === 'growth' 
@@ -112,9 +116,9 @@ export default function SignUpForm() {
         });
         
         setCheckoutUrl(sessionId);
-        setSuccessMessage('Conta criada! Um e-mail de verificação foi enviado. Conclua o pagamento para finalizar.');
+        setSuccessMessage('Conta criada! Verifique seu e-mail (incluindo a caixa de Spam) para confirmar sua conta. Conclua o pagamento para finalizar.');
 
-      } else { // Plano Gratuito
+      } else {
         console.log('[SignUpForm] Iniciando fluxo para plano gratuito.');
         await createUserProfile({
           ...formData,
@@ -122,7 +126,7 @@ export default function SignUpForm() {
           planId: 'free',
           stripePriceId: 'free',
         });
-        setSuccessMessage('Conta criada! Um e-mail de verificação foi enviado. Verifique sua caixa de entrada e spam para ativar sua conta antes de fazer o login.');
+        setSuccessMessage('Conta criada! Verifique seu e-mail (incluindo a caixa de Spam) para ativar sua conta antes de fazer o login.');
       }
 
     } catch (err: any) {
@@ -132,6 +136,20 @@ export default function SignUpForm() {
       setIsLoading(false);
     }
   };
+
+  const handleResend = async () => {
+    if (!userForResend) return;
+    setIsResending(true);
+    setResendFeedback(null);
+    try {
+        await resendVerification(userForResend);
+        setResendFeedback("Um novo e-mail de verificação foi enviado com sucesso!");
+    } catch (error: any) {
+        setResendFeedback(`Erro ao reenviar: ${error.message}`);
+    } finally {
+        setIsResending(false);
+    }
+  }
 
   return (
     <>
@@ -146,8 +164,8 @@ export default function SignUpForm() {
         </div>
 
         {successMessage ? (
-          <div className="bg-green-800/20 border-l-4 border-green-500 text-green-300 p-6 rounded-lg flex items-center text-center flex-col">
-            <CheckCircle className="w-10 h-10 mb-4 text-green-400" />
+          <div className="bg-green-800/20 border-l-4 border-green-500 text-green-300 p-6 rounded-lg text-center flex-col">
+            <CheckCircle className="w-10 h-10 mb-4 text-green-400 mx-auto" />
             <h3 className="text-xl font-bold text-white mb-2">{checkoutUrl ? 'Quase lá!' : 'Conta Criada com Sucesso!'}</h3>
             <p className="text-sm font-semibold mb-6">{successMessage}</p>
             
@@ -161,9 +179,14 @@ export default function SignUpForm() {
                     Ir para Login
                 </Link>
             )}
-             <p className="text-xs text-muted-foreground mt-4">
-                {checkoutUrl ? 'Após pagar, verifique seu e-mail de confirmação e faça o login.' : ''}
-            </p>
+             <div className="mt-6 pt-4 border-t border-green-500/20 text-left">
+                <p className="text-xs text-muted-foreground mb-3">Não recebeu o e-mail de verificação?</p>
+                <Button variant="outline" size="sm" onClick={handleResend} disabled={isResending} className="w-full sm:w-auto">
+                    {isResending ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Send className="mr-2 h-4 w-4"/>}
+                    {isResending ? 'Reenviando...' : 'Reenviar E-mail de Verificação'}
+                </Button>
+                {resendFeedback && <p className="text-xs mt-2">{resendFeedback}</p>}
+             </div>
 
           </div>
         ) : (
