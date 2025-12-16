@@ -26,6 +26,7 @@ export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isPaymentSuccess = searchParams.get('payment_success') === 'true';
+  const isVerified = searchParams.get('verified') === 'true';
   const [isSyncing, setIsSyncing] = useState(isPaymentSuccess);
 
 
@@ -171,6 +172,13 @@ export default function LoginForm() {
           </Link>
           <p className="text-muted-foreground">Bem-vindo de volta! Faça login para continuar.</p>
         </div>
+
+        {isVerified && (
+             <div className="mb-4 bg-green-800/20 border-l-4 border-green-500 text-green-300 p-4 rounded-lg flex items-center text-sm">
+              <CheckCircle className="w-5 h-5 mr-3" />
+              <span>E-mail verificado com sucesso! Você já pode fazer o login.</span>
+            </div>
+        )}
         
         <form onSubmit={handleLogin} className="space-y-6">
           <div className="relative">

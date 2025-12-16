@@ -19,6 +19,14 @@ import {
 
 import { auth } from '@/lib/firebase';
 
+const actionCodeSettings = (): ActionCodeSettings => {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:9004';
+  return {
+    url: `${siteUrl}/login?verified=true`,
+    handleCodeInApp: true,
+  };
+};
+
 export const signUpAndVerify = async (email: string, password: string): Promise<User> => {
   console.log('[AuthService] Iniciando signUpAndVerify para:', email);
   try {
@@ -27,8 +35,7 @@ export const signUpAndVerify = async (email: string, password: string): Promise<
     console.log('[AuthService] Usuário criado com sucesso, UID:', user.uid);
 
     try {
-      // Simplificado: Usa o fluxo padrão do Firebase, que é mais robusto.
-      await sendEmailVerification(user);
+      await sendEmailVerification(user, actionCodeSettings());
       console.log('[AuthService] E-mail de verificação solicitado com sucesso para:', email);
     } catch (verificationError) {
       console.error('❌ [AuthService] ERRO CRÍTICO ao enviar e-mail de verificação:', verificationError);
@@ -76,8 +83,7 @@ export const signInAndCheckVerification = async (email: string, password: string
 export const resendVerification = async (user: User): Promise<void> => {
   console.log('[AuthService] Solicitando reenvio de verificação para:', user.email);
   try {
-    // Simplificado: Usa o fluxo padrão do Firebase.
-    await sendEmailVerification(user);
+    await sendEmailVerification(user, actionCodeSettings());
     console.log('[AuthService] Reenvio de e-mail de verificação solicitado com sucesso.');
   } catch (error: any) {
     console.error('❌ [AuthService] ERRO ao reenviar e-mail de verificação:', error);
@@ -98,7 +104,7 @@ export const signOut = async (): Promise<void> => {
 export const sendPasswordReset = async (email: string): Promise<void> => {
   console.log('[AuthService] Solicitando redefinição de senha para:', email);
   try {
-    await firebaseSendPasswordResetEmail(auth, email);
+    await firebaseSendPasswordResetEmail(auth, email, actionCodeSettings());
     console.log('[AuthService] E-mail de redefinição de senha enviado com sucesso.');
   } catch (error: any) {
     console.error('❌ [AuthService] ERRO ao enviar e-mail de redefinição de senha:', error);
