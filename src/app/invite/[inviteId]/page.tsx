@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -6,7 +7,7 @@ import Link from 'next/link';
 import { Mail, Lock, AlertCircle, CheckCircle, User, Loader2 } from 'lucide-react';
 import { validateInvite, acceptInvite } from '@/ai/flows/user-management';
 import { Logo } from '@/components/ui/logo';
-import { createUserWithEmailAndPassword, getAuth } from 'firebase/auth';
+import { createUserWithEmailAndPassword, getAuth, sendEmailVerification } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 
 const auth = getAuth(app);
@@ -69,8 +70,10 @@ export default function AcceptInvitePage() {
       const userCredential = await createUserWithEmailAndPassword(auth, inviteInfo.email, formData.password);
       const user = userCredential.user;
 
-      // Step 2: Call server action to create Firestore documents and finalize acceptance
-      // This will now also trigger the welcome/verification email via the backend extension
+      // Step 2: Send verification email immediately
+      await sendEmailVerification(user);
+
+      // Step 3: Call server action to create Firestore documents and finalize acceptance
       await acceptInvite({
         inviteId,
         name: formData.name,

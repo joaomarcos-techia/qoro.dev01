@@ -14,7 +14,6 @@ import {
 } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
-import { sendWelcomeEmail } from './emailService';
 
 const FREE_PLAN_USER_LIMIT = 2;
 const GROWTH_PLAN_USER_LIMIT = 5;
@@ -112,9 +111,6 @@ export const createUserProfile = async (input: z.infer<typeof UserProfileCreatio
       }, { merge: true });
       
       await adminAuth.setCustomUserClaims(uid, { organizationId: orgRef.id, role: 'admin', planId: planId });
-
-      // Send welcome/verification email using Trigger Email extension
-      await sendWelcomeEmail(email, uid, { name });
 
       return { uid };
 
@@ -322,9 +318,6 @@ export const acceptInvite = async (inviteId: string, userData: { name: string, u
 
     await adminAuth.setCustomUserClaims(userData.uid, { organizationId, role: 'member', planId });
     await inviteRef.update({ status: 'accepted', acceptedAt: FieldValue.serverTimestamp(), acceptedBy: userData.uid });
-
-    // Send welcome/verification email using Trigger Email extension
-    await sendWelcomeEmail(email, userData.uid, { name: userData.name });
 
     return { success: true, organizationId };
 };

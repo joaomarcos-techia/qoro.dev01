@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -10,7 +11,7 @@ import { Logo } from '@/components/ui/logo';
 import { LegalPopup } from '@/components/landing/LegalPopup';
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 
 const auth = getAuth(app);
@@ -89,7 +90,10 @@ export default function SignUpForm() {
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       const user = userCredential.user;
 
-      // Step 2: Handle plan logic
+      // Step 2: Send verification email immediately
+      await sendEmailVerification(user);
+
+      // Step 3: Handle plan logic
       if (plan === 'growth' || plan === 'performance') {
         const priceId = plan === 'growth' 
             ? process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID
@@ -110,7 +114,7 @@ export default function SignUpForm() {
         });
         
         setCheckoutUrl(sessionId);
-        setSuccessMessage('Credenciais criadas! O próximo passo é concluir o pagamento.');
+        setSuccessMessage('Conta criada! Um e-mail de verificação foi enviado. Conclua o pagamento para finalizar.');
 
       } else { // Free Plan
         await createUserProfile({
