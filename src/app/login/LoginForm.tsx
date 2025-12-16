@@ -1,13 +1,11 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, LogIn, AlertCircle, CheckCircle, Loader2, RefreshCw } from 'lucide-react';
-import { signIn } from '@/lib/auth';
-import { resendVerificationEmail } from '@/ai/flows/user-management';
+import { signInAndCheckVerification, resendVerification, sendPasswordReset } from '@/lib/authService'; // Alterado para o novo serviço
 import { Logo } from '@/components/ui/logo';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -20,9 +18,9 @@ export default function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [showResend, setShowResend] = useState(false);
   const [resendSuccess, setResendSuccess] = useState<string | null>(null);
-  const [resendError, setResendError] = useState<string | null>(null);
-  const [currentUserForResend, setCurrentUserForResend] = useState<FirebaseUser | null>(null);
-
+  const [isResending, setIsResending] = useState(false);
+  const [userForResend, setUserForResend] = useState<FirebaseUser | null>(null);
+  
   const router = useRouter();
   const searchParams = useSearchParams();
   const isPaymentSuccess = searchParams.get('payment_success') === 'true';
@@ -37,14 +35,10 @@ export default function LoginForm() {
                 // Inicia a sondagem para verificar se o perfil do usuário foi criado no banco de dados.
                 const interval = setInterval(async () => {
                     try {
-                        // Usa a função de backend que verifica diretamente a existência do documento do usuário
                         const profileData = await getAdminAndOrg(user.uid);
-                        
-                        // Se `profileData` não for nulo, significa que o documento do usuário foi criado.
                         if (profileData) {
                             console.log("✅ Profile found! Redirecting to dashboard.");
                             clearInterval(interval);
-                            // Garante que o token do usuário seja atualizado com as permissões (claims)
                             await user.getIdToken(true);
                             router.push('/dashboard');
                         } else {
@@ -52,18 +46,16 @@ export default function LoginForm() {
                         }
                     } catch (e) {
                          console.error("Error polling for user profile:", e);
-                         // O erro não para o polling, ele continuará tentando.
                     }
-                }, 3000); // Tenta a cada 3 segundos
+                }, 3000); 
 
-                // Cleanup do polling se o componente for desmontado ou após muito tempo
                 const timeout = setTimeout(() => {
                     clearInterval(interval);
                     if (isSyncing) {
                         setError("A sincronização está demorando mais que o esperado. Tente fazer login manualmente em alguns instantes.");
                         setIsSyncing(false);
                     }
-                }, 45000); // Timeout de 45 segundos
+                }, 45000); 
 
                 return () => {
                     clearInterval(interval)
@@ -83,50 +75,43 @@ export default function LoginForm() {
     setError(null);
     setShowResend(false);
     setResendSuccess(null);
-    setResendError(null);
+    setUserForResend(null);
     setIsLoading(true);
   
     try {
-      const user = await signIn(email, password);
-      if (!user.emailVerified) {
-        setCurrentUserForResend(user);
-        setError('Seu e-mail ainda não foi verificado.');
-        setShowResend(true);
-        setIsLoading(false);
-        return;
-      }
+      await signInAndCheckVerification(email, password);
       router.push('/dashboard');
     } catch (err: any) {
-      setIsLoading(false);
-       if (err.code === 'auth/email-not-verified') {
-        // This case is handled above, but as a fallback
-        setError('Seu e-mail ainda não foi verificado.');
+      if (err.code === 'auth/email-not-verified') {
+        setError(err.message);
+        setUserForResend(err.user); // Pega o objeto 'user' do erro customizado
         setShowResend(true);
       } else {
-        setError(err.message || 'Ocorreu um erro desconhecido. Tente novamente.');
+        setError(err.message || 'Ocorreu um erro desconhecido.');
       }
+    } finally {
+        setIsLoading(false);
     }
   };
 
   const handleResendVerification = async () => {
-    if (!currentUserForResend) {
-        setResendError('Não foi possível identificar o usuário para o reenvio. Por favor, tente fazer login novamente.');
+    if (!userForResend) {
+        setError('Não foi possível identificar o usuário para o reenvio. Tente fazer login novamente.');
         return;
     }
     setError(null);
     setResendSuccess(null);
-    setResendError(null);
-    setIsLoading(true);
+    setIsResending(true);
     
     try {
-        await resendVerificationEmail({ actor: currentUserForResend.uid });
+        await resendVerification(userForResend);
         setResendSuccess('Um novo e-mail de verificação foi enviado. Verifique sua caixa de entrada e spam.');
         setShowResend(false);
     } catch (err: any) {
-        setResendError(err.message || 'Falha ao reenviar o e-mail de verificação.');
+        setError(err.message || 'Falha ao reenviar o e-mail de verificação.');
+    } finally {
+        setIsResending(false);
     }
-    
-    setIsLoading(false);
   }
 
   if (isSyncing) {
@@ -189,14 +174,14 @@ export default function LoginForm() {
           </div>
 
           {error && (
-            <div className="bg-destructive/20 border-l-4 border-destructive text-destructive-foreground p-4 rounded-lg flex items-center text-sm">
-              <AlertCircle className="w-5 h-5 mr-3" />
+            <div className="bg-destructive/20 border-l-4 border-destructive text-destructive-foreground p-4 rounded-lg flex items-start text-sm">
+              <AlertCircle className="w-5 h-5 mr-3 mt-0.5 flex-shrink-0" />
               <div>
                 {error}
                 {showResend && (
-                    <button type="button" onClick={handleResendVerification} className="font-bold underline hover:text-white mt-1 block disabled:opacity-50" disabled={isLoading}>
-                       {isLoading ? <Loader2 className="w-4 h-4 animate-spin inline-block mr-2" /> : null}
-                        Reenviar e-mail de verificação
+                    <button type="button" onClick={handleResendVerification} className="font-bold underline hover:text-white mt-2 block disabled:opacity-50" disabled={isResending}>
+                       {isResending ? <Loader2 className="w-4 h-4 animate-spin inline-block mr-2" /> : null}
+                        {isResending ? 'Reenviando...' : 'Reenviar e-mail de verificação'}
                     </button>
                 )}
               </div>
@@ -209,14 +194,6 @@ export default function LoginForm() {
               <span>{resendSuccess}</span>
             </div>
           )}
-
-          {resendError && (
-             <div className="bg-destructive/20 border-l-4 border-destructive text-destructive-foreground p-4 rounded-lg flex items-center text-sm">
-                <AlertCircle className="w-5 h-5 mr-3" />
-                <span>{resendError}</span>
-             </div>
-          )}
-
 
           <button
             type="submit"

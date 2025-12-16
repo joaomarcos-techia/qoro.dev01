@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview User and organization management flows.
@@ -24,9 +25,12 @@ import {
     AppPermissionsSchema,
 } from '@/ai/schemas';
 import * as orgService from '@/services/organizationService';
-import { sendVerificationEmail } from '@/services/emailService';
 import { getAdminAndOrg } from '@/services/utils';
-import type { UserProfile } from '@/ai/schemas';
+import { User, getAuth } from 'firebase/auth';
+import { app } from '@/lib/firebase';
+import { resendVerification as resendVerificationClient } from '@/lib/authService';
+
+const auth = getAuth(app);
 
 const ActorSchema = z.object({ actor: z.string() });
 const DeleteUserSchema = z.object({ userId: z.string(), actor: z.string() });
@@ -141,15 +145,16 @@ const updateUserPermissionsFlow = ai.defineFlow(
 const resendVerificationEmailFlow = ai.defineFlow(
     {
       name: 'resendVerificationEmailFlow',
-      inputSchema: ActorSchema,
+      inputSchema: z.object({ user: z.any() }), // Recebe o objeto User do cliente
       outputSchema: z.object({ success: z.boolean() }),
     },
-    async ({ actor }) => {
-      const adminOrgData = await getAdminAndOrg(actor);
-      if (!adminOrgData) {
-        throw new Error('Usuário não encontrado.');
+    async ({ user }) => {
+      if (!user) {
+        throw new Error('Objeto de usuário inválido fornecido.');
       }
-      await sendVerificationEmail(actor, adminOrgData.userData.name);
+      // A lógica agora é puramente do lado do cliente, mas mantemos o fluxo para consistência da API.
+      // A chamada real é feita no componente LoginForm.
+      await resendVerificationClient(user as User);
       return { success: true };
     }
 );
@@ -164,7 +169,7 @@ export async function deleteUser(input: z.infer<typeof DeleteUserSchema>): Promi
     return deleteUserFlow(input);
 }
 
-export async function listUsers(input: z.infer<typeof ActorSchema>): Promise<UserProfile[]> {
+export async function listUsers(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof UserProfileSchema>[]> {
     return listUsersFlow(input);
 }
 
@@ -196,6 +201,6 @@ export async function updateUserPermissions(input: z.infer<typeof UpdateUserPerm
     return updateUserPermissionsFlow(input);
 }
 
-export async function resendVerificationEmail(input: z.infer<typeof ActorSchema>): Promise<{ success: boolean }> {
+export async function resendVerificationEmail(input: { user: User }): Promise<{ success: boolean }> {
     return resendVerificationEmailFlow(input);
 }

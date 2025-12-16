@@ -11,10 +11,7 @@ import { Logo } from '@/components/ui/logo';
 import { LegalPopup } from '@/components/landing/LegalPopup';
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
-import { app } from '@/lib/firebase';
-
-const auth = getAuth(app);
+import { signUpAndVerify } from '@/lib/authService'; // Alterado para o novo serviço
 
 export default function SignUpForm() {
   const router = useRouter();
@@ -72,26 +69,27 @@ export default function SignUpForm() {
     setError(null);
     setSuccessMessage(null);
     setCheckoutUrl(null);
-    setIsLoading(true);
 
-    if (formData.password.length < 6) {
-      setError('A senha deve ter pelo menos 6 caracteres.');
-      setIsLoading(false);
+    if (!agreedToTerms) {
+      setError('Você deve concordar com os Termos de Uso e a Política de Privacidade.');
       return;
     }
      if (!formData.name || !formData.organizationName || !formData.email || !formData.password || !formData.cnpj) {
       setError('Todos os campos marcados com * são obrigatórios.');
-      setIsLoading(false);
+      return;
+    }
+    if (formData.password.length < 6) {
+      setError('A senha deve ter pelo menos 6 caracteres.');
       return;
     }
 
-    try {
-      // Step 1: Create the user in Firebase Auth on the client side
-      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
-      const user = userCredential.user;
+    setIsLoading(true);
 
-      // Step 2 (handled by backend): Send verification email
-      // Step 3: Handle plan logic
+    try {
+      // Etapa 1: Criar usuário no Firebase Auth e enviar e-mail de verificação (via authService)
+      const user = await signUpAndVerify(formData.email, formData.password);
+
+      // Etapa 2: Lógica de planos (Stripe ou criação de perfil gratuito)
       if (plan === 'growth' || plan === 'performance') {
         const priceId = plan === 'growth' 
             ? process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID
@@ -103,7 +101,7 @@ export default function SignUpForm() {
         
         const { sessionId } = await createCheckoutSession({
             priceId: priceId,
-            actor: user.uid,
+            actor: user.uid, // Usa o UID do usuário recém-criado
             name: formData.name,
             organizationName: formData.organizationName,
             cnpj: formData.cnpj.replace(/\D/g, ''),
@@ -114,23 +112,19 @@ export default function SignUpForm() {
         setCheckoutUrl(sessionId);
         setSuccessMessage('Conta criada! Um e-mail de verificação foi enviado. Conclua o pagamento para finalizar.');
 
-      } else { // Free Plan
+      } else { // Plano Gratuito
+        // A criação do perfil no Firestore ainda é necessária.
         await createUserProfile({
           ...formData,
           uid: user.uid,
           planId: 'free',
           stripePriceId: 'free',
         });
-        setSuccessMessage('Conta criada! Um e-mail de verificação foi enviado. Ative sua conta e faça o login.');
+        setSuccessMessage('Conta criada! Um e-mail de verificação foi enviado. Verifique sua caixa de entrada e spam para ativar sua conta antes de fazer o login.');
       }
 
     } catch (err: any) {
-      let errorMessage = 'Ocorreu um erro ao criar a conta. Tente novamente.';
-      if (err.code === 'auth/email-already-in-use') {
-          errorMessage = 'Este e-mail já está em uso por outra conta.';
-      }
-      setError(errorMessage);
-      console.error(err);
+      setError(err.message || 'Ocorreu um erro desconhecido.');
     } finally {
       setIsLoading(false);
     }

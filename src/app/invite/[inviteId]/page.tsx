@@ -7,10 +7,8 @@ import Link from 'next/link';
 import { Mail, Lock, AlertCircle, CheckCircle, User, Loader2 } from 'lucide-react';
 import { validateInvite, acceptInvite } from '@/ai/flows/user-management';
 import { Logo } from '@/components/ui/logo';
-import { createUserWithEmailAndPassword, getAuth } from 'firebase/auth';
-import { app } from '@/lib/firebase';
-
-const auth = getAuth(app);
+import { signUpAndVerify } from '@/lib/authService';
+import { sendEmailVerification, User as FirebaseUser } from 'firebase/auth';
 
 export default function AcceptInvitePage() {
   const router = useRouter();
@@ -66,13 +64,10 @@ export default function AcceptInvitePage() {
     setError(null);
 
     try {
-      // Step 1: Create user in Firebase Auth on the client side
-      const userCredential = await createUserWithEmailAndPassword(auth, inviteInfo.email, formData.password);
-      const user = userCredential.user;
-
-      // Step 2 (handled by backend): Send verification email
+      // A função signUpAndVerify já cria o usuário e envia o e-mail de verificação.
+      const user = await signUpAndVerify(inviteInfo.email, formData.password);
       
-      // Step 3: Call server action to create Firestore documents and finalize acceptance
+      // A função `acceptInvite` agora só precisa associar o UID ao convite e criar o perfil no Firestore.
       await acceptInvite({
         inviteId,
         name: formData.name,
@@ -89,6 +84,7 @@ export default function AcceptInvitePage() {
           errorMessage = 'Este e-mail já está em uso por outra conta.';
       }
       setError(errorMessage);
+    } finally {
       setIsSubmitting(false);
     }
   };

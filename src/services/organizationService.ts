@@ -15,7 +15,6 @@ import {
 } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
-import { sendVerificationEmail } from './emailService';
 
 const FREE_PLAN_USER_LIMIT = 2;
 const GROWTH_PLAN_USER_LIMIT = 5;
@@ -114,8 +113,8 @@ export const createUserProfile = async (input: z.infer<typeof UserProfileCreatio
       
       await adminAuth.setCustomUserClaims(uid, { organizationId: orgRef.id, role: 'admin', planId: planId });
       
-      // Send verification email in the background. Don't block the user creation.
-      await sendVerificationEmail(uid, name);
+      // O envio do e-mail de verificação agora é feito no cliente.
+      // Nenhuma ação de e-mail é necessária aqui.
 
       return { uid };
 
@@ -306,6 +305,7 @@ export const acceptInvite = async (inviteId: string, userData: { name: string, u
     const { email, organizationId, planId } = inviteDoc.data()!;
     const hasPulseAccess = planId === 'performance';
     
+    // O usuário já foi criado no cliente. Esta função agora apenas cria o perfil no Firestore.
     await adminDb.collection('users').doc(userData.uid).set({
         name: userData.name,
         email: email,
@@ -323,10 +323,8 @@ export const acceptInvite = async (inviteId: string, userData: { name: string, u
 
     await adminAuth.setCustomUserClaims(userData.uid, { organizationId, role: 'member', planId });
     await inviteRef.update({ status: 'accepted', acceptedAt: FieldValue.serverTimestamp(), acceptedBy: userData.uid });
-
-    // Send verification email in the background. Don't block the user creation.
-    await sendVerificationEmail(userData.uid, userData.name);
-
+    
+    // O envio do e-mail de verificação já foi feito no cliente.
     return { success: true, organizationId };
 };
 
@@ -347,7 +345,6 @@ export const updateUserPermissions = async (input: z.infer<typeof UpdateUserPerm
       throw new Error("Usuário não encontrado nesta organização.");
     }
 
-    // Ensure Pulse is disabled if not on performance plan
     if (adminOrgData.planId !== 'performance' && permissions.qoroPulse) {
         permissions.qoroPulse = false;
     }
@@ -382,7 +379,6 @@ export const handleSubscriptionChange = async (subscriptionId: string, newPriceI
     const organizationId = orgDoc.id;
     const oldPlanId = orgDoc.data().planId as PlanId;
 
-    // Determine new planId from priceId
     let newPlanId: PlanId = 'free';
     if (newStatus !== 'canceled' && newStatus !== 'unpaid') {
         if (newPriceId === process.env.NEXT_PUBLIC_STRIPE_PERFORMANCE_PLAN_PRICE_ID) {
@@ -403,7 +399,6 @@ export const handleSubscriptionChange = async (subscriptionId: string, newPriceI
     }
 
 
-    // Update organization document
     await orgDoc.ref.update({
         stripeSubscriptionStatus: newStatus,
         stripePriceId: newPriceId,
@@ -411,7 +406,6 @@ export const handleSubscriptionChange = async (subscriptionId: string, newPriceI
         lastSystemNotification: notificationMessage,
     });
 
-    // Update all users in the organization
     const usersSnapshot = await adminDb.collection('users').where('organizationId', '==', organizationId).get();
     if (usersSnapshot.empty) {
         return;
@@ -424,7 +418,6 @@ export const handleSubscriptionChange = async (subscriptionId: string, newPriceI
         const userRef = userDoc.ref;
         const currentPermissions = userDoc.data().permissions || {};
         
-        // Update user document in Firestore
         batch.update(userRef, {
             planId: newPlanId,
             permissions: {
@@ -434,7 +427,6 @@ export const handleSubscriptionChange = async (subscriptionId: string, newPriceI
             stripeSubscriptionStatus: newStatus,
         });
 
-        // Update custom claims for real-time access changes
         return adminAuth.setCustomUserClaims(userDoc.id, {
             organizationId,
             role: userDoc.data().role,
@@ -442,7 +434,6 @@ export const handleSubscriptionChange = async (subscriptionId: string, newPriceI
         });
     });
 
-    // Commit batch and wait for all claims to be updated
     await Promise.all([batch.commit(), ...userUpdatePromises]);
 
     console.log(`✅ Subscription for organization ${organizationId} updated to plan '${newPlanId}'. ${usersSnapshot.size} users affected.`);
