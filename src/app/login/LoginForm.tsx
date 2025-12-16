@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, LogIn, AlertCircle, CheckCircle, Loader2, RefreshCw } from 'lucide-react';
-import { signInAndCheckVerification, resendVerification, sendPasswordReset } from '@/lib/authService'; // Alterado para o novo serviço
+import { signInAndCheckVerification, resendVerification, sendPasswordReset } from '@/lib/authService';
 import { Logo } from '@/components/ui/logo';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';

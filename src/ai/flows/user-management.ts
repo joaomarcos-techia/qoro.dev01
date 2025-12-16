@@ -11,7 +11,6 @@
  * - inviteUser - Sends an invitation email to a new user.
  * - deleteUser - Deletes a user from the organization.
  * - updateUserPermissions - Updates a user's module permissions.
- * - resendVerificationEmail - Triggers a new verification email for the current user.
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
@@ -22,15 +21,10 @@ import {
     OrganizationProfileSchema, 
     UserProfileSchema,
     UserAccessInfoSchema,
-    AppPermissionsSchema,
+    AppPermissions,
 } from '@/ai/schemas';
 import * as orgService from '@/services/organizationService';
 import { getAdminAndOrg } from '@/services/utils';
-import { User, getAuth } from 'firebase/auth';
-import { app } from '@/lib/firebase';
-import { resendVerification as resendVerificationClient } from '@/lib/authService';
-
-const auth = getAuth(app);
 
 const ActorSchema = z.object({ actor: z.string() });
 const DeleteUserSchema = z.object({ userId: z.string(), actor: z.string() });
@@ -142,23 +136,6 @@ const updateUserPermissionsFlow = ai.defineFlow(
     async (input) => orgService.updateUserPermissions(input)
 );
 
-const resendVerificationEmailFlow = ai.defineFlow(
-    {
-      name: 'resendVerificationEmailFlow',
-      inputSchema: z.object({ user: z.any() }), // Recebe o objeto User do cliente
-      outputSchema: z.object({ success: z.boolean() }),
-    },
-    async ({ user }) => {
-      if (!user) {
-        throw new Error('Objeto de usuário inválido fornecido.');
-      }
-      // A lógica agora é puramente do lado do cliente, mas mantemos o fluxo para consistência da API.
-      // A chamada real é feita no componente LoginForm.
-      await resendVerificationClient(user as User);
-      return { success: true };
-    }
-);
-
 
 // Exported functions (client-callable wrappers)
 export async function inviteUser(input: z.infer<typeof InviteUserSchema> & z.infer<typeof ActorSchema>): Promise<{ inviteId: string }> {
@@ -199,8 +176,4 @@ export async function acceptInvite(input: z.infer<typeof AcceptInviteInput>): Pr
 
 export async function updateUserPermissions(input: z.infer<typeof UpdateUserPermissionsSchema> & z.infer<typeof ActorSchema>): Promise<{ success: boolean }> {
     return updateUserPermissionsFlow(input);
-}
-
-export async function resendVerificationEmail(input: { user: User }): Promise<{ success: boolean }> {
-    return resendVerificationEmailFlow(input);
 }
