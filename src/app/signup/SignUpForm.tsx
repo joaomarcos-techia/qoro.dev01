@@ -11,7 +11,7 @@ import { Logo } from '@/components/ui/logo';
 import { LegalPopup } from '@/components/landing/LegalPopup';
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
-import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 
 const auth = getAuth(app);
@@ -90,9 +90,7 @@ export default function SignUpForm() {
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       const user = userCredential.user;
 
-      // Step 2: Send verification email immediately
-      await sendEmailVerification(user);
-
+      // Step 2 (handled by backend): Send verification email
       // Step 3: Handle plan logic
       if (plan === 'growth' || plan === 'performance') {
         const priceId = plan === 'growth' 

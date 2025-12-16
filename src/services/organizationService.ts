@@ -115,7 +115,7 @@ export const createUserProfile = async (input: z.infer<typeof UserProfileCreatio
       await adminAuth.setCustomUserClaims(uid, { organizationId: orgRef.id, role: 'admin', planId: planId });
       
       // Send verification email in the background. Don't block the user creation.
-      sendVerificationEmail(uid, name).catch(err => console.error(err));
+      await sendVerificationEmail(uid, name);
 
       return { uid };
 
@@ -325,7 +325,7 @@ export const acceptInvite = async (inviteId: string, userData: { name: string, u
     await inviteRef.update({ status: 'accepted', acceptedAt: FieldValue.serverTimestamp(), acceptedBy: userData.uid });
 
     // Send verification email in the background. Don't block the user creation.
-    sendVerificationEmail(userData.uid, userData.name).catch(err => console.error(err));
+    await sendVerificationEmail(userData.uid, userData.name);
 
     return { success: true, organizationId };
 };
