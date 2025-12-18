@@ -44,13 +44,22 @@ export async function POST(req: Request) {
 
         const { firebaseUID, organizationName, userName, cnpj, contactEmail, contactPhone, organizationId, upgrade } = session.metadata || {};
         const subscriptionId = session.subscription as string;
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
         
         if (upgrade === 'true') {
-          // Lógica de upgrade
-          if (!organizationId || !subscriptionId) {
-            return NextResponse.json({ error: 'Metadados de upgrade essenciais não encontrados.' }, { status: 400 });
+          if (!organizationId) {
+            return NextResponse.json({ error: 'Metadados de upgrade essenciais (organizationId) não encontrados.' }, { status: 400 });
           }
-          const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+
+          // Update the existing organization with the new Stripe details.
+          const orgRef = adminDb.collection('organizations').doc(organizationId);
+          await orgRef.update({
+            stripeCustomerId: subscription.customer as string,
+            stripeSubscriptionId: subscription.id,
+            stripePriceId: subscription.items.data[0].price.id,
+          });
+
+          // Trigger the standard subscription change handler to update plan details for all users.
           await handleSubscriptionChange(
             subscription.id,
             subscription.items.data[0].price.id,
@@ -58,12 +67,11 @@ export async function POST(req: Request) {
           );
 
         } else {
-          // Lógica de novo cadastro
+          // Logic for a brand-new user registration
           if (!firebaseUID || !organizationName || !userName || !subscriptionId) {
             return NextResponse.json({ error: 'Metadados de novo cliente essenciais não encontrados.' }, { status: 400 });
           }
 
-          const subscription = await stripe.subscriptions.retrieve(subscriptionId);
           await createUserProfile({
             uid: firebaseUID,
             name: userName,

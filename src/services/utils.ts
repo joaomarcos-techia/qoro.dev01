@@ -7,12 +7,14 @@ import { Timestamp } from 'firebase-admin/firestore';
 // Tipo de retorno modificado para ser um objeto simples (POJO)
 type AdminOrgResult = {
     userData: { [key: string]: any }; // Plain object
+    cnpj: string;
     companyId: string;
     organizationId: string;
     organizationName: string;
     userRole: string;
     adminUid: string;
     planId: 'free' | 'growth' | 'performance';
+    stripeCustomerId: string | null;
 } | null;
 
 
@@ -22,7 +24,6 @@ export const getAdminAndOrg = async (actorUid: string): Promise<AdminOrgResult> 
     }
     
     const userDocRef = adminDb.collection('users').doc(actorUid);
-    // Força a releitura do documento diretamente do servidor, ignorando qualquer cache.
     const userDoc = await userDocRef.get();
     
     if (!userDoc.exists) {
@@ -39,7 +40,6 @@ export const getAdminAndOrg = async (actorUid: string): Promise<AdminOrgResult> 
     }
     
     const orgDocRef = adminDb.collection('organizations').doc(companyId);
-    // Força a releitura do documento da organização diretamente do servidor.
     const orgDoc = await orgDocRef.get();
     
     if (!orgDoc.exists) {
@@ -62,6 +62,8 @@ export const getAdminAndOrg = async (actorUid: string): Promise<AdminOrgResult> 
         organizationName: orgData.name, 
         userRole, 
         adminUid: actorUid,
-        planId
+        planId,
+        stripeCustomerId: orgData.stripeCustomerId || null,
+        cnpj: orgData.cnpj || null,
     };
 };
