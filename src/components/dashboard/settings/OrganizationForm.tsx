@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -8,14 +7,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { getOrganizationDetails, updateOrganizationDetails } from '@/ai/flows/user-management';
-import { createBillingPortalSession } from '@/ai/flows/billing-flow';
-import { UpdateOrganizationDetailsSchema, OrganizationProfile } from '@/ai/schemas';
+import { getOrganizationDetailsFlowWrapper as getOrganizationDetails, updateOrganizationDetailsFlowWrapper as updateOrganizationDetails } from '@/ai/flows/user-management';
+import { OrganizationProfile, UpdateOrganizationDetailsSchema } from '@/ai/schemas';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, AlertCircle, CheckCircle, Building, FileText, Mail, Phone, ExternalLink } from 'lucide-react';
-import Link from 'next/link';
+import { Loader2, AlertCircle, CheckCircle, Building, FileText, Mail, Phone } from 'lucide-react';
 
 const formatCNPJ = (value: string) => {
     if (!value) return "";
@@ -52,7 +49,7 @@ export function OrganizationForm() {
 
     useEffect(() => {
         async function fetchDetails() {
-            if (!currentUser) return;
+            if (!currentUser || !currentUser.uid) return;
             setIsLoading({ page: true, form: false });
             try {
                 const details = await getOrganizationDetails({ actor: currentUser.uid });
@@ -66,15 +63,12 @@ export function OrganizationForm() {
                     });
                 }
             } catch (error) {
-                console.error("Failed to fetch organization details:", error);
                 setFeedback({ type: 'error', message: 'Não foi possível carregar os dados da organização.' });
             } finally {
                 setIsLoading(prev => ({...prev, page: false }));
             }
         }
-        if (currentUser) {
-            fetchDetails();
-        }
+        fetchDetails();
     }, [currentUser, reset]);
 
     const onSubmit = async (data: z.infer<typeof UpdateOrganizationDetailsSchema>) => {
@@ -92,7 +86,6 @@ export function OrganizationForm() {
             await updateOrganizationDetails({ ...submissionData, actor: currentUser.uid });
             setFeedback({ type: 'success', message: 'Dados da organização atualizados com sucesso!' });
         } catch (error: any) {
-            console.error(error);
             setFeedback({ type: 'error', message: error.message || 'Falha ao atualizar os dados. Tente novamente.' });
         } finally {
             setIsLoading(prev => ({ ...prev, form: false }));

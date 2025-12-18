@@ -6,7 +6,7 @@ import { Mail, Send, KeyRound, UserPlus, Building, AlertCircle, CheckCircle, Arr
 import { inviteUserFlowWrapper as inviteUser, listUsersFlowWrapper as listUsers, deleteUserFlowWrapper as deleteUser, updateUserPermissionsFlowWrapper as updateUserPermissions } from '@/ai/flows/user-management';
 import { sendPasswordReset } from '@/lib/authService';
 import { createBillingPortalSession } from '@/ai/flows/billing-flow';
-import { UserProfile, InviteUserSchema, AppPermissions } from '@/ai/schemas';
+import { UserProfile, AppPermissions } from '@/ai/schemas';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { OrganizationForm } from '@/components/dashboard/settings/OrganizationForm';
@@ -31,7 +31,6 @@ import {
     DialogDescription,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from '@/components/ui/dialog';
 
 
@@ -435,4 +434,3 @@ export default function SettingsPage() {
         </div>
     );
 }
-
