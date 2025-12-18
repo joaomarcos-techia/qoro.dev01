@@ -6,7 +6,7 @@ import { signOut } from '@/lib/authService';
 import { useRouter } from 'next/navigation';
 import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { getUserProfile } from '@/ai/flows/user-management';
+import { getUserProfileFlowWrapper as getUserProfile } from '@/ai/flows/user-management';
 import Link from 'next/link';
 import { Logo } from '@/components/ui/logo';
 import { usePlan } from '@/contexts/PlanContext';
@@ -35,11 +35,11 @@ export function Header() {
             setUserProfile(profile);
         } else {
             // This case is now handled by the PlanContext polling
-            // We just wait for the user data to be available.
+            // We just wait for the user data to be available. 
             return; 
         }
     } catch (err) {
-        console.error("Falha ao buscar perfil do usuário:", err);
+        
         setError("Não foi possível carregar os dados do perfil.");
         setUserProfile(null); 
     } finally {
