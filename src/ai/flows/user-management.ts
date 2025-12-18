@@ -252,7 +252,10 @@ export const handleSubscriptionChange = async (subscriptionId: string, newPriceI
     await batch.commit();
 };
 
-export async function validateInvite(input: { inviteId: string }): Promise<{ email: string; organizationName: string; }> {
+const ValidateInviteInputSchema = z.object({ inviteId: z.string() });
+const ValidateInviteOutputSchema = z.object({ email: z.string(), organizationName: z.string() });
+
+export async function validateInvite(input: z.infer<typeof ValidateInviteInputSchema>): Promise<z.infer<typeof ValidateInviteOutputSchema>> {
     const { inviteId } = input;
     if (!inviteId || typeof inviteId !== 'string') {
         throw new Error('ID do convite inválido.');
@@ -267,7 +270,11 @@ export async function validateInvite(input: { inviteId: string }): Promise<{ ema
     return { email: data.email, organizationName: data.organizationName };
 };
 
-export async function acceptInvite(input: { inviteId: string; name: string; uid: string; }): Promise<{ success: boolean; }> {
+const AcceptInviteInputSchema = z.object({ inviteId: z.string(), name: z.string(), uid: z.string() });
+const AcceptInviteOutputSchema = z.object({ success: z.boolean() });
+
+
+export async function acceptInvite(input: z.infer<typeof AcceptInviteInputSchema>): Promise<z.infer<typeof AcceptInviteOutputSchema>> {
     const { inviteId, name, uid } = input;
     if (!uid) {
         throw new Error('UID do usuário é inválido.');
@@ -389,18 +396,18 @@ const deleteUserFlow = ai.defineFlow(
 );
 
 const validateInviteFlow = ai.defineFlow(
-    { name: 'validateInviteFlow', inputSchema: z.object({ inviteId: z.string() }), outputSchema: z.object({ email: z.string(), organizationName: z.string() }) },
+    { name: 'validateInviteFlow', inputSchema: ValidateInviteInputSchema, outputSchema: ValidateInviteOutputSchema },
     async (input) => validateInvite(input)
 );
 
 const acceptInviteFlow = ai.defineFlow(
-    { name: 'acceptInviteFlow', inputSchema: z.object({ inviteId: z.string(), name: z.string(), uid: z.string() }), outputSchema: z.object({ success: z.boolean() }) },
+    { name: 'acceptInviteFlow', inputSchema: AcceptInviteInputSchema, outputSchema: AcceptInviteOutputSchema },
     async (input) => acceptInvite(input)
 );
 
 
 // Exported flow wrappers
-export async function inviteUserFlowWrapper(input: z.infer<typeof InviteUserSchema> & z.infer<typeof ActorSchema>): Promise<{ inviteId: z.string }> {
+export async function inviteUserFlowWrapper(input: z.infer<typeof InviteUserSchema> & z.infer<typeof ActorSchema>): Promise<{ inviteId: string }> {
     return inviteUserFlow(input);
 }
 
@@ -444,10 +451,10 @@ export async function updateUserPermissionsFlowWrapper(input: z.infer<typeof Upd
     return { success: true };
 }
 
-export async function validateInviteFlowWrapper(input: z.infer<typeof z.object({ inviteId: z.string() })>): Promise<z.infer<typeof z.object({ email: z.string(), organizationName: z.string() })>> {
+export async function validateInviteFlowWrapper(input: z.infer<typeof ValidateInviteInputSchema>): Promise<z.infer<typeof ValidateInviteOutputSchema>> {
     return validateInviteFlow(input);
 }
 
-export async function acceptInviteFlowWrapper(input: z.infer<typeof z.object({ inviteId: z.string(), name: z.string(), uid: z.string() })>): Promise<z.infer<typeof z.object({ success: z.boolean() })>> {
+export async function acceptInviteFlowWrapper(input: z.infer<typeof AcceptInviteInputSchema>): Promise<z.infer<typeof AcceptInviteOutputSchema>> {
     return acceptInviteFlow(input);
 }
