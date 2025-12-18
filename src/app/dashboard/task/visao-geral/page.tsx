@@ -77,32 +77,29 @@ export default function VisaoGeralPage() {
     return () => unsubscribe();
   }, []);
 
-  const fetchData = async (user: User | null) => {
-    if (!user || !user.uid) {
-        setIsLoading(false);
-        return;
-    }
-    setIsLoading(true);
-    setError(null);
-    try {
-        const [metricsData, usersData] = await Promise.all([
-            getOverviewMetrics({ actor: user.uid }),
-            listUsers({ actor: user.uid })
-        ]);
-        setMetrics(metricsData);
-        setUsers(usersData);
-    } catch (err: any) {
-        setError(err.message || 'Não foi possível carregar os dados.');
-    } finally {
-        setIsLoading(false);
-    }
-  }
-
   useEffect(() => {
-    if (currentUser) {
-      fetchData(currentUser);
+    const fetchData = async () => {
+        if (!currentUser?.uid) {
+            setIsLoading(false);
+            return;
+        }
+        setIsLoading(true);
+        setError(null);
+        try {
+            const [metricsData, usersData] = await Promise.all([
+                getOverviewMetrics({ actor: currentUser.uid }),
+                listUsers({ actor: currentUser.uid })
+            ]);
+            setMetrics(metricsData);
+            setUsers(usersData);
+        } catch (err: any) {
+            setError(err.message || 'Não foi possível carregar os dados.');
+        } finally {
+            setIsLoading(false);
+        }
     }
-  }, [currentUser, refreshTrigger]);
+    fetchData();
+  }, [currentUser?.uid, refreshTrigger]);
 
   const handleSelectTask = (task: TaskProfile) => {
     setSelectedTask(task);

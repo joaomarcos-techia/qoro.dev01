@@ -184,9 +184,9 @@ function DashboardContent() {
 
   useEffect(() => {
     async function fetchAllMetrics() {
-        if (!currentUser || !currentUser.uid || isPlanLoading || planError) {
-          setIsLoadingMetrics(false);
-          return;
+        if (!currentUser?.uid) {
+            setIsLoadingMetrics(false);
+            return;
         };
 
         setIsLoadingMetrics(true);
@@ -212,7 +212,7 @@ function DashboardContent() {
     }
     
     fetchAllMetrics();
-  }, [currentUser, isPlanLoading, planError]);
+  }, [currentUser?.uid]);
 
   const dismissNotification = async () => {
     if (!organizationId) return;
