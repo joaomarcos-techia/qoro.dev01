@@ -88,35 +88,30 @@ export const updateTask = async (
     if (!taskDoc.exists || data.companyId !== organizationId) {
       throw new Error('Tarefa não encontrada ou acesso negado.');
     }
+    
+    const { id, __commentOnlyUpdate, ...updateData } = input;
 
-    if (input.__commentOnlyUpdate) {
-        if (input.comments) {
-             const commentsWithDate = input.comments.map(c => ({...c, createdAt: new Date(c.createdAt as string)}));
-             await taskRef.update({
-                comments: commentsWithDate,
-                updatedAt: FieldValue.serverTimestamp(),
-             });
-             return { id: taskId };
-        }
-    }
+    // Convert all incoming subtasks and comments to plain objects for Firestore
+    const subtasks = updateData.subtasks?.map(st => ({ ...st })) || [];
+    const comments = (updateData.comments || []).map(c => ({...c, createdAt: new Date(c.createdAt as string)}));
 
-    const { id, comments, __commentOnlyUpdate, ...updateData } = input;
-    const existingComments = (Array.isArray(data.comments) ? data.comments : []).map(c => ({
-        ...c,
-        createdAt: toISOStringSafe(c.createdAt)
-    }));
-
-    const payload = {
+    const payload: { [key: string]: any } = {
         ...updateData,
         dueDate: updateData.dueDate ? new Date(updateData.dueDate) : data.dueDate,
+        subtasks: subtasks,
+        comments: comments,
         updatedAt: FieldValue.serverTimestamp(),
-        comments: existingComments.map(c => ({...c, createdAt: new Date(c.createdAt!)})),
     };
+
+    // Remove the special flag from the payload
+    delete payload.__commentOnlyUpdate;
+
 
     await taskRef.update(payload);
     return { id: taskId };
-  } catch (error) {
-    throw new Error('Falha ao atualizar a tarefa.');
+  } catch (error: any) {
+    console.error("Error updating task:", error);
+    throw new Error(`Falha ao atualizar a tarefa: ${error.message}`);
   }
 };
 
@@ -314,3 +309,4 @@ export const getOverviewMetrics = async (actorUid: string) => {
         throw new Error('Falha ao carregar a visão geral de tarefas.');
     }
 };
+
