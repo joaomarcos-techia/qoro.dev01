@@ -16,7 +16,7 @@ import {
     DialogTitle,
   } from '@/components/ui/dialog';
 import { TaskForm } from '@/components/dashboard/task/TaskForm';
-import { listUsers } from '@/ai/flows/user-management';
+import { listUsersFlowWrapper as listUsers } from '@/ai/flows/user-management';
 
 
 interface OverviewMetrics {
@@ -79,7 +79,7 @@ export default function VisaoGeralPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-        if (!currentUser?.uid) {
+        if (!currentUser || !currentUser.uid) {
             setIsLoading(false);
             return;
         }
@@ -99,7 +99,7 @@ export default function VisaoGeralPage() {
         }
     }
     fetchData();
-  }, [currentUser?.uid, refreshTrigger]);
+  }, [currentUser, refreshTrigger]);
 
   const handleSelectTask = (task: TaskProfile) => {
     setSelectedTask(task);

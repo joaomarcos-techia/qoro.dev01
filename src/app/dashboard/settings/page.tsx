@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Mail, Send, KeyRound, UserPlus, Building, AlertCircle, CheckCircle, ArrowLeft, User, Shield, Users, Loader2, ExternalLink, Trash2, Copy, CreditCard, SlidersHorizontal, MessageSquare } from 'lucide-react';
-import { inviteUser, listUsers, deleteUser, updateUserPermissions } from '@/ai/flows/user-management';
+import { inviteUserFlowWrapper as inviteUser, listUsersFlowWrapper as listUsers, deleteUserFlowWrapper as deleteUser, updateUserPermissionsFlowWrapper as updateUserPermissions } from '@/ai/flows/user-management';
 import { sendPasswordReset } from '@/lib/authService';
 import { createBillingPortalSession } from '@/ai/flows/billing-flow';
 import { UserProfile, InviteUserSchema, AppPermissions } from '@/ai/schemas';
@@ -82,7 +82,7 @@ export default function SettingsPage() {
     };
     
     const fetchUsers = useCallback(async () => {
-        if (!currentUser) return;
+        if (!currentUser || !currentUser.uid) return;
         setIsLoading(prev => ({ ...prev, users: true }));
         try {
             const userList = await listUsers({ actor: currentUser.uid });
@@ -93,7 +93,6 @@ export default function SettingsPage() {
             });
             setUsers(userList);
         } catch (error: any) {
-            console.error("Failed to fetch users:", error);
             setFeedback({ type: 'error', message: error.message || 'Não foi possível carregar a lista de usuários.', context: 'users' });
         } finally {
             setIsLoading(prev => ({ ...prev, users: false }));
@@ -108,7 +107,7 @@ export default function SettingsPage() {
     }, []);
 
     useEffect(() => {
-        if (currentUser && activeTab === 'users' && isAdmin) {
+        if (currentUser && currentUser.uid && activeTab === 'users' && isAdmin) {
             fetchUsers();
         }
     }, [activeTab, currentUser, fetchUsers, isAdmin]);
@@ -158,7 +157,6 @@ export default function SettingsPage() {
             });
             setInviteEmail('');
         } catch (error: any) {
-            console.error(error);
             setFeedback({ type: 'error', message: error.message || 'Falha ao criar o convite.', context: 'invite' });
         } finally {
             setIsLoading(prev => ({ ...prev, invite: false }));
@@ -184,7 +182,6 @@ export default function SettingsPage() {
             setFeedback({ type: 'success', message: 'Usuário removido com sucesso.', context: 'users' });
             fetchUsers(); // Refresh the list
         } catch (error: any) {
-            console.error("Failed to delete user:", error);
             setFeedback({ type: 'error', message: error.message || 'Falha ao remover usuário.', context: 'users' });
         } finally {
             setIsLoading(prev => ({ ...prev, deleteUser: '' }));
@@ -199,7 +196,6 @@ export default function SettingsPage() {
             const { url } = await createBillingPortalSession({ actor: currentUser.uid });
             window.open(url, '_self');
         } catch (error: any) {
-            console.error("Failed to create billing portal session:", error);
             setFeedback({ type: 'error', message: "Não foi possível acessar o portal de assinaturas. Verifique suas configurações no Stripe.", context: 'portal' });
         } finally {
              setIsLoading(prev => ({...prev, portal: false }));
@@ -440,4 +436,3 @@ export default function SettingsPage() {
     );
 }
 
-    

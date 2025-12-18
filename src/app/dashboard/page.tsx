@@ -184,7 +184,7 @@ function DashboardContent() {
 
   useEffect(() => {
     async function fetchAllMetrics() {
-        if (!currentUser?.uid) {
+        if (!currentUser || !currentUser.uid) {
             setIsLoadingMetrics(false);
             return;
         };
@@ -212,7 +212,7 @@ function DashboardContent() {
     }
     
     fetchAllMetrics();
-  }, [currentUser?.uid]);
+  }, [currentUser]);
 
   const dismissNotification = async () => {
     if (!organizationId) return;

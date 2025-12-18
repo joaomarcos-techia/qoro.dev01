@@ -17,7 +17,7 @@ import { TaskProfile, UserProfile } from '@/ai/schemas';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useTasks } from '@/contexts/TasksContext';
-import { listUsers } from '@/ai/flows/user-management';
+import { listUsersFlowWrapper as listUsers } from '@/ai/flows/user-management';
 
 export default function ListaPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -35,7 +35,7 @@ export default function ListaPage() {
   }, []);
 
   useEffect(() => {
-    if (currentUser) {
+    if (currentUser && currentUser.uid) {
         setIsLoadingUsers(true);
         listUsers({ actor: currentUser.uid })
           .then(setUsers)
