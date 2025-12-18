@@ -307,15 +307,6 @@ export async function acceptInvite(input: { inviteId: string; name: string; uid:
 
 // --- Genkit Flows ---
 
-const createUserProfileFlow = ai.defineFlow(
-    {
-        name: 'createUserProfileFlow',
-        inputSchema: UserProfileCreationSchema,
-        outputSchema: z.object({ uid: z.string() })
-    },
-    async (input) => createUserProfile(input)
-);
-
 const listUsersFlow = ai.defineFlow(
     { name: 'listUsersFlow', inputSchema: ActorSchema, outputSchema: z.array(UserProfileSchema) },
     async ({ actor }) => listUsers(actor)
@@ -404,10 +395,6 @@ const acceptInviteFlow = ai.defineFlow(
 
 
 // Exported flow wrappers
-export async function createUserProfileFlowWrapper(input: z.infer<typeof UserProfileCreationSchema>): Promise<{ uid: string }> {
-    return createUserProfileFlow(input);
-}
-
 export async function inviteUserFlowWrapper(input: z.infer<typeof InviteUserSchema> & z.infer<typeof ActorSchema>): Promise<{ inviteId: z.string }> {
     return inviteUserFlow(input);
 }
