@@ -2,7 +2,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Mail, Send, KeyRound, UserPlus, Building, AlertCircle, CheckCircle, ArrowLeft, User, Shield, Users, Loader2, ExternalLink, Trash2, Copy, CreditCard, SlidersHorizontal, MessageSquare } from 'lucide-react';
+import { Mail, Send, KeyRound, UserPlus, Building, AlertCircle, CheckCircle, ArrowLeft, User, Shield, Users, Loader2, ExternalLink, Trash2, Copy, CreditCard, SlidersHorizontal, MessageSquare, Check } from 'lucide-react';
 import { inviteUserFlowWrapper as inviteUser, listUsersFlowWrapper as listUsers, deleteUserFlowWrapper as deleteUser, updateUserPermissionsFlowWrapper as updateUserPermissions } from '@/ai/flows/user-management';
 import { sendPasswordReset } from '@/lib/authService';
 import { createBillingPortalSession } from '@/ai/flows/billing-flow';
@@ -63,6 +63,7 @@ export default function SettingsPage() {
     
     const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
     const [selectedUserForPermissions, setSelectedUserForPermissions] = useState<UserProfile | null>(null);
+    const [isCopied, setIsCopied] = useState(false);
 
     const isAdmin = userRole === 'admin';
     
@@ -160,6 +161,12 @@ export default function SettingsPage() {
         } finally {
             setIsLoading(prev => ({ ...prev, invite: false }));
         }
+    };
+
+    const handleCopy = (link: string) => {
+        navigator.clipboard.writeText(link);
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
     };
     
     const handleOpenPermissions = (user: UserProfile) => {
@@ -359,7 +366,9 @@ export default function SettingsPage() {
                                             {feedback.type === 'success' && feedback.data?.link && (
                                                 <div className="mt-3 flex items-center gap-2 pl-8">
                                                     <Input readOnly value={feedback.data.link} className="bg-secondary text-xs" />
-                                                    <Button variant="ghost" size="icon" onClick={() => navigator.clipboard.writeText(feedback.data.link)}><Copy className="w-4 h-4"/></Button>
+                                                    <Button variant="ghost" size="icon" onClick={() => handleCopy(feedback.data.link)}>
+                                                        {isCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                                                    </Button>
                                                 </div>
                                             )}
                                         </div>
