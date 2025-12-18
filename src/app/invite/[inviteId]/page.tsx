@@ -23,11 +23,11 @@ export default function AcceptInvitePage() {
 
   useEffect(() => {
     async function verifyInvite() {
+      // Guard clause to prevent running with an empty or undefined inviteId
       if (!inviteId) {
-        setError('ID de convite inválido.');
-        setIsLoading(false);
         return;
       }
+      setIsLoading(true);
       try {
         const info = await validateInvite({ inviteId });
         setInviteInfo(info);
