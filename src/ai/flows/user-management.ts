@@ -408,7 +408,7 @@ export async function createUserProfileFlowWrapper(input: z.infer<typeof UserPro
     return createUserProfileFlow(input);
 }
 
-export async function inviteUserFlowWrapper(input: z.infer<typeof InviteUserSchema> & z.infer<typeof ActorSchema>): Promise<{ inviteId: string }> {
+export async function inviteUserFlowWrapper(input: z.infer<typeof InviteUserSchema> & z.infer<typeof ActorSchema>): Promise<{ inviteId: z.string }> {
     return inviteUserFlow(input);
 }
 
