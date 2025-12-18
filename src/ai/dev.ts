@@ -10,3 +10,4 @@ import './flows/supplier-management';
 import './flows/reconciliation-flow';
 import './flows/billing-flow';
 import './flows/qualification-flow';
+import './flows/upgrade-flow';

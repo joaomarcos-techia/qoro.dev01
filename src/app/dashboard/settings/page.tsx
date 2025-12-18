@@ -2,10 +2,11 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Mail, Send, KeyRound, UserPlus, Building, AlertCircle, CheckCircle, ArrowLeft, User, Shield, Users, Loader2, ExternalLink, Trash2, Copy, CreditCard, SlidersHorizontal, MessageSquare, Check, ArrowUpRight } from 'lucide-react';
+import { Mail, Send, KeyRound, UserPlus, Building, AlertCircle, CheckCircle, ArrowLeft, User, Shield, Users, Loader2, ExternalLink, Trash2, Copy, CreditCard, SlidersHorizontal, MessageSquare, Check, ArrowUpRight, Crown } from 'lucide-react';
 import { inviteUserFlowWrapper as inviteUser, listUsersFlowWrapper as listUsers, deleteUserFlowWrapper as deleteUser, updateUserPermissionsFlowWrapper as updateUserPermissions } from '@/ai/flows/user-management';
 import { sendPasswordReset } from '@/lib/authService';
 import { createBillingPortalSession } from '@/ai/flows/billing-flow';
+import { createUpgradeSession } from '@/ai/flows/upgrade-flow';
 import { UserProfile, AppPermissions } from '@/ai/schemas';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -56,7 +57,7 @@ export default function SettingsPage() {
     const [activeTab, setActiveTab] = useState('account');
     const [inviteEmail, setInviteEmail] = useState('');
     const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
-    const [isLoading, setIsLoading] = useState({ invite: false, password: false, users: true, permissions: '', portal: false, deleteUser: '' });
+    const [isLoading, setIsLoading] = useState({ invite: false, password: false, users: true, permissions: '', portal: false, deleteUser: '', upgrade: false });
     const [feedback, setFeedback] = useState<{ type: 'error' | 'success', message: string, context: string, data?: any } | null>(null);
     const [users, setUsers] = useState<UserProfile[]>([]);
     const { planId, isLoading: isPlanLoading, role: userRole } = usePlan();
@@ -207,6 +208,22 @@ export default function SettingsPage() {
              setIsLoading(prev => ({...prev, portal: false }));
         }
     };
+    
+    const handleUpgrade = async () => {
+        if (!currentUser || !isAdmin) return;
+        setIsLoading(prev => ({...prev, upgrade: true}));
+        setFeedback(null);
+        try {
+            const { sessionId } = await createUpgradeSession({ actor: currentUser.uid });
+            window.location.href = sessionId;
+        } catch (error: any) {
+            setFeedback({ type: 'error', message: "Não foi possível iniciar o processo de upgrade. Tente novamente.", context: 'portal' });
+            setIsLoading(prev => ({...prev, upgrade: false}));
+        }
+    }
+
+
+    const nextPlan = planId === 'free' ? 'Growth' : (planId === 'growth' ? 'Performance' : null);
 
     return (
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -297,12 +314,16 @@ export default function SettingsPage() {
                                                         {!isLoading.portal && <CreditCard className="ml-2 h-4 w-4" />}
                                                     </Button>
                                                 )}
-                                                 <Link href="/#precos" className="w-full flex-1">
-                                                    <Button variant="default" className="w-full bg-primary/20 text-primary border border-primary/50 hover:bg-primary/30">
-                                                        Mudar de plano
-                                                        <ArrowUpRight className="ml-2 h-4 w-4"/>
-                                                    </Button>
-                                                 </Link>
+                                                {isAdmin && nextPlan && (
+                                                     <Button onClick={handleUpgrade} disabled={isLoading.upgrade} className="w-full flex-1 bg-primary/20 text-primary border border-primary/50 hover:bg-primary/30">
+                                                         {isLoading.upgrade ? (
+                                                             <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                                                         ) : (
+                                                             <Crown className="mr-2 h-4 w-4"/>
+                                                         )}
+                                                        {isLoading.upgrade ? 'Aguarde...' : `Upgrade para ${nextPlan}`}
+                                                     </Button>
+                                                )}
                                             </div>
                                         </div>
                                     </div>

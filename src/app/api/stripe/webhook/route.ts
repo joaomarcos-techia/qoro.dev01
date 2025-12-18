@@ -42,29 +42,43 @@ export async function POST(req: Request) {
             return NextResponse.json({ received: true });
         }
 
-        const { firebaseUID, organizationName, userName, cnpj, contactEmail, contactPhone } = session.metadata || {};
+        const { firebaseUID, organizationName, userName, cnpj, contactEmail, contactPhone, organizationId, upgrade } = session.metadata || {};
         const subscriptionId = session.subscription as string;
         
-        if (!firebaseUID || !organizationName || !userName || !subscriptionId) {
-          return NextResponse.json({ error: 'Metadados essenciais não encontrados na sessão de checkout.' }, { status: 400 });
+        if (upgrade === 'true') {
+          // Lógica de upgrade
+          if (!organizationId || !subscriptionId) {
+            return NextResponse.json({ error: 'Metadados de upgrade essenciais não encontrados.' }, { status: 400 });
+          }
+          const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+          await handleSubscriptionChange(
+            subscription.id,
+            subscription.items.data[0].price.id,
+            subscription.status
+          );
+
+        } else {
+          // Lógica de novo cadastro
+          if (!firebaseUID || !organizationName || !userName || !subscriptionId) {
+            return NextResponse.json({ error: 'Metadados de novo cliente essenciais não encontrados.' }, { status: 400 });
+          }
+
+          const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+          await createUserProfile({
+            uid: firebaseUID,
+            name: userName,
+            organizationName: organizationName,
+            email: session.customer_details?.email || '',
+            cnpj: cnpj,
+            contactEmail: contactEmail,
+            contactPhone: contactPhone,
+            planId: subscription.items.data[0].price.id === process.env.NEXT_PUBLIC_STRIPE_PERFORMANCE_PLAN_PRICE_ID ? 'performance' : 'growth',
+            stripePriceId: subscription.items.data[0].price.id,
+            stripeCustomerId: subscription.customer as string,
+            stripeSubscriptionId: subscription.id,
+            stripeSubscriptionStatus: subscription.status,
+          });
         }
-
-        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-
-        await createUserProfile({
-          uid: firebaseUID,
-          name: userName,
-          organizationName: organizationName,
-          email: session.customer_details?.email || '', // Email comes from customer_details
-          cnpj: cnpj,
-          contactEmail: contactEmail,
-          contactPhone: contactPhone,
-          planId: subscription.items.data[0].price.id === process.env.NEXT_PUBLIC_STRIPE_PERFORMANCE_PLAN_PRICE_ID ? 'performance' : (subscription.items.data[0].price.id === process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID ? 'growth' : 'free'),
-          stripePriceId: subscription.items.data[0].price.id,
-          stripeCustomerId: subscription.customer as string,
-          stripeSubscriptionId: subscription.id,
-          stripeSubscriptionStatus: subscription.status,
-        });
         
         break;
       }
