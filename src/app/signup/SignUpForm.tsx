@@ -210,7 +210,7 @@ export default function SignUpForm() {
                     </div>
                     <div className="relative">
                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                        <input name="contactEmail" type="email" placeholder="E-mail de Contato (opcional)" value={formData.contactEmail} onChange={handleInputChange} className="w-full pl-12 pr-4 py-3 bg-input rounded-xl border-border focus:ring-2 focus:ring-primary transition-all duration-200"/>
+                        <input name="contactEmail" type="email" placeholder="E-mail de Contato (opcional)" value={formData.contactEmail} onChange={handleInputChange} maxLength={30} className="w-full pl-12 pr-4 py-3 bg-input rounded-xl border-border focus:ring-2 focus:ring-primary transition-all duration-200"/>
                     </div>
                     <div className="relative">
                         <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
