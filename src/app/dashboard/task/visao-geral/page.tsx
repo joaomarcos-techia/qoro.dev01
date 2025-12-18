@@ -77,7 +77,11 @@ export default function VisaoGeralPage() {
     return () => unsubscribe();
   }, []);
 
-  const fetchData = async (user: User) => {
+  const fetchData = async (user: User | null) => {
+    if (!user) {
+        setIsLoading(false);
+        return;
+    }
     setIsLoading(true);
     setError(null);
     try {
@@ -96,9 +100,7 @@ export default function VisaoGeralPage() {
   }
 
   useEffect(() => {
-    if (currentUser) {
-        fetchData(currentUser);
-    }
+    fetchData(currentUser);
   }, [currentUser, refreshTrigger]);
 
   const handleSelectTask = (task: TaskProfile) => {
