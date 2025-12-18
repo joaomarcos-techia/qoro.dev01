@@ -103,11 +103,15 @@ export async function POST(req: Request) {
 
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription;
-        await handleSubscriptionChange(
-            subscription.id,
-            'free', // When deleted, revert to free plan
-            subscription.status // e.g., 'canceled'
-        );
+        const orgSnapshot = await adminDb.collection('organizations').where('stripeSubscriptionId', '==', subscription.id).limit(1).get();
+        if (!orgSnapshot.empty) {
+            const orgDoc = orgSnapshot.docs[0];
+            await handleSubscriptionChange(
+                subscription.id,
+                orgDoc.data().stripePriceId || 'free',
+                'canceled'
+            );
+        }
         break;
       }
 

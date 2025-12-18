@@ -65,6 +65,7 @@ export const createUserProfile = async (input: z.infer<typeof UserProfileCreatio
         stripeSubscriptionId: stripeSubscriptionId || null,
         stripePriceId: stripePriceId || null,
         stripeCurrentPeriodEnd: null, // Will be updated by webhook
+        planId: planId, // Set initial plan on organization
       });
   
       // 2. Create User
@@ -238,11 +239,15 @@ export const handleSubscriptionChange = async (subscriptionId: string, newPriceI
   
     const usersSnapshot = await adminDb.collection('users').where('organizationId', '==', orgDoc.id).get();
     const batch = adminDb.batch();
-    usersSnapshot.forEach(userDoc => {
+    
+    for (const userDoc of usersSnapshot.docs) {
       const userRef = adminDb.collection('users').doc(userDoc.id);
       batch.update(userRef, { planId: newPlanId });
-      adminAuth.setCustomUserClaims(userDoc.id, { ...userDoc.data().claims, planId: newPlanId });
-    });
+      
+      const userRecord = await adminAuth.getUser(userDoc.id);
+      const currentClaims = userRecord.customClaims || {};
+      await adminAuth.setCustomUserClaims(userDoc.id, { ...currentClaims, planId: newPlanId });
+    }
   
     await batch.commit();
 };
@@ -437,4 +442,12 @@ export async function updateUserPermissionsFlowWrapper(input: z.infer<typeof Upd
   
     await userRef.update({ permissions: input.permissions });
     return { success: true };
+}
+
+export async function validateInviteFlowWrapper(input: z.infer<typeof z.object({ inviteId: z.string() })>): Promise<z.infer<typeof z.object({ email: z.string(), organizationName: z.string() })>> {
+    return validateInviteFlow(input);
+}
+
+export async function acceptInviteFlowWrapper(input: z.infer<typeof z.object({ inviteId: z.string(), name: z.string(), uid: z.string() })>): Promise<z.infer<typeof z.object({ success: z.boolean() })>> {
+    return acceptInviteFlow(input);
 }

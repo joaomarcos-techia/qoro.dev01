@@ -34,8 +34,7 @@ const createCheckoutSessionFlow = ai.defineFlow(
   async ({ priceId, actor, name, organizationName, cnpj, contactEmail, contactPhone }) => {
     
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:9003';
-    const planId = priceId === process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID ? 'growth' : 'performance';
-
+    
     // The webhook now relies on metadata to create the user profile.
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -43,7 +42,7 @@ const createCheckoutSessionFlow = ai.defineFlow(
       billing_address_collection: 'required',
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${siteUrl}/dashboard?payment_success=true`,
-      cancel_url: `${siteUrl}/signup?plan=${planId}&payment_cancelled=true`,
+      cancel_url: `${siteUrl}/signup?plan=${priceId}&payment_cancelled=true`,
       // Crucial metadata for the webhook to construct the user profile
       metadata: {
           firebaseUID: actor,
