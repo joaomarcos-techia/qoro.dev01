@@ -259,7 +259,11 @@ export async function validateInvite(input: { inviteId: string }): Promise<{ ema
     return { email: data.email, organizationName: data.organizationName };
 };
 
-export async function acceptInvite(inviteId: string, { name, uid }: { name: string; uid: string }): Promise<{ success: boolean; }> {
+export async function acceptInvite(input: { inviteId: string; name: string; uid: string; }): Promise<{ success: boolean; }> {
+    const { inviteId, name, uid } = input;
+    if (!uid) {
+        throw new Error('UID do usuário é inválido.');
+    }
     const inviteRef = adminDb.collection('invites').doc(inviteId);
     return adminDb.runTransaction(async (transaction) => {
         const inviteDoc = await transaction.get(inviteRef);
@@ -389,7 +393,7 @@ const validateInviteFlow = ai.defineFlow(
 
 const acceptInviteFlow = ai.defineFlow(
     { name: 'acceptInviteFlow', inputSchema: z.object({ inviteId: z.string(), name: z.string(), uid: z.string() }), outputSchema: z.object({ success: z.boolean() }) },
-    async ({ inviteId, name, uid }) => acceptInvite(inviteId, { name, uid })
+    async (input) => acceptInvite(input)
 );
 
 
