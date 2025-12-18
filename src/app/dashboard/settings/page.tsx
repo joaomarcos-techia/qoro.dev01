@@ -57,7 +57,7 @@ export default function SettingsPage() {
     const [activeTab, setActiveTab] = useState('account');
     const [inviteEmail, setInviteEmail] = useState('');
     const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
-    const [isLoading, setIsLoading] = useState({ invite: false, password: false, users: true, permissions: '', portal: false, deleteUser: '', upgrade: false });
+    const [isLoading, setIsLoading] = useState({ invite: false, password: false, users: true, permissions: '', portal: false, deleteUser: '', upgrade: '' });
     const [feedback, setFeedback] = useState<{ type: 'error' | 'success', message: string, context: string, data?: any } | null>(null);
     const [users, setUsers] = useState<UserProfile[]>([]);
     const { planId, isLoading: isPlanLoading, role: userRole } = usePlan();
@@ -209,18 +209,21 @@ export default function SettingsPage() {
         }
     };
     
-    const handleUpgrade = async () => {
+    const handleUpgrade = async (targetPlanId: string) => {
         if (!currentUser || !isAdmin) return;
-        setIsLoading(prev => ({...prev, upgrade: true}));
+        setIsLoading(prev => ({ ...prev, upgrade: targetPlanId }));
         setFeedback(null);
         try {
-            const { sessionId } = await createUpgradeSession({ actor: currentUser.uid });
+            const { sessionId } = await createUpgradeSession({
+                actor: currentUser.uid,
+                targetPriceId: targetPlanId,
+            });
             window.location.href = sessionId;
         } catch (error: any) {
             setFeedback({ type: 'error', message: "Não foi possível iniciar o processo de upgrade. Tente novamente.", context: 'portal' });
-            setIsLoading(prev => ({...prev, upgrade: false}));
+            setIsLoading(prev => ({ ...prev, upgrade: '' }));
         }
-    }
+    };
 
 
     const nextPlan = planId === 'free' ? 'Growth' : (planId === 'growth' ? 'Performance' : null);
@@ -314,15 +317,17 @@ export default function SettingsPage() {
                                                         {!isLoading.portal && <CreditCard className="ml-2 h-4 w-4" />}
                                                     </Button>
                                                 )}
-                                                {isAdmin && nextPlan && (
-                                                     <Button onClick={handleUpgrade} disabled={isLoading.upgrade} className="w-full flex-1 bg-primary/20 text-primary border border-primary/50 hover:bg-primary/30">
-                                                         {isLoading.upgrade ? (
-                                                             <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-                                                         ) : (
-                                                             <Crown className="mr-2 h-4 w-4"/>
-                                                         )}
-                                                        {isLoading.upgrade ? 'Aguarde...' : `Upgrade para ${nextPlan}`}
-                                                     </Button>
+                                                {isAdmin && planId === 'free' && (
+                                                    <Button onClick={() => handleUpgrade(process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID!)} disabled={!!isLoading.upgrade} className="w-full flex-1 bg-primary/20 text-primary border border-primary/50 hover:bg-primary/30">
+                                                        {isLoading.upgrade === process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                                                        <Crown className="mr-2 h-4 w-4"/> Upgrade para Growth
+                                                    </Button>
+                                                )}
+                                                 {isAdmin && (planId === 'free' || planId === 'growth') && (
+                                                    <Button onClick={() => handleUpgrade(process.env.NEXT_PUBLIC_STRIPE_PERFORMANCE_PLAN_PRICE_ID!)} disabled={!!isLoading.upgrade} className="w-full flex-1 bg-primary/20 text-primary border border-primary/50 hover:bg-primary/30">
+                                                        {isLoading.upgrade === process.env.NEXT_PUBLIC_STRIPE_PERFORMANCE_PLAN_PRICE_ID && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                                                        <Crown className="mr-2 h-4 w-4"/> Upgrade para Performance
+                                                    </Button>
                                                 )}
                                             </div>
                                         </div>
