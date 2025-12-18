@@ -1,5 +1,4 @@
 
-
 'use server';
 /**
  * @fileOverview Task management services.
@@ -83,30 +82,39 @@ export const updateTask = async (
 
     const taskRef = adminDb.collection('tasks').doc(taskId);
     const taskDoc = await taskRef.get();
-    const data = taskDoc.data() || {};
-
-    if (!taskDoc.exists || data.companyId !== organizationId) {
+    
+    if (!taskDoc.exists || taskDoc.data()?.companyId !== organizationId) {
       throw new Error('Tarefa não encontrada ou acesso negado.');
     }
-    
+
+    const existingData = taskDoc.data()!;
     const { id, __commentOnlyUpdate, ...updateData } = input;
 
-    // Convert all incoming subtasks and comments to plain objects for Firestore
-    const subtasks = updateData.subtasks?.map(st => ({ ...st })) || [];
-    const comments = (updateData.comments || []).map(c => ({...c, createdAt: new Date(c.createdAt as string)}));
+    let payload: { [key: string]: any };
 
-    const payload: { [key: string]: any } = {
-        ...updateData,
-        dueDate: updateData.dueDate ? new Date(updateData.dueDate) : data.dueDate,
-        subtasks: subtasks,
-        comments: comments,
+    if (__commentOnlyUpdate) {
+      // If only updating comments, merge new comments with existing data
+      payload = {
+        ...existingData,
+        comments: (updateData.comments || []).map(c => ({...c, createdAt: new Date(c.createdAt as string)})),
         updatedAt: FieldValue.serverTimestamp(),
-    };
-
-    // Remove the special flag from the payload
+      };
+    } else {
+      // For full updates, use the provided data
+      payload = {
+        ...updateData,
+        dueDate: updateData.dueDate ? new Date(updateData.dueDate) : existingData.dueDate,
+        subtasks: updateData.subtasks?.map(st => ({ ...st })) || [],
+        comments: (updateData.comments || []).map(c => ({...c, createdAt: new Date(c.createdAt as string)})),
+        updatedAt: FieldValue.serverTimestamp(),
+      };
+    }
+    
+    // Remove the special flag from the final payload
     delete payload.__commentOnlyUpdate;
-
-
+    // Ensure `createdAt` is not overwritten
+    delete payload.createdAt;
+    
     await taskRef.update(payload);
     return { id: taskId };
   } catch (error: any) {
@@ -309,4 +317,3 @@ export const getOverviewMetrics = async (actorUid: string) => {
         throw new Error('Falha ao carregar a visão geral de tarefas.');
     }
 };
-

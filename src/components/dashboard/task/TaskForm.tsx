@@ -129,14 +129,20 @@ export function TaskForm({ onTaskAction, task, users, viewOnly = false }: TaskFo
         setNewCommentText('');
         
         try {
+            // Using existing task data from the form state
             const currentTaskData = getValues();
-            const updatedComments = [...(currentTaskData.comments || []), optimisticComment];
-
+            
             await updateTask({ 
-                ...currentTaskData,
+                // Pass the full task object to ensure all required fields are present
+                ...task,
                 id: task.id,
-                dueDate: currentTaskData.dueDate ? currentTaskData.dueDate.toISOString() : null,
-                comments: updatedComments.map(c => ({...c, createdAt: new Date(c.createdAt).toISOString()})),
+                title: task.title,
+                status: task.status,
+                priority: task.priority,
+                // Ensure dates are in the correct format if they exist
+                dueDate: task.dueDate ? new Date(task.dueDate).toISOString() : null,
+                // Append the new comment
+                comments: [...(task.comments || []), { ...optimisticComment, createdAt: optimisticComment.createdAt.toISOString() }],
                 actor: currentUser.uid,
                 __commentOnlyUpdate: true, 
             });
