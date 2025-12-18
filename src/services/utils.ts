@@ -32,7 +32,7 @@ export const getAdminAndOrg = async (actorUid: string): Promise<AdminOrgResult> 
     const userData = userDoc.data()!;
     const companyId = userData.organizationId;
     const userRole = userData.role || 'member'; 
-    const planId = userData.planId || 'free'; // Correção: Pegar planId do usuário
+    const planId = userData.planId || 'free'; // Correção: Pegar planId do usuário, não da organização.
     
     if (!companyId) {
         return null;
