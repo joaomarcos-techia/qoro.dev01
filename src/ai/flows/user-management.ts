@@ -224,7 +224,7 @@ export const handleSubscriptionChange = async (subscriptionId: string, newPriceI
     
     let lastSystemNotification = null;
     if (status === 'active' && orgDoc.data().planId !== newPlanId) {
-        lastSystemNotification = `Seu plano foi alterado para ${'${newPlanId}'}.`;
+        lastSystemNotification = `Seu plano foi alterado para ${newPlanId}.`;
     } else if (status === 'canceled' || status === 'unpaid') {
         lastSystemNotification = "Houve um problema com sua assinatura. Seu plano foi alterado para o gratuito.";
     }
