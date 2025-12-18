@@ -24,9 +24,13 @@ export default function AcceptInvitePage() {
   useEffect(() => {
     async function verifyInvite() {
       // Guard clause to prevent running with an empty or undefined inviteId
-      if (!inviteId) {
+      if (!inviteId || typeof inviteId !== 'string') {
+        setIsLoading(false);
+        // Don't set an error here, let the UI show its loading or initial state
+        // until the inviteId is available.
         return;
       }
+      
       setIsLoading(true);
       try {
         const info = await validateInvite({ inviteId });

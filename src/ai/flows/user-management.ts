@@ -244,7 +244,11 @@ export const handleSubscriptionChange = async (subscriptionId: string, newPriceI
     await batch.commit();
 };
 
-export const validateInvite = async (inviteId: string) => {
+export async function validateInvite(input: { inviteId: string }): Promise<{ email: string; organizationName: string; }> {
+    const { inviteId } = input;
+    if (!inviteId || typeof inviteId !== 'string') {
+        throw new Error('ID do convite inválido.');
+    }
     const inviteRef = adminDb.collection('invites').doc(inviteId);
     const doc = await inviteRef.get();
 
@@ -255,7 +259,7 @@ export const validateInvite = async (inviteId: string) => {
     return { email: data.email, organizationName: data.organizationName };
 };
 
-export const acceptInvite = async (inviteId: string, { name, uid }: { name: string; uid: string }) => {
+export async function acceptInvite(inviteId: string, { name, uid }: { name: string; uid: string }): Promise<{ success: boolean; }> {
     const inviteRef = adminDb.collection('invites').doc(inviteId);
     return adminDb.runTransaction(async (transaction) => {
         const inviteDoc = await transaction.get(inviteRef);
@@ -378,9 +382,14 @@ const deleteUserFlow = ai.defineFlow(
     async (input) => deleteUser(input.userId, input.actor)
 );
 
-const updateUserPermissionsFlow = ai.defineFlow(
-    { name: 'updateUserPermissionsFlow', inputSchema: UpdateUserPermissionsSchema.extend(ActorSchema.shape), outputSchema: z.object({ success: z.boolean() }) },
-    async (input) => updateUserPermissions(input)
+const validateInviteFlow = ai.defineFlow(
+    { name: 'validateInviteFlow', inputSchema: z.object({ inviteId: z.string() }), outputSchema: z.object({ email: z.string(), organizationName: z.string() }) },
+    async (input) => validateInvite(input)
+);
+
+const acceptInviteFlow = ai.defineFlow(
+    { name: 'acceptInviteFlow', inputSchema: z.object({ inviteId: z.string(), name: z.string(), uid: z.string() }), outputSchema: z.object({ success: z.boolean() }) },
+    async ({ inviteId, name, uid }) => acceptInvite(inviteId, { name, uid })
 );
 
 
@@ -418,5 +427,17 @@ export async function getUserProfileFlowWrapper(input: z.infer<typeof ActorSchem
 }
 
 export async function updateUserPermissionsFlowWrapper(input: z.infer<typeof UpdateUserPermissionsSchema> & z.infer<typeof ActorSchema>): Promise<{ success: boolean }> {
-    return updateUserPermissionsFlow(input);
+    const adminOrgData = await getAdminAndOrg(input.actor);
+    if (!adminOrgData || adminOrgData.userRole !== 'admin') {
+      throw new Error("Apenas administradores podem alterar permissões.");
+    }
+  
+    const userRef = adminDb.collection('users').doc(input.userId);
+    const userDoc = await userRef.get();
+    if (!userDoc.exists || userDoc.data()?.organizationId !== adminOrgData.organizationId) {
+      throw new Error("Usuário não encontrado nesta organização.");
+    }
+  
+    await userRef.update({ permissions: input.permissions });
+    return { success: true };
 }
