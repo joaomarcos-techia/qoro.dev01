@@ -29,7 +29,7 @@ export default function AcceptInvitePage() {
         return;
       }
       try {
-        const info = await validateInvite(inviteId);
+        const info = await validateInvite({ inviteId });
         setInviteInfo(info);
       } catch (err: any) {
         setError(err.message || 'Este convite é inválido, expirou ou já foi utilizado.');
@@ -145,15 +145,15 @@ export default function AcceptInvitePage() {
             </div>
             <div className="relative">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <input name="name" type="text" placeholder="Seu nome completo *" value={formData.name} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 bg-input rounded-xl border-border focus:ring-2 focus:ring-primary"/>
+                <input name="name" type="text" placeholder="Seu nome completo *" value={formData.name} onChange={handleInputChange} required maxLength={20} className="w-full pl-12 pr-4 py-3 bg-input rounded-xl border-border focus:ring-2 focus:ring-primary"/>
             </div>
             <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <input name="password" type="password" placeholder="Crie uma senha *" value={formData.password} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 bg-input rounded-xl border-border focus:ring-2 focus:ring-primary"/>
+                <input name="password" type="password" placeholder="Crie uma senha *" value={formData.password} onChange={handleInputChange} required maxLength={12} className="w-full pl-12 pr-4 py-3 bg-input rounded-xl border-border focus:ring-2 focus:ring-primary"/>
             </div>
              <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <input name="confirmPassword" type="password" placeholder="Confirme sua senha *" value={formData.confirmPassword} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 bg-input rounded-xl border-border focus:ring-2 focus:ring-primary"/>
+                <input name="confirmPassword" type="password" placeholder="Confirme sua senha *" value={formData.confirmPassword} onChange={handleInputChange} required maxLength={12} className="w-full pl-12 pr-4 py-3 bg-input rounded-xl border-border focus:ring-2 focus:ring-primary"/>
             </div>
 
           {error && (
