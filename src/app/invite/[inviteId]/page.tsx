@@ -5,59 +5,9 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, AlertCircle, CheckCircle, User, Loader2 } from 'lucide-react';
-import { adminDb } from '@/lib/firebase-admin';
-import { Timestamp } from 'firebase-admin/firestore';
-import { adminAuth } from '@/lib/firebase-admin';
+import { validateInvite, acceptInvite } from '@/ai/flows/user-management';
 import { Logo } from '@/components/ui/logo';
 import { signUpAndVerify } from '@/lib/authService';
-
-async function validateInvite(inviteId: string) {
-    const inviteRef = adminDb.collection('invites').doc(inviteId);
-    const doc = await inviteRef.get();
-  
-    if (!doc.exists || doc.data()?.status !== 'pending' || doc.data()?.expiresAt.toDate() < new Date()) {
-      throw new Error("Convite inválido, expirado ou já utilizado.");
-    }
-    const data = doc.data()!;
-    return { email: data.email, organizationName: data.organizationName };
-};
-  
-async function acceptInvite(inviteId: string, { name, uid }: { name: string; uid: string }) {
-    const inviteRef = adminDb.collection('invites').doc(inviteId);
-    return adminDb.runTransaction(async (transaction) => {
-      const inviteDoc = await transaction.get(inviteRef);
-      if (!inviteDoc.exists || inviteDoc.data()?.status !== 'pending') {
-        throw new Error("Convite inválido ou já aceito.");
-      }
-      const inviteData = inviteDoc.data()!;
-      const orgDoc = await transaction.get(adminDb.collection('organizations').doc(inviteData.organizationId));
-      if (!orgDoc.exists) {
-        throw new Error("Organização associada ao convite não encontrada.");
-      }
-      const planId = orgDoc.data()!.planId || 'free';
-  
-      const userRef = adminDb.collection('users').doc(uid);
-      transaction.set(userRef, {
-        name,
-        email: inviteData.email,
-        organizationId: inviteData.organizationId,
-        role: 'member',
-        createdAt: new Date(),
-        planId: planId,
-        permissions: {
-          qoroCrm: true,
-          qoroPulse: planId === 'performance',
-          qoroTask: true,
-          qoroFinance: true,
-        },
-      });
-  
-      transaction.update(inviteRef, { status: 'accepted', acceptedBy: uid, acceptedAt: new Date() });
-      await adminAuth.setCustomUserClaims(uid, { organizationId: inviteData.organizationId, role: 'member', planId });
-      return { success: true };
-    });
-};
-
 
 export default function AcceptInvitePage() {
   const router = useRouter();
@@ -113,24 +63,23 @@ export default function AcceptInvitePage() {
     setError(null);
 
     try {
-      console.log('[AcceptInvite] Chamando signUpAndVerify...');
       const user = await signUpAndVerify(inviteInfo.email, formData.password);
-      console.log('[AcceptInvite] signUpAndVerify concluído. Chamando acceptInvite...');
       
-      await acceptInvite(inviteId, {
+      await acceptInvite({
+        inviteId,
         name: formData.name,
         uid: user.uid,
       });
-      console.log('[AcceptInvite] acceptInvite concluído com sucesso.');
 
       setSuccess(true);
-      setTimeout(() => router.push('/login'), 5000); 
+      setTimeout(() => router.push('/login?verified=true'), 3000); 
 
     } catch (err: any) {
-      console.error('❌ [AcceptInvite] ERRO no handleAccept:', err);
       let errorMessage = 'Ocorreu um erro ao finalizar o cadastro. Verifique o console.';
       if (err.code === 'auth/email-already-in-use') {
           errorMessage = 'Este e-mail já está em uso por outra conta.';
+      } else if (err.message) {
+          errorMessage = err.message;
       }
       setError(errorMessage);
     } finally {

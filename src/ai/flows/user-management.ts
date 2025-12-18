@@ -11,6 +11,8 @@
  * - inviteUser - Sends an invitation email to a new user.
  * - deleteUser - Deletes a user from the organization.
  * - updateUserPermissions - Updates a user's module permissions.
+ * - validateInvite - Checks if an invite ID is valid.
+ * - acceptInvite - Associates a new user with an organization via an invite.
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
@@ -240,6 +242,53 @@ export const handleSubscriptionChange = async (subscriptionId: string, newPriceI
     });
   
     await batch.commit();
+};
+
+export const validateInvite = async (inviteId: string) => {
+    const inviteRef = adminDb.collection('invites').doc(inviteId);
+    const doc = await inviteRef.get();
+
+    if (!doc.exists || doc.data()?.status !== 'pending' || doc.data()?.expiresAt.toDate() < new Date()) {
+        throw new Error("Convite inválido, expirado ou já utilizado.");
+    }
+    const data = doc.data()!;
+    return { email: data.email, organizationName: data.organizationName };
+};
+
+export const acceptInvite = async (inviteId: string, { name, uid }: { name: string; uid: string }) => {
+    const inviteRef = adminDb.collection('invites').doc(inviteId);
+    return adminDb.runTransaction(async (transaction) => {
+        const inviteDoc = await transaction.get(inviteRef);
+        if (!inviteDoc.exists || inviteDoc.data()?.status !== 'pending') {
+            throw new Error("Convite inválido ou já aceito.");
+        }
+        const inviteData = inviteDoc.data()!;
+        const orgDoc = await transaction.get(adminDb.collection('organizations').doc(inviteData.organizationId));
+        if (!orgDoc.exists) {
+            throw new Error("Organização associada ao convite não encontrada.");
+        }
+        const planId = orgDoc.data()!.planId || 'free';
+
+        const userRef = adminDb.collection('users').doc(uid);
+        transaction.set(userRef, {
+            name,
+            email: inviteData.email,
+            organizationId: inviteData.organizationId,
+            role: 'member',
+            createdAt: new Date(),
+            planId: planId,
+            permissions: {
+                qoroCrm: true,
+                qoroPulse: planId === 'performance',
+                qoroTask: true,
+                qoroFinance: true,
+            },
+        });
+
+        transaction.update(inviteRef, { status: 'accepted', acceptedBy: uid, acceptedAt: new Date() });
+        await adminAuth.setCustomUserClaims(uid, { organizationId: inviteData.organizationId, role: 'member', planId });
+        return { success: true };
+    });
 };
 
 // --- Genkit Flows ---
