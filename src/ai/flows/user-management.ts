@@ -188,8 +188,11 @@ export const deleteUser = async (userId: string, actorUid: string) => {
       throw new Error("Usuário não encontrado nesta organização.");
     }
   
-    await adminAuth.deleteUser(userId);
-    await userRef.delete();
+    // Execute both deletions concurrently
+    await Promise.all([
+      adminAuth.deleteUser(userId),
+      userRef.delete()
+    ]);
   
     return { success: true };
 };
@@ -263,6 +266,9 @@ export async function acceptInvite(input: { inviteId: string; name: string; uid:
     const { inviteId, name, uid } = input;
     if (!uid) {
         throw new Error('UID do usuário é inválido.');
+    }
+    if (!name) {
+        throw new Error('O nome do usuário é obrigatório.');
     }
     const inviteRef = adminDb.collection('invites').doc(inviteId);
     return adminDb.runTransaction(async (transaction) => {
