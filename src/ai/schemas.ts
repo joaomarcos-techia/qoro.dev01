@@ -2,6 +2,10 @@
 
 import { z } from 'zod';
 
+const emailRegex = new RegExp(
+    /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+);
+
 // Schemas for User and Organization Management
 export const SignUpSchema = z.object({
     name: z.string().min(1, 'O nome é obrigatório.'),
@@ -99,7 +103,7 @@ export const AddressSchema = z.object({
 
 export const CustomerSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
-  email: z.string().email('Email inválido').or(z.literal('')).optional(),
+  email: z.string().regex(emailRegex, 'Formato de email inválido').or(z.literal('')).optional(),
   phone: z.string().optional(),
   company: z.string().optional(),
   cpf: z.string().optional(),
@@ -418,3 +422,6 @@ export type ReconciliationProfile = z.infer<typeof ReconciliationProfileSchema>;
     
 
 
+
+
+    
