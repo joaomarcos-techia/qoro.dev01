@@ -1,3 +1,4 @@
+
 'use client';
 
 import { CustomerProfile } from '@/ai/schemas';
@@ -36,8 +37,6 @@ const formatPhone = (value?: string) => {
 export function CustomerKanbanCard({ customer, stageIds, onMove }: KanbanCardProps) {
   
   const currentStageIndex = stageIds.findIndex(id => id === customer.status);
-  const isLostStage = customer.status === 'lost';
-  const isWonStage = customer.status === 'won';
 
   const handleMove = (direction: 'prev' | 'next') => {
     const newIndex = direction === 'next' ? currentStageIndex + 1 : currentStageIndex - 1;
@@ -81,15 +80,13 @@ export function CustomerKanbanCard({ customer, stageIds, onMove }: KanbanCardPro
                 <ChevronLeft className="w-4 h-4" />
             </Button>
             
-            {(isWonStage || isLostStage) && (
-                 <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-muted-foreground hover:text-red-400" title="Arquivar Cliente">
-                        <Archive className="w-4 h-4" />
-                    </Button>
-                </AlertDialogTrigger>
-            )}
+            <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-muted-foreground hover:text-red-400" title="Arquivar Cliente">
+                    <Archive className="w-4 h-4" />
+                </Button>
+            </AlertDialogTrigger>
             
-            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => handleMove('next')} disabled={currentStageIndex >= stageIds.length - 1 || isWonStage || isLostStage}>
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => handleMove('next')} disabled={currentStageIndex >= stageIds.length - 1}>
                 <ChevronRight className="w-4 h-4" />
             </Button>
         </div>
@@ -98,7 +95,7 @@ export function CustomerKanbanCard({ customer, stageIds, onMove }: KanbanCardPro
             <AlertDialogHeader>
                 <AlertDialogTitle>Arquivar cliente?</AlertDialogTitle>
                 <AlertDialogDescription>
-                    O cliente "{customer.name}" será removido do funil, mas seus dados continuarão salvos na lista de clientes. Você tem certeza?
+                    O cliente "{customer.name}" será removido do funil, mas seus dados continuarão salvos na lista de clientes com o status "Arquivado". Você tem certeza?
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

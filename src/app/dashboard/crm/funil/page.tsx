@@ -91,7 +91,7 @@ export default function FunilPage() {
     'lost'
   ];
   
-  const stageNames: Record<string, string> = {
+  const stageNames: Record<CustomerProfile['status'], string> = {
       new: 'Novo / lead recebido',
       initial_contact: 'Contato inicial',
       qualification: 'Qualificação',
@@ -108,7 +108,7 @@ export default function FunilPage() {
       title: stageNames[stage],
       customers: customers.filter((customer) => customer.status === stage),
     }));
-  }, [customers, stageOrder]);
+  }, [customers, stageOrder, stageNames]);
 
   const renderContent = () => {
     if (isLoading) {
