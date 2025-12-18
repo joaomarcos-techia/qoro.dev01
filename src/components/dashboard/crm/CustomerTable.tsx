@@ -223,6 +223,12 @@ export function CustomerTable({ onCountChange }: CustomerTableProps) {
                             <Copy className="mr-2 h-4 w-4" />
                             Copiar CPF
                         </DropdownMenuItem>
+                        {customer.status !== 'archived' && (
+                            <DropdownMenuItem onClick={() => handleArchive(customer)} className="rounded-xl">
+                                <Archive className="mr-2 h-4 w-4" />
+                                Arquivar cliente
+                            </DropdownMenuItem>
+                        )}
                         <DropdownMenuSeparator />
                         <AlertDialogTrigger asChild>
                             <DropdownMenuItem className="text-red-500 focus:bg-destructive/20 focus:text-red-400 rounded-xl">
