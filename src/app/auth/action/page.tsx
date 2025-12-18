@@ -15,20 +15,21 @@ function ActionHandler() {
 
   useEffect(() => {
     const actionCode = searchParams.get('oobCode');
-    const mode = searchParams.get('mode');
-
-    if (mode === 'verifyEmail' && actionCode) {
-      setMessage('Verificando seu e-mail...');
+    
+    if (actionCode) {
       handleActionCode(actionCode)
         .then((redirectUrl) => {
-          setMessage('Verificação concluída! Redirecionando...');
+          setMessage('Ação concluída! Redirecionando...');
           router.push(redirectUrl);
         })
         .catch(() => {
-          setError('O link de verificação é inválido ou já expirou. Por favor, tente novamente.');
+          setError('O link de ação é inválido ou já expirou. Por favor, tente novamente.');
+          // Optional: redirect to login with error after a delay
+          setTimeout(() => router.push('/login?error=invalid_link'), 3000);
         });
     } else {
-      setError('Ação não reconhecida ou link inválido.');
+       // If there's no code, maybe redirect to login page
+       router.push('/login');
     }
   }, [searchParams, router]);
 
@@ -38,7 +39,7 @@ function ActionHandler() {
         <Logo className="mx-auto mb-8" />
         {error ? (
           <>
-            <h2 className="text-2xl font-bold text-destructive mb-4">Erro</h2>
+            <h2 className="text-2xl font-bold text-destructive mb-4">Erro na Verificação</h2>
             <p className="text-muted-foreground">{error}</p>
           </>
         ) : (
@@ -54,7 +55,14 @@ function ActionHandler() {
 
 export default function ActionPage() {
     return (
-        <Suspense fallback={<div>Carregando...</div>}>
+        <Suspense fallback={
+            <main className="flex items-center justify-center min-h-screen bg-black p-4">
+              <div className="w-full max-w-md mx-auto bg-card rounded-2xl border border-border p-8 md:p-12 text-center">
+                <Loader2 className="w-10 h-10 text-primary mx-auto animate-spin mb-6" />
+                <h2 className="text-2xl font-bold text-foreground">Carregando...</h2>
+              </div>
+            </main>
+        }>
             <ActionHandler />
         </Suspense>
     )

@@ -35,11 +35,8 @@ export const signUpAndVerify = async (email: string, password: string): Promise<
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    try {
-      await sendEmailVerification(user, actionCodeSettings());
-    } catch (verificationError) {
-      // Opcional: logar o erro em um serviço de monitoramento em produção
-    }
+    // A verificação será enviada, mas o fluxo seguro depende da página /auth/action
+    await sendEmailVerification(user, actionCodeSettings());
 
     return user;
   } catch (error: any) {
@@ -56,7 +53,7 @@ export const signInAndCheckVerification = async (email: string, password: string
     const user = userCredential.user;
 
     if (!user.emailVerified) {
-      const verificationError = new Error('Seu e-mail ainda não foi verificado.');
+      const verificationError = new Error('Seu e-mail ainda não foi verificado. Verifique sua caixa de entrada e spam, ou solicite um novo link de verificação.');
       (verificationError as any).code = 'auth/email-not-verified';
       (verificationError as any).user = user;
       throw verificationError;
@@ -77,7 +74,7 @@ export const resendVerification = async (user: User): Promise<void> => {
   try {
     await sendEmailVerification(user, actionCodeSettings());
   } catch (error: any) {
-    throw new Error('Falha ao reenviar o e-mail de verificação. Tente novamente mais tarde.');
+    throw new Error('Falha ao reenviar o e-mail de verificação. Aguarde um momento e tente novamente.');
   }
 };
 
@@ -100,20 +97,22 @@ export const sendPasswordReset = async (email: string): Promise<void> => {
 export const handleActionCode = async (actionCode: string): Promise<string> => {
   try {
     const info = await checkActionCode(auth, actionCode);
-    const { operation, data } = info;
+    
+    // Ação principal: aplicar o código
+    await applyActionCode(auth, actionCode);
 
-    switch (operation) {
+    // Redirecionamento baseado na operação
+    switch (info.operation) {
       case 'VERIFY_EMAIL':
-        await applyActionCode(auth, actionCode);
         return '/login?verified=true';
       case 'PASSWORD_RESET':
-        // Futuramente, pode redirecionar para uma página de redefinição de senha
-        return `/reset-password?oobCode=${actionCode}`;
+        return `/reset-password?oobCode=${actionCode}`; // Ainda precisa do código para resetar
       default:
         return '/login?error=invalid_action';
     }
   } catch (error: any) {
     if (error.code === 'auth/invalid-action-code') {
+      // O link pode ter sido usado ou expirado
       return '/login?error=invalid_or_expired_link';
     }
     return `/login?error=unknown_error`;
