@@ -2,7 +2,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Mail, Send, KeyRound, UserPlus, Building, AlertCircle, CheckCircle, ArrowLeft, User, Shield, Users, Loader2, ExternalLink, Trash2, Copy, CreditCard, SlidersHorizontal, MessageSquare, Check } from 'lucide-react';
+import { Mail, Send, KeyRound, UserPlus, Building, AlertCircle, CheckCircle, ArrowLeft, User, Shield, Users, Loader2, ExternalLink, Trash2, Copy, CreditCard, SlidersHorizontal, MessageSquare, Check, ArrowUpRight } from 'lucide-react';
 import { inviteUserFlowWrapper as inviteUser, listUsersFlowWrapper as listUsers, deleteUserFlowWrapper as deleteUser, updateUserPermissionsFlowWrapper as updateUserPermissions } from '@/ai/flows/user-management';
 import { sendPasswordReset } from '@/lib/authService';
 import { createBillingPortalSession } from '@/ai/flows/billing-flow';
@@ -289,16 +289,22 @@ export default function SettingsPage() {
                                                     <p className="text-lg font-bold text-primary">{planId ? planNames[planId] : 'Não identificado'}</p>
                                                 )}
                                             </div>
-                                        </div>
-                                        {planId !== 'free' && isAdmin && (
-                                            <div className="pt-2">
-                                                <Button type="button" variant="outline" onClick={redirectToCustomerPortal} disabled={isLoading.portal} className="w-full">
-                                                    {isLoading.portal && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-                                                    {isLoading.portal ? 'Acessando...' : 'Gerenciar Assinatura'}
-                                                    {!isLoading.portal && <CreditCard className="ml-2 h-4 w-4" />}
-                                                </Button>
+                                             <div className="pt-2 flex flex-col sm:flex-row gap-3">
+                                                {planId !== 'free' && isAdmin && (
+                                                    <Button type="button" variant="outline" onClick={redirectToCustomerPortal} disabled={isLoading.portal} className="w-full flex-1">
+                                                        {isLoading.portal && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                                                        {isLoading.portal ? 'Acessando...' : 'Gerenciar Assinatura'}
+                                                        {!isLoading.portal && <CreditCard className="ml-2 h-4 w-4" />}
+                                                    </Button>
+                                                )}
+                                                 <Link href="/#precos" className="w-full flex-1">
+                                                    <Button variant="default" className="w-full bg-primary/20 text-primary border border-primary/50 hover:bg-primary/30">
+                                                        Mudar de plano
+                                                        <ArrowUpRight className="ml-2 h-4 w-4"/>
+                                                    </Button>
+                                                 </Link>
                                             </div>
-                                        )}
+                                        </div>
                                     </div>
                                 </div>
                                 <div>
