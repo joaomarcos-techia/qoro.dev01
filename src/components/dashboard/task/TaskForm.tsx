@@ -13,6 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { createTask, updateTask } from '@/ai/flows/task-management';
+import { createUpgradeSession } from '@/ai/flows/upgrade-flow';
 import { TaskSchema, TaskProfile, UserProfile } from '@/ai/schemas';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -40,6 +41,7 @@ type TaskFormProps = {
 export function TaskForm({ onTaskAction, task, users, viewOnly = false }: TaskFormProps) {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isUpgrading, setIsUpgrading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [newSubtaskText, setNewSubtaskText] = useState('');
   const [newCommentText, setNewCommentText] = useState('');
@@ -57,6 +59,18 @@ export function TaskForm({ onTaskAction, task, users, viewOnly = false }: TaskFo
     });
     return () => unsubscribe();
   }, []);
+
+  const handleUpgrade = async () => {
+    if (!currentUser) return;
+    setIsUpgrading(true);
+    try {
+        const { sessionId } = await createUpgradeSession({ actor: currentUser.uid });
+        window.location.href = sessionId;
+    } catch (error: any) {
+        setError(error.message || "Não foi possível iniciar o processo de upgrade.");
+        setIsUpgrading(false);
+    }
+  }
 
   const {
     register,
@@ -290,9 +304,15 @@ export function TaskForm({ onTaskAction, task, users, viewOnly = false }: TaskFo
             </div>
         )}
         {isLimitReached && (
-             <div className="bg-yellow-500/20 border-l-4 border-yellow-500 text-yellow-300 p-4 rounded-lg flex items-center">
-                <Info className="w-5 h-5 mr-3" />
-                <span className="text-sm">Você atingiu o limite de {FREE_PLAN_LIMIT} tarefas do plano gratuito. <a href="/#precos" className="font-bold underline">Faça upgrade</a> para adicionar mais.</span>
+            <div className="bg-yellow-500/20 border-l-4 border-yellow-500 text-yellow-300 p-4 rounded-lg flex items-center justify-between">
+                <div className="flex items-center">
+                    <Info className="w-5 h-5 mr-3 flex-shrink-0" />
+                    <span className="text-sm">Você atingiu o limite de {FREE_PLAN_LIMIT} tarefas do plano gratuito.</span>
+                </div>
+                 <Button variant="ghost" onClick={handleUpgrade} disabled={isUpgrading} className="text-yellow-300 hover:text-yellow-200 h-auto p-0 font-bold underline">
+                    {isUpgrading && <Loader2 className="w-4 h-4 mr-2 animate-spin"/>}
+                    {isUpgrading ? 'Aguarde' : 'Faça upgrade'}
+                </Button>
             </div>
         )}
       <div className="flex justify-end pt-4">
