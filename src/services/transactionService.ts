@@ -103,34 +103,30 @@ export const updateTransaction = async (input: z.infer<typeof UpdateTransactionS
             if (oldData?.companyId !== organizationId) {
                 throw new Error("Acesso negado à transação.");
             }
-             if (!oldData?.accountId) {
-                throw new Error("A transação original não está associada a uma conta.");
-            }
-            if (!updateData.accountId) {
-                throw new Error("A conta financeira é obrigatória para a atualização.");
-            }
 
             const oldAmount = Number(oldData?.amount || 0);
             const newAmount = Number(updateData.amount || 0);
+            const oldAccountId = oldData?.accountId;
+            const newAccountId = updateData.accountId;
 
-            const oldAccountRef = adminDb.collection('accounts').doc(oldData.accountId);
-            const newAccountRef = adminDb.collection('accounts').doc(updateData.accountId);
-            
-            const oldAccountDoc = await t.get(oldAccountRef);
-            if (!oldAccountDoc.exists) throw new Error("Conta antiga não encontrada.");
-            let oldAccountBalance = oldAccountDoc.data()!.balance;
-            oldAccountBalance += (oldData?.type === 'expense' ? oldAmount : -oldAmount);
-            
-            if (oldData?.accountId === updateData.accountId) {
-                const newBalance = oldAccountBalance + (updateData.type === 'income' ? newAmount : -newAmount);
-                t.update(newAccountRef, { balance: newBalance });
-            } else {
+            // Revert old transaction from old account if it exists
+            if (oldAccountId) {
+                const oldAccountRef = adminDb.collection('accounts').doc(oldAccountId);
+                const oldAccountDoc = await t.get(oldAccountRef);
+                if (oldAccountDoc.exists) {
+                    let oldAccountBalance = oldAccountDoc.data()!.balance;
+                    oldAccountBalance += (oldData?.type === 'expense' ? oldAmount : -oldAmount);
+                    t.update(oldAccountRef, { balance: oldAccountBalance });
+                }
+            }
+
+            // Apply new transaction to new account if it exists
+            if (newAccountId) {
+                const newAccountRef = adminDb.collection('accounts').doc(newAccountId);
                 const newAccountDoc = await t.get(newAccountRef);
                 if (!newAccountDoc.exists) throw new Error("Nova conta não encontrada.");
                 let newAccountBalance = newAccountDoc.data()!.balance;
                 newAccountBalance += (updateData.type === 'income' ? newAmount : -newAmount);
-
-                t.update(oldAccountRef, { balance: oldAccountBalance });
                 t.update(newAccountRef, { balance: newAccountBalance });
             }
             
@@ -326,3 +322,4 @@ export const bulkCreateTransactions = async (
 
     
 
+  
