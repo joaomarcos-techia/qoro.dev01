@@ -219,12 +219,6 @@ export function CustomerTable({ onCountChange }: CustomerTableProps) {
                             <Edit className="mr-2 h-4 w-4" />
                             Editar cliente
                         </DropdownMenuItem>
-                        {customer.status !== 'archived' && (
-                            <DropdownMenuItem onClick={() => handleArchive(customer)} className="rounded-xl">
-                                <Archive className="mr-2 h-4 w-4" />
-                                Arquivar cliente
-                            </DropdownMenuItem>
-                        )}
                         <DropdownMenuItem onClick={() => navigator.clipboard.writeText(customer.cpf || '')} disabled={!customer.cpf} className="rounded-xl">
                             <Copy className="mr-2 h-4 w-4" />
                             Copiar CPF
