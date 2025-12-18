@@ -40,6 +40,7 @@ export default function SignUpForm() {
   const [isResending, setIsResending] = useState(false);
   const [resendFeedback, setResendFeedback] = useState<string | null>(null);
 
+  const isVerified = searchParams.get('verified') === 'true';
 
   const formatCNPJ = (value: string) => {
     if (!value) return "";
@@ -135,6 +136,8 @@ export default function SignUpForm() {
         await createUserProfile({
           ...formData,
           uid: user.uid,
+          planId: 'free',
+          stripePriceId: 'free',
         });
         setSuccessMessage('Conta criada! Um e-mail de verificação foi enviado. Verifique sua caixa de entrada e spam para ativar sua conta antes de fazer o login.');
       }
@@ -157,6 +160,13 @@ export default function SignUpForm() {
           </Link>
           <p className="text-muted-foreground">Crie sua conta para começar a organizar sua empresa.</p>
         </div>
+
+        {isVerified && (
+             <div className="mb-4 bg-green-800/20 border-l-4 border-green-500 text-green-300 p-4 rounded-lg flex items-center text-sm">
+              <CheckCircle className="w-5 h-5 mr-3" />
+              <span>E-mail verificado com sucesso! Você já pode fazer o login.</span>
+            </div>
+        )}
 
         {successMessage ? (
           <div className="bg-green-800/20 border-l-4 border-green-500 text-green-300 p-6 rounded-lg text-center flex-col">
@@ -192,7 +202,7 @@ export default function SignUpForm() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                     <div className="relative">
                         <Building className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                        <input name="organizationName" type="text" placeholder="Nome da Empresa *" value={formData.organizationName} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 bg-input rounded-xl border-border focus:ring-2 focus:ring-primary transition-all duration-200"/>
+                        <input name="organizationName" type="text" placeholder="Nome da Empresa *" value={formData.organizationName} onChange={handleInputChange} required maxLength={20} className="w-full pl-12 pr-4 py-3 bg-input rounded-xl border-border focus:ring-2 focus:ring-primary transition-all duration-200"/>
                     </div>
                     <div className="relative">
                         <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -215,15 +225,15 @@ export default function SignUpForm() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                     <div className="relative md:col-span-2">
                         <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                        <input name="name" type="text" placeholder="Seu Nome *" value={formData.name} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 bg-input rounded-xl border-border focus:ring-2 focus:ring-primary transition-all duration-200"/>
+                        <input name="name" type="text" placeholder="Seu Nome *" value={formData.name} onChange={handleInputChange} required maxLength={20} className="w-full pl-12 pr-4 py-3 bg-input rounded-xl border-border focus:ring-2 focus:ring-primary transition-all duration-200"/>
                     </div>
                     <div className="relative">
                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                        <input name="email" type="email" placeholder="Seu E-mail de login *" value={formData.email} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 bg-input rounded-xl border-border focus:ring-2 focus:ring-primary transition-all duration-200"/>
+                        <input name="email" type="email" placeholder="Seu E-mail de login *" value={formData.email} onChange={handleInputChange} required maxLength={30} className="w-full pl-12 pr-4 py-3 bg-input rounded-xl border-border focus:ring-2 focus:ring-primary transition-all duration-200"/>
                     </div>
                     <div className="relative">
                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                        <input name="password" type="password" placeholder="Sua Senha *" value={formData.password} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 bg-input rounded-xl border-border focus:ring-2 focus:ring-primary transition-all duration-200"/>
+                        <input name="password" type="password" placeholder="Sua Senha *" value={formData.password} onChange={handleInputChange} required maxLength={12} className="w-full pl-12 pr-4 py-3 bg-input rounded-xl border-border focus:ring-2 focus:ring-primary transition-all duration-200"/>
                     </div>
                 </div>
             </div>
