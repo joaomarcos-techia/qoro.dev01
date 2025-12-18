@@ -33,7 +33,7 @@ const createCheckoutSessionFlow = ai.defineFlow(
   },
   async ({ priceId, actor, name, organizationName, cnpj, contactEmail, contactPhone }) => {
     
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:9004';
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:9003';
     const planId = priceId === process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID ? 'growth' : 'performance';
 
     // The webhook now relies on metadata to create the user profile.
@@ -42,7 +42,7 @@ const createCheckoutSessionFlow = ai.defineFlow(
       mode: 'subscription',
       billing_address_collection: 'required',
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${siteUrl}/login?payment_success=true`,
+      success_url: `${siteUrl}/dashboard?payment_success=true`,
       cancel_url: `${siteUrl}/signup?plan=${planId}&payment_cancelled=true`,
       // Crucial metadata for the webhook to construct the user profile
       metadata: {
@@ -90,7 +90,7 @@ const createBillingPortalSessionFlow = ai.defineFlow(
       const { url } = await stripe.billingPortal.sessions.create({
         customer: stripeCustomerId,
         configuration: portalConfigurationId,
-        return_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:9004'}/dashboard/settings`,
+        return_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:9003'}/dashboard/settings`,
       });
   
       return { url };
