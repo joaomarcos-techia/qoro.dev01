@@ -129,8 +129,11 @@ export default function SignUpForm() {
             contactPhone: formData.contactPhone.replace(/\D/g, '')
         });
         
+        // Open checkout in a new tab
+        window.open(sessionId, '_blank');
+        setSuccessMessage('Sua conta foi criada! A página de pagamento foi aberta em uma nova aba. Após concluir, verifique seu e-mail para ativar a conta e depois faça o login.');
+        // Set checkout URL to show the button just in case the popup fails
         setCheckoutUrl(sessionId);
-        setSuccessMessage('Conta criada! Um e-mail de verificação foi enviado. Verifique sua caixa de entrada e Spam. Após a verificação, conclua o pagamento para finalizar.');
 
       } else {
         await createUserProfile({
@@ -175,9 +178,9 @@ export default function SignUpForm() {
             <p className="text-sm font-semibold mb-6">{successMessage}</p>
             
             {checkoutUrl ? (
-                <a href={checkoutUrl} target="_self" rel="noopener noreferrer" className="w-full bg-primary text-primary-foreground py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 border border-transparent hover:border-primary/50 flex items-center justify-center font-semibold">
+                <a href={checkoutUrl} target="_blank" rel="noopener noreferrer" className="w-full bg-primary text-primary-foreground py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 border border-transparent hover:border-primary/50 flex items-center justify-center font-semibold">
                     <CreditCard className="mr-2 h-5 w-5" />
-                    Ir para o Pagamento
+                    Reabrir Pagamento
                 </a>
             ) : (
                 <Link href="/login" className="w-full bg-primary text-primary-foreground py-3 rounded-xl hover:bg-primary/90 transition-all duration-300 border border-transparent hover:border-primary/50 flex items-center justify-center font-semibold">

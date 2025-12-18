@@ -201,7 +201,7 @@ export default function SettingsPage() {
         setFeedback(null);
         try {
             const { url } = await createBillingPortalSession({ actor: currentUser.uid });
-            window.open(url, '_self');
+            window.open(url, '_blank');
         } catch (error: any) {
             setFeedback({ type: 'error', message: "Não foi possível acessar o portal de assinaturas. Verifique suas configurações no Stripe.", context: 'portal' });
         } finally {
@@ -218,9 +218,10 @@ export default function SettingsPage() {
                 actor: currentUser.uid,
                 targetPriceId: targetPlanId,
             });
-            window.location.href = sessionId;
+            window.open(sessionId, '_blank');
         } catch (error: any) {
             setFeedback({ type: 'error', message: "Não foi possível iniciar o processo de upgrade. Tente novamente.", context: 'portal' });
+        } finally {
             setIsLoading(prev => ({ ...prev, upgrade: '' }));
         }
     };
