@@ -15,6 +15,8 @@ import {
   sendPasswordResetEmail as firebaseSendPasswordResetEmail,
   ActionCodeSettings,
   User,
+  applyActionCode,
+  checkActionCode,
 } from 'firebase/auth';
 
 import { auth } from '@/lib/firebase';
@@ -22,7 +24,8 @@ import { auth } from '@/lib/firebase';
 const actionCodeSettings = (): ActionCodeSettings => {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:9004';
   return {
-    url: `${siteUrl}/login?verified=true`,
+    // Aponta para uma página genérica que manipulará a ação.
+    url: `${siteUrl}/auth/action`, 
     handleCodeInApp: true,
   };
 };
@@ -74,7 +77,7 @@ export const resendVerification = async (user: User): Promise<void> => {
   try {
     await sendEmailVerification(user, actionCodeSettings());
   } catch (error: any) {
-    throw new Error('Falha ao reenviar o e-mail. Tente novamente mais tarde.');
+    throw new Error('Falha ao reenviar o e-mail de verificação. Tente novamente mais tarde.');
   }
 };
 
@@ -91,5 +94,28 @@ export const sendPasswordReset = async (email: string): Promise<void> => {
     await firebaseSendPasswordResetEmail(auth, email, actionCodeSettings());
   } catch (error: any) {
     throw new Error('Não foi possível enviar o e-mail. Verifique o endereço e tente novamente.');
+  }
+};
+
+export const handleActionCode = async (actionCode: string): Promise<string> => {
+  try {
+    const info = await checkActionCode(auth, actionCode);
+    const { operation, data } = info;
+
+    switch (operation) {
+      case 'VERIFY_EMAIL':
+        await applyActionCode(auth, actionCode);
+        return '/login?verified=true';
+      case 'PASSWORD_RESET':
+        // Futuramente, pode redirecionar para uma página de redefinição de senha
+        return `/reset-password?oobCode=${actionCode}`;
+      default:
+        return '/login?error=invalid_action';
+    }
+  } catch (error: any) {
+    if (error.code === 'auth/invalid-action-code') {
+      return '/login?error=invalid_or_expired_link';
+    }
+    return `/login?error=unknown_error`;
   }
 };
