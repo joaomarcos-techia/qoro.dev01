@@ -4,7 +4,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { getUserAccessInfo } from '@/ai/flows/user-management';
+import { getUserAccessInfoFlowWrapper as getUserAccessInfo } from '@/ai/flows/user-management';
 import { AppPermissions } from '@/ai/schemas';
 import { getAdminAndOrg } from '@/services/utils';
 
@@ -55,7 +55,6 @@ export const PlanProvider = ({ children }: { children: React.ReactNode }) => {
            throw new Error("User data not ready");
         }
     } catch (err) {
-        console.error("Failed to fetch plan info:", err);
         setError("USER_DATA_NOT_FOUND");
     } finally {
         setIsLoading(false);
