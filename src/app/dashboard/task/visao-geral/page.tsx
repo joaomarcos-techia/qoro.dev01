@@ -78,7 +78,7 @@ export default function VisaoGeralPage() {
   }, []);
 
   const fetchData = async (user: User | null) => {
-    if (!user) {
+    if (!user || !user.uid) {
         setIsLoading(false);
         return;
     }
@@ -92,7 +92,6 @@ export default function VisaoGeralPage() {
         setMetrics(metricsData);
         setUsers(usersData);
     } catch (err: any) {
-        console.error("Erro ao buscar métricas:", err);
         setError(err.message || 'Não foi possível carregar os dados.');
     } finally {
         setIsLoading(false);
@@ -100,7 +99,9 @@ export default function VisaoGeralPage() {
   }
 
   useEffect(() => {
-    fetchData(currentUser);
+    if (currentUser) {
+      fetchData(currentUser);
+    }
   }, [currentUser, refreshTrigger]);
 
   const handleSelectTask = (task: TaskProfile) => {

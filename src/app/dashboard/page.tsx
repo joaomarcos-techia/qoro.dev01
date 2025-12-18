@@ -184,7 +184,7 @@ function DashboardContent() {
 
   useEffect(() => {
     async function fetchAllMetrics() {
-        if (!currentUser || isPlanLoading || planError) {
+        if (!currentUser || !currentUser.uid || isPlanLoading || planError) {
           setIsLoadingMetrics(false);
           return;
         };
@@ -205,16 +205,13 @@ function DashboardContent() {
                 totalBalance: finance.totalBalance,
             });
         } catch (err: any) {
-            console.error("Dashboard Metrics Error:", err);
             setMetricsError("Não foi possível carregar as métricas do dashboard.");
         } finally {
              setIsLoadingMetrics(false);
         }
     }
     
-    if (currentUser) {
-        fetchAllMetrics();
-    }
+    fetchAllMetrics();
   }, [currentUser, isPlanLoading, planError]);
 
   const dismissNotification = async () => {
