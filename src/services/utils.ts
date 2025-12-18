@@ -32,6 +32,7 @@ export const getAdminAndOrg = async (actorUid: string): Promise<AdminOrgResult> 
     const userData = userDoc.data()!;
     const companyId = userData.organizationId;
     const userRole = userData.role || 'member'; 
+    const planId = userData.planId || 'free'; // Correção: Pegar planId do usuário
     
     if (!companyId) {
         return null;
@@ -45,17 +46,6 @@ export const getAdminAndOrg = async (actorUid: string): Promise<AdminOrgResult> 
         throw new Error(`Organization with ID ${companyId} not found, but is referenced by user ${actorUid}.`);
     }
     const orgData = orgDoc.data()!;
-
-    let planId: 'free' | 'growth' | 'performance' = 'free';
-
-    const performancePriceId = process.env.NEXT_PUBLIC_STRIPE_PERFORMANCE_PLAN_PRICE_ID;
-    const growthPriceId = process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID;
-
-    if (orgData.stripePriceId === performancePriceId) {
-        planId = 'performance';
-    } else if (orgData.stripePriceId === growthPriceId) {
-        planId = 'growth';
-    }
 
     // Convert any complex objects (like Timestamps) to plain types
     const plainUserData = JSON.parse(JSON.stringify(userData, (key, value) => {
