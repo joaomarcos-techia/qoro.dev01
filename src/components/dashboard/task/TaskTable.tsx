@@ -42,7 +42,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MoreHorizontal, ArrowUpDown, Search, Loader2, List, Flag, Calendar, User, Edit, Trash2, CheckSquare } from 'lucide-react';
+import { MoreHorizontal, ArrowUpDown, Search, Loader2, List, Flag, Calendar, User, Edit, Trash2, CheckSquare, Eye } from 'lucide-react';
 import type { TaskProfile, UserProfile } from '@/ai/schemas';
 import { format, parseISO, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -74,9 +74,10 @@ interface TaskTableProps {
   error: string | null;
   onRefresh: () => void;
   onEdit: (task: TaskProfile) => void;
+  onView: (task: TaskProfile) => void;
 }
 
-export function TaskTable({ tasks, users, isLoading, error, onRefresh, onEdit }: TaskTableProps) {
+export function TaskTable({ tasks, users, isLoading, error, onRefresh, onEdit, onView }: TaskTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [currentUser, setCurrentUser] = React.useState<FirebaseUser | null>(null);
@@ -177,6 +178,10 @@ export function TaskTable({ tasks, users, isLoading, error, onRefresh, onEdit }:
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="rounded-2xl">
                     <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => onView(task)} className="rounded-xl">
+                        <Eye className="mr-2 h-4 w-4" />
+                        Ver Detalhes
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => onEdit(task)} className="rounded-xl">
                         <Edit className="mr-2 h-4 w-4" />
                         Editar tarefa
