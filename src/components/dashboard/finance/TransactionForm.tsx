@@ -49,6 +49,7 @@ export function TransactionForm({ onAction, transaction, transactionCount = 0 }:
   
   const isEditMode = !!transaction?.id;
   const isLimitReached = !isEditMode && planId === 'free' && transactionCount >= FREE_PLAN_LIMIT;
+  const isFreePlan = planId === 'free';
 
 
   useEffect(() => {
@@ -177,22 +178,23 @@ export function TransactionForm({ onAction, transaction, transactionCount = 0 }:
         </div>
 
         <div className="space-y-2">
-            <Label>Conta</Label>
-             <Controller
-                name="accountId"
-                control={control}
-                render={({ field }) => (
-                <Select onValueChange={field.onChange} value={field.value || ''}>
-                    <SelectTrigger><SelectValue placeholder="Selecione a conta" /></SelectTrigger>
-                    <SelectContent>
-                        {accounts.map(account => (
-                            <SelectItem key={account.id} value={account.id}>{account.name}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-                )}
-            />
-             {errors.accountId && <p className="text-destructive text-sm">{errors.accountId.message}</p>}
+          <Label htmlFor="account-select">Conta</Label>
+          <Controller
+              name="accountId"
+              control={control}
+              render={({ field }) => (
+              <Select onValueChange={field.onChange} value={field.value || ''} disabled={isFreePlan}>
+                  <SelectTrigger id="account-select"><SelectValue placeholder="Selecione a conta" /></SelectTrigger>
+                  <SelectContent>
+                      {accounts.map(account => (
+                          <SelectItem key={account.id} value={account.id}>{account.name}</SelectItem>
+                      ))}
+                  </SelectContent>
+              </Select>
+              )}
+          />
+          {isFreePlan && <p className='text-xs text-muted-foreground'>Múltiplas contas é um recurso de planos pagos.</p>}
+          {errors.accountId && <p className="text-destructive text-sm">{errors.accountId.message}</p>}
         </div>
 
         <div className="space-y-2">
