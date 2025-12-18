@@ -4,7 +4,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { getUserAccessInfoFlowWrapper as getUserAccessInfo } from '@/ai/flows/user-management';
+import { getUserAccessInfoFlowWrapper } from '@/ai/flows/user-management';
 import { AppPermissions } from '@/ai/schemas';
 import { getAdminAndOrg } from '@/services/utils';
 
@@ -43,7 +43,7 @@ export const PlanProvider = ({ children }: { children: React.ReactNode }) => {
     try {
         await user.getIdToken(true); // Garante que as custom claims estão atualizadas
         
-        const accessInfo = await getUserAccessInfo({ actor: user.uid });
+        const accessInfo = await getUserAccessInfoFlowWrapper({ actor: user.uid });
         const adminOrgData = await getAdminAndOrg(user.uid);
         
         if (accessInfo && adminOrgData) {

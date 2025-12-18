@@ -17,8 +17,8 @@ type AdminOrgResult = {
 
 
 export const getAdminAndOrg = async (actorUid: string): Promise<AdminOrgResult> => {
-    if (!actorUid) {
-        throw new Error('User must be authenticated to perform this action.');
+    if (!actorUid || typeof actorUid !== 'string' || actorUid.trim() === '') {
+        throw new Error('O ID do ator (actorUid) é inválido ou não foi fornecido.');
     }
     
     const userDocRef = adminDb.collection('users').doc(actorUid);
