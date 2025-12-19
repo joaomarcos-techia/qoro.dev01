@@ -295,8 +295,8 @@ function DashboardContent() {
                     isLoading={isLoadingMetrics}
                     error={!!metricsError} 
                     colorClass='bg-finance-primary'
-                    isLocked={isFinanceLocked}
-                    lockedText="Acesso bloqueado pelo administrador"
+                    isLocked={isFinanceLocked || planId === 'free'}
+                    lockedText={planId === 'free' ? "Disponível em planos pagos" : "Acesso bloqueado pelo administrador"}
                 />
             </div>
              {metricsError && (
