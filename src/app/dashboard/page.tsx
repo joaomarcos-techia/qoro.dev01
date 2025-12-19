@@ -162,14 +162,20 @@ function DashboardContent() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user: FirebaseUser | null) => {
-      setCurrentUser(user);
       if (!user) {
         router.push('/login');
-      } else {
+      }
+      setCurrentUser(user);
+    });
+    return () => unsubscribe();
+  }, [router]);
+
+  useEffect(() => {
+    if (currentUser) {
         const sessionId = searchParams.get('session_id');
         if (sessionId) {
-          setIsVerifyingPayment(true);
-          verifyCheckoutSession({ sessionId, actor: user.uid })
+            setIsVerifyingPayment(true);
+            verifyCheckoutSession({ sessionId, actor: currentUser.uid })
             .then(() => {
               refetchPlan(); // Force plan context to update
             })
@@ -181,10 +187,8 @@ function DashboardContent() {
               window.history.replaceState({}, document.title, newUrl);
             });
         }
-      }
-    });
-    return () => unsubscribe();
-  }, [router, searchParams, refetchPlan]);
+    }
+  }, [currentUser, searchParams, refetchPlan, router]);
 
 
   useEffect(() => {
