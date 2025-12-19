@@ -179,7 +179,3 @@ export async function validateInviteFlowWrapper(input: z.infer<typeof ValidateIn
 export async function acceptInviteFlowWrapper(input: z.infer<typeof AcceptInviteInputSchema>): Promise<z.infer<typeof AcceptInviteOutputSchema>> {
     return acceptInviteFlow(input);
 }
-
-// Direct service exports for server-to-server calls (e.g., from webhooks)
-export { createUserProfile, handleSubscriptionChange } from '@/services/organizationService';
-    
