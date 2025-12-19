@@ -36,6 +36,7 @@ const createUpgradeSessionFlow = ai.defineFlow(
     let session;
     
     if (stripeCustomerId) {
+        // User is already a paying customer, create a subscription update session
         const subscriptions = await stripe.subscriptions.list({
             customer: stripeCustomerId,
             limit: 1,
@@ -44,6 +45,8 @@ const createUpgradeSessionFlow = ai.defineFlow(
         if (subscriptions.data.length === 0) {
              throw new Error("Assinatura não encontrada no Stripe para este cliente.");
         }
+
+        const subscription = subscriptions.data[0];
 
         session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
@@ -62,6 +65,7 @@ const createUpgradeSessionFlow = ai.defineFlow(
 
     } else {
         // User is on a free plan and has no Stripe customer ID.
+        // Create a new checkout session that will create a new customer and subscription.
         session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             mode: 'subscription',
@@ -71,7 +75,7 @@ const createUpgradeSessionFlow = ai.defineFlow(
             cancel_url: `${siteUrl}/dashboard/settings?upgrade_cancelled=true`,
             metadata: {
                 firebaseUID: actor,
-                organizationId: organizationId,
+                organizationId: organizationId, // Ensure organizationId is passed for upgrades from free
                 organizationName: orgDetails.organizationName,
                 userName: userData.name,
                 cnpj: orgDetails.cnpj,
