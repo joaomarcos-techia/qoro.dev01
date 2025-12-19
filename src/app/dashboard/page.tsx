@@ -1,4 +1,3 @@
-
 'use client';
 import Link from 'next/link';
 import {
@@ -14,6 +13,7 @@ import {
   Lock,
   X,
   Bell,
+  CheckCircle,
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
@@ -21,8 +21,9 @@ import { auth, db } from '@/lib/firebase';
 import { getCrmDashboardMetrics } from '@/ai/flows/crm-management';
 import { getFinanceDashboardMetrics } from '@/ai/flows/finance-management';
 import { getOverviewMetrics } from '@/ai/flows/task-management';
+import { verifyCheckoutSession } from '@/ai/flows/billing-flow';
 import { ErrorBoundary } from 'react-error-boundary';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { usePlan } from '@/contexts/PlanContext';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -148,24 +149,43 @@ const AppCard = ({
 
 
 function DashboardContent() {
-  const { planId, permissions, isLoading: isPlanLoading, error: planError, organizationId } = usePlan();
+  const { planId, permissions, isLoading: isPlanLoading, error: planError, organizationId, refetch: refetchPlan } = usePlan();
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [isLoadingMetrics, setIsLoadingMetrics] = useState(true);
   const [metricsError, setMetricsError] = useState<string | null>(null);
   const [metrics, setMetrics] = useState<DashboardMetrics>({ totalCustomers: 0, activeLeads: 0, pendingTasks: 0, totalBalance: 0 });
   const [systemNotification, setSystemNotification] = useState<string | null>(null);
   const router = useRouter();
-
+  const searchParams = useSearchParams();
+  
+  const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user: FirebaseUser | null) => {
       setCurrentUser(user);
       if (!user) {
         router.push('/login');
+      } else {
+        const sessionId = searchParams.get('session_id');
+        if (sessionId) {
+          setIsVerifyingPayment(true);
+          verifyCheckoutSession({ sessionId, actor: user.uid })
+            .then(() => {
+              refetchPlan(); // Force plan context to update
+            })
+            .catch(console.error) // Silently fail, context will poll
+            .finally(() => {
+              setIsVerifyingPayment(false);
+              // Clean URL
+              const newUrl = window.location.pathname;
+              window.history.replaceState({}, document.title, newUrl);
+            });
+        }
       }
     });
     return () => unsubscribe();
-  }, [router]);
+  }, [router, searchParams, refetchPlan]);
+
 
   useEffect(() => {
     if (!organizationId) return;
@@ -211,8 +231,10 @@ function DashboardContent() {
         }
     }
     
-    fetchAllMetrics();
-  }, [currentUser]);
+    if(!isVerifyingPayment){
+        fetchAllMetrics();
+    }
+  }, [currentUser, isVerifyingPayment]);
 
   const dismissNotification = async () => {
     if (!organizationId) return;
@@ -229,6 +251,20 @@ function DashboardContent() {
     )
   }
   
+  if (isVerifyingPayment) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center bg-card border border-primary/50 rounded-2xl p-8 max-w-lg">
+          <CheckCircle className="mx-auto w-12 h-12 text-primary mb-4" />
+          <h3 className="mt-4 text-lg font-bold text-foreground">Pagamento confirmado!</h3>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Estamos sincronizando sua nova assinatura. A página será atualizada em instantes...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (planError === 'USER_DATA_NOT_FOUND') {
     return (
       <div className="flex items-center justify-center h-full">

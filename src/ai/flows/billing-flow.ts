@@ -1,15 +1,16 @@
-
 'use server';
 /**
  * @fileOverview Billing and subscription management flows.
  * - createCheckoutSession: Creates a Stripe Checkout session for a user to subscribe.
  * - createBillingPortalSession: Creates a Stripe Billing Portal session for a user to manage their subscription.
+ * - verifyCheckoutSession: Verifies a checkout session and triggers subscription updates.
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { adminDb } from '@/lib/firebase-admin';
 import { stripe } from '@/lib/stripe';
 import { getAdminAndOrg } from '@/services/utils';
+import { handleSubscriptionChange } from '@/services/organizationService';
 
 const CreateCheckoutSessionSchema = z.object({
   priceId: z.string(),
@@ -22,6 +23,11 @@ const CreateCheckoutSessionSchema = z.object({
 });
 
 const CreateBillingPortalSessionSchema = z.object({
+  actor: z.string(),
+});
+
+const VerifyCheckoutSessionSchema = z.object({
+  sessionId: z.string(),
   actor: z.string(),
 });
 
@@ -41,7 +47,8 @@ const createCheckoutSessionFlow = ai.defineFlow(
       mode: 'subscription',
       billing_address_collection: 'required',
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${siteUrl}/dashboard?payment_success=true`,
+      // Add the session_id to the success URL for manual verification
+      success_url: `${siteUrl}/dashboard?payment_success=true&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${siteUrl}/signup?plan=${priceId}&payment_cancelled=true`,
       // Crucial metadata for the webhook to construct the user profile
       metadata: {
@@ -95,6 +102,47 @@ const createBillingPortalSessionFlow = ai.defineFlow(
       return { url };
     }
   );
+
+const verifyCheckoutSessionFlow = ai.defineFlow(
+  {
+    name: 'verifyCheckoutSessionFlow',
+    inputSchema: VerifyCheckoutSessionSchema,
+    outputSchema: z.object({ success: z.boolean(), message: z.string() }),
+  },
+  async ({ sessionId, actor }) => {
+    try {
+      const session = await stripe.checkout.sessions.retrieve(sessionId, {
+        expand: ['subscription'],
+      });
+
+      if (session.status !== 'complete') {
+        throw new Error('A sessão de checkout não foi concluída.');
+      }
+
+      const subscription = session.subscription as any; // Expand gives us the full object
+      if (!subscription) {
+        throw new Error('Detalhes da assinatura não encontrados na sessão.');
+      }
+      
+      const priceId = subscription.items?.data?.[0]?.price?.id;
+      if (!priceId) {
+        throw new Error('ID do plano não encontrado na assinatura.');
+      }
+
+      // We have the subscription details, now trigger the same logic the webhook uses.
+      // This ensures consistency whether the update comes from the webhook or manual verification.
+      await handleSubscriptionChange(subscription.id, priceId, subscription.status);
+
+      return { success: true, message: 'Assinatura verificada e atualizada com sucesso!' };
+
+    } catch (error: any) {
+      console.error(`Falha na verificação manual da sessão de checkout ${sessionId}:`, error);
+      // We don't throw an error back to the client to avoid a scary error message.
+      // The PlanContext polling will eventually catch the update.
+      return { success: false, message: error.message || 'Erro desconhecido durante a verificação.' };
+    }
+  }
+);
   
 
 // --- Exported Functions ---
@@ -105,4 +153,8 @@ export async function createCheckoutSession(input: z.infer<typeof CreateCheckout
 
 export async function createBillingPortalSession(input: z.infer<typeof CreateBillingPortalSessionSchema>): Promise<{ url: string }> {
   return createBillingPortalSessionFlow(input);
+}
+
+export async function verifyCheckoutSession(input: z.infer<typeof VerifyCheckoutSessionSchema>): Promise<{ success: boolean; message: string; }> {
+  return verifyCheckoutSessionFlow(input);
 }

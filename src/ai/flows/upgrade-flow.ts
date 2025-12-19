@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Flow for handling subscription upgrades.
@@ -35,6 +34,10 @@ const createUpgradeSessionFlow = ai.defineFlow(
     
     let session;
     
+    // Add the session_id to the success URL for manual verification on upgrade too
+    const successUrl = `${siteUrl}/dashboard?payment_success=true&upgrade=true&session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = `${siteUrl}/dashboard/settings?upgrade_cancelled=true`;
+
     if (stripeCustomerId) {
         // User is already a paying customer, create a subscription update session
         const subscriptions = await stripe.subscriptions.list({
@@ -46,16 +49,14 @@ const createUpgradeSessionFlow = ai.defineFlow(
              throw new Error("Assinatura não encontrada no Stripe para este cliente.");
         }
 
-        const subscription = subscriptions.data[0];
-
         session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             mode: 'subscription',
             billing_address_collection: 'required',
             customer: stripeCustomerId,
             line_items: [{ price: targetPriceId, quantity: 1 }],
-            success_url: `${siteUrl}/dashboard?payment_success=true&upgrade=true`,
-            cancel_url: `${siteUrl}/dashboard/settings?upgrade_cancelled=true`,
+            success_url: successUrl,
+            cancel_url: cancelUrl,
             metadata: {
                 firebaseUID: actor,
                 organizationId: organizationId,
@@ -71,8 +72,8 @@ const createUpgradeSessionFlow = ai.defineFlow(
             mode: 'subscription',
             billing_address_collection: 'required',
             line_items: [{ price: targetPriceId, quantity: 1 }],
-            success_url: `${siteUrl}/dashboard?payment_success=true&upgrade=true`,
-            cancel_url: `${siteUrl}/dashboard/settings?upgrade_cancelled=true`,
+            success_url: successUrl,
+            cancel_url: cancelUrl,
             metadata: {
                 firebaseUID: actor,
                 organizationId: organizationId, // Ensure organizationId is passed for upgrades from free
