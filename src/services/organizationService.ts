@@ -7,6 +7,17 @@ import { z } from 'zod';
 import { InviteUserSchema, UpdateOrganizationDetailsSchema, UpdateUserPermissionsSchema, UserProfileCreationSchema, UserProfileSchema, OrganizationProfileSchema } from '@/ai/schemas';
 import { getAdminAndOrg } from './utils';
 
+// Helper function to map Stripe Price ID to internal Plan ID
+function getPlanFromPriceId(priceId: string): 'free' | 'growth' | 'performance' {
+  if (priceId === process.env.NEXT_PUBLIC_STRIPE_PERFORMANCE_PLAN_PRICE_ID) {
+    return 'performance';
+  }
+  if (priceId === process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID) {
+    return 'growth';
+  }
+  return 'free';
+}
+
 export const createUserProfile = async (input: z.infer<typeof UserProfileCreationSchema>) => {
     const {
       uid, name, email, organizationName, cnpj,
@@ -186,7 +197,7 @@ export const handleSubscriptionChange = async (subscriptionId: string, newPriceI
     }
   
     const orgDoc = orgSnapshot.docs[0];
-    const newPlanId = newPriceId === process.env.NEXT_PUBLIC_STRIPE_PERFORMANCE_PLAN_PRICE_ID ? 'performance' : (newPriceId === process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID ? 'growth' : 'free');
+    const newPlanId = getPlanFromPriceId(newPriceId);
     
     let lastSystemNotification = null;
     if (status === 'active' && orgDoc.data().planId !== newPlanId) {

@@ -12,6 +12,16 @@ const relevantEvents = new Set([
   'customer.subscription.deleted',
 ]);
 
+// Helper function to map Stripe Price ID to internal Plan ID
+function getPlanFromPriceId(priceId: string): 'free' | 'growth' | 'performance' {
+  const planMap: Record<string, 'free' | 'growth' | 'performance'> = {
+    [process.env.NEXT_PUBLIC_STRIPE_PERFORMANCE_PLAN_PRICE_ID!]: 'performance',
+    [process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID!]: 'growth',
+  };
+  return planMap[priceId] || 'free'; // Default to 'free' if no match
+}
+
+
 export async function POST(req: Request) {
   const sig = req.headers.get('stripe-signature');
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -46,6 +56,11 @@ export async function POST(req: Request) {
         const subscriptionId = session.subscription as string;
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
         
+        const priceId = subscription.items.data?.[0]?.price?.id;
+        if (!priceId) {
+            return NextResponse.json({ error: 'Subscription item with price ID not found.' }, { status: 400 });
+        }
+        
         if (upgrade === 'true') {
           if (!organizationId) {
             return NextResponse.json({ error: 'Metadados de upgrade essenciais (organizationId) não encontrados.' }, { status: 400 });
@@ -56,21 +71,23 @@ export async function POST(req: Request) {
           await orgRef.update({
             stripeCustomerId: subscription.customer as string,
             stripeSubscriptionId: subscription.id,
-            stripePriceId: subscription.items.data[0].price.id,
+            stripePriceId: priceId,
           });
 
           // Trigger the standard subscription change handler to update plan details for all users.
           await handleSubscriptionChange(
             subscription.id,
-            subscription.items.data[0].price.id,
+            priceId,
             subscription.status
           );
 
         } else {
           // Logic for a brand-new user registration
-          if (!firebaseUID || !organizationName || !userName || !subscriptionId) {
+          if (!firebaseUID || !organizationName || !userName) {
             return NextResponse.json({ error: 'Metadados de novo cliente essenciais não encontrados.' }, { status: 400 });
           }
+
+          const planId = getPlanFromPriceId(priceId);
 
           await createUserProfile({
             uid: firebaseUID,
@@ -80,8 +97,8 @@ export async function POST(req: Request) {
             cnpj: cnpj,
             contactEmail: contactEmail,
             contactPhone: contactPhone,
-            planId: subscription.items.data[0].price.id === process.env.NEXT_PUBLIC_STRIPE_PERFORMANCE_PLAN_PRICE_ID ? 'performance' : 'growth',
-            stripePriceId: subscription.items.data[0].price.id,
+            planId: planId,
+            stripePriceId: priceId,
             stripeCustomerId: subscription.customer as string,
             stripeSubscriptionId: subscription.id,
             stripeSubscriptionStatus: subscription.status,
@@ -93,9 +110,13 @@ export async function POST(req: Request) {
 
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription;
+        const priceId = subscription.items.data?.[0]?.price?.id;
+        if (!priceId) {
+            return NextResponse.json({ error: 'Subscription item with price ID not found on update.' }, { status: 400 });
+        }
         await handleSubscriptionChange(
             subscription.id,
-            subscription.items.data[0].price.id,
+            priceId,
             subscription.status
         );
         break;
@@ -104,11 +125,22 @@ export async function POST(req: Request) {
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription;
         const orgSnapshot = await adminDb.collection('organizations').where('stripeSubscriptionId', '==', subscription.id).limit(1).get();
+        
         if (!orgSnapshot.empty) {
             const orgDoc = orgSnapshot.docs[0];
+            const orgRef = adminDb.collection('organizations').doc(orgDoc.id);
+            
+            // Clean up Stripe data from the organization
+            await orgRef.update({
+              stripeSubscriptionId: null,
+              stripePriceId: null,
+              stripeSubscriptionStatus: 'canceled',
+            });
+            
+            // Standardize plan to 'free' upon cancellation
             await handleSubscriptionChange(
                 subscription.id,
-                orgDoc.data().stripePriceId || 'free',
+                'free', // Force plan to free
                 'canceled'
             );
         }
