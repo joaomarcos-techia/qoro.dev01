@@ -16,7 +16,7 @@ import {
     DialogTitle,
   } from '@/components/ui/dialog';
 import { TaskForm } from '@/components/dashboard/task/TaskForm';
-import { listUsersFlowWrapper as listUsers } from '@/ai/flows/user-management';
+import { listUsers } from '@/ai/flows/user-management';
 
 
 interface OverviewMetrics {

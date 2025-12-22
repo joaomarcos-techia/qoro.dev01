@@ -9,8 +9,8 @@ runConfig:
   memory: 5GiB
 
 # Opcional: Especifique o tempo limite para solicitações (em segundos).
-# O padrão é 60s. Aumente se você tiver fluxos de IA de longa duração.
-# timeoutSeconds: 120
+# O padrão é 60s. Aumentado para 120s para acomodar fluxos de IA mais longos.
+timeoutSeconds: 120
 
 # Opcional: Defina variáveis de ambiente para produção.
 # Os valores públicos podem ser definidos aqui. Os valores secretos DEVEM ser

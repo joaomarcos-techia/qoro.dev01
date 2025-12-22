@@ -139,43 +139,42 @@ const updateUserPermissionsFlow = ai.defineFlow(
 
 // --- Exported Functions ---
 
-// Exported flow wrappers
-export async function inviteUserFlowWrapper(input: z.infer<typeof InviteUserSchema> & z.infer<typeof ActorSchema>): Promise<{ inviteId: string }> {
+export async function inviteUser(input: z.infer<typeof InviteUserSchema> & z.infer<typeof ActorSchema>): Promise<{ inviteId: string }> {
     return inviteUserFlow(input);
 }
 
-export async function deleteUserFlowWrapper(input: z.infer<typeof DeleteUserSchema>): Promise<{ success: boolean }> {
+export async function deleteUser(input: z.infer<typeof DeleteUserSchema>): Promise<{ success: boolean }> {
     return deleteUserFlow(input);
 }
 
-export async function listUsersFlowWrapper(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof UserProfileSchema>[]> {
+export async function listUsers(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof UserProfileSchema>[]> {
     return listUsersFlow(input);
 }
 
-export async function getOrganizationDetailsFlowWrapper(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof OrganizationProfileSchema> | null> {
+export async function getOrganizationDetails(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof OrganizationProfileSchema> | null> {
     return getOrganizationDetailsFlow(input);
 }
 
-export async function updateOrganizationDetailsFlowWrapper(input: z.infer<typeof UpdateOrganizationDetailsSchema> & z.infer<typeof ActorSchema>): Promise<{ success: boolean }> {
+export async function updateOrganizationDetails(input: z.infer<typeof UpdateOrganizationDetailsSchema> & z.infer<typeof ActorSchema>): Promise<{ success: boolean }> {
     return updateOrganizationDetailsFlow(input);
 }
 
-export async function getUserAccessInfoFlowWrapper(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof UserAccessInfoSchema> | null> {
+export async function getUserAccessInfo(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof UserAccessInfoSchema> | null> {
     return getUserAccessInfoFlow(input);
 }
 
-export async function getUserProfileFlowWrapper(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof UserProfileOutputSchema> | null> {
+export async function getUserProfile(input: z.infer<typeof ActorSchema>): Promise<z.infer<typeof UserProfileOutputSchema> | null> {
     return getUserProfileFlow(input);
 }
 
-export async function updateUserPermissionsFlowWrapper(input: z.infer<typeof UpdateUserPermissionsSchema> & z.infer<typeof ActorSchema>): Promise<{ success: boolean }> {
+export async function updateUserPermissions(input: z.infer<typeof UpdateUserPermissionsSchema> & z.infer<typeof ActorSchema>): Promise<{ success: boolean }> {
     return updateUserPermissionsFlow(input);
 }
 
-export async function validateInviteFlowWrapper(input: z.infer<typeof ValidateInviteInputSchema>): Promise<z.infer<typeof ValidateInviteOutputSchema>> {
+export async function validateInvite(input: z.infer<typeof ValidateInviteInputSchema>): Promise<z.infer<typeof ValidateInviteOutputSchema>> {
     return validateInviteFlow(input);
 }
 
-export async function acceptInviteFlowWrapper(input: z.infer<typeof AcceptInviteInputSchema>): Promise<z.infer<typeof AcceptInviteOutputSchema>> {
+export async function acceptInvite(input: z.infer<typeof AcceptInviteInputSchema>): Promise<z.infer<typeof AcceptInviteOutputSchema>> {
     return acceptInviteFlow(input);
 }

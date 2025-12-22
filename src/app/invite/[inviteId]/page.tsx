@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, AlertCircle, CheckCircle, User, Loader2 } from 'lucide-react';
-import { validateInviteFlowWrapper as validateInvite, acceptInviteFlowWrapper as acceptInvite } from '@/ai/flows/user-management';
+import { validateInvite, acceptInvite } from '@/ai/flows/user-management';
 import { Logo } from '@/components/ui/logo';
 import { signUpAndVerify } from '@/lib/authService';
 

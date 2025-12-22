@@ -7,7 +7,7 @@ import { TaskKanbanBoard } from '@/components/dashboard/task/TaskKanbanBoard';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { updateTaskStatus, deleteTask, updateTask } from '@/ai/flows/task-management';
-import { listUsersFlowWrapper as listUsers } from '@/ai/flows/user-management';
+import { listUsers } from '@/ai/flows/user-management';
 import { TaskProfile, UserProfile, Subtask } from '@/ai/schemas';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { TaskForm } from '@/components/dashboard/task/TaskForm';

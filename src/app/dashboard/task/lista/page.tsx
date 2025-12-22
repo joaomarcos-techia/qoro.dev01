@@ -17,7 +17,7 @@ import { TaskProfile, UserProfile } from '@/ai/schemas';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useTasks } from '@/contexts/TasksContext';
-import { listUsersFlowWrapper as listUsers } from '@/ai/flows/user-management';
+import { listUsers } from '@/ai/flows/user-management';
 
 export default function ListaPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
