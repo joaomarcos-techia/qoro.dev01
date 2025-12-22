@@ -3,17 +3,20 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
     
-    // Allow users to read and write files only within a folder corresponding to their organizationId.
-    // This is crucial for features like bank reconciliation uploads.
-    // Example path: /reconciliations/ORG_ID_123/my_statement.ofx
+    // Permitir leitura pública de arquivos na raiz (como favicon, logos públicos)
+    match /logofinal-removebg-preview.png {
+      allow read: if true;
+      allow write: if false;
+    }
+    
+    // Regra existente para arquivos organizacionais
     match /{folder}/{orgId}/{allPaths=**} {
       allow read, write: if request.auth != null && orgId == request.auth.token.organizationId;
     }
-
-    // For any other path not matching the structure above, deny all access by default.
-    // This is an implicit denial, but can be made explicit if needed.
-    // match /{allOtherPaths=**} {
-    //   allow read, write: if false;
-    // }
+    
+    // Bloquear tudo que não se encaixe nas regras acima
+    match /{allOtherPaths=**} {
+      allow read, write: if false;
+    }
   }
 }
