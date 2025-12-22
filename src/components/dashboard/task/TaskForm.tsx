@@ -221,7 +221,7 @@ export function TaskForm({ onTaskAction, task, users, viewOnly = false }: TaskFo
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Status</Label>
+          <Label>Progresso</Label>
           <Controller name="status" control={control} render={({ field }) => (
               <Select onValueChange={field.onChange} value={field.value} disabled={viewOnly}><SelectTrigger><SelectValue/></SelectTrigger>
                 <SelectContent><SelectItem value="todo">A fazer</SelectItem><SelectItem value="in_progress">Em progresso</SelectItem><SelectItem value="review">Revisão</SelectItem><SelectItem value="done">Concluída</SelectItem></SelectContent>
@@ -307,7 +307,7 @@ export function TaskForm({ onTaskAction, task, users, viewOnly = false }: TaskFo
             <div className="bg-yellow-500/20 border-l-4 border-yellow-500 text-yellow-300 p-4 rounded-lg flex items-center justify-between">
                 <div className="flex items-center">
                     <Info className="w-5 h-5 mr-3 flex-shrink-0" />
-                    <span className="text-sm">Você atingiu o limite de {FREE_PLAN_LIMIT} tarefas do plano gratuito.</span>
+                    <span className="text-sm">Você atingiu o limite de ${FREE_PLAN_LIMIT} tarefas do plano gratuito.</span>
                 </div>
                  <Button variant="ghost" onClick={handleUpgrade} disabled={isUpgrading} className="text-yellow-300 hover:text-yellow-200 h-auto p-0 font-bold underline">
                     {isUpgrading && <Loader2 className="w-4 h-4 mr-2 animate-spin"/>}
