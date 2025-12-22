@@ -162,6 +162,7 @@ export function TransactionForm({ onAction, transaction, transactionCount = 0 }:
         const submissionData = {
             ...data,
             date: data.date ? new Date(data.date).toISOString() : new Date().toISOString(),
+            status: 'paid' as const, // Always 'paid'
         };
 
         if (isEditMode) {
@@ -310,19 +311,6 @@ export function TransactionForm({ onAction, transaction, transactionCount = 0 }:
           )}/>
         </div>
 
-         <div className="space-y-2">
-          <Label>Status</Label>
-          <Controller name="status" control={control} render={({ field }) => (
-            <Select onValueChange={field.onChange} value={field.value || 'paid'}>
-                <SelectTrigger><SelectValue/></SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="paid">Pago</SelectItem>
-                    <SelectItem value="pending">Pendente</SelectItem>
-                </SelectContent>
-            </Select>
-          )}/>
-        </div>
-
       </div>
        {error && (
             <div className="bg-destructive/20 text-destructive-foreground p-4 rounded-lg flex items-center mt-4">
@@ -334,9 +322,9 @@ export function TransactionForm({ onAction, transaction, transactionCount = 0 }:
             <div className="bg-yellow-500/20 border-l-4 border-yellow-500 text-yellow-300 p-4 rounded-lg flex items-center justify-between">
                 <div className="flex items-center">
                     <Info className="w-5 h-5 mr-3 flex-shrink-0" />
-                    <span className="text-sm">Você atingiu o limite de {FREE_PLAN_LIMIT} transações do plano gratuito.</span>
+                    <span className="text-sm">Você atingiu o limite de ${FREE_PLAN_LIMIT} transações do plano gratuito.</span>
                 </div>
-                <Button variant="ghost" onClick={handleUpgrade} disabled={isUpgrading} className="text-yellow-300 hover:text-yellow-200 h-auto p-0 font-bold underline">
+                 <Button variant="ghost" onClick={handleUpgrade} disabled={isUpgrading} className="text-yellow-300 hover:text-yellow-200 h-auto p-0 font-bold underline">
                     {isUpgrading && <Loader2 className="w-4 h-4 mr-2 animate-spin"/>}
                     {isUpgrading ? 'Aguarde' : 'Faça upgrade'}
                 </Button>

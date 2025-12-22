@@ -159,15 +159,6 @@ export function TransactionTable({ refreshKey, onAction }: TransactionTableProps
       },
     },
     {
-      accessorKey: 'status',
-      header: 'Status',
-      cell: ({ row }) => {
-          const status = row.getValue('status') as keyof typeof statusMap;
-          const { text, color } = statusMap[status] || statusMap.pending;
-          return <span className={`px-2 py-1 text-xs font-semibold rounded-full ${color}`}>{text}</span>;
-        },
-    },
-    {
       id: 'actions',
       cell: ({ row }) => {
         const transaction = row.original;

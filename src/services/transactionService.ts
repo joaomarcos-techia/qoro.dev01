@@ -28,6 +28,8 @@ export const createTransaction = async (input: z.infer<typeof TransactionSchema>
 
     // Remove undefined values before sending to Firestore
     const cleanInput = JSON.parse(JSON.stringify(input));
+    // Always set status to paid
+    cleanInput.status = 'paid';
 
     try {
         if (accountId) {
@@ -130,7 +132,7 @@ export const updateTransaction = async (input: z.infer<typeof UpdateTransactionS
                 t.update(newAccountRef, { balance: newAccountBalance });
             }
             
-            t.update(transactionRef, { ...updateData, updatedAt: FieldValue.serverTimestamp() });
+            t.update(transactionRef, { ...updateData, status: 'paid', updatedAt: FieldValue.serverTimestamp() });
         });
         return { id: transactionId };
     } catch (error: any) {
