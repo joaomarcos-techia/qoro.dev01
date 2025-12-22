@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { getOrganizationDetailsFlowWrapper as getOrganizationDetails, updateOrganizationDetailsFlowWrapper as updateOrganizationDetails } from '@/ai/flows/user-management';
+import { getOrganizationDetails, updateOrganizationDetails } from '@/ai/flows/user-management';
 import { OrganizationProfile, UpdateOrganizationDetailsSchema } from '@/ai/schemas';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
