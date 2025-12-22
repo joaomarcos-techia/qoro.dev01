@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, AlertCircle, CheckCircle, User, Building, FileText, Phone, Loader2, CreditCard, Send } from 'lucide-react';
 import { createCheckoutSession } from '@/ai/flows/billing-flow';
-import { createUserProfile } from '@/ai/flows/user-management';
 import { Logo } from '@/components/ui/logo';
 import { LegalPopup } from '@/components/landing/LegalPopup';
 import { Checkbox } from "@/components/ui/checkbox"
@@ -136,12 +135,9 @@ export default function SignUpForm() {
         setCheckoutUrl(sessionId);
 
       } else {
-        await createUserProfile({
-          ...formData,
-          uid: user.uid,
-          planId: 'free',
-          stripePriceId: 'free',
-        });
+        // For the free plan, we no longer call createUserProfile directly.
+        // The user just needs to verify their email. The profile will be created on first login if needed,
+        // or by the webhook if they upgrade.
         setSuccessMessage('Conta criada! Um e-mail de verificação foi enviado. Verifique sua caixa de entrada e spam para ativar sua conta antes de fazer o login.');
       }
 
