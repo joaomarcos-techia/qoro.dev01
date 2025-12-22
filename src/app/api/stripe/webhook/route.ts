@@ -36,6 +36,7 @@ export async function POST(req: Request) {
     const rawBody = await req.text();
     event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
   } catch (err: any) {
+    console.error(`❌ Webhook signature verification failed: ${err.message}`);
     return NextResponse.json({ error: `Webhook signature verification failed: ${err.message}` }, { status: 400 });
   }
 
@@ -49,7 +50,7 @@ export async function POST(req: Request) {
         const session = event.data.object as Stripe.Checkout.Session;
         
         if (session.mode !== 'subscription' || !session.subscription) {
-            return NextResponse.json({ received: true });
+            return NextResponse.json({ received: true, message: 'Ignoring non-subscription checkout session.' });
         }
 
         const { firebaseUID, organizationName, userName, cnpj, contactEmail, contactPhone, organizationId, upgrade } = session.metadata || {};
@@ -57,15 +58,24 @@ export async function POST(req: Request) {
         
         const priceId = subscription.items.data?.[0]?.price?.id;
         if (!priceId) {
+            console.error(`❌ Price ID not found in subscription items for session ${session.id}.`);
             return NextResponse.json({ error: 'Price ID not found in subscription items.' }, { status: 400 });
         }
         
         if (upgrade === 'true') {
           if (!organizationId) {
+            console.error(`❌ organizationId is required for upgrades, but was not found in metadata for session ${session.id}.`);
             return NextResponse.json({ error: 'organizationId is required for upgrades.' }, { status: 400 });
           }
-
+          
           const orgRef = adminDb.collection('organizations').doc(organizationId);
+          const orgDoc = await orgRef.get();
+
+          // Idempotency Check: If this subscription is already set, do nothing.
+          if (orgDoc.exists() && orgDoc.data()?.stripeSubscriptionId === subscription.id) {
+            return NextResponse.json({ received: true, message: 'Upgrade already processed.' });
+          }
+
           await orgRef.update({
             stripeCustomerId: subscription.customer as string,
             stripeSubscriptionId: subscription.id,
@@ -75,7 +85,9 @@ export async function POST(req: Request) {
           await handleSubscriptionChange(subscription.id, priceId, subscription.status);
 
         } else {
+          // New user signup flow
           if (!firebaseUID || !organizationName || !userName) {
+            console.error(`❌ Essential metadata for new customer missing in session ${session.id}.`);
             return NextResponse.json({ error: 'Essential metadata for new customer missing.' }, { status: 400 });
           }
 
@@ -103,6 +115,7 @@ export async function POST(req: Request) {
         const subscription = event.data.object as Stripe.Subscription;
         const priceId = subscription.items.data?.[0]?.price?.id;
         if (!priceId) {
+            console.error(`❌ Price ID not found on subscription update event ${subscription.id}.`);
             return NextResponse.json({ error: 'Price ID not found on subscription update.' }, { status: 400 });
         }
         await handleSubscriptionChange(subscription.id, priceId, subscription.status);
@@ -111,22 +124,26 @@ export async function POST(req: Request) {
 
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription;
-        // O `handleSubscriptionChange` agora lida com a lógica de rebaixamento para 'free'.
-        // O `priceId` original não é mais necessário, pois o resultado final é sempre 'free'.
+        // The `handleSubscriptionChange` function now correctly handles the downgrade to 'free'.
         await handleSubscriptionChange(
             subscription.id,
-            'free_plan_dummy_id', // Passa um ID de preço fictício, pois o plano será 'free'
+            'free_plan_dummy_id', // A dummy price ID is fine since the plan will always be 'free'
             'canceled'
         );
         break;
       }
       
       default:
-        // Evento não relevante, já filtrado no início.
+        // This case should not be reached due to the initial event check.
+        console.warn(`🤷‍♀️ Unhandled relevant event type: ${event.type}`);
         break;
     }
 
   } catch (err: any) {
+    console.error(`🚨 Webhook handler failed for event: ${event.type}. Error: ${err.message}`, {
+      eventId: event.id,
+      errorStack: err.stack,
+    });
     return NextResponse.json({ error: `Webhook handler failed: ${err.message}` }, { status: 500 });
   }
 

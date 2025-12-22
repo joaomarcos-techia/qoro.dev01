@@ -194,6 +194,7 @@ export const updateUserPermissions = async (input: z.infer<typeof UpdateUserPerm
 export const handleSubscriptionChange = async (subscriptionId: string, priceId: string, status: string) => {
     const orgSnapshot = await adminDb.collection('organizations').where('stripeSubscriptionId', '==', subscriptionId).limit(1).get();
     if (orgSnapshot.empty) {
+      console.warn(`[handleSubscriptionChange] No organization found for subscription ID: ${subscriptionId}`);
       return;
     }
   
@@ -202,28 +203,43 @@ export const handleSubscriptionChange = async (subscriptionId: string, priceId: 
     
     let lastSystemNotification = null;
     const currentPlanId = orgDoc.data().planId;
+    const finalPlanId = (status === 'active') ? newPlanId : 'free';
 
-    if (status === 'active' && currentPlanId !== newPlanId) {
-        lastSystemNotification = `Seu plano foi alterado para ${newPlanId.charAt(0).toUpperCase() + newPlanId.slice(1)}.`;
-    } else if ((status === 'canceled' || status === 'unpaid') && currentPlanId !== 'free') {
+    if (status === 'active' && currentPlanId !== finalPlanId) {
+        lastSystemNotification = `Seu plano foi alterado para ${finalPlanId.charAt(0).toUpperCase() + finalPlanId.slice(1)}.`;
+    } else if (status !== 'active' && currentPlanId !== 'free') {
         lastSystemNotification = "Houve um problema com sua assinatura. Seu plano foi retornado para o Essencial (gratuito).";
     }
 
-    const finalPlanId = (status === 'active') ? newPlanId : 'free';
+    const orgUpdateData: { [key: string]: any } = {
+        planId: finalPlanId,
+        stripeSubscriptionStatus: status,
+    };
+    if(lastSystemNotification) {
+        orgUpdateData.lastSystemNotification = lastSystemNotification;
+    }
+    if (finalPlanId === 'free') {
+        orgUpdateData.stripePriceId = null;
+        orgUpdateData.stripeSubscriptionId = null;
+    }
 
-    await orgDoc.ref.update({
-      stripePriceId: finalPlanId === 'free' ? null : priceId,
-      stripeSubscriptionStatus: status,
-      planId: finalPlanId,
-      lastSystemNotification,
-    });
+    await orgDoc.ref.update(orgUpdateData);
   
     const usersSnapshot = await adminDb.collection('users').where('organizationId', '==', orgDoc.id).get();
+    if(usersSnapshot.empty) return;
+
     const batch = adminDb.batch();
     
     for (const userDoc of usersSnapshot.docs) {
       const userRef = adminDb.collection('users').doc(userDoc.id);
-      batch.update(userRef, { planId: finalPlanId });
+      const userPermissions = userDoc.data().permissions || {};
+
+      const updatedPermissions = {
+        ...userPermissions,
+        qoroPulse: finalPlanId === 'performance' ? userPermissions.qoroPulse : false,
+      };
+
+      batch.update(userRef, { planId: finalPlanId, permissions: updatedPermissions });
       
       const userRecord = await adminAuth.getUser(userDoc.id);
       const currentClaims = userRecord.customClaims || {};
