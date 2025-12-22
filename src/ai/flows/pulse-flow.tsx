@@ -1,7 +1,7 @@
 
 'use server';
 
-import { ai, googleAI } from '@/ai/genkit';
+import { ai as aiPromise, googleAI } from '@/ai/genkit';
 import { z } from 'zod';
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
@@ -22,7 +22,7 @@ const AiStructuredOutputSchema = z.object({
   response: z.string().describe("A resposta completa e formatada para o usuário."),
 });
 
-const pulseFlow = ai.defineFlow(
+const pulseFlowPromise = aiPromise.then(ai => ai.defineFlow(
   {
     name: 'pulseFlow',
     inputSchema: AskPulseInputSchema,
@@ -139,10 +139,11 @@ Sua resposta DEVE ser um objeto JSON contendo duas chaves: "suggestedTitle" and 
 
     return { response: responseMessage, conversationId, title: finalTitle };
   }
-);
+));
 
 export async function askPulse(
   input: z.infer<typeof AskPulseInputSchema>
 ): Promise<z.infer<typeof AskPulseOutputSchema>> {
+  const pulseFlow = await pulseFlowPromise;
   return pulseFlow(input);
 }
