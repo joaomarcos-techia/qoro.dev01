@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { AppPermissionsSchema, UserProfile, AppPermissions } from '@/ai/schemas';
-import { updateUserPermissions } from '@/ai/flows/user-management';
+import { updateUserPermissionsFlowWrapper as updateUserPermissions } from '@/ai/flows/user-management';
 import { Loader2, AlertCircle, Lock } from 'lucide-react';
 import { z } from 'zod';
 
