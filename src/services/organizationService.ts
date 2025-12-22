@@ -191,7 +191,7 @@ export const updateUserPermissions = async (input: z.infer<typeof UpdateUserPerm
     return { success: true };
 };
 
-export const handleSubscriptionChange = async (subscriptionId: string, priceId: string, status: string) => {
+export const handleSubscriptionChange = async (subscriptionId: string, priceId: string | null, status: string) => {
     const orgSnapshot = await adminDb.collection('organizations').where('stripeSubscriptionId', '==', subscriptionId).limit(1).get();
     if (orgSnapshot.empty) {
       console.warn(`[handleSubscriptionChange] No organization found for subscription ID: ${subscriptionId}`);
@@ -199,11 +199,13 @@ export const handleSubscriptionChange = async (subscriptionId: string, priceId: 
     }
   
     const orgDoc = orgSnapshot.docs[0];
-    const newPlanId = getPlanFromPriceId(priceId);
+    // If priceId is null, it's a cancellation, so the plan becomes 'free'
+    const newPlanId = priceId ? getPlanFromPriceId(priceId) : 'free';
     
     let lastSystemNotification = null;
     const currentPlanId = orgDoc.data().planId;
-    const finalPlanId = (status === 'active') ? newPlanId : 'free';
+    // Determine the final plan based on subscription status. If not active, it's free.
+    const finalPlanId = (status === 'active' || status === 'trialing') ? newPlanId : 'free';
 
     if (status === 'active' && currentPlanId !== finalPlanId) {
         lastSystemNotification = `Seu plano foi alterado para ${finalPlanId.charAt(0).toUpperCase() + finalPlanId.slice(1)}.`;
@@ -214,21 +216,27 @@ export const handleSubscriptionChange = async (subscriptionId: string, priceId: 
     const orgUpdateData: { [key: string]: any } = {
         planId: finalPlanId,
         stripeSubscriptionStatus: status,
+        stripePriceId: priceId, // Store the latest priceId
     };
+
     if(lastSystemNotification) {
         orgUpdateData.lastSystemNotification = lastSystemNotification;
     }
+    
+    // If the plan is now free, clear the subscription-related fields
     if (finalPlanId === 'free') {
-        orgUpdateData.stripePriceId = null;
         orgUpdateData.stripeSubscriptionId = null;
+        orgUpdateData.stripePriceId = null;
     }
 
-    await orgDoc.ref.update(orgUpdateData);
+    const batch = adminDb.batch();
+    batch.update(orgDoc.ref, orgUpdateData);
   
     const usersSnapshot = await adminDb.collection('users').where('organizationId', '==', orgDoc.id).get();
-    if(usersSnapshot.empty) return;
-
-    const batch = adminDb.batch();
+    if(usersSnapshot.empty) {
+        await batch.commit();
+        return;
+    };
     
     for (const userDoc of usersSnapshot.docs) {
       const userRef = adminDb.collection('users').doc(userDoc.id);

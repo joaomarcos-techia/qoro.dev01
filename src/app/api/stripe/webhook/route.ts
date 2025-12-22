@@ -28,6 +28,7 @@ export async function POST(req: Request) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
   if (!sig || !webhookSecret) {
+    console.error('❌ Webhook secret or signature missing');
     return NextResponse.json({ error: 'Webhook secret or signature missing' }, { status: 400 });
   }
 
@@ -45,12 +46,14 @@ export async function POST(req: Request) {
   }
   
   try {
+    console.log(`📥 Processing event: ${event.type} (${event.id})`);
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         
         if (session.mode !== 'subscription' || !session.subscription) {
-            return NextResponse.json({ received: true, message: 'Ignoring non-subscription checkout session.' });
+            console.log(`Ignoring non-subscription checkout session: ${session.id}`);
+            return NextResponse.json({ received: true });
         }
 
         const { firebaseUID, organizationName, userName, cnpj, contactEmail, contactPhone, organizationId, upgrade } = session.metadata || {};
@@ -71,9 +74,10 @@ export async function POST(req: Request) {
           const orgRef = adminDb.collection('organizations').doc(organizationId);
           const orgDoc = await orgRef.get();
 
-          // Idempotency Check: If this subscription is already set, do nothing.
+          // ✅ Idempotency Check
           if (orgDoc.exists() && orgDoc.data()?.stripeSubscriptionId === subscription.id) {
-            return NextResponse.json({ received: true, message: 'Upgrade already processed.' });
+            console.log(`✓ Upgrade already processed for session: ${session.id}`);
+            return NextResponse.json({ received: true });
           }
 
           await orgRef.update({
@@ -124,28 +128,28 @@ export async function POST(req: Request) {
 
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription;
-        // The `handleSubscriptionChange` function now correctly handles the downgrade to 'free'.
+        // ✅ Explicitly pass null for priceId on cancellation to revert to 'free' plan
         await handleSubscriptionChange(
             subscription.id,
-            'free_plan_dummy_id', // A dummy price ID is fine since the plan will always be 'free'
+            null,
             'canceled'
         );
         break;
       }
       
       default:
-        // This case should not be reached due to the initial event check.
         console.warn(`🤷‍♀️ Unhandled relevant event type: ${event.type}`);
         break;
     }
+    console.log(`✅ Event processed successfully: ${event.id}`);
+    return NextResponse.json({ received: true }, { status: 200 });
 
   } catch (err: any) {
     console.error(`🚨 Webhook handler failed for event: ${event.type}. Error: ${err.message}`, {
       eventId: event.id,
       errorStack: err.stack,
     });
+    // ⚠️ Status 500 will cause Stripe to retry the webhook
     return NextResponse.json({ error: `Webhook handler failed: ${err.message}` }, { status: 500 });
   }
-
-  return NextResponse.json({ received: true });
 }
