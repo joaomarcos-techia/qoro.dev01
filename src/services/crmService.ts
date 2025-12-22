@@ -444,24 +444,6 @@ export const deleteQuote = async (quoteId: string, actor: string) => {
     if (!doc.exists || doc.data()?.companyId !== organizationId) {
         throw new Error('Orçamento não encontrado ou acesso negado.');
     }
-
-    const quoteData = doc.data()!;
-
-    if (quoteData.status === 'won') {
-        await quoteRef.delete();
-        return { id: quoteId, success: true };
-    }
-
-    const billsSnapshot = await adminDb.collection('bills')
-        .where('companyId', '==', organizationId)
-        .where('tags', 'array-contains', `quote-${quoteId}`)
-        .limit(1)
-        .get();
-
-    if (!billsSnapshot.empty) {
-        const billDoc = billsSnapshot.docs[0];
-        await billService.deleteBill(billDoc.id, actor);
-    }
     
     await quoteRef.delete();
 
