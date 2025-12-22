@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -213,7 +214,6 @@ export function BillForm({ onAction, bill }: BillFormProps) {
               <SelectTrigger><SelectValue/></SelectTrigger>
               <SelectContent>
                 <SelectItem value="pending">Pendente</SelectItem>
-                <SelectItem value="paid">Paga</SelectItem>
                 <SelectItem value="overdue">Vencida</SelectItem>
               </SelectContent>
             </Select>

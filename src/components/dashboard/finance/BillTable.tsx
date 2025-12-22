@@ -138,7 +138,7 @@ export function BillTable({ onEdit, onRefresh, refreshKey }: BillTableProps) {
                     <DropdownMenuTrigger asChild><Button variant="ghost" className="h-8 w-8 p-0 rounded-xl"><span className="sr-only">Abrir menu</span><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="rounded-2xl">
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                        {bill.status === 'pending' && (
+                        {(bill.status === 'pending' || bill.status === 'overdue') && (
                              <DropdownMenuItem onClick={() => handleMarkAsPaid(bill)} className="rounded-xl cursor-pointer text-green-400 focus:text-green-300">
                                 <CheckCircle className="mr-2 h-4 w-4" />
                                 Marcar como paga

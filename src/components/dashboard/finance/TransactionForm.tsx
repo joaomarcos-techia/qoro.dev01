@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -83,7 +82,6 @@ export function TransactionForm({ onAction, transaction, transactionCount = 0 }:
     resolver: zodResolver(FormSchema),
     defaultValues: {
         type: 'expense',
-        status: 'paid',
         paymentMethod: 'pix',
         date: new Date(),
         description: '',
@@ -96,8 +94,16 @@ export function TransactionForm({ onAction, transaction, transactionCount = 0 }:
 
   const handleNumericInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    const numericValue = value.replace(/[^0-9,]/g, '').replace(',', '.');
-    setValue('amount', parseFloat(numericValue) || 0, { shouldValidate: true });
+    // Permite apenas números, uma vírgula ou um ponto
+    const numericValue = value.replace(/[^0-9,.]/g, '').replace(',', '.');
+    // Garante que haja apenas um ponto decimal
+    const parts = numericValue.split('.');
+    const formattedValue = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : numericValue;
+    
+    // Atualiza o valor no input diretamente para o usuário ver
+    e.target.value = formattedValue;
+    // Atualiza o valor no form hook como número
+    setValue('amount', parseFloat(formattedValue) || 0, { shouldValidate: true });
   };
   
   useEffect(() => {
@@ -134,7 +140,6 @@ export function TransactionForm({ onAction, transaction, transactionCount = 0 }:
     } else if (accounts.length > 0) {
         reset({
             type: 'expense',
-            status: 'paid',
             paymentMethod: 'pix',
             date: new Date(),
             description: '',
@@ -162,7 +167,7 @@ export function TransactionForm({ onAction, transaction, transactionCount = 0 }:
         const submissionData = {
             ...data,
             date: data.date ? new Date(data.date).toISOString() : new Date().toISOString(),
-            status: 'paid' as const, // Always 'paid'
+            status: 'paid' as const,
         };
 
         if (isEditMode) {
@@ -230,8 +235,8 @@ export function TransactionForm({ onAction, transaction, transactionCount = 0 }:
                 id="amount" 
                 type="text" 
                 inputMode="decimal" 
-                {...register('amount')}
-                onChange={handleNumericInput}
+                defaultValue={register('amount').value}
+                onInput={handleNumericInput}
                 placeholder="0,00" 
             />
             {errors.amount && <p className="text-destructive text-sm">{errors.amount.message}</p>}
