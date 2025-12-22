@@ -31,6 +31,14 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MoreHorizontal, ArrowUpDown, Search, Loader2, ShoppingCart, Edit, Trash2, Copy } from 'lucide-react';
@@ -293,5 +301,7 @@ export function ProductTable({ onEdit, onRefresh }: ProductTableProps) {
     </div>
   );
 }
+
+    
 
     
