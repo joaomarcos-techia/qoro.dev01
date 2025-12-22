@@ -28,6 +28,7 @@ export const createUserProfile = async (input: z.infer<typeof UserProfileCreatio
     const orgRef = adminDb.collection('organizations').doc();
     const userRef = adminDb.collection('users').doc(uid);
   
+    // Use a transaction to ensure atomicity
     await adminDb.runTransaction(async (transaction) => {
       // 1. Create Organization
       transaction.set(orgRef, {
@@ -40,8 +41,8 @@ export const createUserProfile = async (input: z.infer<typeof UserProfileCreatio
         stripeCustomerId: stripeCustomerId || null,
         stripeSubscriptionId: stripeSubscriptionId || null,
         stripePriceId: stripePriceId || null,
-        stripeCurrentPeriodEnd: null, // Will be updated by webhook
-        planId: planId, // Set initial plan on organization
+        stripeCurrentPeriodEnd: null,
+        planId: planId,
       });
   
       // 2. Create User
@@ -61,6 +62,7 @@ export const createUserProfile = async (input: z.infer<typeof UserProfileCreatio
       });
     });
   
+    // 3. Set Custom Claims
     await adminAuth.setCustomUserClaims(uid, { organizationId: orgRef.id, role: 'admin', planId });
   
     return { uid };
@@ -165,7 +167,6 @@ export const deleteUser = async (userId: string, actorUid: string) => {
       throw new Error("Usuário não encontrado nesta organização.");
     }
   
-    // Execute both deletions concurrently
     await Promise.all([
       adminAuth.deleteUser(userId),
       userRef.delete()
@@ -190,26 +191,30 @@ export const updateUserPermissions = async (input: z.infer<typeof UpdateUserPerm
     return { success: true };
 };
 
-export const handleSubscriptionChange = async (subscriptionId: string, newPriceId: string, status: string) => {
+export const handleSubscriptionChange = async (subscriptionId: string, priceId: string, status: string) => {
     const orgSnapshot = await adminDb.collection('organizations').where('stripeSubscriptionId', '==', subscriptionId).limit(1).get();
     if (orgSnapshot.empty) {
       return;
     }
   
     const orgDoc = orgSnapshot.docs[0];
-    const newPlanId = getPlanFromPriceId(newPriceId);
+    const newPlanId = getPlanFromPriceId(priceId);
     
     let lastSystemNotification = null;
-    if (status === 'active' && orgDoc.data().planId !== newPlanId) {
-        lastSystemNotification = `Seu plano foi alterado para ${newPlanId}.`;
-    } else if (status === 'canceled' || status === 'unpaid') {
-        lastSystemNotification = "Houve um problema com sua assinatura. Seu plano foi alterado para o gratuito.";
+    const currentPlanId = orgDoc.data().planId;
+
+    if (status === 'active' && currentPlanId !== newPlanId) {
+        lastSystemNotification = `Seu plano foi alterado para ${newPlanId.charAt(0).toUpperCase() + newPlanId.slice(1)}.`;
+    } else if ((status === 'canceled' || status === 'unpaid') && currentPlanId !== 'free') {
+        lastSystemNotification = "Houve um problema com sua assinatura. Seu plano foi retornado para o Essencial (gratuito).";
     }
 
+    const finalPlanId = (status === 'active') ? newPlanId : 'free';
+
     await orgDoc.ref.update({
-      stripePriceId: newPriceId,
+      stripePriceId: finalPlanId === 'free' ? null : priceId,
       stripeSubscriptionStatus: status,
-      planId: newPlanId,
+      planId: finalPlanId,
       lastSystemNotification,
     });
   
@@ -218,11 +223,11 @@ export const handleSubscriptionChange = async (subscriptionId: string, newPriceI
     
     for (const userDoc of usersSnapshot.docs) {
       const userRef = adminDb.collection('users').doc(userDoc.id);
-      batch.update(userRef, { planId: newPlanId });
+      batch.update(userRef, { planId: finalPlanId });
       
       const userRecord = await adminAuth.getUser(userDoc.id);
       const currentClaims = userRecord.customClaims || {};
-      await adminAuth.setCustomUserClaims(userDoc.id, { ...currentClaims, planId: newPlanId });
+      await adminAuth.setCustomUserClaims(userDoc.id, { ...currentClaims, planId: finalPlanId });
     }
   
     await batch.commit();
@@ -245,32 +250,33 @@ export async function validateInvite(inviteId: string) {
 
 export async function acceptInvite(inviteId: string, input: {name: string, uid: string}) {
     const { name, uid } = input;
-    if (!uid) {
-        throw new Error('UID do usuário é inválido.');
+    if (!uid || !name) {
+        throw new Error('Nome e UID do usuário são obrigatórios.');
     }
-    if (!name) {
-        throw new Error('O nome do usuário é obrigatório.');
-    }
+
     const inviteRef = adminDb.collection('invites').doc(inviteId);
+    
     return adminDb.runTransaction(async (transaction) => {
         const inviteDoc = await transaction.get(inviteRef);
         if (!inviteDoc.exists || inviteDoc.data()?.status !== 'pending') {
             throw new Error("Convite inválido ou já aceito.");
         }
+        
         const inviteData = inviteDoc.data()!;
         const orgDoc = await transaction.get(adminDb.collection('organizations').doc(inviteData.organizationId));
         if (!orgDoc.exists) {
             throw new Error("Organização associada ao convite não encontrada.");
         }
-        const planId = orgDoc.data()!.planId || 'free';
 
+        const planId = orgDoc.data()!.planId || 'free';
         const userRef = adminDb.collection('users').doc(uid);
+        
         transaction.set(userRef, {
             name,
             email: inviteData.email,
             organizationId: inviteData.organizationId,
             role: 'member',
-            createdAt: new Date(),
+            createdAt: FieldValue.serverTimestamp(),
             planId: planId,
             permissions: {
                 qoroCrm: true,
@@ -280,8 +286,9 @@ export async function acceptInvite(inviteId: string, input: {name: string, uid: 
             },
         });
 
-        transaction.update(inviteRef, { status: 'accepted', acceptedBy: uid, acceptedAt: new Date() });
+        transaction.update(inviteRef, { status: 'accepted', acceptedBy: uid, acceptedAt: FieldValue.serverTimestamp() });
         await adminAuth.setCustomUserClaims(uid, { organizationId: inviteData.organizationId, role: 'member', planId });
+        
         return { success: true };
     });
 };
