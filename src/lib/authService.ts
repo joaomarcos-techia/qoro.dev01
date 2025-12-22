@@ -1,4 +1,3 @@
-
 'use client';
 
 /**
@@ -22,7 +21,7 @@ import {
 import { auth } from '@/lib/firebase';
 
 const actionCodeSettings = (): ActionCodeSettings => {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:9004';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://qoro.dev';
   return {
     // Aponta para uma página genérica que manipulará a ação.
     url: `${siteUrl}/auth/action`, 

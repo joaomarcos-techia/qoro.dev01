@@ -30,7 +30,7 @@ const createUpgradeSessionFlow = ai.defineFlow(
       throw new Error("O ID do plano de destino não foi fornecido.");
     }
     
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:9003';
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://qoro.dev';
     
     let session;
     

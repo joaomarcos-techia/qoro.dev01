@@ -39,7 +39,7 @@ const createCheckoutSessionFlow = ai.defineFlow(
   },
   async ({ priceId, actor, name, organizationName, cnpj, contactEmail, contactPhone }) => {
     
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:9003';
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://qoro.dev';
     
     // The webhook now relies on metadata to create the user profile.
     const session = await stripe.checkout.sessions.create({
@@ -96,7 +96,7 @@ const createBillingPortalSessionFlow = ai.defineFlow(
       const { url } = await stripe.billingPortal.sessions.create({
         customer: stripeCustomerId,
         configuration: portalConfigurationId,
-        return_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:9003'}/dashboard/settings`,
+        return_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://qoro.dev'}/dashboard/settings`,
       });
   
       return { url };

@@ -17,6 +17,11 @@ timeoutSeconds: 120
 # armazenados no Secret Manager e referenciados pela chave 'secret'.
 # https://firebase.google.com/docs/app-hosting/configure-backend#set-env
 env:
+  # URL do Site (Pública) - Usada para redirects do Stripe e Firebase Auth
+  - variable: NEXT_PUBLIC_SITE_URL
+    value: "https://qoro.dev"
+    availability: [BUILD, RUNTIME]
+
   # Variáveis do Firebase (Públicas)
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
     value: "AIzaSyB-v1ynnLnRuIV4-VTJhBtXPPkHpg-ivtU"
