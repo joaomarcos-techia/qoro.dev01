@@ -9,18 +9,9 @@ import {
   useReactTable,
   SortingState,
   getSortedRowModel,
-  ColumnFiltersState,
   getFilteredRowModel,
   getPaginationRowModel,
 } from '@tanstack/react-table';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -67,7 +58,7 @@ interface ProductTableProps {
 export function ProductTable({ onEdit, onRefresh }: ProductTableProps) {
   const [data, setData] = React.useState<ProductProfile[]>([]);
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [globalFilter, setGlobalFilter] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [currentUser, setCurrentUser] = React.useState<FirebaseUser | null>(null);
@@ -195,11 +186,18 @@ export function ProductTable({ onEdit, onRefresh }: ProductTableProps) {
     getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
-    onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: setGlobalFilter,
     getFilteredRowModel: getFilteredRowModel(),
+    globalFilterFn: (row, columnId, filterValue) => {
+        const searchTerm = filterValue.toLowerCase();
+        const name = row.original.name?.toLowerCase() || '';
+        const sku = row.original.sku?.toLowerCase() || '';
+        const category = row.original.category?.toLowerCase() || '';
+        return name.includes(searchTerm) || sku.includes(searchTerm) || category.includes(searchTerm);
+    },
     state: {
       sorting,
-      columnFilters,
+      globalFilter,
     },
   });
   
@@ -233,12 +231,10 @@ export function ProductTable({ onEdit, onRefresh }: ProductTableProps) {
             <div className="relative w-full sm:w-auto">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
-                placeholder="Buscar por nome..."
-                value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
-                onChange={(event) =>
-                    table.getColumn('name')?.setFilterValue(event.target.value)
-                }
-                className="w-full sm:w-[300px] pl-10 pr-4 py-2 bg-secondary rounded-xl border-border focus:ring-2 focus:ring-primary transition-all duration-300"
+                    placeholder="Buscar por nome, SKU ou categoria..."
+                    value={globalFilter}
+                    onChange={(event) => setGlobalFilter(event.target.value)}
+                    className="w-full sm:w-[300px] pl-10 pr-4 py-2 bg-secondary rounded-xl border-border focus:ring-2 focus:ring-primary transition-all duration-300"
                 />
             </div>
       </div>
@@ -297,3 +293,5 @@ export function ProductTable({ onEdit, onRefresh }: ProductTableProps) {
     </div>
   );
 }
+
+    
