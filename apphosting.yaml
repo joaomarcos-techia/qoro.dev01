@@ -20,67 +20,49 @@ env:
   # URL do Site (Pública) - Usada para redirects do Stripe e Firebase Auth
   - variable: NEXT_PUBLIC_SITE_URL
     value: "https://qoro.dev"
-    availability: [BUILD, RUNTIME]
 
   # Variáveis do Firebase (Públicas)
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
     value: "AIzaSyB-v1ynnLnRuIV4-VTJhBtXPPkHpg-ivtU"
-    availability: [BUILD, RUNTIME]
   - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
     value: "https://accounts.google.com/o/oauth2/auth"
-    availability: [BUILD, RUNTIME]
   - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
     value: "qoro-iy1gs"
-    availability: [BUILD, RUNTIME]
   - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
     value: "qoro-iy1gs.firebasestorage.app"
-    availability: [BUILD, RUNTIME]
   - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
     value: "62039220673"
-    availability: [BUILD, RUNTIME]
   - variable: NEXT_PUBLIC_FIREBASE_APP_ID
     value: "1:62039220673:web:c357a855b1093c508f8f40"
-    availability: [BUILD, RUNTIME]
   - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
     value: "G-L3D1C3SYVV"
-    availability: [BUILD, RUNTIME]
   
   # Variáveis do Stripe (Públicas)
   - variable: NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID
     value: "price_1Rzr2FKnoRE6MSOlBbtvn4cb"
-    availability: [BUILD, RUNTIME]
   - variable: NEXT_PUBLIC_STRIPE_PERFORMANCE_PLAN_PRICE_ID
     value: "price_1Rzr2jKnoRE6MSOl1yBSMsjy"
-    availability: [BUILD, RUNTIME]
 
   # --- SECRETS - Os valores para estas variáveis DEVEM ser criados no Secret Manager ---
 
   # Variáveis do Stripe (Secretas)
   - variable: STRIPE_PORTAL_CONFIGURATION_ID
-    secret: STRIPE_PORTAL_CONFIGURATION_ID # Nome do Secret
-    availability: [RUNTIME]
+    secret: STRIPE_PORTAL_CONFIGURATION_ID
   - variable: STRIPE_SECRET_KEY
-    secret: STRIPE_SECRET_KEY # Nome do Secret
-    availability: [BUILD, RUNTIME]
+    secret: STRIPE_SECRET_KEY
   - variable: STRIPE_WEBHOOK_SECRET
-    secret: STRIPE_WEBHOOK_SECRET # Nome do Secret
-    availability: [BUILD, RUNTIME]
+    secret: STRIPE_WEBHOOK_SECRET
   
   # Chaves de API (Secretas)
   - variable: GOOGLE_API_KEY
-    secret: GOOGLE_API_KEY # Nome do Secret
-    availability: [BUILD, RUNTIME]
+    secret: GOOGLE_API_KEY
   - variable: GEMINI_API_KEY
-    secret: GEMINI_API_KEY # Nome do Secret
-    availability: [BUILD, RUNTIME]
+    secret: GEMINI_API_KEY
   
   # Configurações do Firebase Admin (Secretas)
   - variable: FIREBASE_PROJECT_ID
-    secret: FIREBASE_PROJECT_ID # Nome do Secret
-    availability: [RUNTIME]
+    secret: FIREBASE_PROJECT_ID
   - variable: FIREBASE_CLIENT_EMAIL
-    secret: FIREBASE_CLIENT_EMAIL # Nome do Secret
-    availability: [RUNTIME]
+    secret: FIREBASE_CLIENT_EMAIL
   - variable: FIREBASE_PRIVATE_KEY
-    secret: FIREBASE_PRIVATE_KEY # Nome do Secret
-    availability: [RUNTIME]
+    secret: FIREBASE_PRIVATE_KEY
