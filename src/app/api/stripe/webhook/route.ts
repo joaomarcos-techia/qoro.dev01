@@ -75,7 +75,7 @@ export async function POST(req: Request) {
           const orgDoc = await orgRef.get();
 
           // ✅ Idempotency Check
-          if (orgDoc.exists() && orgDoc.data()?.stripeSubscriptionId === subscription.id) {
+          if (orgDoc.exists && orgDoc.data()?.stripeSubscriptionId === subscription.id) {
             console.log(`✓ Upgrade already processed for session: ${session.id}`);
             return NextResponse.json({ received: true });
           }
