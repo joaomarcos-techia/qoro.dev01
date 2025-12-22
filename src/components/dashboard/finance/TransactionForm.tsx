@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -60,10 +61,16 @@ export function TransactionForm({ onAction, transaction, transactionCount = 0 }:
   }, []);
 
   const handleUpgrade = async () => {
-    if (!currentUser) return;
+    if (!currentUser || !process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID) {
+      setError("Não foi possível determinar o plano de upgrade. Verifique as configurações.");
+      return;
+    }
     setIsUpgrading(true);
     try {
-        const { sessionId } = await createUpgradeSession({ actor: currentUser.uid });
+        const { sessionId } = await createUpgradeSession({ 
+          actor: currentUser.uid,
+          targetPriceId: process.env.NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID
+        });
         window.location.href = sessionId;
     } catch (error: any) {
         setError(error.message || "Não foi possível iniciar o processo de upgrade.");
