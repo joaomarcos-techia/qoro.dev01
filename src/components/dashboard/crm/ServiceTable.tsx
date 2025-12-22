@@ -38,6 +38,14 @@ import { listServices, deleteService } from '@/ai/flows/crm-management';
 import type { ServiceProfile } from '@/ai/schemas';
 import { getAuth, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { app } from '@/lib/firebase';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 const auth = getAuth(app);
 
