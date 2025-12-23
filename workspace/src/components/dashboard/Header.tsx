@@ -6,7 +6,7 @@ import { signOut } from '@/lib/authService';
 import { useRouter } from 'next/navigation';
 import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { getUserProfileFlowWrapper as getUserProfile } from '@/ai/flows/user-management';
+import { getUserProfile } from '@/ai/flows/user-management';
 import Link from 'next/link';
 import { Logo } from '@/components/ui/logo';
 import { usePlan } from '@/contexts/PlanContext';

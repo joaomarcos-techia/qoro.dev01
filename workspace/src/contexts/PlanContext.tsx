@@ -4,7 +4,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { getUserAccessInfoFlowWrapper as getUserAccessInfo } from '@/ai/flows/user-management';
+import { getUserAccessInfo } from '@/ai/flows/user-management';
 import { AppPermissions } from '@/ai/schemas';
 import { getAdminAndOrg } from '@/services/utils';
 
