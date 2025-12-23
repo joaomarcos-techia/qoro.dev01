@@ -15,7 +15,7 @@ import {
   Bell,
   CheckCircle,
 } from 'lucide-react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { getCrmDashboardMetrics } from '@/ai/flows/crm-management';
@@ -395,11 +395,21 @@ function DashboardContent() {
   );
 }
 
+function LoadingFallback() {
+    return (
+        <div className="flex items-center justify-center h-full">
+            <Loader2 className="w-12 h-12 text-primary animate-spin" />
+        </div>
+    );
+}
+
 export default function Dashboard() {
     return (
         <div className="h-full">
             <ErrorBoundary FallbackComponent={DashboardErrorFallback}>
-                <DashboardContent />
+                <Suspense fallback={<LoadingFallback />}>
+                    <DashboardContent />
+                </Suspense>
             </ErrorBoundary>
         </div>
     )
