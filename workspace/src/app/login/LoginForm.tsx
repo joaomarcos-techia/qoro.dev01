@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, LogIn, AlertCircle, CheckCircle, Loader2, RefreshCw } from 'lucide-react';
-import { signInAndCheckVerification, resendVerification, sendPasswordReset } from '@/lib/authService';
+import { signInAndCheckVerification, resendVerification } from '@/lib/authService';
 import { Logo } from '@/components/ui/logo';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -21,6 +21,8 @@ export default function LoginForm() {
   const [isResending, setIsResending] = useState(false);
   const [userForResend, setUserForResend] = useState<FirebaseUser | null>(null);
   
+  const [syncProgress, setSyncProgress] = useState(0);
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const isPaymentSuccess = searchParams.get('payment_success') === 'true';
@@ -30,45 +32,64 @@ export default function LoginForm() {
 
   useEffect(() => {
     if (isSyncing) {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // Inicia a sondagem para verificar se o perfil do usuário foi criado no banco de dados.
-                const interval = setInterval(async () => {
-                    try {
-                        const profileData = await getAdminAndOrg(user.uid);
-                        if (profileData) {
-                            console.log("✅ Profile found! Redirecting to dashboard.");
-                            clearInterval(interval);
-                            await user.getIdToken(true);
-                            router.push('/dashboard');
-                        } else {
-                            console.log("⏳ Profile not found yet, polling...");
-                        }
-                    } catch (e) {
-                         console.error("Error polling for user profile:", e);
-                    }
-                }, 3000); 
-
-                const timeout = setTimeout(() => {
-                    clearInterval(interval);
-                    if (isSyncing) {
-                        setError("A sincronização está demorando mais que o esperado. Tente fazer login manualmente em alguns instantes.");
-                        setIsSyncing(false);
-                    }
-                }, 45000); 
-
-                return () => {
-                    clearInterval(interval)
-                    clearTimeout(timeout);
-                }; 
+      let pollInterval = 2000;
+      const maxInterval = 10000;
+      let attempts = 0;
+      const maxAttempts = 15;
+      let timeoutId: NodeJS.Timeout;
+      
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        if (user) {
+          const poll = async () => {
+            attempts++;
+            setSyncProgress(Math.min((attempts / maxAttempts) * 100, 90));
+  
+            try {
+              const profileData = await getAdminAndOrg(user.uid);
+              
+              if (profileData) {
+                setSyncProgress(100);
+                await user.getIdToken(true);
+                
+                setTimeout(() => {
+                  router.push('/dashboard');
+                }, 500);
+                
+                return;
+              }
+              
+              if (attempts < maxAttempts) {
+                timeoutId = setTimeout(poll, pollInterval);
+                pollInterval = Math.min(pollInterval * 1.5, maxInterval);
+              } else {
+                setError(
+                  "A sincronização está demorando mais que o esperado. " +
+                  "Sua conta foi criada com sucesso. Tente fazer login manualmente em alguns instantes."
+                );
+                setIsSyncing(false);
+              }
+              
+            } catch (e) {
+              if (attempts < maxAttempts) {
+                timeoutId = setTimeout(poll, pollInterval);
+                pollInterval = Math.min(pollInterval * 1.5, maxInterval);
+              } else {
+                setError("Erro ao verificar seu perfil. Tente fazer login manualmente.");
+                setIsSyncing(false);
+              }
             }
-        });
-        return () => {
-            if(unsubscribe) unsubscribe();
-        };
+          };
+  
+          poll();
+        }
+      });
+  
+      return () => {
+        if (unsubscribe) unsubscribe();
+        if (timeoutId) clearTimeout(timeoutId);
+      };
     }
   }, [isSyncing, router]);
-
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,7 +105,7 @@ export default function LoginForm() {
     } catch (err: any) {
       if (err.code === 'auth/email-not-verified') {
         setError(err.message);
-        setUserForResend(err.user); // Pega o objeto 'user' do erro customizado
+        setUserForResend(err.user);
         setShowResend(true);
       } else {
         setError(err.message || 'Ocorreu um erro desconhecido.');
@@ -141,14 +162,14 @@ export default function LoginForm() {
           </Link>
           <p className="text-muted-foreground">Bem-vindo de volta! Faça login para continuar.</p>
         </div>
-        
+
         {isVerified && (
              <div className="mb-4 bg-green-800/20 border-l-4 border-green-500 text-green-300 p-4 rounded-lg flex items-center text-sm">
               <CheckCircle className="w-5 h-5 mr-3" />
               <span>E-mail verificado com sucesso! Você já pode fazer o login.</span>
             </div>
-          )}
-
+        )}
+        
         <form onSubmit={handleLogin} className="space-y-6">
           <div className="relative">
             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -169,6 +190,7 @@ export default function LoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              maxLength={12}
               className="w-full pl-12 pr-4 py-3 bg-input rounded-xl border-border focus:ring-2 focus:ring-primary transition-all duration-200"
             />
           </div>
