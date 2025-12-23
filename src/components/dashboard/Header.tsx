@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ChevronDown, LogOut, RefreshCw, Settings, User } from 'lucide-react';
