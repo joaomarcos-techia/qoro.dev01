@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -26,6 +25,7 @@ export default function ListaPage() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
+  const [isViewOnlyModal, setIsViewOnlyModal] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -35,11 +35,11 @@ export default function ListaPage() {
   }, []);
 
   useEffect(() => {
-    if (currentUser) {
+    if (currentUser && currentUser.uid) {
         setIsLoadingUsers(true);
         listUsers({ actor: currentUser.uid })
           .then(setUsers)
-          .catch((err) => { /* erro silencioso */ })
+          .catch((err) => console.error("Failed to load users", err))
           .finally(() => setIsLoadingUsers(false));
     }
   }, [currentUser]);
@@ -48,6 +48,7 @@ export default function ListaPage() {
     setIsModalOpen(open);
     if (!open) {
       setSelectedTask(null);
+      setIsViewOnlyModal(false);
     }
   };
 
@@ -58,11 +59,19 @@ export default function ListaPage() {
 
   const handleEditTask = (task: TaskProfile) => {
     setSelectedTask(task);
+    setIsViewOnlyModal(false);
     setIsModalOpen(true);
   };
   
+  const handleViewTask = (task: TaskProfile) => {
+    setSelectedTask(task);
+    setIsViewOnlyModal(true);
+    setIsModalOpen(true);
+  };
+
   const handleAddTask = () => {
     setSelectedTask(null);
+    setIsViewOnlyModal(false);
     setIsModalOpen(true);
   }
 
@@ -71,12 +80,14 @@ export default function ListaPage() {
        <Dialog open={isModalOpen} onOpenChange={handleModalOpenChange}>
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-foreground">{selectedTask ? 'Editar tarefa' : 'Criar nova tarefa'}</DialogTitle>
+              <DialogTitle className="text-2xl font-bold text-foreground">
+                {selectedTask ? (isViewOnlyModal ? 'Detalhes da Tarefa' : 'Editar tarefa') : 'Criar nova tarefa'}
+              </DialogTitle>
               <DialogDescription>
-                {selectedTask ? 'Altere as informações da tarefa abaixo.' : 'Preencha as informações abaixo para adicionar uma nova tarefa.'}
+                {selectedTask ? (isViewOnlyModal ? 'Visualize os detalhes e adicione comentários.' : 'Altere as informações da tarefa abaixo.') : 'Preencha as informações abaixo para adicionar uma nova tarefa.'}
               </DialogDescription>
             </DialogHeader>
-            <TaskForm onTaskAction={handleTaskAction} task={selectedTask} users={users} />
+            <TaskForm onTaskAction={handleTaskAction} task={selectedTask} users={users} viewOnly={isViewOnlyModal} />
           </DialogContent>
         </Dialog>
 
@@ -104,6 +115,7 @@ export default function ListaPage() {
             error={error} 
             onRefresh={refreshTasks}
             onEdit={handleEditTask}
+            onView={handleViewTask}
         />
       </div>
     </div>
