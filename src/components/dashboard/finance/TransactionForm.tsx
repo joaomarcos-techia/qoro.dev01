@@ -101,15 +101,10 @@ export function TransactionForm({ onAction, transaction, transactionCount = 0 }:
 
   const handleNumericInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Permite apenas números, uma vírgula ou um ponto
     const numericValue = value.replace(/[^0-9,.]/g, '').replace(',', '.');
-    // Garante que haja apenas um ponto decimal
     const parts = numericValue.split('.');
     const formattedValue = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : numericValue;
     
-    // Atualiza o valor no input diretamente para o usuário ver
-    e.target.value = formattedValue;
-    // Atualiza o valor no form hook como número
     setValue('amount', parseFloat(formattedValue) || 0, { shouldValidate: true });
   };
   
@@ -238,13 +233,19 @@ export function TransactionForm({ onAction, transaction, transactionCount = 0 }:
         
         <div className="space-y-2">
             <Label htmlFor="amount">Valor (R$)*</Label>
-            <Input 
-                id="amount" 
-                type="text" 
-                inputMode="decimal" 
-                defaultValue={register('amount').value}
-                onInput={handleNumericInput}
-                placeholder="0,00" 
+            <Controller
+                name="amount"
+                control={control}
+                render={({ field }) => (
+                    <Input
+                        id="amount"
+                        type="text"
+                        inputMode="decimal"
+                        defaultValue={field.value || ''}
+                        onInput={handleNumericInput}
+                        placeholder="0,00"
+                    />
+                )}
             />
             {errors.amount && <p className="text-destructive text-sm">{errors.amount.message}</p>}
         </div>
@@ -351,3 +352,5 @@ export function TransactionForm({ onAction, transaction, transactionCount = 0 }:
     </form>
   );
 }
+
+    
