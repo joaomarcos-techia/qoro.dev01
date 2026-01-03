@@ -14,7 +14,7 @@ export function HeroSection() {
           </h1>
           
           <p className="text-lg md:text-xl text-white/70 mb-10 max-w-4xl mx-auto leading-relaxed">
-           Nossa IA agentica opera 24/7 para qualificar leads, automatizar o atendimento e fidelizar clientes, eliminando tarefas repetitivas e permitindo que sua equipe foque no que realmente importa: escalar o negócio.
+           Nossa operação trabalha 24/7 para qualificar leads, eliminando tarefas repetitivas e permitindo que sua equipe foque no que realmente importa: escalar o negócio.
           </p>
           
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
