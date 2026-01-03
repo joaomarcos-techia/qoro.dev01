@@ -1,29 +1,8 @@
+"use client";
 
-import { Rocket, Zap, ShieldCheck } from 'lucide-react';
-
-const pillars = [
-  {
-    icon: Rocket,
-    title: 'Aquisição inteligente',
-    solution: 'Qualificação instantânea e sem fricção.',
-    description: 'Implementamos agentes de IA que engajam, qualificam e agendam reuniões em tempo real (24/7). Sua equipe humana recebe apenas leads prontos para fechar.',
-    color: 'text-crm-primary'
-  },
-  {
-    icon: Zap,
-    title: 'Otimização de fluxo',
-    solution: 'Processos autônomos: a máquina de eficiência.',
-    description: 'A IA assume a carga operacional (CRM, triagem, documentação), liberando sua equipe para focar em estratégia e relacionamento de alto nível.',
-    color: 'text-task-primary'
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Fidelização proativa',
-    solution: 'Retenção preditiva: o LTV blindado.',
-    description: 'Usamos a IA para prever o churn e orquestrar a comunicação cross-channel personalizada, transformando clientes ocasionais em defensores da marca.',
-    color: 'text-pulse-primary'
-  }
-];
+import { Box, Lock, Search, Rocket, Zap, ShieldCheck } from "lucide-react";
+import { GlowingEffect } from "@/components/ui/glowing-effect";
+import { cn } from "@/lib/utils";
 
 export function ForWhoSection() {
   return (
@@ -38,21 +17,66 @@ export function ForWhoSection() {
             Nós instalamos um sistema de growth IA que opera em três frentes para garantir escala e retenção.
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {pillars.map((pillar) => (
-            <div key={pillar.title} className="bg-card border border-border rounded-3xl p-8 flex flex-col transition-all duration-300 hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-2">
-              <div className="flex-shrink-0 mb-6">
-                <div className={`inline-block p-4 bg-secondary rounded-xl ${pillar.colorClass}`}>
-                  <pillar.icon className="w-8 h-8" />
-                </div>
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2">{pillar.title}</h3>
-              <p className="text-base font-semibold text-white/80 mb-4">"{pillar.solution}"</p>
-              <p className="text-white/70 text-sm flex-grow">{pillar.description}</p>
-            </div>
-          ))}
-        </div>
+        <ul className="grid grid-cols-1 grid-rows-none gap-8 md:grid-cols-12 md:grid-rows-1">
+          <GridItem
+            area="md:[grid-area:1/1/2/5]"
+            icon={<Rocket className="h-6 w-6" />}
+            title="Aquisição inteligente"
+            description="Implementamos agentes de IA que engajam e qualificam leads em tempo real (24/7). Sua equipe humana recebe apenas reuniões com clientes prontos para fechar."
+          />
+          <GridItem
+            area="md:[grid-area:1/5/2/9]"
+            icon={<Zap className="h-6 w-6" />}
+            title="Otimização de fluxo"
+            description="A IA assume a carga operacional (CRM, triagem, documentação), liberando sua equipe para focar em estratégia e relacionamento de alto nível."
+          />
+          <GridItem
+            area="md:[grid-area:1/9/2/13]"
+            icon={<ShieldCheck className="h-6 w-6" />}
+            title="Fidelização proativa"
+            description="Usamos a IA para prever o churn e orquestrar a comunicação cross-channel, transformando clientes ocasionais em defensores da marca."
+          />
+        </ul>
       </div>
     </section>
   );
 }
+
+interface GridItemProps {
+  area: string;
+  icon: React.ReactNode;
+  title: string;
+  description: React.ReactNode;
+}
+
+const GridItem = ({ area, icon, title, description }: GridItemProps) => {
+  return (
+    <li className={cn("min-h-[16rem] list-none", area)}>
+      <div className="relative h-full rounded-[1.25rem] border-[0.75px] border-border p-2 md:rounded-[1.5rem] md:p-3">
+        <GlowingEffect
+          spread={40}
+          glow={true}
+          disabled={false}
+          proximity={64}
+          inactiveZone={0.01}
+          borderWidth={3}
+        />
+        <div className="relative flex h-full flex-col justify-between gap-6 overflow-hidden rounded-xl border-[0.75px] bg-background p-6 shadow-sm dark:shadow-[0px_0px_27px_0px_rgba(45,45,45,0.3)] md:p-6">
+          <div className="relative flex flex-1 flex-col justify-between gap-3">
+            <div className="w-fit rounded-lg border-[0.75px] border-border bg-muted p-3">
+              {icon}
+            </div>
+            <div className="space-y-3">
+              <h3 className="pt-0.5 text-xl leading-[1.375rem] font-semibold font-sans tracking-[-0.04em] md:text-2xl md:leading-[1.875rem] text-balance text-foreground">
+                {title}
+              </h3>
+              <h2 className="[&_b]:md:font-semibold [&_strong]:md:font-semibold font-sans text-sm leading-[1.125rem] md:text-base md:leading-[1.375rem] text-muted-foreground">
+                {description}
+              </h2>
+            </div>
+          </div>
+        </div>
+      </div>
+    </li>
+  );
+};
