@@ -3,21 +3,21 @@ import { ThumbsDown } from 'lucide-react';
 
 const painPoints = [
   {
-    title: 'Qualificação de Leads',
-    problem: 'O Lead Esfria Antes de Ser Atendido.',
-    description: 'Sua equipe SDR gasta 80% do tempo em leads desqualificados ou demora horas para responder. A fricção entre o interesse do cliente e a resposta humana é o maior ralo de pipeline do seu negócio.',
+    title: 'Qualificação de leads',
+    problem: 'O lead esfria antes de ser atendido.',
+    description: 'Sua equipe de vendas gasta 80% do tempo com leads desqualificados ou demora horas para responder. A fricção entre o interesse do cliente e a resposta humana é o maior gargalo do seu negócio.',
     colorClass: 'text-red-400'
   },
   {
-    title: 'Fluxo de Atendimento',
-    problem: 'O Caos Operacional e a Sobrecarga de Equipe.',
-    description: 'Documentação manual, triagem de e-mails e atualizações de CRM consomem centenas de horas. Sua equipe está presa em tarefas de baixo valor, limitando a capacidade de escala real da sua empresa.',
+    title: 'Fluxo de atendimento',
+    problem: 'O caos operacional sobrecarrega a equipe.',
+    description: 'Documentação manual, triagem de e-mails e atualizações de CRM consomem horas. Sua equipe fica presa em tarefas de baixo valor, o que limita a capacidade de escala da sua empresa.',
     colorClass: 'text-yellow-400'
   },
   {
-    title: 'Fidelização e Retenção',
-    problem: 'O Churn Silencioso e o LTV Estagnado.',
-    description: 'Você só descobre que um cliente está insatisfeito quando ele cancela. A falta de predição e a comunicação reativa fazem com que clientes com experiências positivas gastem 140% mais com a concorrência.',
+    title: 'Fidelização e retenção',
+    problem: 'O churn silencioso e o LTV estagnado.',
+    description: 'Você só descobre a insatisfação do cliente quando ele cancela. A falta de predição e a comunicação reativa fazem com que clientes valiosos busquem a concorrência.',
     colorClass: 'text-orange-400'
   }
 ];
@@ -27,9 +27,9 @@ export function AboutSection() {
     <section id="dor" className="py-20 bg-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <div className="text-sm font-medium text-primary mb-4 tracking-wider uppercase">Problemas Reais</div>
+          <div className="text-sm font-medium text-primary mb-4 tracking-wider uppercase">Problemas reais</div>
           <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
-            O Custo Invisível da Ineficiência Manual
+            O custo invisível da ineficiência manual
           </h2>
           <p className="text-lg text-white/70 max-w-3xl mx-auto">
             Identificamos os 3 gargalos que estão drenando sua margem e sua escalabilidade.

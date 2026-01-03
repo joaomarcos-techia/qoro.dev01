@@ -4,22 +4,22 @@ import { Rocket, Zap, ShieldCheck } from 'lucide-react';
 const pillars = [
   {
     icon: Rocket,
-    title: 'Aquisição Inteligente',
-    solution: 'AI SDR: Qualificação Instantânea e Sem Fricção.',
-    description: 'Implementamos Agentes de IA que engajam, qualificam e agendam reuniões em tempo real (24/7). Sua equipe humana recebe apenas leads prontos para fechar.',
+    title: 'Aquisição inteligente',
+    solution: 'Qualificação instantânea e sem fricção.',
+    description: 'Implementamos agentes de IA que engajam, qualificam e agendam reuniões em tempo real (24/7). Sua equipe humana recebe apenas leads prontos para fechar.',
     colorClass: 'text-crm-primary'
   },
   {
     icon: Zap,
-    title: 'Otimização de Fluxo',
-    solution: 'Processos Agentic: A Máquina de Eficiência.',
+    title: 'Otimização de fluxo',
+    solution: 'Processos agentic: a máquina de eficiência.',
     description: 'A IA assume a carga operacional (CRM, triagem, documentação), liberando sua equipe para focar em estratégia e relacionamento de alto nível.',
     colorClass: 'text-task-primary'
   },
   {
     icon: ShieldCheck,
-    title: 'Fidelização Proativa',
-    solution: 'Retenção Preditiva: O LTV Blindado.',
+    title: 'Fidelização proativa',
+    solution: 'Retenção preditiva: o LTV blindado.',
     description: 'Usamos a IA para prever o churn e orquestrar a comunicação cross-channel personalizada, transformando clientes ocasionais em defensores da marca.',
     colorClass: 'text-pulse-primary'
   }
@@ -32,10 +32,10 @@ export function ForWhoSection() {
         <div className="text-center mb-16">
           <div className="text-sm font-medium text-primary mb-4 tracking-wider uppercase">A Solução</div>
           <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
-            A Arquitetura do Crescimento Autônomo
+            A arquitetura do crescimento autônomo
           </h2>
           <p className="text-lg text-white/70 max-w-3xl mx-auto">
-            Nós instalamos um sistema de Growth IA que opera em três frentes para garantir escala e retenção.
+            Nós instalamos um sistema de growth IA que opera em três frentes para garantir escala e retenção.
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

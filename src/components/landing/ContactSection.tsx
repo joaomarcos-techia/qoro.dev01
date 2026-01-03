@@ -19,11 +19,11 @@ export function ContactSection() {
         <section id="contato" className="py-20 bg-black">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                  <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-                    Seu Negócio Não Terá Mais Funcionários. Terá um Exército de Agentes.
+                    Seu negócio não terá mais funcionários. Terá um exército de agentes.
                 </h2>
-                <p className="text-lg text-primary mb-4 font-semibold">O futuro é o Orchestrated Workforce. Sua equipe humana foca na Estratégia. A IA garante a Execução.</p>
+                <p className="text-lg text-primary mb-4 font-semibold">O futuro é o orchestrated workforce. Sua equipe humana foca na estratégia. A IA garante a execução.</p>
                 <p className="text-lg md:text-xl text-white/70 mb-10 leading-relaxed max-w-3xl mx-auto">
-                    Não fique para trás. A Growth IA não é uma opção, é a fundação da próxima década de crescimento.
+                    Não fique para trás. A growth IA não é uma opção, é a fundação da próxima década de crescimento.
                 </p>
                 <div 
                     onClick={handleClick}
@@ -36,7 +36,7 @@ export function ContactSection() {
                         </>
                     ) : (
                         <>
-                            Agende Sua Análise de Fluxo Agentic Gratuita
+                            Agende sua análise de fluxo agentic gratuita
                             <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                         </>
                     )}

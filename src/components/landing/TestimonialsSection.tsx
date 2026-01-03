@@ -4,7 +4,7 @@ import { Hospital, Scale, Building2, TrendingUp } from 'lucide-react';
 const caseStudies = [
   {
     icon: Hospital,
-    title: 'Clínicas e Saúde',
+    title: 'Clínicas e saúde',
     pain: 'Agendamentos perdidos e sobrecarga administrativa de médicos.',
     solution: 'Gestão de agendamentos por IA e resumo automático de prontuários.',
     result: 'Redução de 75% no tempo de documentação, devolvendo o foco ao paciente.',
@@ -12,10 +12,10 @@ const caseStudies = [
   },
   {
     icon: Scale,
-    title: 'Escritórios de Advocacia',
+    title: 'Escritórios de advocacia',
     pain: 'Pesquisa jurisprudencial lenta e triagem manual de documentos.',
     solution: 'Agentes de IA para análise preditiva de casos e resumo de volumes documentais.',
-    result: 'Redução de 90% no tempo de pesquisa e precisão total na precificação de honorários.',
+    result: 'Redução de 90% no tempo de pesquisa e precisão na precificação de honorários.',
     color: 'text-pulse-primary',
   },
   {
@@ -33,9 +33,9 @@ export function TestimonialsSection() {
     <section id="casos" className="py-20 bg-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <div className="text-sm font-medium text-primary mb-4 tracking-wider uppercase">Estudos de Caso</div>
+          <div className="text-sm font-medium text-primary mb-4 tracking-wider uppercase">Estudos de caso</div>
           <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
-            Crescimento Cirúrgico: IA Aplicada ao Seu Setor
+            Crescimento cirúrgico: IA aplicada ao seu setor
           </h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
