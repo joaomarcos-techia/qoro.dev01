@@ -14,7 +14,7 @@ export function HeroSection() {
           </h1>
           
           <p className="text-lg md:text-xl text-white/70 mb-10 max-w-4xl mx-auto leading-relaxed">
-           Nossa operação trabalha 24/7 para qualificar leads, eliminando tarefas repetitivas e permitindo que sua equipe foque no que realmente importa: escalar o negócio.
+            Enquanto sua equipe se afoga em tarefas repetitivas e leads que esfriam, a automação com IA opera 24/7, qualificando, atendendo e fidelizando com precisão cirúrgica. Você está perdendo escala a cada minuto que seu negócio não opera de forma autônoma.
           </p>
           
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4">

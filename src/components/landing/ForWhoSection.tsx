@@ -7,21 +7,21 @@ const pillars = [
     title: 'Aquisição inteligente',
     solution: 'Qualificação instantânea e sem fricção.',
     description: 'Implementamos agentes de IA que engajam, qualificam e agendam reuniões em tempo real (24/7). Sua equipe humana recebe apenas leads prontos para fechar.',
-    colorClass: 'text-crm-primary'
+    color: 'text-crm-primary'
   },
   {
     icon: Zap,
     title: 'Otimização de fluxo',
-    solution: 'Processos agentic: a máquina de eficiência.',
+    solution: 'Processos autônomos: a máquina de eficiência.',
     description: 'A IA assume a carga operacional (CRM, triagem, documentação), liberando sua equipe para focar em estratégia e relacionamento de alto nível.',
-    colorClass: 'text-task-primary'
+    color: 'text-task-primary'
   },
   {
     icon: ShieldCheck,
     title: 'Fidelização proativa',
     solution: 'Retenção preditiva: o LTV blindado.',
     description: 'Usamos a IA para prever o churn e orquestrar a comunicação cross-channel personalizada, transformando clientes ocasionais em defensores da marca.',
-    colorClass: 'text-pulse-primary'
+    color: 'text-pulse-primary'
   }
 ];
 
