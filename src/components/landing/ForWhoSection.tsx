@@ -1,80 +1,56 @@
 
-import { User, Users, Briefcase, Check } from 'lucide-react';
+import { Rocket, Zap, ShieldCheck } from 'lucide-react';
 
-const targetAudiences = [
+const pillars = [
   {
-    icon: User,
-    title: 'Autônomos e MEIs',
-    description: 'Centralize seus clientes, projetos e finanças. Transmita profissionalismo e organização, mesmo trabalhando sozinho.',
-    benefits: [
-      'Controle total de clientes e funil de vendas',
-      'Organize tarefas e prazos em um só lugar',
-      'Visão clara do seu fluxo de caixa',
-    ],
+    icon: Rocket,
+    title: 'Aquisição Inteligente',
+    solution: 'AI SDR: Qualificação Instantânea e Sem Fricção.',
+    description: 'Implementamos Agentes de IA que engajam, qualificam e agendam reuniões em tempo real (24/7). Sua equipe humana recebe apenas leads prontos para fechar.',
     colorClass: 'text-crm-primary'
   },
   {
-    icon: Users,
-    title: 'Pequenas e Médias Empresas',
-    description: 'Alinhe suas equipes, otimize processos e tome decisões baseadas em dados concretos, não em achismos.',
-    benefits: [
-      'Funil de vendas colaborativo para a equipe',
-      'Delegação e acompanhamento de tarefas',
-      'Controle de contas a pagar e receber',
-    ],
-    colorClass: 'text-pulse-primary'
+    icon: Zap,
+    title: 'Otimização de Fluxo',
+    solution: 'Processos Agentic: A Máquina de Eficiência.',
+    description: 'A IA assume a carga operacional (CRM, triagem, documentação), liberando sua equipe para focar em estratégia e relacionamento de alto nível.',
+    colorClass: 'text-task-primary'
   },
   {
-    icon: Briefcase,
-    title: 'Agências e Consultorias',
-    description: 'Gerencie múltiplos clientes e projetos com eficiência, garantindo entregas no prazo e máxima rentabilidade.',
-    benefits: [
-      'Gestão centralizada de múltiplos projetos',
-      'Criação de orçamentos profissionais em minutos',
-      'Insights de IA para otimizar suas estratégias',
-    ],
-    colorClass: 'text-task-primary'
+    icon: ShieldCheck,
+    title: 'Fidelização Proativa',
+    solution: 'Retenção Preditiva: O LTV Blindado.',
+    description: 'Usamos a IA para prever o churn e orquestrar a comunicação cross-channel personalizada, transformando clientes ocasionais em defensores da marca.',
+    colorClass: 'text-pulse-primary'
   }
 ];
 
 export function ForWhoSection() {
   return (
-    <section id="para-quem" className="py-20 bg-black">
+    <section id="solucao" className="py-20 bg-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <div className="text-sm font-medium text-primary mb-4 tracking-wider uppercase">Para quem é a Qoro?</div>
+          <div className="text-sm font-medium text-primary mb-4 tracking-wider uppercase">A Solução</div>
           <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
-            Desenhado para o seu tipo de negócio
+            A Arquitetura do Crescimento Autônomo
           </h2>
           <p className="text-lg text-white/70 max-w-3xl mx-auto">
-            Seja você um exército de um homem só ou uma equipe em crescimento, a Qoro se adapta às suas necessidades.
+            Nós instalamos um sistema de Growth IA que opera em três frentes para garantir escala e retenção.
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
-          {targetAudiences.map((audience) => {
-            const Icon = audience.icon;
-            return (
-              <div key={audience.title} className="bg-card border border-border rounded-3xl p-8 flex flex-col transition-all duration-300 hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-2">
-                <div className="flex-shrink-0 mb-6">
-                  <div className={`inline-block p-4 bg-secondary rounded-xl ${audience.colorClass}`}>
-                    <Icon className="w-8 h-8" />
-                  </div>
-                </div>
-                <div className="flex flex-col flex-grow">
-                  <h3 className="text-2xl font-bold text-white mb-3">{audience.title}</h3>
-                  <p className="text-white/70 mb-6 flex-grow">{audience.description}</p>
-                  <ul className="space-y-3">
-                    {audience.benefits.map((benefit) => (
-                      <li key={benefit} className="flex items-center text-white/80">
-                        <Check className="w-5 h-5 text-crm-primary mr-3 flex-shrink-0" />
-                        <span>{benefit}</span>
-                      </li>
-                    ))}
-                  </ul>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {pillars.map((pillar) => (
+            <div key={pillar.title} className="bg-card border border-border rounded-3xl p-8 flex flex-col transition-all duration-300 hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-2">
+              <div className="flex-shrink-0 mb-6">
+                <div className={`inline-block p-4 bg-secondary rounded-xl ${pillar.colorClass}`}>
+                  <pillar.icon className="w-8 h-8" />
                 </div>
               </div>
-            );
-          })}
+              <h3 className="text-xl font-bold text-white mb-2">{pillar.title}</h3>
+              <p className="text-base font-semibold text-white/80 mb-4">"{pillar.solution}"</p>
+              <p className="text-white/70 text-sm flex-grow">{pillar.description}</p>
+            </div>
+          ))}
         </div>
       </div>
     </section>

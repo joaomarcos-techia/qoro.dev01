@@ -21,9 +21,9 @@ export function Header() {
   }, []);
 
   const navLinks = [
-    { href: '/#sobre', label: 'Sobre' },
-    { href: '/#para-quem', label: 'Para quem é?' },
-    { href: '/#precos', label: 'Planos' },
+    { href: '/#dor', label: 'A Dor' },
+    { href: '/#solucao', label: 'A Solução' },
+    { href: '/#casos', label: 'Estudos de Caso' },
     { href: '/#contato', label: 'Contato' },
   ];
   
@@ -75,14 +75,6 @@ export function Header() {
             </nav>
           </div>
           
-          <div className="hidden md:flex flex-shrink-0">
-             <Link href="/login">
-                <div className="bg-primary text-primary-foreground px-5 py-2 rounded-full font-medium text-sm transition-all duration-300 ease-in-out hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/30 hover:scale-105">
-                    Entrar
-                </div>
-            </Link>
-          </div>
-
           <div className="flex items-center gap-4 md:hidden">
             <button
                 className="md:hidden text-white"
@@ -107,11 +99,6 @@ export function Header() {
                           {link.label}
                       </a>
                   ))}
-                   <Link href="/login">
-                        <div className="w-full bg-primary text-primary-foreground mt-2 py-2.5 rounded-full font-medium text-sm">
-                            Entrar
-                        </div>
-                    </Link>
               </nav>
           </div>
       )}
