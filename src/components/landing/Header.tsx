@@ -23,7 +23,7 @@ export function Header() {
   const navLinks = [
     { href: '/#dor', label: 'A Dor' },
     { href: '/#solucao', label: 'A Solução' },
-    { href: '/#servicos', label: 'Serviços' },
+    { href: '/#casos', label: 'Estudos de Caso' },
     { href: '/#contato', label: 'Contato' },
   ];
   
