@@ -7,11 +7,7 @@ import * as qualificationService from '@/services/qualificationService';
 import { QualificationLeadSchema } from '@/ai/schemas';
 import { questions } from '@/app/qualificacao/form/questions';
 
-const contactFields = [
-    { key: 'fullName', title: 'Nome Completo' },
-    { key: 'role', title: 'Cargo' },
-    { key: 'email', title: 'E-mail' },
-];
+const contactFields = ['fullName', 'role', 'email'];
 
 const qualificationFlow = ai.defineFlow(
   {
@@ -22,33 +18,36 @@ const qualificationFlow = ai.defineFlow(
   async (answers) => {
     try {
       const questionMap = new Map(questions.map(q => [q.key, q.title]));
-
-      const formattedAnswers = Object.entries(answers)
-        .map(([key, value]) => {
-          if (key === 'interestedFeatures' && typeof value === 'object' && value !== null) {
-            const features = Object.values(value as Record<string, string[]>).flat().join(', ');
-            return {
-              pergunta: questionMap.get(key) || 'Funcionalidades de Interesse',
-              resposta: features || 'Não informado',
-            };
-          }
-          if (questionMap.has(key)) {
-            return {
-              pergunta: questionMap.get(key)!,
-              resposta: value || 'Não informado',
-            };
-          }
-          return null;
-        })
-        .filter(item => item !== null && item.resposta !== 'Não informado' && !contactFields.some(f => f.key === item.pergunta));
-      
+      const formattedAnswers: { pergunta: string; resposta: string }[] = [];
       const contactInfo: Record<string, any> = {};
-      contactFields.forEach(field => {
-        const answer = (answers as any)[field.key];
-        if (answer) {
-            contactInfo[field.title] = answer;
+
+      for (const [key, value] of Object.entries(answers)) {
+        if (!value) continue;
+
+        if (contactFields.includes(key)) {
+          const contactTitle = questions.find(q => q.keys?.includes(key))?.title || key;
+           const fieldInfo = {
+            'fullName': 'Nome Completo',
+            'role': 'Cargo',
+            'email': 'E-mail'
+          };
+          contactInfo[fieldInfo[key as keyof typeof fieldInfo]] = value;
+          continue;
         }
-      });
+        
+        const pergunta = questionMap.get(key) || 'Funcionalidades de Interesse';
+        let resposta: string;
+
+        if (key === 'interestedFeatures' && typeof value === 'object' && value !== null) {
+          resposta = Object.values(value as Record<string, string[]>).flat().join(', ');
+        } else {
+          resposta = String(value);
+        }
+
+        if (resposta && resposta.trim() !== '' && pergunta) {
+          formattedAnswers.push({ pergunta, resposta });
+        }
+      }
       
       const dataToSave = {
           respostas: formattedAnswers,
