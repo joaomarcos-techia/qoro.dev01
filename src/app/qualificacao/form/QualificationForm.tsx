@@ -118,15 +118,23 @@ export default function QualificationForm() {
     handleInputChange(key, { ...currentFeatures, [category]: newCategoryFeatures });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setIsLoading(true);
-    // Fire-and-forget: we don't await the result, providing immediate user feedback.
-    submitQualificationForm(answers).catch(error => {
-        // This error will only be visible in the server logs, not to the user.
-        console.error("❌ Falha no envio do formulário em segundo plano:", error);
-    });
-    // Immediately redirect the user for a snappy experience.
-    router.push('/qualificacao/obrigado');
+    try {
+        const result = await submitQualificationForm(answers);
+        if (result.success) {
+            router.push('/qualificacao/obrigado');
+        } else {
+            // Handle error case - maybe show a toast message
+            console.error("Falha no envio do formulário:", result.message);
+            setIsLoading(false);
+            // Optionally, inform the user about the failure
+        }
+    } catch (error) {
+        console.error("❌ Falha catastrófica no envio do formulário:", error);
+        setIsLoading(false);
+        // Optionally, inform the user about the failure
+    }
   };
 
   const isNextButtonDisabled = () => {
