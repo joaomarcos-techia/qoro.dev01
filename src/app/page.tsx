@@ -17,7 +17,7 @@ export default function HomePage() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#110f1c] p-8 py-20 md:py-8">
+    <main className="flex min-h-screen items-center justify-center bg-[#110f1c] p-8 py-8 md:py-8">
       <div className="flex h-full w-full max-w-6xl flex-col items-center justify-center md:grid md:grid-cols-2 md:gap-16">
         
         {/* Coluna da Imagem */}
