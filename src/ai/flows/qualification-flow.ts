@@ -7,13 +7,12 @@ import * as qualificationService from '@/services/qualificationService';
 import { QualificationLeadSchema } from '@/ai/schemas';
 
 const questions = [
-  { key: 'companySize', title: 'Qual o tamanho da sua empresa?' },
-  { key: 'inefficientProcesses', title: 'Quais processos internos hoje consomem mais tempo da sua equipe?' },
-  { key: 'currentTools', title: 'Quais ferramentas ou softwares vocês já utilizam no dia a dia?' },
-  { key: 'urgency', title: 'Qual o nível de prioridade que você dá para resolver esse problema?' },
-  { key: 'interestedServices', title: 'Em quais serviços você tem mais interesse?' },
-  { key: 'investmentRange', title: 'Em qual faixa de investimento você estaria confortável para este projeto?' },
-  { key: 'desiredOutcome', title: 'O que você gostaria de alcançar com essa solução?' },
+  { key: 'clinicSpecialty', title: 'Especialidade Principal' },
+  { key: 'clinicChallenges', title: 'Maiores Desafios' },
+  { key: 'currentTools', title: 'Ferramentas Atuais' },
+  { key: 'mainGoal', title: 'Principal Objetivo' },
+  { key: 'interestedFeatures', title: 'Funcionalidades de Interesse' },
+  { key: 'investmentRange', title: 'Faixa de Investimento' },
 ];
 
 const contactFields = [
@@ -35,7 +34,7 @@ const qualificationFlow = ai.defineFlow(
         const formattedAnswers = questions.map(q => {
           let answer = (answers as any)[q.key];
           
-          if (q.key === 'interestedServices' && typeof answer === 'object' && answer !== null) {
+          if (q.key === 'interestedFeatures' && typeof answer === 'object' && answer !== null) {
             answer = Object.values(answer).flat().join(', ');
           }
           
@@ -55,7 +54,8 @@ const qualificationFlow = ai.defineFlow(
         
         const dataToSave = {
             respostas: formattedAnswers,
-            contato: contactInfo
+            contato: contactInfo,
+            especialidade: answers.clinicSpecialty || 'Não informado',
         };
 
         await qualificationService.createQualificationLead(dataToSave);

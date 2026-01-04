@@ -17,7 +17,7 @@ export default function ThankYouPage() {
             Obrigado!
         </h1>
         <p className="text-lg text-white/70 mb-10 leading-relaxed">
-            Recebemos suas respostas. Nossa equipe de especialistas irá analisá-las e entrará em contato em breve com os próximos passos.
+            Recebemos suas respostas. Nossa equipe de especialistas em gestão de clínicas irá analisá-las e entrará em contato em breve.
         </p>
         <Button 
           onClick={() => router.push('/')}

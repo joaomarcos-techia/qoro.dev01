@@ -208,13 +208,12 @@ export const QuoteProfileSchema = QuoteSchema.extend({
 export type QuoteProfile = z.infer<typeof QuoteProfileSchema>;
 
 export const QualificationLeadSchema = z.object({
-  companySize: z.string().optional(),
-  inefficientProcesses: z.string().optional(),
+  clinicSpecialty: z.string().optional(),
+  clinicChallenges: z.string().optional(),
   currentTools: z.string().optional(),
-  urgency: z.string().optional(),
-  interestedServices: z.record(z.array(z.string())).optional(),
+  mainGoal: z.string().optional(),
+  interestedFeatures: z.record(z.array(z.string())).optional(),
   investmentRange: z.string().optional(),
-  desiredOutcome: z.string().optional(),
   fullName: z.string().optional(),
   role: z.string().optional(),
   email: z.string().optional(),

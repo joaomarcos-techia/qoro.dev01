@@ -1,3 +1,4 @@
+
 'use client';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -24,10 +25,10 @@ export default function QualificationIntroPage() {
             <Logo height={60} />
         </div>
         <h1 className="text-3xl md:text-5xl font-bold text-white mb-6">
-            Vamos encontrar a solução perfeita para você
+            Vamos encontrar a solução perfeita para sua clínica
         </h1>
         <p className="text-lg md:text-xl text-white/70 mb-10 leading-relaxed">
-          Preencha este formulário de qualificação para que possamos entender melhor sua empresa, seus desafios e indicar a solução mais adequada às suas necessidades.
+          Preencha este formulário rápido para que possamos entender os desafios da sua clínica e indicar a melhor solução para otimizar sua gestão e atendimento.
         </p>
         <Button 
           onClick={handleStart}

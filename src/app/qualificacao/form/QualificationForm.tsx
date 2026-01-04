@@ -16,78 +16,72 @@ import { submitQualificationForm } from '@/ai/flows/qualification-flow';
 const questions = [
   {
     step: 1,
-    section: 'Empresa',
-    title: 'Qual o tamanho da sua empresa?',
+    section: 'Sua Clínica',
+    title: 'Qual é a especialidade principal da sua clínica?',
     type: 'radio',
-    key: 'companySize',
-    options: ['1 a 5 pessoas', '5 a 10 pessoas', '10 a 20 pessoas', '20 a 50 pessoas', '50 a 100 pessoas', 'Mais de 100 pessoas'],
+    key: 'clinicSpecialty',
+    options: ['Clínica Geral', 'Odontologia', 'Fisioterapia', 'Psicologia', 'Estética', 'Outra'],
   },
   {
     step: 2,
-    section: 'Problema',
-    title: 'Quais processos internos hoje consomem mais tempo da sua equipe?',
+    section: 'Desafios',
+    title: 'Quais são os maiores desafios na gestão da sua clínica hoje?',
     type: 'textarea',
-    key: 'inefficientProcesses',
-    placeholder: 'Ex: "Gerenciamento manual de planilhas", "Falta de comunicação entre vendas e financeiro"...',
+    key: 'clinicChallenges',
+    placeholder: 'Ex: "Agendamento de pacientes", "Controle de prontuários", "Comunicação com pacientes", "Gestão financeira"...',
   },
   {
     step: 3,
-    section: 'Problema',
-    title: 'Quais ferramentas ou softwares vocês já utilizam no dia a dia?',
+    section: 'Ferramentas',
+    title: 'Quais sistemas ou ferramentas você já utiliza?',
     type: 'textarea',
     key: 'currentTools',
-    placeholder: 'Ex: "Trello para tarefas, Excel para finanças, WhatsApp para clientes"...',
+    placeholder: 'Ex: "Software de agendamento X", "Prontuário eletrônico Y", "Planilhas para o financeiro"...',
   },
   {
     step: 4,
-    section: 'Problema',
-    title: 'Qual o nível de prioridade que você dá para resolver esse problema?',
+    section: 'Objetivos',
+    title: 'Qual é o seu principal objetivo ao buscar uma nova solução?',
     type: 'radio',
-    key: 'urgency',
+    key: 'mainGoal',
     options: [
-      'Alta (preciso resolver agora, mesmo que demande investimento maior)',
-      'Média (quero resolver em breve, mas depende do custo-benefício)',
-      'Baixa (só estou explorando possibilidades)',
+      'Reduzir o tempo gasto em tarefas administrativas',
+      'Melhorar a experiência e comunicação com o paciente',
+      'Aumentar o faturamento e otimizar as finanças',
+      'Centralizar todas as informações em um único lugar',
     ],
   },
   {
     step: 5,
-    section: 'Serviço',
-    title: 'Em quais serviços você tem mais interesse?',
+    section: 'Funcionalidades',
+    title: 'Quais funcionalidades são mais importantes para você?',
     subtitle: 'Selecione uma ou mais opções.',
     type: 'checkbox',
-    key: 'interestedServices',
+    key: 'interestedFeatures',
     options: [
-      { category: 'Automação e Eficiência', items: ['Automação de processos internos', 'Integração entre sistemas já existentes'] },
-      { category: 'Inteligência Artificial', items: ['Criação de agente de IA personalizado', 'Chatbots de atendimento', 'Geração de análises e insights automatizados'] },
-      { category: 'Desenvolvimento', items: ['Criação de SaaS sob medida'] },
+      { category: 'Gestão de Pacientes', items: ['Agenda inteligente e online', 'Prontuário eletrônico personalizável', 'Confirmação de consulta automática (WhatsApp)'] },
+      { category: 'Financeiro', items: ['Controle de caixa e fluxo de caixa', 'Faturamento de convênios', 'Relatórios financeiros automáticos'] },
+      { category: 'Inteligência', items: ['Assistente de IA para responder perguntas de gestão', 'Análise de dados de pacientes e agendamentos'] },
     ],
   },
   {
     step: 6,
     section: 'Investimento',
-    title: 'Em qual faixa de investimento você estaria confortável para este projeto?',
+    title: 'Qual a faixa de investimento mensal que você considera para uma solução completa?',
     type: 'radio',
     key: 'investmentRange',
-    options: ['Até R$ 2.000', 'R$ 2.000 – R$ 5.000', 'R$ 5.000 – R$ 10.000', 'Acima de R$ 10.000', 'Ainda não tenho uma ideia clara'],
+    options: ['Até R$ 300/mês', 'R$ 300 – R$ 600/mês', 'R$ 600 – R$ 1.000/mês', 'Acima de R$ 1.000/mês', 'Ainda não sei'],
   },
   {
     step: 7,
-    section: 'Expectativa',
-    title: 'O que você gostaria de alcançar com essa solução?',
-    type: 'textarea',
-    key: 'desiredOutcome',
-    placeholder: 'Ex: "Reduzir custos em 20%", "Ganhar 5 horas por semana", "Aumentar as vendas"...',
-  },
-  {
-    step: 8,
     section: 'Contato',
     title: 'Excelente! Estamos quase lá. Faltam apenas seus dados para contato.',
     type: 'contact',
-    key: 'contactInfo', // Added key to prevent build error
+    key: 'contactInfo',
     keys: ['fullName', 'role', 'email'],
   },
 ];
+
 
 const totalSteps = questions.length;
 
@@ -121,15 +115,15 @@ export default function QualificationForm() {
   };
 
   const handleCheckboxChange = (category: string, item: string, checked: boolean) => {
-    const key = 'interestedServices';
-    const currentServices = answers[key] || {};
-    const categoryServices: string[] = currentServices[category] || [];
+    const key = 'interestedFeatures';
+    const currentFeatures = answers[key] || {};
+    const categoryFeatures: string[] = currentFeatures[category] || [];
 
-    const newCategoryServices = checked
-      ? [...categoryServices, item]
-      : categoryServices.filter((s: string) => s !== item);
+    const newCategoryFeatures = checked
+      ? [...categoryFeatures, item]
+      : categoryFeatures.filter((s: string) => s !== item);
 
-    handleInputChange(key, { ...currentServices, [category]: newCategoryServices });
+    handleInputChange(key, { ...currentFeatures, [category]: newCategoryFeatures });
   };
 
   const handleSubmit = () => {
