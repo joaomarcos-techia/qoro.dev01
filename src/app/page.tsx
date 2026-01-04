@@ -17,12 +17,12 @@ export default function HomePage() {
   };
 
   return (
-    <main className="flex h-screen items-center justify-center bg-[#110f1c] p-4 sm:p-8 py-20 md:py-8">
+    <main className="flex min-h-screen items-center justify-center bg-[#110f1c] p-8 py-20 md:py-8">
       <div className="flex h-full w-full max-w-6xl flex-col items-center justify-center md:grid md:grid-cols-2 md:gap-16">
         
         {/* Coluna da Imagem */}
-        <div className="flex w-full justify-center md:order-last md:justify-end mb-4 md:mb-0">
-          <div className="relative h-auto w-full max-w-[280px] md:max-w-md">
+        <div className="flex w-full max-w-xs justify-center md:order-last md:max-w-md md:justify-end mb-8 md:mb-0">
+          <div className="relative h-auto w-full">
             <Image
               src="https://firebasestorage.googleapis.com/v0/b/qoro-iy1gs.firebasestorage.app/o/mesh-gradient22.png?alt=media&token=675b8ae5-eb2b-486c-ad0c-2c0f2bd4db3c"
               alt="Gradiente abstrato com tons de roxo, rosa e azul"
@@ -36,7 +36,7 @@ export default function HomePage() {
         </div>
 
         {/* Coluna de Texto */}
-        <div className="w-full max-w-[280px] flex flex-col justify-center text-left md:max-w-full md:text-left">
+        <div className="w-full max-w-xs flex flex-col justify-center text-left md:max-w-full">
           <h1 className="text-3xl font-semibold leading-tight text-white md:text-[51px]">
             Aumente o seu faturamento com IA.
           </h1>

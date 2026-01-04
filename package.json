@@ -1,19 +1,17 @@
 {
-  "name": "qoroflow",
+  "name": "qoroflow-website",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 9003 -H 0.0.0.0",
+    "dev": "next dev",
     "build": "next build",
     "genkit:dev": "genkit start --dotEnvPath .env -- tsx src/ai/dev.ts",
-    "genkit:watch": "genkit start --dotEnvPath .env -- tsx --watch src/ai/dev.ts",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@genkit-ai/google-genai": "^1.26.0",
-    "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-checkbox": "^1.1.1",
     "@radix-ui/react-label": "^2.1.0",
     "@radix-ui/react-progress": "^1.1.0",
@@ -27,7 +25,6 @@
     "next": "^14.2.35",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-hook-form": "^7.52.1",
     "tailwind-merge": "^2.4.0",
     "tailwindcss-animate": "^1.0.0",
     "zod": "^3.24.4"

@@ -3,40 +3,16 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Helper function to get the user's organization ID from their user document.
-    function getUserOrgId(userId) {
-      return get(/databases/$(database)/documents/users/$(userId)).data.organizationId;
-    }
-    
-    // Helper function to check if the user is an admin of their organization.
-    function isUserAdmin(userId) {
-      return get(/databases/$(database)/documents/users/$(userId)).data.role == 'admin';
+    // Permite que qualquer pessoa crie um lead de qualificação.
+    // Bloqueia leituras, atualizações ou exclusões do lado do cliente.
+    match /qualification_leads/{leadId} {
+      allow read, update, delete: if false;
+      allow create: if true;
     }
 
-    // Users can read/update their own document. Only admins can create/delete users (implicitly handled by backend flows).
-    match /users/{userId} {
-      allow read, update: if request.auth.uid == userId;
-    }
-
-    // Users can read their own organization document. Only admins can update it.
-    match /organizations/{orgId} {
-      allow read: if request.auth != null && getUserOrgId(request.auth.uid) == orgId;
-      allow update: if request.auth != null && getUserOrgId(request.auth.uid) == orgId && isUserAdmin(request.auth.uid);
-    }
-    
-    // Generic rule for all other business collections (CRM, Finance, Tasks, etc.).
-    // This rule applies to any collection that has a `companyId` field.
-    // It allows full access (create, read, update, delete) if the document's companyId
-    // matches the user's organizationId.
-    match /{collection}/{docId} {
-      allow read, update, delete: if request.auth != null && getUserOrgId(request.auth.uid) == resource.data.companyId;
-      allow create: if request.auth != null && request.resource.data.companyId == getUserOrgId(request.auth.uid);
-    }
-
-    // Specific rule for pulse_conversations which uses `userId` instead of `companyId`.
-    match /pulse_conversations/{conversationId} {
-        allow read, write, delete: if request.auth != null && request.auth.uid == resource.data.userId;
-        allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+    // Bloqueia o acesso a todas as outras coleções por padrão.
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
