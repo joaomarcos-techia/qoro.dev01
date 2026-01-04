@@ -19,13 +19,6 @@ export default function ThankYouPage() {
         <p className="text-lg text-white/70 mb-10 leading-relaxed">
             Recebemos suas respostas. Nossa equipe de especialistas em gestão de clínicas irá analisá-las e entrará em contato em breve.
         </p>
-        <Button 
-          onClick={() => router.push('/')}
-          variant="outline"
-        >
-          <Home className="mr-2 h-4 w-4" />
-          Voltar para a Página Inicial
-        </Button>
       </div>
     </div>
   );
