@@ -44,13 +44,13 @@ export default function HomePage() {
 
         {/* Coluna da Imagem */}
         <div className="flex justify-center md:justify-end animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-          <div className="relative w-full max-w-md h-auto aspect-square rounded-3xl overflow-hidden shadow-2xl shadow-purple-900/20">
+          <div className="relative w-full max-w-md h-auto rounded-3xl overflow-hidden shadow-2xl shadow-purple-900/20">
             <Image
               src="https://firebasestorage.googleapis.com/v0/b/qoro-iy1gs.firebasestorage.app/o/mesh-gradient22.png?alt=media&token=675b8ae5-eb2b-486c-ad0c-2c0f2bd4db3c"
               alt="Gradiente abstrato com tons de roxo, rosa e azul"
-              fill
+              width={590}
+              height={722}
               className="object-cover"
-              sizes="(max-width: 768px) 100vw, 50vw"
               priority
             />
           </div>
