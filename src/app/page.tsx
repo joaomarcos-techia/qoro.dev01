@@ -47,7 +47,7 @@ export default function HomePage() {
             onClick={handleRedirect}
             disabled={isLoading}
             size="lg"
-            className="w-full bg-[#8A2BE2] text-white hover:bg-[#7a25c1] rounded-full px-10 py-6 text-lg font-semibold transition-all duration-300 md:w-auto"
+            className="w-full bg-[#8A2BE2] text-white hover:bg-[#7a25c1] rounded-full px-8 py-6 text-lg font-semibold transition-all duration-300 md:w-auto"
           >
             {isLoading ? (
               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
