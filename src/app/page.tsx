@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -20,7 +21,7 @@ export default function HomePage() {
       <div className="flex h-full w-full max-w-6xl flex-col items-center justify-center md:grid md:grid-cols-2 md:gap-16">
         
         {/* Coluna da Imagem */}
-        <div className="flex w-full justify-center md:justify-end">
+        <div className="flex w-full justify-center md:justify-end md:order-last">
           <div className="relative h-auto w-full max-w-xs md:max-w-md">
             <Image
               src="https://firebasestorage.googleapis.com/v0/b/qoro-iy1gs.firebasestorage.app/o/mesh-gradient22.png?alt=media&token=675b8ae5-eb2b-486c-ad0c-2c0f2bd4db3c"
