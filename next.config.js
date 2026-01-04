@@ -30,6 +30,10 @@ const nextConfig = {
   },
   experimental: {
     webVitalsAttribution: ['CLS', 'LCP'],
+    allowedDevOrigins: [
+        '3000-firebase-qoro2-1767413451474.cluster-ve345ymguzcd6qqzuko2qbxtfe.cloudworkstations.dev',
+        '*.cloudworkstations.dev',
+    ]
   },
   async headers() {
     return [
