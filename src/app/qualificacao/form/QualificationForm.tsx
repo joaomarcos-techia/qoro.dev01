@@ -11,7 +11,8 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
-import { submitQualificationForm, questions } from '@/ai/flows/qualification-flow';
+import { submitQualificationForm } from '@/ai/flows/qualification-flow';
+import { questions } from './questions';
 
 const totalSteps = questions.length;
 
