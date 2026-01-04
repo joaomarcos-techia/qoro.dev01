@@ -1,10 +1,8 @@
-
 'use client';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
+import { ArrowRight, Loader2 } from 'lucide-react';
 import { Logo } from '@/components/ui/logo';
-import Link from 'next/link';
 import { useState } from 'react';
 
 export default function QualificationIntroPage() {
@@ -17,7 +15,7 @@ export default function QualificationIntroPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-black p-4 text-center">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-black p-8 text-center">
         
 
       <div className="max-w-2xl text-center">

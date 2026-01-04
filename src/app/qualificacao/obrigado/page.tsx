@@ -8,7 +8,7 @@ export default function ThankYouPage() {
   const router = useRouter();
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-black p-4 text-center">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-black p-8 text-center">
       <div className="max-w-md">
         <div className="mx-auto mb-8 inline-block rounded-full bg-green-500/10 p-5 border border-green-500/20">
             <CheckCircle className="h-12 w-12 text-green-400" />

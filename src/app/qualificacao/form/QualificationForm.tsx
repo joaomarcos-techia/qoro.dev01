@@ -145,11 +145,11 @@ export default function QualificationForm() {
 
   return (
     <div className="flex flex-col min-h-screen bg-black text-white p-4 sm:p-6 md:p-8">
-      <header className="fixed top-0 left-0 right-0 p-4 z-10">
+      <header className="fixed top-0 left-0 right-0 p-4 z-10 bg-black">
         <Progress value={progress} className="w-full h-1.5" />
       </header>
 
-      <main className="flex-grow flex items-center justify-center">
+      <main className="flex-grow flex flex-col items-center justify-center pt-16 pb-8">
         <div className={cn("w-full max-w-3xl transition-all duration-300", isAnimatingOut ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0')}>
           <div className="mb-8">
             <p className="text-primary font-semibold mb-2 flex items-center text-sm sm:text-base">
@@ -159,12 +159,12 @@ export default function QualificationForm() {
             {currentQuestion.subtitle && <p className="text-muted-foreground mt-2 text-base md:text-lg">{currentQuestion.subtitle}</p>}
           </div>
 
-          <div className="min-h-[300px]">
+          <div className="min-h-[250px]">
             {currentQuestion.type === 'radio' && Array.isArray(currentQuestion.options) && (
               <RadioGroup
                 value={answers[currentQuestion.key] || ''}
                 onValueChange={(value) => handleInputChange(currentQuestion.key as string, value)}
-                className="grid grid-cols-1 gap-3"
+                className="grid grid-cols-1 sm:grid-cols-2 gap-3"
               >
                 {currentQuestion.options.map((option: any) => (
                   <Label key={typeof option === 'string' ? option : option.category} className={cn(
@@ -240,31 +240,33 @@ export default function QualificationForm() {
               </div>
             )}
           </div>
-
-          <div className={cn(
-              "mt-12 flex flex-col-reverse sm:flex-row gap-4",
-              currentStep > 0 ? "justify-between" : "justify-end"
-            )}>
-            {currentStep > 0 && (
-              <Button variant="outline" size="lg" onClick={handleBack} disabled={isLoading} className="w-full sm:w-auto">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Voltar
-              </Button>
-            )}
-
-            {currentStep < totalSteps - 1 ? (
-              <Button size="lg" onClick={handleNext} disabled={isNextButtonDisabled()} className="w-full sm:w-auto">
-                Avançar <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            ) : (
-              <Button size="lg" onClick={handleSubmit} disabled={isLoading || isNextButtonDisabled()} className="w-full sm:w-auto">
-                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                {isLoading ? 'Enviando...' : 'Enviar Respostas'}
-              </Button>
-            )}
-          </div>
         </div>
       </main>
+      
+      <footer className="w-full max-w-3xl mx-auto">
+        <div className={cn(
+            "mt-8 flex flex-col-reverse sm:flex-row gap-4",
+            currentStep > 0 ? "justify-between" : "justify-end"
+          )}>
+          {currentStep > 0 && (
+            <Button variant="outline" size="lg" onClick={handleBack} disabled={isLoading} className="w-full sm:w-auto">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Voltar
+            </Button>
+          )}
+
+          {currentStep < totalSteps - 1 ? (
+            <Button size="lg" onClick={handleNext} disabled={isNextButtonDisabled()} className="w-full sm:w-auto">
+              Avançar <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          ) : (
+            <Button size="lg" onClick={handleSubmit} disabled={isLoading || isNextButtonDisabled()} className="w-full sm:w-auto">
+              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+              {isLoading ? 'Enviando...' : 'Enviar Respostas'}
+            </Button>
+          )}
+        </div>
+      </footer>
     </div>
   );
 }
