@@ -11,69 +11,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
-import { submitQualificationForm } from '@/ai/flows/qualification-flow';
-
-const questions = [
-  {
-    step: 1,
-    section: 'Sua Clínica',
-    title: 'Qual é a especialidade principal da sua clínica?',
-    type: 'radio',
-    key: 'clinicSpecialty',
-    options: ['Clínica Geral', 'Odontologia', 'Fisioterapia', 'Psicologia', 'Estética', 'Outra'],
-  },
-  {
-    step: 2,
-    section: 'Desafios',
-    title: 'Quais são os maiores desafios na gestão da sua clínica hoje?',
-    type: 'textarea',
-    key: 'clinicChallenges',
-    placeholder: 'Ex: "Agendamento de pacientes", "Controle de prontuários", "Comunicação com pacientes", "Gestão financeira"...',
-  },
-  {
-    step: 3,
-    section: 'Ferramentas',
-    title: 'Quais sistemas ou ferramentas você já utiliza?',
-    type: 'textarea',
-    key: 'currentTools',
-    placeholder: 'Ex: "Software de agendamento X", "Prontuário eletrônico Y", "Planilhas para o financeiro"...',
-  },
-  {
-    step: 4,
-    section: 'Objetivos',
-    title: 'Qual é o seu principal objetivo ao buscar uma nova solução?',
-    type: 'radio',
-    key: 'mainGoal',
-    options: [
-      'Reduzir o tempo gasto em tarefas administrativas',
-      'Melhorar a experiência e comunicação com o paciente',
-      'Aumentar o faturamento e otimizar as finanças',
-      'Centralizar todas as informações em um único lugar',
-    ],
-  },
-  {
-    step: 5,
-    section: 'Funcionalidades',
-    title: 'Quais funcionalidades são mais importantes para você?',
-    subtitle: 'Selecione uma ou mais opções.',
-    type: 'checkbox',
-    key: 'interestedFeatures',
-    options: [
-      { category: 'Gestão de Pacientes', items: ['Agenda inteligente e online', 'Prontuário eletrônico personalizável', 'Confirmação de consulta automática (WhatsApp)'] },
-      { category: 'Financeiro', items: ['Controle de caixa e fluxo de caixa', 'Faturamento de convênios', 'Relatórios financeiros automáticos'] },
-      { category: 'Inteligência', items: ['Assistente de IA para responder perguntas de gestão', 'Análise de dados de pacientes e agendamentos'] },
-    ],
-  },
-  {
-    step: 6,
-    section: 'Contato',
-    title: 'Excelente! Estamos quase lá. Faltam apenas seus dados para contato.',
-    type: 'contact',
-    key: 'contactInfo',
-    keys: ['fullName', 'role', 'email'],
-  },
-];
-
+import { submitQualificationForm, questions } from '@/ai/flows/qualification-flow';
 
 const totalSteps = questions.length;
 
@@ -157,7 +95,7 @@ export default function QualificationForm() {
         <Progress value={progress} className="w-full h-1.5" />
       </header>
 
-      <main className="flex-grow flex flex-col items-center justify-center pt-16 pb-8">
+      <main className="flex-grow flex flex-col items-center justify-center pt-24 pb-12">
         <div className={cn("w-full max-w-3xl transition-all duration-300", isAnimatingOut ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0')}>
           <div className="mb-8">
             <p className="text-primary font-semibold mb-2 flex items-center text-sm sm:text-base">
@@ -167,7 +105,7 @@ export default function QualificationForm() {
             {currentQuestion.subtitle && <p className="text-muted-foreground mt-2 text-base md:text-lg">{currentQuestion.subtitle}</p>}
           </div>
 
-          <div className="min-h-[250px]">
+          <div className="min-h-[300px] sm:min-h-[250px]">
             {currentQuestion.type === 'radio' && Array.isArray(currentQuestion.options) && (
               <RadioGroup
                 value={answers[currentQuestion.key] || ''}
