@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 export default function HomePage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
 
   const handleRedirect = () => {
     setIsLoading(true);
@@ -29,6 +30,7 @@ export default function HomePage() {
               height={722}
               className="object-cover"
               priority
+              onLoad={() => setIsImageLoaded(true)}
             />
           </div>
         </div>
@@ -43,11 +45,11 @@ export default function HomePage() {
           </p>
           <Button
             onClick={handleRedirect}
-            disabled={isLoading}
+            disabled={isLoading || !isImageLoaded}
             size="lg"
             className="w-full bg-[#8A2BE2] text-white hover:bg-[#7a25c1] rounded-full px-4 py-3 text-lg font-semibold transition-all duration-300 md:w-auto md:h-auto md:px-8 md:py-4"
           >
-            {isLoading ? (
+            {isLoading || !isImageLoaded ? (
               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
             ) : (
               'Entre em contato'
