@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -20,7 +21,7 @@ export default function HomePage() {
       <div className="flex h-full w-full max-w-6xl flex-col items-center justify-center md:grid md:grid-cols-2 md:gap-16">
         
         {/* Coluna da Imagem */}
-        <div className="flex w-full justify-center md:justify-end md:order-last">
+        <div className="flex w-full justify-center md:order-last md:justify-end">
           <div className="relative h-auto w-full max-w-xs md:max-w-md">
             <Image
               src="https://firebasestorage.googleapis.com/v0/b/qoro-iy1gs.firebasestorage.app/o/mesh-gradient22.png?alt=media&token=675b8ae5-eb2b-486c-ad0c-2c0f2bd4db3c"
@@ -46,7 +47,7 @@ export default function HomePage() {
             onClick={handleRedirect}
             disabled={isLoading}
             size="lg"
-            className="w-full bg-[#8A2BE2] text-white hover:bg-[#7a25c1] rounded-full px-6 py-6 text-lg font-semibold transition-all duration-300 md:w-auto"
+            className="w-full bg-[#8A2BE2] text-white hover:bg-[#7a25c1] rounded-full px-6 py-3 text-lg font-semibold transition-all duration-300 md:w-auto"
           >
             {isLoading ? (
               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
