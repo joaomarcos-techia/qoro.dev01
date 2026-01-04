@@ -39,10 +39,6 @@ env:
   
   # --- SECRETS - Os valores para estas variáveis DEVEM ser criados no Secret Manager ---
   
-  # Chaves de API (Secretas)
-  - variable: GEMINI_API_KEY
-    secret: GEMINI_API_KEY
-  
   # Configurações do Firebase Admin (Secretas)
   - variable: FIREBASE_PROJECT_ID
     secret: FIREBASE_PROJECT_ID
@@ -50,3 +46,4 @@ env:
     secret: FIREBASE_CLIENT_EMAIL
   - variable: FIREBASE_PRIVATE_KEY
     secret: FIREBASE_PRIVATE_KEY
+
