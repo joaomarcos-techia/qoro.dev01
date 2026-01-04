@@ -76,6 +76,7 @@ export default function QualificationForm() {
   };
 
   const isNextButtonDisabled = () => {
+    if (!currentQuestion) return true; // Safety check
     const value = answers[currentQuestion.key as string];
     if (currentQuestion.type === 'textarea' || currentQuestion.type === 'contact') {
       if (currentQuestion.type === 'contact') {
@@ -88,6 +89,15 @@ export default function QualificationForm() {
     }
     return !value;
   };
+
+  // If currentQuestion is not available (e.g., after submit before redirect), don't render.
+  if (!currentQuestion) {
+    return (
+        <div className="flex h-screen items-center justify-center bg-black">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-black text-white p-4 sm:p-6 md:p-8">
