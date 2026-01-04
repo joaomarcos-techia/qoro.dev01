@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -18,7 +17,7 @@ export default function HomePage() {
 
   return (
     <main className="flex h-screen items-center justify-center bg-[#110f1c] p-4 sm:p-8">
-      <div className="flex h-full w-full max-w-6xl flex-col items-center justify-center md:grid md:grid-cols-2 md:gap-16">
+      <div className="flex h-full w-full max-w-6xl flex-col items-center justify-center py-8 md:grid md:grid-cols-2 md:gap-16 md:py-0">
         
         {/* Coluna da Imagem */}
         <div className="flex w-full justify-center md:order-last md:justify-end">
@@ -35,7 +34,7 @@ export default function HomePage() {
         </div>
 
         {/* Coluna de Texto */}
-        <div className="w-full max-w-xs flex h-full flex-col justify-center text-left md:order-first md:max-w-full md:text-left">
+        <div className="w-full max-w-xs flex h-full flex-col justify-center text-left md:max-w-full md:text-left">
           <div className="flex-grow md:flex-grow-0"></div>
           <h1 className="text-4xl font-semibold leading-tight text-white md:text-[51px]">
             Aumente o seu faturamento com IA.
@@ -47,7 +46,7 @@ export default function HomePage() {
             onClick={handleRedirect}
             disabled={isLoading}
             size="lg"
-            className="w-full bg-[#8A2BE2] text-white hover:bg-[#7a25c1] rounded-full px-4 py-3 text-lg font-semibold transition-all duration-300 md:w-auto"
+            className="w-full bg-[#8A2BE2] text-white hover:bg-[#7a25c1] rounded-full px-4 py-3 text-lg font-semibold transition-all duration-300 md:w-auto md:h-auto md:px-8 md:py-4"
           >
             {isLoading ? (
               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
