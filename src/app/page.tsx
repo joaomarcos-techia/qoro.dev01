@@ -35,7 +35,7 @@ export default function HomePage() {
         </div>
 
         {/* Coluna de Texto */}
-        <div className="flex h-full flex-col justify-center text-left md:order-first md:text-left">
+        <div className="w-full max-w-xs flex h-full flex-col justify-center text-left md:order-first md:max-w-full md:text-left">
           <div className="flex-grow md:flex-grow-0"></div>
           <h1 className="text-4xl font-semibold leading-tight text-white md:text-[51px]">
             Aumente o seu faturamento com IA.
