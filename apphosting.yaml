@@ -17,7 +17,7 @@ timeoutSeconds: 120
 # armazenados no Secret Manager e referenciados pela chave 'secret'.
 # https://firebase.google.com/docs/app-hosting/configure-backend#set-env
 env:
-  # URL do Site (Pública) - Usada para redirects do Stripe e Firebase Auth
+  # URL do Site (Pública)
   - variable: NEXT_PUBLIC_SITE_URL
     value: "https://qoro.dev"
 
@@ -37,25 +37,9 @@ env:
   - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
     value: "G-L3D1C3SYVV"
   
-  # Variáveis do Stripe (Públicas)
-  - variable: NEXT_PUBLIC_STRIPE_GROWTH_PLAN_PRICE_ID
-    value: "price_1Rzr2FKnoRE6MSOlBbtvn4cb"
-  - variable: NEXT_PUBLIC_STRIPE_PERFORMANCE_PLAN_PRICE_ID
-    value: "price_1Rzr2jKnoRE6MSOl1yBSMsjy"
-
   # --- SECRETS - Os valores para estas variáveis DEVEM ser criados no Secret Manager ---
-
-  # Variáveis do Stripe (Secretas)
-  - variable: STRIPE_PORTAL_CONFIGURATION_ID
-    secret: STRIPE_PORTAL_CONFIGURATION_ID
-  - variable: STRIPE_SECRET_KEY
-    secret: STRIPE_SECRET_KEY
-  - variable: STRIPE_WEBHOOK_SECRET
-    secret: STRIPE_WEBHOOK_SECRET
   
   # Chaves de API (Secretas)
-  - variable: GOOGLE_API_KEY
-    secret: GOOGLE_API_KEY
   - variable: GEMINI_API_KEY
     secret: GEMINI_API_KEY
   
