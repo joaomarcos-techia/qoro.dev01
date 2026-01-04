@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -20,8 +19,8 @@ export default function HomePage() {
     <main className="flex items-center justify-center min-h-screen bg-[#110f1c] p-4 sm:p-8">
       <div className="w-full max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center">
         
-        {/* Coluna de Texto */}
-        <div className="text-center md:text-left">
+        {/* Coluna de Texto - A ordem é alterada para mobile com 'order-last' e 'md:order-first' */}
+        <div className="text-center md:text-left order-last md:order-first">
           <h1 className="text-[51px] font-semibold text-white mb-6 leading-tight">
             Aumente o seu faturamento com IA.
           </h1>
