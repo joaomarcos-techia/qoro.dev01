@@ -30,10 +30,6 @@ const nextConfig = {
   },
   experimental: {
     webVitalsAttribution: ['CLS', 'LCP'],
-    allowedDevOrigins: [
-        '3000-firebase-qoro2-1767413451474.cluster-ve345ymguzcd6qqzuko2qbxtfe.cloudworkstations.dev',
-        '*.cloudworkstations.dev',
-    ]
   },
   async headers() {
     return [
@@ -41,8 +37,8 @@ const nextConfig = {
         source: '/:path*',
         headers: [
           { key: 'Access-Control-Allow-Origin', value: '*' },
-          { key: 'Access-Control-Allow-Methods', value: 'GET,POST,OPTIONS' },
-          { key: 'Access-Control-Allow-Headers', value: 'Content-Type' },
+          { key: 'Access-control-allow-methods', value: 'GET, POST, PUT, DELETE, OPTIONS' },
+          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
         ],
       },
     ];
