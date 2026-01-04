@@ -22,10 +22,10 @@ export default function HomePage() {
         
         {/* Coluna de Texto */}
         <div className="text-center md:text-left">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+          <h1 className="text-[51px] font-semibold text-white mb-6 leading-tight">
             Aumente o seu faturamento com IA.
           </h1>
-          <p className="text-lg sm:text-xl text-gray-300/80 mb-10 max-w-lg mx-auto md:mx-0">
+          <p className="font-normal text-[20px] text-gray-300/80 mb-10 max-w-lg mx-auto md:mx-0">
             Desenvolvemos para você uma operação personalizada que atende, converte e fideliza.
           </p>
           <Button
