@@ -35,7 +35,7 @@ export default function HomePage() {
         </div>
 
         {/* Coluna de Texto */}
-        <div className="flex h-full flex-col justify-center text-center md:text-left">
+        <div className="flex h-full flex-col justify-center text-left md:order-first md:text-left">
           <div className="flex-grow md:flex-grow-0"></div>
           <h1 className="text-4xl font-semibold leading-tight text-white md:text-[51px]">
             Aumente o seu faturamento com IA.
@@ -47,7 +47,7 @@ export default function HomePage() {
             onClick={handleRedirect}
             disabled={isLoading}
             size="lg"
-            className="w-full bg-[#8A2BE2] text-white hover:bg-[#7a25c1] rounded-full px-6 py-3 text-lg font-semibold transition-all duration-300 md:w-auto"
+            className="w-full bg-[#8A2BE2] text-white hover:bg-[#7a25c1] rounded-full px-4 py-3 text-lg font-semibold transition-all duration-300 md:w-auto"
           >
             {isLoading ? (
               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
