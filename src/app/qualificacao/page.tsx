@@ -17,14 +17,7 @@ export default function QualificationIntroPage() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-black p-4 text-center">
-        <div className="absolute top-8 left-8">
-            <Link href="/">
-                <Button variant="outline" className="rounded-full">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Voltar ao site
-                </Button>
-            </Link>
-        </div>
+        
 
       <div className="max-w-2xl text-center">
         <div className="flex justify-center mb-8">
