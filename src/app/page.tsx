@@ -34,11 +34,11 @@ export default function HomePage() {
         </div>
 
         {/* Coluna de Texto */}
-        <div className="w-full max-w-xs flex flex-col justify-center text-left md:max-w-full md:text-left">
+        <div className="w-full max-w-[280px] flex flex-col justify-center text-left md:max-w-full md:text-left">
           <h1 className="text-3xl font-semibold leading-tight text-white md:text-[51px]">
             Aumente o seu faturamento com IA.
           </h1>
-          <p className="font-normal text-sm text-gray-300/80 my-4 max-w-lg mx-auto md:mx-0 md:text-[20px] md:my-6 md:mb-10">
+          <p className="font-normal text-sm text-gray-300/80 my-4 md:text-[20px] md:my-6 md:mb-10">
             Desenvolvemos para você uma operação personalizada que atende, converte e fideliza.
           </p>
           <Button
