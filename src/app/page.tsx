@@ -25,7 +25,7 @@ export default function HomePage() {
             Aumente o seu faturamento com IA.
           </h1>
           <p className="text-lg sm:text-xl text-gray-300/80 mb-10 max-w-lg mx-auto md:mx-0">
-            Desenvolvemos para você uma operação personalizada que atende, converte e fideliza.
+            Nossa operação trabalha 24/7 para qualificar leads, eliminando tarefas repetitivas e permitindo que sua equipe foque no que realmente importa: escalar o negócio.
           </p>
           <Button
             onClick={handleRedirect}
@@ -45,7 +45,7 @@ export default function HomePage() {
         <div className="flex justify-center md:justify-end animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
           <div className="relative w-full max-w-md h-auto aspect-square rounded-3xl overflow-hidden shadow-2xl shadow-purple-900/20">
             <Image
-              src="https://firebasestorage.googleapis.com/v0/b/qoro-iy1gs.firebasestorage.app/o/background.png?alt=media&token=c1a3b567-2115-46e2-9b21-4f107f9c9b13"
+              src="https://firebasestorage.googleapis.com/v0/b/qoro-iy1gs.firebasestorage.app/o/mesh-gradient22.png?alt=media&token=675b8ae5-eb2b-486c-ad0c-2c0f2bd4db3c"
               alt="Gradiente abstrato com tons de roxo, rosa e azul"
               fill
               className="object-cover"
