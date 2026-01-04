@@ -63,20 +63,17 @@ export default function QualificationForm() {
         if (result.success) {
             router.push('/qualificacao/obrigado');
         } else {
-            // Handle error case - maybe show a toast message
             console.error("Falha no envio do formulário:", result.message);
             setIsLoading(false);
-            // Optionally, inform the user about the failure
         }
     } catch (error) {
         console.error("❌ Falha catastrófica no envio do formulário:", error);
         setIsLoading(false);
-        // Optionally, inform the user about the failure
     }
   };
 
   const isNextButtonDisabled = () => {
-    if (!currentQuestion) return true; // Safety check
+    if (!currentQuestion) return true;
     const value = answers[currentQuestion.key as string];
     if (currentQuestion.type === 'textarea' || currentQuestion.type === 'contact') {
       if (currentQuestion.type === 'contact') {
@@ -90,7 +87,6 @@ export default function QualificationForm() {
     return !value;
   };
 
-  // If currentQuestion is not available (e.g., after submit before redirect), don't render.
   if (!currentQuestion) {
     return (
         <div className="flex h-screen items-center justify-center bg-black">
