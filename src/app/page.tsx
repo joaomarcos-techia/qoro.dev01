@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -25,7 +26,7 @@ export default function HomePage() {
             Aumente o seu faturamento com IA.
           </h1>
           <p className="text-lg sm:text-xl text-gray-300/80 mb-10 max-w-lg mx-auto md:mx-0">
-            Nossa operação trabalha 24/7 para qualificar leads, eliminando tarefas repetitivas e permitindo que sua equipe foque no que realmente importa: escalar o negócio.
+            Desenvolvemos para você uma operação personalizada que atende, converte e fideliza.
           </p>
           <Button
             onClick={handleRedirect}
