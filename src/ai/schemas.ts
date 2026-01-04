@@ -213,7 +213,6 @@ export const QualificationLeadSchema = z.object({
   currentTools: z.string().optional(),
   mainGoal: z.string().optional(),
   interestedFeatures: z.record(z.array(z.string())).optional(),
-  investmentRange: z.string().optional(),
   fullName: z.string().optional(),
   role: z.string().optional(),
   email: z.string().optional(),

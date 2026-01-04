@@ -66,14 +66,6 @@ const questions = [
   },
   {
     step: 6,
-    section: 'Investimento',
-    title: 'Qual a faixa de investimento mensal que você considera para uma solução completa?',
-    type: 'radio',
-    key: 'investmentRange',
-    options: ['Até R$ 300/mês', 'R$ 300 – R$ 600/mês', 'R$ 600 – R$ 1.000/mês', 'Acima de R$ 1.000/mês', 'Ainda não sei'],
-  },
-  {
-    step: 7,
     section: 'Contato',
     title: 'Excelente! Estamos quase lá. Faltam apenas seus dados para contato.',
     type: 'contact',

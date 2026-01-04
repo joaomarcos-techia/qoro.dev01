@@ -12,7 +12,6 @@ const questions = [
   { key: 'currentTools', title: 'Ferramentas Atuais' },
   { key: 'mainGoal', title: 'Principal Objetivo' },
   { key: 'interestedFeatures', title: 'Funcionalidades de Interesse' },
-  { key: 'investmentRange', title: 'Faixa de Investimento' },
 ];
 
 const contactFields = [
