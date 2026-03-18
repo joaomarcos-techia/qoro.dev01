@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find 'C:\\\\Users\\\\joaom\\\\Downloads\\\\landing page' -type f -not -path */node_modules/*)",
+      "Bash(dir \"C:\\\\Users\\\\joaom\\\\Downloads\\\\landing page\" /B)",
+      "Bash(npm install:*)",
+      "Bash(npm search:*)",
+      "Bash(npm view:*)",
+      "mcp__Claude_Preview__preview_start",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:github.com)",
+      "Bash(npx tsc:*)",
+      "Bash(./node_modules/.bin/tsc --noEmit)",
+      "Bash(node node_modules/typescript/bin/tsc --noEmit)"
+    ]
+  }
+}
