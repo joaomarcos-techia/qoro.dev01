@@ -5,7 +5,6 @@ import {
   IconShieldCheck,
   IconRocket,
   IconCash,
-  IconDoorExit,
 } from "@tabler/icons-react";
 import SectionBadge from "./ui/SectionBadge";
 
@@ -13,15 +12,16 @@ const steps = [
   {
     step: "01",
     icon: IconRocket,
-    title: "Setup gratuito",
-    highlight: "R$ 0",
-    subtitle: "para começar",
-    description: "Sua clínica operando em até 72 horas, sem investir nada.",
+    title: "Implementação personalizada",
+    highlight: "Investimento",
+    subtitle: "único para começar",
+    description:
+      "Configuração completa da IA, integração com o sistema da sua clínica e ajustes personalizados. Valor parcelável.",
     benefits: [
-      "Implementação completa",
+      "Configuração completa da IA",
+      "Integração com seu sistema",
       "Onboarding em até 72h",
-      "Configuração personalizada",
-      "Suporte dedicado",
+      "Valor parcelável",
     ],
     color: "text-accent-green",
     borderColor: "border-accent-green/20",
@@ -30,16 +30,16 @@ const steps = [
   {
     step: "02",
     icon: IconCash,
-    title: "Pague pelo resultado",
-    highlight: "Comissão",
-    subtitle: "só sobre o aumento",
+    title: "Mensalidade + Performance",
+    highlight: "Fixo",
+    subtitle: "mais bônus sobre crescimento",
     description:
-      "Taxa pequena apenas sobre o faturamento extra que a IA gerar. Sem surpresas.",
+      "Mensalidade fixa para manter o sistema funcionando 24/7, mais um percentual apenas sobre o faturamento que crescer acima do seu ponto de partida.",
     benefits: [
-      "Sem mensalidade fixa",
-      "Sem taxa de adesão",
-      "Cobrado sobre o ganho real",
-      "Transparência total",
+      "Sistema ativo 24 horas",
+      "Suporte e manutenção incluso",
+      "Performance só sobre crescimento real",
+      "Transparência total nos números",
     ],
     color: "text-primary-light",
     borderColor: "border-primary/30",
@@ -48,17 +48,17 @@ const steps = [
   },
   {
     step: "03",
-    icon: IconDoorExit,
-    title: "Sem fidelidade",
-    highlight: "Livre",
-    subtitle: "cancele quando quiser",
+    icon: IconShieldCheck,
+    title: "Garantia real",
+    highlight: "ROI 3x",
+    subtitle: "ou devolvemos o setup",
     description:
-      "Confiança renovada todo mês. Sem multa, sem burocracia, sem letras miúdas.",
+      "Se em 90 dias você não tiver pelo menos 3 vezes o retorno sobre o investimento, devolvemos a taxa de instalação. Sem condições escondidas.",
     benefits: [
-      "Cancelamento imediato",
-      "Sem multa contratual",
-      "Dados exportáveis",
-      "Sem carência",
+      "Garantia de ROI em 90 dias",
+      "Relatório mensal de resultados",
+      "Reunião mensal de acompanhamento",
+      "Você vê cada resultado gerado",
     ],
     color: "text-accent-blue",
     borderColor: "border-accent-blue/20",
@@ -88,8 +88,8 @@ export default function Pricing() {
             className="mt-5 font-manrope font-semibold text-white tracking-[-0.02em]"
             style={{ fontSize: "clamp(28px, 4vw, 44px)" }}
           >
-            Zero risco.{" "}
-            <span className="gradient-text">Zero custo inicial.</span>
+            Resultado real.{" "}
+            <span className="gradient-text">Investimento inteligente.</span>
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -102,8 +102,8 @@ export default function Pricing() {
             }}
             className="mt-4 text-white/50 font-inter text-base sm:text-lg max-w-lg mx-auto"
           >
-            Você só investe quando já está ganhando. Sem mensalidade, sem taxa
-            de adesão.
+            Modelo transparente com setup único, mensalidade fixa e performance
+            sobre o crescimento.
           </motion.p>
         </div>
 
@@ -204,7 +204,7 @@ export default function Pricing() {
 
         {/* Connector arrows (desktop only) */}
         <div className="hidden md:flex justify-center items-center gap-2 mt-8 mb-2">
-          {["Setup", "Resultado", "Liberdade"].map((label, i) => (
+          {["Implementação", "Operação", "Garantia"].map((label, i) => (
             <div key={i} className="flex items-center gap-2">
               <span className="text-[11px] font-inter font-medium text-white/25 uppercase tracking-wider">
                 {label}
@@ -234,11 +234,12 @@ export default function Pricing() {
             </div>
             <div className="text-center sm:text-left">
               <p className="font-manrope font-semibold text-white text-[16px]">
-                Garantia de resultado
+                Transparência total
               </p>
               <p className="text-white/45 text-[14px] font-inter mt-1 leading-relaxed">
-                Se a IA não gerar aumento de faturamento, você não paga nada.
-                Simples assim.
+                Você recebe relatório mensal com cada lead atendido, cada
+                agendamento feito e cada resultado gerado. Reunião mensal de 30
+                minutos para acompanhar tudo.
               </p>
             </div>
           </div>

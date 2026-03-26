@@ -149,8 +149,29 @@ export default function HowItWorks() {
     offset: ["start 70%", "end 40%"],
   });
 
-  const heightTransform = useTransform(scrollYProgress, [0, 1], [0, contentHeight]);
-  const opacityTransform = useTransform(scrollYProgress, [0, 0.1], [0, 1]);
+  // On mobile, delay the line so it trails behind the steps
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  const heightTransform = useTransform(
+    scrollYProgress,
+    isMobile
+      ? [0.05, 0.3, 0.6, 0.9]
+      : [0, 1],
+    isMobile
+      ? [0, contentHeight * 0.25, contentHeight * 0.55, contentHeight]
+      : [0, contentHeight]
+  );
+  const opacityTransform = useTransform(
+    scrollYProgress,
+    isMobile ? [0.05, 0.15] : [0, 0.1],
+    [0, 1]
+  );
 
   return (
     <section
