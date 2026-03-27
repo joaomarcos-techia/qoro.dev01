@@ -1,9 +1,5 @@
 {
   "projects": {
-    "yes": "landing-qoro",
-    "landing-qoro": "landing-qoro",
     "default": "qoro-iy1gs"
-  },
-  "targets": {},
-  "etags": {}
+  }
 }
