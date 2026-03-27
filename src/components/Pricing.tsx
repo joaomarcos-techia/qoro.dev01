@@ -5,6 +5,7 @@ import {
   IconShieldCheck,
   IconRocket,
   IconCash,
+  IconDoorExit,
 } from "@tabler/icons-react";
 import SectionBadge from "./ui/SectionBadge";
 
@@ -16,10 +17,10 @@ const steps = [
     highlight: "Investimento",
     subtitle: "único para começar",
     description:
-      "Configuração completa da IA, integração com o sistema da sua clínica e ajustes personalizados. Valor parcelável.",
+      "Sistema completo configurado para sua clínica: agenda, prontuário, financeiro e IA. Tudo pronto para operar. Valor parcelável.",
     benefits: [
-      "Configuração completa da IA",
-      "Integração com seu sistema",
+      "Sistema completo e exclusivo",
+      "Configuração personalizada",
       "Onboarding em até 72h",
       "Valor parcelável",
     ],
@@ -38,7 +39,7 @@ const steps = [
     benefits: [
       "Sistema ativo 24 horas",
       "Suporte e manutenção incluso",
-      "Performance só sobre crescimento real",
+      "Atualizações contínuas da IA",
       "Transparência total nos números",
     ],
     color: "text-primary-light",
@@ -48,17 +49,17 @@ const steps = [
   },
   {
     step: "03",
-    icon: IconShieldCheck,
-    title: "Garantia real",
-    highlight: "ROI 3x",
-    subtitle: "ou devolvemos o setup",
+    icon: IconDoorExit,
+    title: "Confiança, não contrato",
+    highlight: "Livre",
+    subtitle: "sem fidelidade, sem multa",
     description:
-      "Se em 90 dias você não tiver pelo menos 3 vezes o retorno sobre o investimento, devolvemos a taxa de instalação. Sem condições escondidas.",
+      "Nosso modelo se sustenta pelo resultado que entrega, não por cláusulas de permanência. Se não fizer sentido, você sai sem pagar nada a mais.",
     benefits: [
-      "Garantia de ROI em 90 dias",
-      "Relatório mensal de resultados",
-      "Reunião mensal de acompanhamento",
-      "Você vê cada resultado gerado",
+      "Zero burocracia para cancelar",
+      "Sem multa ou taxa de saída",
+      "Sem contrato de permanência",
+      "Liberdade total de decisão",
     ],
     color: "text-accent-blue",
     borderColor: "border-accent-blue/20",
@@ -134,11 +135,8 @@ export default function Pricing() {
               }
             >
 <div className="p-6 md:p-8">
-                {/* Step number + icon */}
-                <div className="flex items-center justify-between mb-6">
-                  <span className="text-[11px] font-mono font-bold text-white/20 tracking-widest uppercase">
-                    Passo {step.step}
-                  </span>
+                {/* Icon */}
+                <div className="flex items-center justify-end mb-6">
                   <div
                     className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                       step.featured ? "bg-primary/15" : "bg-white/[0.04]"
@@ -204,7 +202,7 @@ export default function Pricing() {
 
         {/* Connector arrows (desktop only) */}
         <div className="hidden md:flex justify-center items-center gap-2 mt-8 mb-2">
-          {["Implementação", "Operação", "Garantia"].map((label, i) => (
+          {["Implementação", "Operação", "Liberdade"].map((label, i) => (
             <div key={i} className="flex items-center gap-2">
               <span className="text-[11px] font-inter font-medium text-white/25 uppercase tracking-wider">
                 {label}
@@ -234,12 +232,12 @@ export default function Pricing() {
             </div>
             <div className="text-center sm:text-left">
               <p className="font-manrope font-semibold text-white text-[16px]">
-                Transparência total
+                Você acompanha cada resultado
               </p>
               <p className="text-white/45 text-[14px] font-inter mt-1 leading-relaxed">
-                Você recebe relatório mensal com cada lead atendido, cada
-                agendamento feito e cada resultado gerado. Reunião mensal de 30
-                minutos para acompanhar tudo.
+                Todo mês você recebe um relatório claro com os atendimentos realizados,
+                agendamentos e o impacto real no seu faturamento. Sem números escondidos —
+                você vê exatamente o que está funcionando.
               </p>
             </div>
           </div>
