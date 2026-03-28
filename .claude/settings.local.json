@@ -14,7 +14,9 @@
       "Bash(./node_modules/.bin/tsc --noEmit)",
       "Bash(node node_modules/typescript/bin/tsc --noEmit)",
       "Bash(grep -v \"\\\\.git$\")",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(npx --version)",
+      "Bash(npx sharp-cli:*)"
     ]
   }
 }
