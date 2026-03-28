@@ -16,7 +16,12 @@
       "Bash(grep -v \"\\\\.git$\")",
       "Bash(npm run:*)",
       "Bash(npx --version)",
-      "Bash(npx sharp-cli:*)"
+      "Bash(npx sharp-cli:*)",
+      "Bash(wc -l /c/Users/joaom/Downloads/\"landing page\"/src/components/*.tsx)",
+      "Bash(cd /c/Users/joaom/Downloads/\"landing page\")",
+      "Bash(grep -r \"hidden\\\\|display\" src/components/*.tsx)",
+      "Bash(grep -E \"md:hidden|md:flex|hidden md:\" src/components/*.tsx)",
+      "Bash(npm ls:*)"
     ]
   }
 }

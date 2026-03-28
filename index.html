@@ -1,29 +1,381 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ClínicaIA — Gestão Clínica Inteligente com IA</title>
-    <meta name="description" content="Sistema de gestão clínica com agente de IA no WhatsApp. Agendamentos automáticos, prontuário digital, TISS e gestão completa. Setup em 72 horas." />
-    <meta property="og:title" content="ClínicaIA — Gestão clínica no piloto automático" />
-    <meta property="og:description" content="Agente de IA que agenda consultas pelo WhatsApp 24h. Prontuário digital. Financeiro integrado. LGPD compliance." />
+
+    <!-- Primary SEO -->
+    <title>Qoro — Gestão Clínica com IA no WhatsApp | Agendamento Automático 24h</title>
+    <meta name="description" content="Qoro é o sistema de gestão clínica com agente de IA no WhatsApp. Agendamentos automáticos 24h, prontuário digital, gestão financeira e LGPD compliance. Setup em 72 horas. 15+ clínicas ativas no Brasil." />
+    <meta name="keywords" content="Qoro, gestão clínica, IA WhatsApp, agendamento automático, prontuário digital, software médico, clínica inteligente, gestão financeira clínica, LGPD saúde, telemedicina" />
+    <meta name="author" content="Qoro" />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+    <link rel="canonical" href="https://qoro.dev/" />
+
+    <!-- Open Graph -->
+    <meta property="og:site_name" content="Qoro" />
+    <meta property="og:title" content="Qoro — IA que atende, agenda e gerencia sua clínica" />
+    <meta property="og:description" content="Agente de IA no WhatsApp que cuida dos seus pacientes 24h. Prontuário digital, gestão financeira, TISS e zero custo inicial. 15+ clínicas já confiam na Qoro." />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://qoro.dev/" />
     <meta property="og:locale" content="pt_BR" />
+    <meta property="og:image" content="https://qoro.dev/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Qoro — Gestão Clínica com IA no WhatsApp" />
+
+    <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="ClínicaIA" />
-    <meta name="twitter:description" content="Sua clínica no piloto automático." />
+    <meta name="twitter:title" content="Qoro — IA que atende, agenda e gerencia sua clínica" />
+    <meta name="twitter:description" content="Agente inteligente no WhatsApp que cuida dos seus pacientes 24h. Prontuário digital, financeiro integrado. Setup em 72h." />
+    <meta name="twitter:image" content="https://qoro.dev/og-image.png" />
+
+    <!-- Favicons -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#0a0a12" />
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Manrope:wght@400;500;700;800&family=Poppins:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
+
+    <!-- JSON-LD: Organization -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Qoro",
+      "url": "https://qoro.dev",
+      "logo": "https://qoro.dev/logo-qoro.svg",
+      "description": "Qoro é uma plataforma de gestão clínica com inteligência artificial integrada ao WhatsApp. Automatiza agendamentos, prontuário digital e gestão financeira para clínicas médicas no Brasil.",
+      "foundingDate": "2025",
+      "areaServed": "BR",
+      "sameAs": [
+        "https://www.instagram.com/qoro.dev/"
+      ],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "sales",
+        "url": "https://wa.me/5588996822198",
+        "availableLanguage": "Portuguese"
+      }
+    }
+    </script>
+
+    <!-- JSON-LD: SoftwareApplication -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Qoro",
+      "applicationCategory": "HealthApplication",
+      "operatingSystem": "Web, WhatsApp",
+      "description": "Sistema de gestão clínica com agente de IA no WhatsApp. Agendamentos automáticos 24h, prontuário digital com assinatura eletrônica, gestão financeira com TISS, e compliance LGPD. Setup em 72 horas.",
+      "url": "https://qoro.dev",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "BRL",
+        "description": "Setup gratuito com mensalidade fixa + performance sobre crescimento. Sem contrato de fidelidade."
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.9",
+        "reviewCount": "15",
+        "bestRating": "5"
+      },
+      "featureList": [
+        "Agente de IA no WhatsApp 24h",
+        "Agendamento automático de consultas",
+        "Prontuário digital com assinatura eletrônica",
+        "Gestão financeira com TISS",
+        "Confirmações e lembretes automáticos",
+        "Compliance LGPD e CFM",
+        "Criptografia AES-256",
+        "Suporte a 18+ especialidades médicas"
+      ]
+    }
+    </script>
+
+    <!-- JSON-LD: FAQPage -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "O que é a Qoro?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Qoro é um sistema de gestão clínica com inteligência artificial integrada ao WhatsApp. A plataforma automatiza agendamentos, confirmações e lembretes de consultas 24 horas por dia, além de oferecer prontuário digital com assinatura eletrônica, gestão financeira com TISS e compliance total com LGPD e CFM. Mais de 15 clínicas já utilizam a Qoro no Brasil."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Como funciona o agendamento automático por WhatsApp da Qoro?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "O agente de IA da Qoro conecta-se ao WhatsApp da clínica via QR Code. A partir daí, pacientes enviam mensagens pelo WhatsApp e a IA agenda, remarca ou cancela consultas automaticamente, 24 horas por dia, sem intervenção humana. A IA também envia confirmações e lembretes automáticos, reduzindo o no-show em até 50%."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "A Qoro é segura para dados médicos?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Sim. A Qoro utiliza criptografia AES-256 para proteção de dados, possui auditoria completa de acessos e é 100% conforme com a LGPD (Lei Geral de Proteção de Dados) e com as normas do CFM (Conselho Federal de Medicina). Os prontuários digitais contam com assinatura eletrônica válida juridicamente."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Quanto custa a Qoro?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A Qoro opera com um modelo de investimento único de implementação (parcelável), seguido de uma mensalidade fixa mais um percentual de performance sobre o crescimento de faturamento. Não há contrato de fidelidade, multa ou taxa de saída — a clínica pode cancelar a qualquer momento sem custos adicionais."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Quanto tempo leva para implementar a Qoro?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A implementação completa da Qoro leva até 72 horas. O processo inclui cadastro da clínica e equipe médica, configuração personalizada da agenda, conexão do WhatsApp via QR Code e ativação da IA. Não é necessária consultoria externa nem conhecimento técnico."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Quais especialidades médicas a Qoro atende?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A Qoro atende mais de 18 especialidades médicas, incluindo cardiologia, dermatologia, pediatria, ortopedia, neurologia, ginecologia, oftalmologia, psiquiatria, endocrinologia, urologia, entre outras. O sistema se adapta a clínicas de qualquer porte e especialidade."
+          }
+        }
+      ]
+    }
+    </script>
+
+    <!-- JSON-LD: HowTo -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      "name": "Como implementar a Qoro na sua clínica",
+      "description": "Três passos simples para ativar o sistema de gestão clínica com IA da Qoro, do cadastro ao primeiro atendimento automático em 72 horas.",
+      "totalTime": "PT72H",
+      "step": [
+        {
+          "@type": "HowToStep",
+          "position": 1,
+          "name": "Fale com a gente",
+          "text": "Cadastramos sua clínica, equipe médica e configuramos a agenda. Sem complicação. Inclui cadastro guiado, configuração de agenda e personalização."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 2,
+          "name": "Conecte o WhatsApp",
+          "text": "Escaneie o QR Code e seu número fica integrado. Pacientes são atendidos automaticamente. Integração em minutos com número conectado e atendimento ativo."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 3,
+          "name": "IA ativada",
+          "text": "Agendamentos, confirmações e lembretes 24h, sem intervenção humana. Agendamento automático, confirmações via IA e respostas 24/7."
+        }
+      ]
+    }
+    </script>
+
+    <!-- Fallback styles for static HTML (before JS loads) -->
+    <style>
+      .seo-fallback { font-family: 'Manrope', 'Inter', system-ui, sans-serif; color: #e0e0e0; background: #0a0a12; max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem; line-height: 1.7; }
+      .seo-fallback h1 { font-size: clamp(28px, 5vw, 48px); font-weight: 700; line-height: 1.1; margin-bottom: 1rem; color: #fff; }
+      .seo-fallback h2 { font-size: clamp(22px, 3.5vw, 36px); font-weight: 600; margin: 2.5rem 0 1rem; color: #fff; }
+      .seo-fallback h3 { font-size: 1.15rem; font-weight: 600; margin: 1.5rem 0 0.5rem; color: #fff; }
+      .seo-fallback p, .seo-fallback li { color: rgba(255,255,255,0.6); font-size: 1rem; }
+      .seo-fallback a { color: #a78bfa; }
+      .seo-fallback ul { padding-left: 1.5rem; }
+      .seo-fallback .faq-item { margin-bottom: 1.5rem; }
+      .seo-fallback .faq-item h3 { color: #c4b5fd; }
+      .seo-fallback nav { display: flex; gap: 1.5rem; padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 2rem; align-items: center; flex-wrap: wrap; }
+      .seo-fallback nav img { height: 24px; margin-right: auto; }
+      .seo-fallback nav a { font-size: 0.875rem; color: rgba(255,255,255,0.6); text-decoration: none; }
+      .seo-fallback footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.08); font-size: 0.8rem; color: rgba(255,255,255,0.3); }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Static HTML fallback: visible to crawlers and users while JS loads -->
+      <div class="seo-fallback">
+        <nav>
+          <img src="/logo-qoro.svg" alt="Qoro — Gestão Clínica com IA" width="80" height="24" />
+          <a href="#como-funciona">Como funciona</a>
+          <a href="#funcionalidades">Funcionalidades</a>
+          <a href="#depoimentos">Depoimentos</a>
+          <a href="#pricing">Modelo de Negócio</a>
+        </nav>
+
+        <main>
+          <!-- Hero -->
+          <section>
+            <p><strong>IA para Saúde</strong></p>
+            <h1>A IA que atende, agenda e gerencia sua clínica.</h1>
+            <p>Agente inteligente no WhatsApp que cuida dos seus pacientes 24h. Prontuário digital, gestão financeira e zero custo inicial.</p>
+            <p>Sem cartão de crédito · Setup em 72h · 15+ clínicas ativas</p>
+          </section>
+
+          <!-- O que é a Qoro -->
+          <section>
+            <h2>O que é a Qoro?</h2>
+            <p><strong>Qoro</strong> é um sistema de gestão clínica com inteligência artificial integrada ao WhatsApp. A plataforma automatiza agendamentos, confirmações e lembretes de consultas 24 horas por dia, além de oferecer prontuário digital com assinatura eletrônica, gestão financeira com TISS e compliance total com LGPD e CFM. Mais de 15 clínicas médicas já utilizam a Qoro no Brasil.</p>
+          </section>
+
+          <!-- Como funciona -->
+          <section id="como-funciona">
+            <h2>Como funciona — Do cadastro ao primeiro atendimento em 72 horas</h2>
+            <p>Três passos. Sem burocracia. Sem consultoria.</p>
+            <ol>
+              <li><strong>Fale com a gente</strong> — Cadastramos sua clínica, equipe médica e configuramos a agenda. Inclui cadastro guiado, configuração de agenda e personalização completa.</li>
+              <li><strong>Conecte o WhatsApp</strong> — Escaneie o QR Code e seu número fica integrado. Pacientes são atendidos automaticamente em minutos.</li>
+              <li><strong>IA ativada</strong> — Agendamentos, confirmações e lembretes 24h, sem intervenção humana. Respostas automáticas 24/7.</li>
+            </ol>
+          </section>
+
+          <!-- Funcionalidades -->
+          <section id="funcionalidades">
+            <h2>Funcionalidades — Tudo que sua clínica precisa, em um só lugar</h2>
+            <p>Do agendamento à gestão financeira, com inteligência artificial.</p>
+
+            <h3>Agenda inteligente</h3>
+            <p>Agendamento, remarcação e cancelamento online. Sem recepcionista sobrecarregada. A IA organiza a agenda automaticamente.</p>
+
+            <h3>IA no WhatsApp com segurança total</h3>
+            <p>Atendimento automatizado 24/7 com criptografia AES-256, auditoria completa e 100% conforme LGPD e CFM.</p>
+
+            <h3>Prontuário e financeiro integrados</h3>
+            <p>Histórico clínico completo com assinatura digital. Fluxo de caixa, TISS e relatórios — tudo em um lugar. Compatível com TISS, assinatura digital e PDF/A.</p>
+
+            <h3>Todas as especialidades</h3>
+            <p>Cardiologia, dermatologia, pediatria, ortopedia, neurologia, ginecologia, oftalmologia, psiquiatria, endocrinologia, urologia e mais 8 especialidades. Adapta-se a qualquer porte de clínica.</p>
+          </section>
+
+          <!-- Depoimentos -->
+          <section id="depoimentos">
+            <h2>O que nossos usuários dizem</h2>
+            <p>Nota média 4.9/5 · 15+ clínicas · NPS 92</p>
+
+            <blockquote>
+              <p>"O agente de IA resolve 80% das dúvidas dos pacientes antes mesmo de eu entrar no consultório. Chego com a agenda organizada e zero mensagem pendente."</p>
+              <footer>— <strong>Dra. Camila Neves</strong>, Dermatologista</footer>
+            </blockquote>
+
+            <blockquote>
+              <p>"A recepção perdia mais de uma hora por dia com ligações de agendamento. Hoje o WhatsApp faz tudo automaticamente. Minha equipe agora foca no atendimento presencial."</p>
+              <footer>— <strong>Rafael Souza</strong>, Gestor de clínica</footer>
+            </blockquote>
+
+            <blockquote>
+              <p>"O sistema é tão intuitivo que aprendi em um dia. Os pacientes adoram confirmar a consulta pelo WhatsApp — o no-show caiu pela metade."</p>
+              <footer>— <strong>Fernanda Oliveira</strong>, Recepcionista</footer>
+            </blockquote>
+
+            <blockquote>
+              <p>"Os prontuários digitais são completos e rápidos. Prescrevo e assino digitalmente em segundos. Nunca mais perdi um documento ou resultado de exame."</p>
+              <footer>— <strong>Dr. Marcos Andrade</strong>, Cardiologista</footer>
+            </blockquote>
+
+            <blockquote>
+              <p>"O módulo financeiro nos deu clareza total. Sabemos exatamente o que entra, o que está pendente e qual a inadimplência do mês — tudo em tempo real."</p>
+              <footer>— <strong>Juliana Costa</strong>, Administradora</footer>
+            </blockquote>
+
+            <blockquote>
+              <p>"A implementação foi rápida e o suporte foi excepcional. Em duas semanas já tínhamos retorno positivo sobre o investimento."</p>
+              <footer>— <strong>Carlos Ferreira</strong>, Diretor Médico</footer>
+            </blockquote>
+          </section>
+
+          <!-- Modelo de Negócio -->
+          <section id="pricing">
+            <h2>Modelo de Negócio — Resultado real, investimento inteligente</h2>
+            <p>Modelo transparente com setup único, mensalidade fixa e performance sobre o crescimento.</p>
+
+            <h3>1. Implementação personalizada</h3>
+            <p>Investimento único para começar. Sistema completo configurado para sua clínica: agenda, prontuário, financeiro e IA. Tudo pronto para operar em até 72h. Valor parcelável.</p>
+
+            <h3>2. Mensalidade + Performance</h3>
+            <p>Fixo mais bônus sobre crescimento. Mensalidade fixa para manter o sistema 24/7, mais um percentual apenas sobre o faturamento que crescer acima do seu ponto de partida. Suporte, manutenção e atualizações da IA inclusos.</p>
+
+            <h3>3. Confiança, não contrato</h3>
+            <p>Livre — sem fidelidade, sem multa. Nosso modelo se sustenta pelo resultado que entrega, não por cláusulas de permanência. Se não fizer sentido, você sai sem pagar nada a mais. Zero burocracia para cancelar.</p>
+
+            <p><strong>Garantia:</strong> Todo mês você recebe um relatório claro com os atendimentos realizados, agendamentos e o impacto real no seu faturamento. Sem números escondidos.</p>
+          </section>
+
+          <!-- FAQ -->
+          <section>
+            <h2>Perguntas frequentes sobre a Qoro</h2>
+
+            <div class="faq-item">
+              <h3>O que é a Qoro?</h3>
+              <p>Qoro é um sistema de gestão clínica com inteligência artificial integrada ao WhatsApp. A plataforma automatiza agendamentos, confirmações e lembretes de consultas 24 horas por dia, além de oferecer prontuário digital com assinatura eletrônica, gestão financeira com TISS e compliance total com LGPD e CFM. Mais de 15 clínicas já utilizam a Qoro no Brasil.</p>
+            </div>
+
+            <div class="faq-item">
+              <h3>Como funciona o agendamento automático por WhatsApp da Qoro?</h3>
+              <p>O agente de IA da Qoro conecta-se ao WhatsApp da clínica via QR Code. A partir daí, pacientes enviam mensagens pelo WhatsApp e a IA agenda, remarca ou cancela consultas automaticamente, 24 horas por dia, sem intervenção humana. A IA também envia confirmações e lembretes automáticos, reduzindo o no-show em até 50%.</p>
+            </div>
+
+            <div class="faq-item">
+              <h3>A Qoro é segura para dados médicos?</h3>
+              <p>Sim. A Qoro utiliza criptografia AES-256 para proteção de dados, possui auditoria completa de acessos e é 100% conforme com a LGPD (Lei Geral de Proteção de Dados) e com as normas do CFM (Conselho Federal de Medicina). Os prontuários digitais contam com assinatura eletrônica válida juridicamente.</p>
+            </div>
+
+            <div class="faq-item">
+              <h3>Quanto custa a Qoro?</h3>
+              <p>A Qoro opera com um modelo de investimento único de implementação (parcelável), seguido de uma mensalidade fixa mais um percentual de performance sobre o crescimento de faturamento. Não há contrato de fidelidade, multa ou taxa de saída — a clínica pode cancelar a qualquer momento sem custos adicionais.</p>
+            </div>
+
+            <div class="faq-item">
+              <h3>Quanto tempo leva para implementar a Qoro?</h3>
+              <p>A implementação completa da Qoro leva até 72 horas. O processo inclui cadastro da clínica e equipe médica, configuração personalizada da agenda, conexão do WhatsApp via QR Code e ativação da IA. Não é necessária consultoria externa nem conhecimento técnico.</p>
+            </div>
+
+            <div class="faq-item">
+              <h3>Quais especialidades médicas a Qoro atende?</h3>
+              <p>A Qoro atende mais de 18 especialidades médicas, incluindo cardiologia, dermatologia, pediatria, ortopedia, neurologia, ginecologia, oftalmologia, psiquiatria, endocrinologia, urologia, entre outras. O sistema se adapta a clínicas de qualquer porte e especialidade.</p>
+            </div>
+          </section>
+
+          <!-- CTA -->
+          <section>
+            <h2>Pronto para transformar sua clínica?</h2>
+            <p>Comece hoje. Resultados esta semana. Setup gratuito, sem cartão, cancele quando quiser.</p>
+            <p>Mais de 15 clínicas já confiam na Qoro.</p>
+            <p><a href="https://wa.me/5588996822198">Fale com a Qoro no WhatsApp</a></p>
+          </section>
+        </main>
+
+        <footer>
+          <p>Qoro — Gestão clínica inteligente com IA. Do agendamento ao financeiro.</p>
+          <p>&copy; 2025 Qoro. Todos os direitos reservados. Feito com dedicação no Brasil.</p>
+          <p><a href="https://www.instagram.com/qoro.dev/">Instagram</a></p>
+        </footer>
+      </div>
+    </div>
+
+    <noscript>
+      <style>.seo-fallback { display: block !important; }</style>
+      <p style="text-align:center; padding:1rem; background:#1a1a2e; color:#a78bfa; font-family:sans-serif;">
+        Para a melhor experiência, ative o JavaScript no seu navegador. O conteúdo essencial da Qoro est&aacute; dispon&iacute;vel acima.
+      </p>
+    </noscript>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

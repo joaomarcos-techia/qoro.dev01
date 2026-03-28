@@ -1,0 +1,51 @@
+# Qoro - https://qoro.dev
+# Allow all search engines and AI crawlers
+
+User-agent: *
+Allow: /
+Disallow: /assets/
+
+# Google
+User-agent: Googlebot
+Allow: /
+
+# Google AI Overviews
+User-agent: Google-Extended
+Allow: /
+
+# OpenAI / ChatGPT
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+# Anthropic / Claude
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+# Perplexity
+User-agent: PerplexityBot
+Allow: /
+
+# Microsoft / Copilot
+User-agent: Bingbot
+Allow: /
+
+# Apple Intelligence
+User-agent: Applebot-Extended
+Allow: /
+
+# Cohere
+User-agent: cohere-ai
+Allow: /
+
+# Meta
+User-agent: FacebookExternalHit
+Allow: /
+
+# Sitemap
+Sitemap: https://qoro.dev/sitemap.xml
